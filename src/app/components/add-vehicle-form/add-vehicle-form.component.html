@@ -1,0 +1,111 @@
+<div class="form-container">
+  <div class="form-header">
+    <h2>Add New Vehicle</h2>
+    <p>Enter your vehicle details</p>
+    <button class="close-btn" type="button" (click)="onClose()">&times;</button>
+  </div>
+
+  <!-- Result Message Display -->
+  <div *ngIf="showMessage" [class.message-container]="true" [class.success]="isSuccess" [class.error]="!isSuccess">
+    <div class="message-content">
+      <span class="message-icon">{{ isSuccess ? '✓' : '✕' }}</span>
+      <p>{{ resultMessage }}</p>
+      <button type="button" class="message-close-btn" (click)="dismissMessage()">&times;</button>
+    </div>
+  </div>
+
+  <form [formGroup]="addVehicleForm" (ngSubmit)="onSubmit()">
+    <!-- Row 1: Make and Model -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="make">Make <span class="required-star">*</span></label>
+        <select id="make" formControlName="make">
+          <option value="" disabled>-- Select Make --</option>
+          <option *ngFor="let m of makes" [value]="m.make">{{ m.make }}</option>
+        </select>
+        <div class="error" *ngIf="addVehicleForm.get('make')?.invalid && (addVehicleForm.get('make')?.dirty || addVehicleForm.get('make')?.touched)">
+          <div *ngIf="addVehicleForm.get('make')?.errors?.['required']">Make is required.</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="model">Model <span class="required-star">*</span></label>
+        <select id="model" formControlName="model" [disabled]="!modelsForSelectedMake.length">
+          <option value="" disabled>-- Select Model --</option>
+          <option *ngFor="let mm of modelsForSelectedMake" [value]="mm">{{ mm }}</option>
+        </select>
+        <div class="error" *ngIf="addVehicleForm.get('model')?.invalid && (addVehicleForm.get('model')?.dirty || addVehicleForm.get('model')?.touched)">
+          <div *ngIf="addVehicleForm.get('model')?.errors?.['required']">Model is required.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Year and Engine Capacity -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="year">Year <span class="required-star">*</span></label>
+        <select id="year" formControlName="year">
+          <option value="" disabled>-- Select Year --</option>
+          <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+        </select>
+        <div class="error" *ngIf="addVehicleForm.get('year')?.invalid && (addVehicleForm.get('year')?.dirty || addVehicleForm.get('year')?.touched)">
+          <div *ngIf="addVehicleForm.get('year')?.errors?.['required']">Year is required.</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="engineCapacity">Engine Capacity <span class="required-star">*</span></label>
+        <input type="number" step="0.1" min="0.1" id="engineCapacity" formControlName="engineCapacity" placeholder="e.g., 2.0">
+        <div class="error" *ngIf="addVehicleForm.get('engineCapacity')?.invalid && (addVehicleForm.get('engineCapacity')?.dirty || addVehicleForm.get('engineCapacity')?.touched)">
+          <div *ngIf="addVehicleForm.get('engineCapacity')?.errors?.['required']">Engine capacity is required.</div>
+          <div *ngIf="addVehicleForm.get('engineCapacity')?.errors?.['engineInvalid']">EngineCapacity must be greater than 0.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Transmission Type and Fuel Type -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="transmissionType">Transmission Type <span class="required-star">*</span></label>
+        <select id="transmissionType" formControlName="transmissionType">
+          <option value="" disabled>-- Select Transmission --</option>
+          <option *ngFor="let type of transmissionTypes" [value]="type">{{ type }}</option>
+        </select>
+        <div class="error" *ngIf="addVehicleForm.get('transmissionType')?.invalid && (addVehicleForm.get('transmissionType')?.dirty || addVehicleForm.get('transmissionType')?.touched)">
+          <div *ngIf="addVehicleForm.get('transmissionType')?.errors?.['required']">Transmission Type is required.</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="fuelType">Fuel Type <span class="required-star">*</span></label>
+        <select id="fuelType" formControlName="fuelType">
+          <option value="" disabled>-- Select Fuel Type --</option>
+          <option *ngFor="let fuel of fuelTypes" [value]="fuel">{{ fuel }}</option>
+        </select>
+        <div class="error" *ngIf="addVehicleForm.get('fuelType')?.invalid && (addVehicleForm.get('fuelType')?.dirty || addVehicleForm.get('fuelType')?.touched)">
+          <div *ngIf="addVehicleForm.get('fuelType')?.errors?.['required']">Fuel Type is required.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: License Plate and Current Mileage -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="licensePlate">License Plate <span class="required-star">*</span></label>
+        <input type="text" id="licensePlate" formControlName="licensePlate" placeholder="e.g., ABC 1234">
+        <div class="error" *ngIf="addVehicleForm.get('licensePlate')?.invalid && (addVehicleForm.get('licensePlate')?.dirty || addVehicleForm.get('licensePlate')?.touched)">
+          <div *ngIf="addVehicleForm.get('licensePlate')?.errors?.['required']">LicensePlate is required.</div>
+          <div *ngIf="addVehicleForm.get('licensePlate')?.errors?.['maxlength']">LicensePlate cannot exceed 20 characters.</div>
+          <div *ngIf="addVehicleForm.get('licensePlate')?.errors?.['licenseNotUnique']">LicensePlate must be unique.</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="mileage">Current Mileage (km) <span class="required-star">*</span></label>
+        <input type="number" min="0" id="mileage" formControlName="mileage" placeholder="e.g., 45000">
+        <div class="error" *ngIf="addVehicleForm.get('mileage')?.invalid && (addVehicleForm.get('mileage')?.dirty || addVehicleForm.get('mileage')?.touched)">
+          <div *ngIf="addVehicleForm.get('mileage')?.errors?.['required']">CurrentMileage is required.</div>
+          <div *ngIf="addVehicleForm.get('mileage')?.errors?.['min']">CurrentMileage must be non-negative.</div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn" (click)="onSubmit()" [disabled]="isSubmitting">Add Vehicle</button>
+  </form>
+</div>

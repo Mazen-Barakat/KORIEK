@@ -1,0 +1,209 @@
+<div class="profile-container">
+  <div class="profile-card">
+    <!-- Main Content: Image Left + Fields Right -->
+    <div class="profile-content">
+      <!-- Left: Image Section -->
+      <div class="image-section">
+        <div class="image-container">
+          <img [src]="getDisplayImage()" alt="Profile" class="profile-image" />
+          <label class="image-upload-label" [class.hidden]="!isEditMode">
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onImageSelected($event)"
+              class="image-upload-input"
+              aria-label="Upload profile image"
+            />
+            <span class="upload-icon">📷</span>
+          </label>
+        </div>
+
+        <!-- Image Error Message -->
+        <div class="field-error-message" *ngIf="getFieldError('profileImage')">
+          <span class="error-icon">⚠</span>
+          <span>{{ getFieldError('profileImage') }}</span>
+        </div>
+      </div>
+
+      <!-- Right: Form Fields -->
+      <div class="form-content">
+        <!-- Header with Edit Button -->
+        <div class="form-header">
+          <h2 class="form-title">Profile Information</h2>
+          <button class="edit-button" (click)="toggleEditMode()" [class.active]="isEditMode">
+            {{ isEditMode ? 'Cancel' : 'Edit' }}
+          </button>
+        </div>
+
+        <!-- Form Fields Grid -->
+        <div class="fields-grid">
+          <!-- First Name -->
+          <div class="form-group">
+            <label for="firstName" class="form-label">
+              First Name <span class="required">*</span>
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              [(ngModel)]="formData.firstName"
+              placeholder="Enter your first name"
+              class="form-input"
+              [class.error]="!!getFieldError('firstName')"
+              [disabled]="!isEditMode || isLoading || isSaving"
+              (blur)="validateField('firstName')"
+            />
+            <div class="field-error-message" *ngIf="getFieldError('firstName')">
+              <span class="error-icon">⚠</span>
+              <span>{{ getFieldError('firstName') }}</span>
+            </div>
+          </div>
+
+          <!-- Last Name -->
+          <div class="form-group">
+            <label for="lastName" class="form-label">
+              Last Name <span class="required">*</span>
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              [(ngModel)]="formData.lastName"
+              placeholder="Enter your last name"
+              class="form-input"
+              [class.error]="!!getFieldError('lastName')"
+              [disabled]="!isEditMode || isLoading || isSaving"
+              (blur)="validateField('lastName')"
+            />
+            <div class="field-error-message" *ngIf="getFieldError('lastName')">
+              <span class="error-icon">⚠</span>
+              <span>{{ getFieldError('lastName') }}</span>
+            </div>
+          </div>
+
+          <!-- Phone Number -->
+          <div class="form-group">
+            <label for="phone" class="form-label">
+              Phone Number <span class="required">*</span>
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              [(ngModel)]="formData.phoneNumber"
+              placeholder="e.g., 01012345678"
+              class="form-input"
+              [class.error]="!!getFieldError('phoneNumber')"
+              [disabled]="!isEditMode || isLoading || isSaving"
+              (blur)="validateField('phoneNumber')"
+            />
+            <div class="field-error-message" *ngIf="getFieldError('phoneNumber')">
+              <span class="error-icon">⚠</span>
+              <span>{{ getFieldError('phoneNumber') }}</span>
+            </div>
+          </div>
+
+          <!-- Country -->
+          <div class="form-group">
+            <label for="country" class="form-label">
+              Country <span class="required">*</span>
+            </label>
+            <input
+              id="country"
+              type="text"
+              [(ngModel)]="formData.country"
+              placeholder="Enter your country"
+              class="form-input"
+              [class.error]="!!getFieldError('country')"
+              [disabled]="!isEditMode || isLoading || isSaving"
+              (blur)="validateField('country')"
+            />
+            <div class="field-error-message" *ngIf="getFieldError('country')">
+              <span class="error-icon">⚠</span>
+              <span>{{ getFieldError('country') }}</span>
+            </div>
+          </div>
+
+          <!-- Governorate -->
+          <div class="form-group">
+            <label for="governorate" class="form-label">
+              Governorate <span class="required">*</span>
+            </label>
+            <input
+              id="governorate"
+              type="text"
+              [(ngModel)]="formData.governorate"
+              placeholder="Enter your governorate"
+              class="form-input"
+              [class.error]="!!getFieldError('governorate')"
+              [disabled]="!isEditMode || isLoading || isSaving"
+              (blur)="validateField('governorate')"
+            />
+            <div class="field-error-message" *ngIf="getFieldError('governorate')">
+              <span class="error-icon">⚠</span>
+              <span>{{ getFieldError('governorate') }}</span>
+            </div>
+          </div>
+
+          <!-- City -->
+          <div class="form-group">
+            <label for="city" class="form-label"> City <span class="required">*</span> </label>
+            <input
+              id="city"
+              type="text"
+              [(ngModel)]="formData.city"
+              placeholder="Enter your city"
+              class="form-input"
+              [class.error]="!!getFieldError('city')"
+              [disabled]="!isEditMode || isLoading || isSaving"
+              (blur)="validateField('city')"
+            />
+            <div class="field-error-message" *ngIf="getFieldError('city')">
+              <span class="error-icon">⚠</span>
+              <span>{{ getFieldError('city') }}</span>
+            </div>
+          </div>
+
+          <!-- Preferred Language -->
+          <div class="form-group">
+            <label for="language" class="form-label">Preferred Language</label>
+            <select
+              id="language"
+              [(ngModel)]="formData.preferredLanguage"
+              class="form-input"
+              [disabled]="!isEditMode || isLoading || isSaving"
+            >
+              <option *ngFor="let lang of languages" [value]="lang">
+                {{ lang }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Validation Summary (shows all errors at once) -->
+        <div
+          class="validation-summary"
+          *ngIf="validationErrors.length > 0 && showValidationSummary"
+        >
+          <div class="validation-summary-header">
+            <span class="summary-icon">⚠</span>
+            <span class="summary-title">Please fix the following errors:</span>
+          </div>
+          <ul class="validation-list">
+            <li *ngFor="let error of validationErrors">{{ error.message }}</li>
+          </ul>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-section" *ngIf="isEditMode">
+          <button
+            (click)="submitForm()"
+            [disabled]="isSaving || isLoading"
+            class="save-button"
+            [class.loading]="isSaving"
+          >
+            <span *ngIf="!isSaving">Save Changes</span>
+            <span *ngIf="isSaving">Saving...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,158 @@
+[
+  {
+    "make": "Toyota",
+    "models": ["Corolla", "Camry", "C-HR", "Rush", "Fortuner", "Yaris", "RAV4", "Highlander", "Land Cruiser", "BZ4X", "Crown", "Veloz"]
+  },
+  {
+    "make": "Hyundai",
+    "models": ["Elantra", "Accent", "Tucson", "Creta", "Bayon", "Sonata", "Staria", "Ioniq 5", "Venue", "Kona", "Ioniq 6"]
+  },
+  {
+    "make": "Kia",
+    "models": ["Sportage", "Cerato", "Seltos", "Picanto", "Stonic", "K5", "Carnival", "Niro", "Sonet", "XCeed"]
+  },
+  {
+    "make": "Nissan",
+    "models": ["Sentra", "Sunny", "Qashqai", "Juke", "Kicks", "X-Trail", "Navara", "Patrol", "Urvan", "Leaf", "Magnite"]
+  },
+  {
+    "make": "Mercedes",
+    "models": ["C-Class", "E-Class", "GLC", "GLE", "A-Class", "S-Class", "GLB", "EQS", "CLA", "GLS", "EQE", "C-Coupe", "C-Cabriolet", "E-Coupe", "E-Cabriolet", "G-Class", "GT", "SL", "Maybach S-Class"]
+  },
+  {
+    "make": "BMW",
+    "models": ["3 Series", "5 Series", "X3", "X5", "1 Series", "4 Series", "X1", "X7", "iX", "2 Series Gran Coupe", "X4", "X6", "7 Series", "8 Series", "i4", "i5", "i7", "Z4"]
+  },
+  {
+    "make": "Skoda",
+    "models": ["Octavia", "Kodiaq", "Karoq", "Scala", "Superb", "Kamiq", "Fabia", "Enyaq"]
+  },
+  {
+    "make": "Peugeot",
+    "models": ["3008", "5008", "2008", "301", "508", "208", "Rifter", "408", "Traveller", "Partner"]
+  },
+  {
+    "make": "Renault",
+    "models": ["Megane", "Duster", "Logan", "Stepway", "Arkana", "Kadjar", "Koleos", "Captur", "Express"]
+  },
+  {
+    "make": "MG",
+    "models": ["ZS", "HS", "5", "6", "GT", "RX5", "Marvel R", "ZS EV"]
+  },
+  {
+    "make": "Ford",
+    "models": ["Focus", "Kuga", "Puma", "Everest", "Ranger", "EcoSport", "Explorer", "Bronco", "Mustang"]
+  },
+  {
+    "make": "Chevrolet",
+    "models": ["Captiva", "Equinox", "Malibu", "Optra", "Aveo", "Trailblazer", "Groove", "Camaro"]
+  },
+  {
+    "make": "Volkswagen",
+    "models": ["Tiguan", "Passat", "T-Roc", "Golf", "Jetta", "Arteon", "Touareg", "ID.4", "ID.3"]
+  },
+  {
+    "make": "Audi",
+    "models": ["A3", "A4", "Q3", "Q5", "A5", "A6", "Q7", "E-tron", "A7", "Q8", "E-tron GT"]
+  },
+  {
+    "make": "Honda",
+    "models": ["CR-V", "Civic", "HR-V", "Accord", "City"]
+  },
+  {
+    "make": "Mitsubishi",
+    "models": ["Lancer", "Outlander", "Attrage", "Eclipse Cross", "Xpander", "Mirage", "ASX"]
+  },
+  {
+    "make": "Suzuki",
+    "models": ["Swift", "Vitara", "Ciaz", "Ertiga", "Dzire", "Baleno", "Jimny", "S-Cross", "Ignis", "Alto"]
+  },
+  {
+    "make": "Fiat",
+    "models": ["Tipo", "500", "500X", "Egea", "Panda", "Doblo", "Ducato"]
+  },
+  {
+    "make": "Citroën",
+    "models": ["C5 Aircross", "C3 Aircross", "C-Elysée", "C4", "C4 X", "Berlingo"]
+  },
+  {
+    "make": "Opel",
+    "models": ["Astra", "Grandland X", "Crossland X", "Corsa", "Mokka", "Insignia", "Zafira Life"]
+  },
+  {
+    "make": "Subaru",
+    "models": ["XV", "Forester", "Outback", "Impreza", "Legacy", "WRX"]
+  },
+  {
+    "make": "Volvo",
+    "models": ["XC40", "XC60", "S60", "S90", "XC90", "C40 Recharge", "EX30", "EX90"]
+  },
+  {
+    "make": "Land Rover",
+    "models": ["Discovery Sport", "Range Rover Evoque", "Defender", "Discovery", "Range Rover Velar", "Range Rover", "Range Rover Sport"]
+  },
+  {
+    "make": "Jeep",
+    "models": ["Wrangler", "Cherokee", "Compass", "Renegade", "Grand Cherokee", "Gladiator", "Grand Cherokee L"]
+  },
+  {
+    "make": "Chery",
+    "models": ["Arrizo 5", "Tiggo 7", "Tiggo 8", "Tiggo 3", "Tiggo 2", "Tiggo 4", "Tiggo 8 Pro", "Tiggo 7 Pro"]
+  },
+  {
+    "make": "Changan",
+    "models": ["Alsvin", "CS35 Plus", "CS55 Plus", "Eado Plus", "UNI-T", "UNI-K", "CS75 Plus"]
+  },
+  {
+    "make": "Geely",
+    "models": ["Coolray", "Emgrand", "Geometry C", "Azkarra", "Tugella"]
+  },
+  {
+    "make": "Haval",
+    "models": ["H6", "Jolion", "H9", "F7", "H6 GT"]
+  },
+  {
+    "make": "BYD",
+    "models": ["F3", "L3", "Atto 3", "Song Plus DM-i", "Han", "Dolphin", "Seal", "Tang EV"]
+  },
+  {
+    "make": "Jetour",
+    "models": ["X70", "X70 Plus", "X90 Plus", "Dashing", "X95"]
+  },
+  {
+    "make": "Proton",
+    "models": ["Saga", "X50", "X70", "Persona"]
+  },
+  {
+    "make": "Dongfeng",
+    "models": ["Aeolus Shine", "Fengon 500", "T5 EVO", "Seres 3", "Glory 500", "Glory 580", "Glory 600"]
+  },
+  {
+    "make": "SsangYong",
+    "models": ["Tivoli", "Korando", "Rexton", "XLV", "Musso Grand"]
+  },
+  {
+    "make": "Infiniti",
+    "models": ["Q50", "QX50", "QX60", "QX55", "QX80"]
+  },
+  {
+    "make": "GMC",
+    "models": ["Terrain", "Acadia", "Sierra", "Yukon", "Savana"]
+  },
+  {
+    "make": "Dodge",
+    "models": ["Durango", "Charger", "Challenger", "Ram 1500"]
+  },
+  {
+    "make": "Porsche",
+    "models": ["Macan", "Cayenne", "Panamera", "911", "Taycan", "718 Cayman", "718 Boxster"]
+  },
+  {
+    "make": "Cadillac",
+    "models": ["Escalade", "CT5"]
+  },
+  {
+    "make": "Lexus",
+    "models": ["ES", "IS", "NX", "RX", "LX"]
+  }
+]

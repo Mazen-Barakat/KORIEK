@@ -1,0 +1,46 @@
+<header class="header">
+  <div class="header-container">
+    <!-- Logo Section -->
+    <div class="logo">
+      <a routerLink="/">
+        <!-- Use the provided logo file: logo.png -->
+        <img src="/Assets/logo.png" alt="Korek Logo" class="logo-image" />
+      </a>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="nav-links">
+      <a routerLink="/about" class="nav-link">About</a>
+      <a routerLink="/features" class="nav-link">Features</a>
+      <a routerLink="/testimonials" class="nav-link">Testimonials</a>
+      <a routerLink="/faq" class="nav-link">FAQ</a>
+    </nav>
+
+    <!-- Right Section: Language, Log In, Sign Up, Logout -->
+    <div class="header-actions">
+      <!-- Language Selector -->
+      <button class="language-btn" (click)="toggleLanguage()">
+        <span class="language-icon">🌐</span>
+        <span class="language-text">{{ currentLanguage }}</span>
+      </button>
+
+      <!-- Show Log In and Sign Up buttons only when user is NOT authenticated -->
+      <ng-container *ngIf="!isAuthenticated">
+        <!-- Log In Button -->
+        <a routerLink="/login" class="btn btn-login">Log In</a>
+
+        <!-- Sign Up Button -->
+        <a routerLink="/signup" class="btn btn-signup">Sign Up</a>
+      </ng-container>
+
+      <!-- Show Profile Button and Logout when user IS authenticated -->
+      <ng-container *ngIf="isAuthenticated">
+        <!-- Profile Button -->
+        <app-profile-button></app-profile-button>
+
+        <!-- Logout Button -->
+        <button (click)="logout()" class="btn btn-logout">Logout</button>
+      </ng-container>
+    </div>
+  </div>
+</header>

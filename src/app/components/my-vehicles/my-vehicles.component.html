@@ -1,0 +1,325 @@
+<div class="my-vehicles-page">
+  <!-- Left Column: Vehicle Cards -->
+  <div class="left-column">
+    <!-- Profile Welcome Section -->
+    <div class="profile-welcome-section">
+      <img [src]="profilePicture" 
+           alt="Profile Picture" 
+           class="profile-picture"
+           (error)="profilePicture = '/Assets/default-profile.png'" />
+      <div class="welcome-message">
+        <h2>{{ welcomeMessage }}</h2>
+      </div>
+    </div>
+
+    <div class="vehicles-section">
+      <div class="section-header">
+        <div class="title-section">
+          <span class="icon">🚗</span>
+          <div>
+            <h1>My Vehicles</h1>
+            <p class="subtitle">Monitor and manage your cars</p>
+          </div>
+        </div>
+        <button class="add-car-btn" (click)="openAddVehicleModal()">
+          <span class="plus-icon">+</span> Add Car
+        </button>
+      </div>
+
+      <div class="vehicles-list">
+        <!-- Show vehicle cards only when there are vehicles -->
+        <ng-container *ngIf="vehicles && vehicles.length > 0; else emptyState">
+          <div *ngFor="let vehicle of vehicles" class="vehicle-card" [class.active]="vehicle.id === selectedVehicleId" (click)="selectVehicle(vehicle)">
+            <div class="vehicle-header">
+              <div class="vehicle-info">
+                <h2>{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</h2>
+                <p class="license-plate">{{ vehicle.licensePlate }}</p>
+                <p class="mileage">Current Mileage: {{ vehicle.currentMileage | number }} km</p>
+              </div>
+              <div class="vehicle-actions">
+                <button class="edit-btn" aria-label="Edit vehicle" (click)="navigateToCarDetails(vehicle, $event)">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-hidden="false" focusable="false">
+                  <path d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l82.7 0-201.4 201.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3 448 192c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160c0-17.7-14.3-32-32-32L320 0zM80 96C35.8 96 0 131.8 0 176L0 432c0 44.2 35.8 80 80 80l256 0c44.2 0 80-35.8 80-80l0-80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 80c0 8.8-7.2 16-16 16L80 448c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l80 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 96z"/>
+                </svg>
+                </button>
+                <button class="delete-btn" aria-label="Delete vehicle" (click)="promptDelete(vehicle, $event)">
+                <!-- simple trash icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="18" height="18" aria-hidden="false" focusable="false">
+                  <path fill="currentColor" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16V64c0-17.7-14.3-32-32-32H320l-7.2-14.3C307.6 6 296.9 0 285 0H163c-11.9 0-22.6 6-27.8 17.7zM53.2 467c1.5 25.7 22.9 45 48.6 45h243.5c25.7 0 47.1-19.3 48.6-45L416 128H32l21.2 339z"/>
+                </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="maintenance-items" *ngIf="vehicle.maintenanceItems && vehicle.maintenanceItems.length > 0">
+              <div 
+                *ngFor="let item of vehicle.maintenanceItems" 
+                class="maintenance-item"
+                [ngClass]="getMaintenanceColor(item.remainingKm)">
+                <div class="item-header">
+                  <span class="item-icon">{{ item.icon }}</span>
+                  <span class="item-name">{{ item.name }}</span>
+                </div>
+                <p class="item-km">{{ item.remainingKm | number }} km</p>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Empty state for new users -->
+        <ng-template #emptyState>
+          <div class="empty-vehicles">
+            <h3>No cars yet</h3>
+            <p class="empty-text">Your cars will appear here once you add them.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Book a Service Section -->
+    <div class="book-service-section">
+      <h2 class="section-title">📅 Book a Service</h2>
+      <p class="section-subtitle">Schedule maintenance for your vehicle</p>
+      <div class="service-options">
+        <button class="service-btn">🔌 Electrical</button>
+        <button class="service-btn">🔧 Mechanical</button>
+        <button class="service-btn">❄️ Seasonal</button>
+        <button class="service-btn">❄️ A/C</button>
+        <button class="service-btn sos">🆘 SOS</button>
+      </div>
+    </div>
+
+    <!-- Maintenance History Section -->
+    <div class="maintenance-history-section">
+      <h2 class="section-title">🔧 Maintenance History</h2>
+      <p class="section-subtitle">Past services and repairs</p>
+      <div class="history-list">
+        <div class="history-item">
+          <div class="history-info">
+            <h3>Auto Expert Galio</h3>
+            <p class="service-type">Oil Change & Filter</p>
+            <p class="service-details">📍 123 Main St · Next change at 55,000 km</p>
+            <button class="view-receipt-btn">👁️ View Receipt</button>
+          </div>
+          <div class="history-price">EGP 350</div>
+        </div>
+        <div class="history-item">
+          <div class="history-info">
+            <h3>Elite Car Service</h3>
+            <p class="service-type">Brake Pad Replacement</p>
+            <p class="service-details">Front brake pads replaced. Rear pads at 60%</p>
+            <button class="view-receipt-btn">👁️ View Receipt</button>
+          </div>
+          <div class="history-price">EGP 600</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expenses Tracker Section -->
+    <div class="expenses-section">
+      <div class="expenses-header">
+        <h2 class="section-title">💰 Expenses Tracker</h2>
+        <div class="expenses-actions">
+          <select class="car-filter-dropdown" (change)="onCarFilterChange($event)" [value]="selectedCarId ?? ''">
+            <option value="">Show All</option>
+            <option *ngFor="let vehicle of vehicles" [value]="vehicle.id">
+              {{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}
+            </option>
+          </select>
+          <button class="add-expense-btn" (click)="openAddExpenseModal()">+ Add Expense</button>
+        </div>
+      </div>
+      <p class="section-subtitle">Track fuel, maintenance, and other costs</p>
+      <div class="expense-list">
+        <div *ngIf="filteredExpenses.length === 0" class="no-expenses">
+          <p>No expenses recorded yet. Click "+ Add Expense" to get started!</p>
+        </div>
+        <div *ngFor="let expense of filteredExpenses" class="expense-item">
+          <div class="expense-icon">{{ expense.icon }}</div>
+          <div class="expense-info">
+            <h4>{{ expense.name }}</h4>
+            <p class="expense-meta">
+              <span class="expense-date">{{ expense.date | date:'yyyy-MM-dd' }}</span>
+              <span class="expense-car-badge">• {{ getVehicleLabel(expense.carId) }}</span>
+            </p>
+          </div>
+          <div class="expense-actions">
+            <span class="expense-amount">EGP {{ expense.amount }}</span>
+            <button class="receipt-btn" title="View receipt">📄 Receipt</button>
+            <button class="delete-expense-btn" title="Delete expense" (click)="deleteExpense(expense.id)" [disabled]="expense.id && deletingExpenseIds.has(expense.id)">
+              <!-- small trash svg -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="16" height="16" aria-hidden="false" focusable="false">
+                <path fill="currentColor" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16V64c0-17.7-14.3-32-32-32H320l-7.2-14.3C307.6 6 296.9 0 285 0H163c-11.9 0-22.6 6-27.8 17.7zM53.2 467c1.5 25.7 22.9 45 48.6 45h243.5c25.7 0 47.1-19.3 48.6-45L416 128H32l21.2 339z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div *ngIf="isAddExpenseModalOpen" class="modal-overlay">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Add New Expense</h3>
+          <button class="modal-close-btn" (click)="closeAddExpenseModal()">✕</button>
+        </div>
+        <div *ngIf="expenseMessage" class="alert" [ngClass]="expenseMessageType === 'success' ? 'success' : 'error'">
+          {{ expenseMessage }}
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="expense-car">Car</label>
+            <select id="expense-car" [(ngModel)]="newExpenseForm.carId" class="form-input" required #carModel="ngModel">
+              <option [ngValue]="null" disabled>Select Car</option>
+              <option *ngFor="let v of vehicles" [ngValue]="v.id">
+                {{ v.make }} {{ v.model }} ({{ v.year }}) - {{ v.licensePlate }}
+              </option>
+            </select>
+            <div class="field-error" *ngIf="submittedExpense && carModel.invalid">Car is required.</div>
+          </div>
+          <div class="form-group">
+            <label for="expense-type">Expense Type</label>
+            <select id="expense-type" [(ngModel)]="newExpenseForm.expenseType" (change)="updateExpenseType(newExpenseForm.expenseType)" class="form-input" required #typeModel="ngModel">
+              <option value="" disabled>Select Expense Type</option>
+              <option *ngFor="let type of expenseTypes" [value]="type">{{ type }}</option>
+            </select>
+            <div class="field-error" *ngIf="submittedExpense && typeModel.invalid">Expense type is required.</div>
+          </div>
+          <div class="form-group">
+            <label for="expense-date">Date</label>
+            <input id="expense-date" type="date" [(ngModel)]="newExpenseForm.expenseDate" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="expense-amount">Amount (EGP)</label>
+            <input id="expense-amount" type="number" min="0.01" step="0.01" [(ngModel)]="newExpenseForm.amount" placeholder="0.00" class="form-input" required #amountModel="ngModel" />
+            <div class="field-error" *ngIf="submittedExpense && (amountModel.invalid || (newExpenseForm.amount ?? 0) <= 0)">
+              Amount must be greater than 0.
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="expense-desc">Description</label>
+            <textarea id="expense-desc" rows="3" class="form-input" [(ngModel)]="newExpenseForm.description" placeholder="Optional description..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="closeAddExpenseModal()" [disabled]="isSavingExpense">Cancel</button>
+          <button class="btn-save" (click)="addExpense()" [disabled]="isSavingExpense">Add Expense</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Sidebar -->
+  <div class="right-column">
+    <!-- Upcoming Maintenance Section -->
+    <div class="upcoming-maintenance-section">
+      <h2 class="section-title">🔧 Upcoming Maintenance</h2>
+      <div class="maintenance-list">
+        <div class="upcoming-item">
+          <div class="item-name-section">
+            <span class="item-icon-small">💧</span>
+            <span>Oil Change</span>
+          </div>
+          <div class="item-details">
+            <p class="item-date">Due: 2025-11-28</p>
+            <span class="badge badge-soon">Soon</span>
+          </div>
+        </div>
+        <div class="upcoming-item">
+          <div class="item-name-section">
+            <span class="item-icon-small">🔧</span>
+            <span>Air Filter Replacement</span>
+          </div>
+          <div class="item-details">
+            <p class="item-date">Due: 2025-12-12</p>
+            <span class="badge badge-due">Due</span>
+          </div>
+        </div>
+        <div class="upcoming-item">
+          <div class="item-name-section">
+            <span class="item-icon-small">🔋</span>
+            <span>Battery Check</span>
+          </div>
+          <div class="item-details">
+            <p class="item-date">Due: 2026-01-15</p>
+            <span class="progress-bar">
+              <span class="progress-fill" style="width: 30%"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tips & News Section -->
+    <div class="tips-section">
+      <h2 class="section-title">💡 Tips & News</h2>
+      
+      <div class="tip-card">
+        <h3>⚠️ Winter Maintenance Tips</h3>
+        <p>Check your battery and tire pressure as temperature drops</p>
+        <span class="tip-date">2025-11-10</span>
+      </div>
+      
+      <div class="tip-card">
+        <h3>🌿 Leaf Phone Update</h3>
+        <p>New fuel-efficient driving features now available</p>
+        <span class="tip-date">2025-11-08</span>
+      </div>
+      
+      <div class="tip-card">
+        <h3>🌦️ Rainy Weather Alert</h3>
+        <p>Heavy rain expected this weekend. Check your wipers!</p>
+        <span class="tip-date">2025-11-06</span>
+      </div>
+    </div>
+
+    <!-- AI Assistant Section -->
+    <div class="ai-assistant-section">
+      <h2 class="section-title">🤖 AI Assistant</h2>
+      <p class="section-subtitle">Describe your issue, get recommendations</p>
+      <button class="chat-btn">💬 Chat with AI</button>
+    </div>
+
+    <!-- Payment Methods Section -->
+    <div class="payment-methods-section">
+      <h2 class="section-title">💳 Payment Methods</h2>
+      <div class="payment-list">
+        <div class="payment-item">
+          <span>💵 Cash</span>
+          <span class="checkmark">✓</span>
+        </div>
+        <div class="payment-item">
+          <span>📱 E-Wallet</span>
+          <span class="checkmark">✓</span>
+        </div>
+        <div class="payment-item">
+          <span>💳 Card</span>
+          <span class="checkmark">✓</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Vehicle Modal -->
+<!-- Delete Confirmation Modal -->
+<div *ngIf="showDeleteConfirm" class="confirm-overlay">
+  <div class="confirm-dialog" role="dialog" aria-modal="true">
+    <h3>Confirm Deletion</h3>
+    <p *ngIf="carToDelete">Delete <strong>{{ carToDelete.make }} {{ carToDelete.model }} ({{ carToDelete.licensePlate }})</strong>? This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn cancel" type="button" (click)="cancelDelete()" [disabled]="isDeleting">Cancel</button>
+      <button class="btn confirm" type="button" (click)="deleteCarConfirmed()" [disabled]="isDeleting">{{ isDeleting ? 'Deleting...' : 'Delete' }}</button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="isAddVehicleModalOpen" class="modal-overlay" (click)="closeAddVehicleModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <app-add-vehicle-form 
+      (close)="closeAddVehicleModal()" 
+      (saved)="onVehicleSaved($event)">
+    </app-add-vehicle-form>
+  </div>
+</div>

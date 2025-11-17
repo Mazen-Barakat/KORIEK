@@ -1,0 +1,34 @@
+<div class="profile-page-container">
+
+  <!-- Success Message -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <span class="alert-icon">✓</span>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <!-- Error Message -->
+  <div class="alert alert-error" *ngIf="error">
+    <span class="alert-icon">!</span>
+    <div>
+      <p>{{ error }}</p>
+      <button (click)="retryLoadProfile()" class="retry-btn">Retry</button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your profile...</p>
+  </div>
+
+  <!-- Profile Form -->
+  <app-profile-form
+    #formRef
+    *ngIf="!isLoading && profile"
+    [profile]="profile"
+    [isLoading]="isLoading"
+    [isSaving]="isSaving"
+    (onSubmit)="updateProfile($event)"
+    (onImageChange)="handleImageChange($event)"
+  ></app-profile-form>
+</div>
