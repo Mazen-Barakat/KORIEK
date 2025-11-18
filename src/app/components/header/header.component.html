@@ -27,10 +27,10 @@
       <!-- Show Log In and Sign Up buttons only when user is NOT authenticated -->
       <ng-container *ngIf="!isAuthenticated">
         <!-- Log In Button -->
-        <a routerLink="/login" class="btn btn-login">Log In</a>
+        <a routerLink="/select-role" class="btn btn-login">Log In</a>
 
         <!-- Sign Up Button -->
-        <a routerLink="/signup" class="btn btn-signup">Sign Up</a>
+        <a routerLink="/select-role" class="btn btn-signup">Sign Up</a>
       </ng-container>
 
       <!-- Show Profile Button and Logout when user IS authenticated -->

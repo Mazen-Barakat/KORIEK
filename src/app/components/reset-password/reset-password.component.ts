@@ -18,6 +18,8 @@ export class ResetPasswordComponent implements OnInit {
   successMessage = '';
   email: string | null = null;
   token: string | null = null;
+  passwordFocused = false;
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -33,11 +35,21 @@ export class ResetPasswordComponent implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
+      console.log('=== URL QUERY PARAMS ===');
+      console.log('All params:', params);
+
       this.email = params['email'] || null;
       this.token = params['token'] || null;
 
+      console.log('Extracted Email:', this.email);
+      console.log('Extracted Token:', this.token);
+      console.log('Token length:', this.token?.length);
+
       if (!this.email || !this.token) {
         this.errorMessage = 'Invalid reset link. Missing email or token.';
+        console.error('❌ Missing email or token in URL');
+      } else {
+        console.log('✅ Email and token successfully extracted from URL');
       }
       this.cdr.detectChanges();
     });
@@ -70,12 +82,21 @@ export class ResetPasswordComponent implements OnInit {
       newPassword: this.form.value.newPassword
     };
 
-    console.log('Sending reset password request with payload:', payload);
+    console.log('=== RESET PASSWORD DEBUG ===');
+    console.log('Email from URL:', this.email);
+    console.log('Token from URL:', this.token);
+    console.log('New Password:', this.form.value.newPassword);
+    console.log('Complete Payload:', JSON.stringify(payload, null, 2));
+    console.log('Endpoint:', 'https://localhost:44316/api/Account/ResetPassword');
 
-    this.http.post('https://localhost:44316/api/Account/ResetPassword', payload)
-      .subscribe({
+    this.http.post('https://localhost:44316/api/Account/ResetPassword', payload, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).subscribe({
         next: (res: any) => {
           this.isLoading = false;
+          console.log('✅ SUCCESS Response:', res);
           this.successMessage = res?.message || 'Password changed successfully. You can now log in.';
           this.cdr.detectChanges();
 
@@ -87,9 +108,12 @@ export class ResetPasswordComponent implements OnInit {
         },
         error: (err: any) => {
           this.isLoading = false;
-          console.error('Reset password error:', err);
-          console.error('Error details:', err.error);
-          
+          console.error('❌ ERROR Response:', err);
+          console.error('Status:', err.status);
+          console.error('Status Text:', err.statusText);
+          console.error('Error Body:', err.error);
+          console.error('Full Error Object:', JSON.stringify(err, null, 2));
+
           if (err?.error?.message) {
             this.errorMessage = err.error.message;
           } else if (err?.error?.errors) {
@@ -101,9 +125,9 @@ export class ResetPasswordComponent implements OnInit {
             // Try to display any error text from the response
             this.errorMessage = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
           } else if (err.status === 0) {
-            this.errorMessage = 'Unable to connect to server. Please try again later.';
+            this.errorMessage = 'Unable to connect to server. Please check if the backend is running.';
           } else {
-            this.errorMessage = `Unable to reset password. Server returned: ${err.status} ${err.statusText}`;
+            this.errorMessage = `Unable to reset password. Status: ${err.status} - ${err.statusText || 'Unknown error'}`;
           }
           this.cdr.detectChanges();
         }
