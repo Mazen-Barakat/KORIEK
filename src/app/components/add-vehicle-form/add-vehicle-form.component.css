@@ -90,6 +90,68 @@
   position: static;
 }
 
+/* Combobox (custom dropdown suggestions) */
+.combobox { position: relative; }
+.combobox input {
+  padding-right: 40px; /* space for arrow */
+  cursor: text;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.combobox input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.combobox::after {
+  content: '';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #4b5563; /* gray similar to icons */
+  pointer-events: none;
+  opacity: 0.8;
+}
+.combo-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #f3f4f6; /* match select background */
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  max-height: 220px;
+  overflow: auto;
+  z-index: 1200;
+  padding: 8px; /* give a small gray surround like native select */
+}
+.combo-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #111827;
+  background: white; /* items have white background to match native select items */
+  margin: 4px 0; /* spacing to show the gray surround */
+  border-radius: 6px;
+}
+.combo-item:hover, .combo-item.highlight {
+  background-color: #e5e7eb; /* light hover matching other selects */
+}
+
+/* scrollbar styling to match the compact look */
+.combo-list::-webkit-scrollbar {
+  width: 8px;
+}
+.combo-list::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 8px;
+}
+
 .form-group select:focus {
   outline: none;
   background-color: #e5e7eb;

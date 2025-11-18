@@ -1,0 +1,34 @@
+<div class="vehicle-info-section vertical-list">
+  <h2>Vehicle Information</h2>
+  
+  <div *ngIf="loading" class="loading-state">
+    <p>Loading vehicle information...</p>
+  </div>
+
+  <div *ngIf="errorMessage && !loading" class="error-state">
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <div *ngIf="vehicleInfo && !loading" class="info-list">
+    <div class="info-row">
+      <label>Make</label>
+      <p>{{ vehicleInfo.make }}</p>
+    </div>
+    <div class="info-row">
+      <label>Model</label>
+      <p>{{ vehicleInfo.model }}</p>
+    </div>
+    <div class="info-row">
+      <label>Year</label>
+      <p>{{ vehicleInfo.year }}</p>
+    </div>
+    <div class="info-row">
+      <label>License Plate</label>
+      <p>{{ vehicleInfo.licensePlate }}</p>
+    </div>
+    <div class="info-row">
+      <label>Engine Capacity</label>
+      <p>{{ vehicleInfo.engineCapacity }}</p>
+    </div>
+  </div>
+</div>

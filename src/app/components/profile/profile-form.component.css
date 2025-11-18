@@ -129,10 +129,11 @@
 }
 
 .edit-button:hover {
-  background-color: #3498db;
+  background-color: #395F7D;
+  border-color: #395F7D;
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 4px 12px rgba(57, 95, 125, 0.22);
 }
 
 .edit-button.active {
@@ -142,8 +143,8 @@
 }
 
 .edit-button.active:hover {
-  background-color: #c0392b;
-  border-color: #c0392b;
+  background-color: #395F7D;
+  border-color: #395F7D;
 }
 
 /* Form Fields Grid */
