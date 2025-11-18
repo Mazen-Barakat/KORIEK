@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -10,7 +10,7 @@ declare const google: any;
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, NgIf, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -19,6 +19,11 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  selectedRole: string = '';
+  showPassword = false;
+  showSuccessPopup = false;
+  rememberMe = false;
+  focusedField: string = '';
   googleClientId = '27204507213-enqrb3ke4kalsgaifbhebtkfpdagmapv.apps.googleusercontent.com';
 
   constructor(
@@ -31,18 +36,28 @@ export class LoginComponent implements OnInit {
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
+      rememberMe: [false]
     });
   }
 
   ngOnInit() {
-    // Check for email confirmation success
+    // Read role from query params
     this.route.queryParams.subscribe(params => {
+      this.selectedRole = params['role'] || '';
+
+      // Redirect to role selection if no role provided
+      if (!this.selectedRole) {
+        this.router.navigate(['/select-role']);
+        return;
+      }
+
+      // Check for email confirmation success
       if (params['confirmed'] === 'true') {
         this.successMessage = 'Email confirmed successfully! You can now log in.';
       }
     });
-    
+
     this.loadGoogleSdk();
   }
 
@@ -88,7 +103,7 @@ export class LoginComponent implements OnInit {
         next: (response: any) => {
           console.log('Login response:', response);
           this.isLoading = false;
-          
+
           // Check if the response indicates success
           if (response.success === true || response.success === 'true') {
             // Store the token using AuthService
@@ -97,18 +112,27 @@ export class LoginComponent implements OnInit {
             } else if (response.token) {
               this.authService.saveToken(response.token);
             }
-            
-            // Store user information if provided
-            if (response.data && response.data.user) {
-              localStorage.setItem('user', JSON.stringify(response.data.user));
+
+            // Store user information using AuthService
+            if (response.data) {
+              this.authService.saveUser(response.data);
             } else if (response.user) {
-              localStorage.setItem('user', JSON.stringify(response.user));
+              this.authService.saveUser(response.user);
             }
-            
+
+            // Handle Remember Me token storage
+            this.handleRememberMe(response);
+
             this.successMessage = response.message || 'Login successful! Redirecting...';
-            
-            // Redirect to my-vehicles page immediately
-            this.router.navigate(['/my-vehicles']);
+
+            // Show success popup
+            this.showSuccessPopup = true;
+            this.cdr.detectChanges();
+
+            // Redirect to my-vehicles page after 1.5 seconds
+            setTimeout(() => {
+              this.router.navigate(['/my-vehicles']);
+            }, 1500);
           } else {
             // Handle unsuccessful response (success: false)
             this.isLoading = false;
@@ -119,7 +143,7 @@ export class LoginComponent implements OnInit {
         error: (error: any) => {
           console.log('Login error:', error);
           this.isLoading = false;
-          
+
           // Check for CORS or network errors
           if (error.status === 0) {
             this.errorMessage = 'Unable to connect to server. Please check if the backend is running and CORS is configured properly.';
@@ -135,10 +159,18 @@ export class LoginComponent implements OnInit {
           } else {
             this.errorMessage = `An error occurred during login. Please try again.`;
           }
-          
+
           this.cdr.detectChanges(); // Force UI update
         }
       });
+  }
+
+  goBack() {
+    this.router.navigate(['/select-role']);
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 
   onForgetPassword() {
@@ -178,8 +210,55 @@ export class LoginComponent implements OnInit {
     return !!(field && field.hasError(errorType) && (field.dirty || field.touched));
   }
 
+  // Check if field is valid and touched
+  isFieldValid(fieldName: string): boolean {
+    const field = this.loginForm.get(fieldName);
+    return !!(field && field.valid && (field.dirty || field.touched));
+  }
+
+  // Track focused field
+  onFieldFocus(fieldName: string): void {
+    this.focusedField = fieldName;
+  }
+
+  onFieldBlur(): void {
+    this.focusedField = '';
+  }
+
+  // Check if field has value
+  hasValue(fieldName: string): boolean {
+    const field = this.loginForm.get(fieldName);
+    return !!(field && field.value);
+  }
+
+  // Toggle Remember Me
+  toggleRememberMe(): void {
+    this.rememberMe = !this.rememberMe;
+    this.loginForm.patchValue({ rememberMe: this.rememberMe });
+  }
+
+  // Handle Remember Me token storage
+  private handleRememberMe(response: any): void {
+    if (this.rememberMe && response.data) {
+      // Store refresh token if Remember Me is enabled
+      if (response.data.refreshToken) {
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+      }
+      if (response.data.userId || response.data.id) {
+        localStorage.setItem('userId', response.data.userId || response.data.id);
+      }
+    }
+  }
+
   // Login with Google
   loginWithGoogle() {
+    // Validate that role is selected
+    if (!this.selectedRole) {
+      this.errorMessage = 'Please select a role first';
+      this.cdr.detectChanges();
+      return;
+    }
+
     try {
       google.accounts.id.renderButton(
         document.createElement('div'),
@@ -250,7 +329,7 @@ export class LoginComponent implements OnInit {
 
     const payload = {
       idToken: idToken,
-      role: 'CAROWNER'
+      role: this.selectedRole
     };
 
     console.log('Sending Google login request with payload:', payload);
@@ -269,11 +348,11 @@ export class LoginComponent implements OnInit {
               this.authService.saveToken(res.token);
             }
 
-            // Store user information if provided
-            if (res.data && res.data.user) {
-              localStorage.setItem('user', JSON.stringify(res.data.user));
+            // Store user information using AuthService
+            if (res.data) {
+              this.authService.saveUser(res.data);
             } else if (res.user) {
-              localStorage.setItem('user', JSON.stringify(res.user));
+              this.authService.saveUser(res.user);
             }
 
             this.successMessage = res.message || 'Login successful! Redirecting...';

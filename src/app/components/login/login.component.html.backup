@@ -1,0 +1,145 @@
+<div class="login-container">
+  <div class="login-card">
+    <!-- Back Button -->
+    <button type="button" class="back-btn" (click)="goBack()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back
+    </button>
+
+    <h2>Welcome Back</h2>
+    <p class="subtitle">Log in to your account</p>
+
+    <!-- Role Badge with Spinning Animation -->
+    <div *ngIf="selectedRole" class="role-badge">
+      <div class="role-badge-content">
+        <div class="spinner-container" [class.spinning]="isLoading">
+          <div class="spinner-ring"></div>
+          <div class="role-icon-wrapper">
+            <svg *ngIf="selectedRole === 'CAROWNER'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="role-icon car-icon">
+              <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+            </svg>
+            <svg *ngIf="selectedRole === 'WORKSHOP'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="role-icon">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+        </div>
+        <span class="role-text">
+          <span>Logging in as:</span>
+          <strong>{{ selectedRole === 'CAROWNER' ? 'Car Owner' : 'Workshop' }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="Enter your email"
+          [class.error]="hasError('email', 'required') || hasError('email', 'email')"
+        />
+        <span *ngIf="hasError('email', 'required')" class="error-message">Email is required</span>
+        <span *ngIf="hasError('email', 'email')" class="error-message">Please enter a valid email</span>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-input-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            placeholder="Enter your password"
+            [class.error]="hasError('password', 'required')"
+          />
+          <button type="button" class="password-toggle" (click)="togglePasswordVisibility()" tabindex="-1">
+            <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+        <span *ngIf="hasError('password', 'required')" class="error-message">Password is required</span>
+      </div>
+
+      <!-- Forget Password Button -->
+      <div class="form-group">
+        <button
+          type="button"
+          class="forget-password-btn"
+          (click)="onForgetPassword()"
+        >
+          Forgot Password?
+        </button>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="submit-btn"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">Log In</span>
+        <span *ngIf="isLoading">Logging in...</span>
+      </button>
+
+      <!-- Signup Link -->
+      <p class="signup-link">
+        Don't have an account? <a [routerLink]="['/signup']" [queryParams]="{role: selectedRole}">Sign up</a>
+      </p>
+    </form>
+
+    <!-- Divider -->
+    <div class="divider">
+      <span>Or</span>
+    </div>
+
+    <!-- Google Sign-In Button -->
+    <button
+      type="button"
+      class="google-btn"
+      (click)="loginWithGoogle()"
+      [disabled]="!selectedRole || isLoading"
+    >
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234285F4' d='M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z'/%3E%3Cpath fill='%2334A853' d='M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z'/%3E%3Cpath fill='%23FBBC05' d='M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z'/%3E%3Cpath fill='%23EA4335' d='M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z'/%3E%3C/svg%3E"
+        alt="Google"
+        class="google-icon"
+      />
+      <span *ngIf="!isLoading">Continue with Google</span>
+      <span *ngIf="isLoading">Signing in...</span>
+    </button>
+
+    <!-- Hidden container for Google SDK -->
+    <div id="google-signin-button" style="display: none;"></div>
+  </div>
+</div>
+
+<!-- Success Popup -->
+<div *ngIf="showSuccessPopup" class="success-popup-overlay">
+  <div class="success-popup">
+    <div class="success-checkmark">
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="36" fill="none" stroke="#6BCF7F" stroke-width="4" class="check-circle"/>
+        <path d="M 25 40 L 35 50 L 55 30" fill="none" stroke="#6BCF7F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" class="check-path"/>
+      </svg>
+    </div>
+    <h3>Welcome Back! 🎉</h3>
+    <p>{{ successMessage }}</p>
+  </div>
+</div>

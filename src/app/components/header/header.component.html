@@ -59,10 +59,10 @@
       <!-- Show Log In, Sign Up and Get the App buttons only when user is NOT authenticated -->
       <ng-container *ngIf="!isAuthenticated">
         <!-- Log In Button -->
-        <a routerLink="/login" class="btn btn-login">Log In</a>
+        <a routerLink="/select-role" class="btn btn-login">Log In</a>
 
         <!-- Sign Up Button -->
-        <a routerLink="/signup" class="btn btn-signup">Sign Up</a>
+        <a routerLink="/select-role" class="btn btn-signup">Sign Up</a>
         
         <!-- Get the App Button (only on landing page) -->
         <button *ngIf="isLandingPage" (click)="scrollToApp()" class="btn btn-app">
