@@ -101,25 +101,22 @@
 }
 
 .car-image-section {
-  background-color: white;
-  border: 1px solid #e5e7eb;
+  background-color: #FBFBFB;
+  border: 1px solid #FBFBFB;
   border-radius: 12px;
-  padding: 0.75rem;
+  padding: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  /* make the image area taller to match screenshot */
   height: 360px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
 .car-image {
   width: 100%;
   height: 100%;
-  border-radius: 8px;
   object-fit: cover;
   display: block;
+  transform: scale(1.18);
+  transform-origin: center center;
 }
 
 .vehicle-info-section {

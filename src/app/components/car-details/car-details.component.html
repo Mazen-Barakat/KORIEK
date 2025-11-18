@@ -36,39 +36,7 @@
       </div>
 
       <!-- Vehicle Information (vertical list) -->
-      <div class="vehicle-info-section vertical-list">
-        <h2>Vehicle Information</h2>
-        <div class="info-list">
-          <div class="info-row">
-            <label>Make</label>
-            <p>{{ vehicle.make }}</p>
-          </div>
-          <div class="info-row">
-            <label>Model</label>
-            <p>{{ vehicle.model }}</p>
-          </div>
-          <div class="info-row">
-            <label>Year</label>
-            <p>{{ vehicle.year }}</p>
-          </div>
-          <div class="info-row">
-            <label>Color</label>
-            <p>{{ vehicle.color }}</p>
-          </div>
-          <div class="info-row">
-            <label>License Plate</label>
-            <p>{{ vehicle.licensePlate }}</p>
-          </div>
-          <div class="info-row">
-            <label>VIN</label>
-            <p>{{ vehicle.vin }}</p>
-          </div>
-          <div class="info-row">
-            <label>Engine Type</label>
-            <p>{{ vehicle.engineType }}</p>
-          </div>
-        </div>
-      </div>
+      <app-vehicle-info [vehicleId]="vehicleId!"></app-vehicle-info>
     </div>
 
     <!-- Right Column: Maintenance Information and Condition Indicators -->

@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AddVehicleFormComponent } from '../add-vehicle-form/add-vehicle-form.component';
@@ -86,12 +86,9 @@ export class MyVehiclesComponent implements OnInit {
 
   constructor(private router: Router, private carsService: CarsService, private cdr: ChangeDetectorRef, private carExpenseService: CarExpenseService) {}
 
-  @HostListener('document:keydown.escape')
-  onEscapeKey() {
-    if (this.isAddVehicleModalOpen) {
-      this.closeAddVehicleModal();
-    }
-  }
+  // Note: removed Escape key handler to prevent closing the Add Vehicle modal
+  // via the Escape key. The modal will now only close when the user clicks
+  // the explicit close button (X) in the form.
 
   get filteredExpenses(): Expense[] {
     if (this.selectedCarId === null) {
@@ -290,7 +287,6 @@ export class MyVehiclesComponent implements OnInit {
   onVehicleSaved(vehicleData: any): void {
     // Reload vehicles from backend after successful save
     this.loadVehiclesFromBackend();
-    this.closeAddVehicleModal();
   }
 
   getMaintenanceColor(remainingKm: number): string {

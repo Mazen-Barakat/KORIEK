@@ -17,22 +17,39 @@
   <form [formGroup]="addVehicleForm" (ngSubmit)="onSubmit()">
     <!-- Row 1: Make and Model -->
     <div class="form-row">
-      <div class="form-group">
+      <div class="form-group combobox">
         <label for="make">Make <span class="required-star">*</span></label>
-        <select id="make" formControlName="make">
-          <option value="" disabled>-- Select Make --</option>
-          <option *ngFor="let m of makes" [value]="m.make">{{ m.make }}</option>
-        </select>
+        <input id="make" type="text" formControlName="make" placeholder="Select or type make"
+          (input)="onComboInput('make',$event)" (focus)="onComboFocus('make')" (blur)="onComboBlur('make')" (keydown)="onComboKeyDown($event,'make')">
+
+        <div *ngIf="showMakeList && filteredMakes.length" class="combo-list">
+          <div *ngFor="let opt of filteredMakes; let i = index"
+               class="combo-item"
+               [class.highlight]="i === highlightedMakeIndex"
+               (mousedown)="selectComboSuggestion('make', opt)">
+            {{ opt }}
+          </div>
+        </div>
+
         <div class="error" *ngIf="addVehicleForm.get('make')?.invalid && (addVehicleForm.get('make')?.dirty || addVehicleForm.get('make')?.touched)">
           <div *ngIf="addVehicleForm.get('make')?.errors?.['required']">Make is required.</div>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group combobox">
         <label for="model">Model <span class="required-star">*</span></label>
-        <select id="model" formControlName="model" [disabled]="!modelsForSelectedMake.length">
-          <option value="" disabled>-- Select Model --</option>
-          <option *ngFor="let mm of modelsForSelectedMake" [value]="mm">{{ mm }}</option>
-        </select>
+        <input id="model" type="text" formControlName="model" placeholder="Select or type model"
+          [disabled]="!modelsForSelectedMake.length"
+          (input)="onComboInput('model',$event)" (focus)="onComboFocus('model')" (blur)="onComboBlur('model')" (keydown)="onComboKeyDown($event,'model')">
+
+        <div *ngIf="showModelList && filteredModels.length" class="combo-list">
+          <div *ngFor="let opt of filteredModels; let i = index"
+               class="combo-item"
+               [class.highlight]="i === highlightedModelIndex"
+               (mousedown)="selectComboSuggestion('model', opt)">
+            {{ opt }}
+          </div>
+        </div>
+
         <div class="error" *ngIf="addVehicleForm.get('model')?.invalid && (addVehicleForm.get('model')?.dirty || addVehicleForm.get('model')?.touched)">
           <div *ngIf="addVehicleForm.get('model')?.errors?.['required']">Model is required.</div>
         </div>
@@ -41,19 +58,38 @@
 
     <!-- Row 2: Year and Engine Capacity -->
     <div class="form-row">
-      <div class="form-group">
+      <div class="form-group combobox">
         <label for="year">Year <span class="required-star">*</span></label>
-        <select id="year" formControlName="year">
-          <option value="" disabled>-- Select Year --</option>
-          <option *ngFor="let year of years" [value]="year">{{ year }}</option>
-        </select>
+        <input id="year" type="text" formControlName="year" placeholder="Select or type year"
+          (input)="onComboInput('year',$event)" (focus)="onComboFocus('year')" (blur)="onComboBlur('year')" (keydown)="onComboKeyDown($event,'year')">
+
+        <div *ngIf="showYearList && filteredYears.length" class="combo-list">
+          <div *ngFor="let opt of filteredYears; let i = index"
+               class="combo-item"
+               [class.highlight]="i === highlightedYearIndex"
+               (mousedown)="selectComboSuggestion('year', opt)">
+            {{ opt }}
+          </div>
+        </div>
+
         <div class="error" *ngIf="addVehicleForm.get('year')?.invalid && (addVehicleForm.get('year')?.dirty || addVehicleForm.get('year')?.touched)">
           <div *ngIf="addVehicleForm.get('year')?.errors?.['required']">Year is required.</div>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group combobox">
         <label for="engineCapacity">Engine Capacity <span class="required-star">*</span></label>
-        <input type="number" step="0.1" min="0.1" id="engineCapacity" formControlName="engineCapacity" placeholder="e.g., 2.0">
+        <input id="engineCapacity" type="text" formControlName="engineCapacity" placeholder="Enter or select capacity (e.g., 1500 CC or 2.0)"
+          (input)="onEngineInput($event)" (focus)="onEngineFocus()" (blur)="onEngineBlur()" (keydown)="onEngineKeyDown($event)">
+
+        <div *ngIf="showEngineList && filteredEngineCapacities.length" class="combo-list">
+          <div *ngFor="let opt of filteredEngineCapacities; let i = index"
+               class="combo-item"
+               [class.highlight]="i === highlightedIndex"
+               (mousedown)="selectEngineSuggestion(opt)">
+            {{ opt }}
+          </div>
+        </div>
+
         <div class="error" *ngIf="addVehicleForm.get('engineCapacity')?.invalid && (addVehicleForm.get('engineCapacity')?.dirty || addVehicleForm.get('engineCapacity')?.touched)">
           <div *ngIf="addVehicleForm.get('engineCapacity')?.errors?.['required']">Engine capacity is required.</div>
           <div *ngIf="addVehicleForm.get('engineCapacity')?.errors?.['engineInvalid']">EngineCapacity must be greater than 0.</div>
@@ -63,22 +99,38 @@
 
     <!-- Row 3: Transmission Type and Fuel Type -->
     <div class="form-row">
-      <div class="form-group">
+      <div class="form-group combobox">
         <label for="transmissionType">Transmission Type <span class="required-star">*</span></label>
-        <select id="transmissionType" formControlName="transmissionType">
-          <option value="" disabled>-- Select Transmission --</option>
-          <option *ngFor="let type of transmissionTypes" [value]="type">{{ type }}</option>
-        </select>
+        <input id="transmissionType" type="text" formControlName="transmissionType" placeholder="Select or type transmission"
+          (input)="onComboInput('transmissionType',$event)" (focus)="onComboFocus('transmissionType')" (blur)="onComboBlur('transmissionType')" (keydown)="onComboKeyDown($event,'transmissionType')">
+
+        <div *ngIf="showTransmissionList && filteredTransmissions.length" class="combo-list">
+          <div *ngFor="let opt of filteredTransmissions; let i = index"
+               class="combo-item"
+               [class.highlight]="i === highlightedTransmissionIndex"
+               (mousedown)="selectComboSuggestion('transmissionType', opt)">
+            {{ opt }}
+          </div>
+        </div>
+
         <div class="error" *ngIf="addVehicleForm.get('transmissionType')?.invalid && (addVehicleForm.get('transmissionType')?.dirty || addVehicleForm.get('transmissionType')?.touched)">
           <div *ngIf="addVehicleForm.get('transmissionType')?.errors?.['required']">Transmission Type is required.</div>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group combobox">
         <label for="fuelType">Fuel Type <span class="required-star">*</span></label>
-        <select id="fuelType" formControlName="fuelType">
-          <option value="" disabled>-- Select Fuel Type --</option>
-          <option *ngFor="let fuel of fuelTypes" [value]="fuel">{{ fuel }}</option>
-        </select>
+        <input id="fuelType" type="text" formControlName="fuelType" placeholder="Select or type fuel"
+          (input)="onComboInput('fuelType',$event)" (focus)="onComboFocus('fuelType')" (blur)="onComboBlur('fuelType')" (keydown)="onComboKeyDown($event,'fuelType')">
+
+        <div *ngIf="showFuelList && filteredFuels.length" class="combo-list">
+          <div *ngFor="let opt of filteredFuels; let i = index"
+               class="combo-item"
+               [class.highlight]="i === highlightedFuelIndex"
+               (mousedown)="selectComboSuggestion('fuelType', opt)">
+            {{ opt }}
+          </div>
+        </div>
+
         <div class="error" *ngIf="addVehicleForm.get('fuelType')?.invalid && (addVehicleForm.get('fuelType')?.dirty || addVehicleForm.get('fuelType')?.touched)">
           <div *ngIf="addVehicleForm.get('fuelType')?.errors?.['required']">Fuel Type is required.</div>
         </div>

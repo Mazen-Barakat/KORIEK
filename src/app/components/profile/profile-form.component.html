@@ -30,7 +30,7 @@
         <!-- Header with Edit Button -->
         <div class="form-header">
           <h2 class="form-title">Profile Information</h2>
-          <button class="edit-button" (click)="toggleEditMode()" [class.active]="isEditMode">
+          <button type="button" class="edit-button" (click)="$event.preventDefault(); toggleEditMode()" [class.active]="isEditMode">
             {{ isEditMode ? 'Cancel' : 'Edit' }}
           </button>
         </div>
@@ -194,7 +194,8 @@
         <!-- Action Buttons -->
         <div class="button-section" *ngIf="isEditMode">
           <button
-            (click)="submitForm()"
+            type="button"
+            (click)="$event.preventDefault(); submitForm()"
             [disabled]="isSaving || isLoading"
             class="save-button"
             [class.loading]="isSaving"
