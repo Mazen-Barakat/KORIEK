@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { VehicleInfoComponent } from './vehicle-info/vehicle-info.component';
 
 interface Vehicle {
   id: string;
@@ -32,7 +33,7 @@ interface ConditionIndicator {
 @Component({
   selector: 'app-car-details',
   standalone: true,
-  imports: [CommonModule, NgIf, NgForOf],
+  imports: [CommonModule, NgIf, NgForOf, VehicleInfoComponent],
   templateUrl: './car-details.component.html',
   styleUrls: ['./car-details.component.css']
 })
@@ -64,7 +65,7 @@ export class CarDetailsComponent implements OnInit {
       vin: 'THGB541A0M100196',
       engineType: '2.5L 4-Cylinder',
       color: 'Pearl White',
-      imageUrl: '/assets/images/car-placeholder.jpg',
+      imageUrl: '/Assets/images/Generic-Car2.jpg',
       lastMaintenanceDate: '10/28/2025',
       nextMaintenanceDate: '11/25/2025',
       nextMaintenanceMileage: 50000,

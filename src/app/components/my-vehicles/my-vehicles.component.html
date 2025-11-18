@@ -15,7 +15,6 @@
     <div class="vehicles-section">
       <div class="section-header">
         <div class="title-section">
-          <span class="icon">🚗</span>
           <div>
             <h1>My Vehicles</h1>
             <p class="subtitle">Monitor and manage your cars</p>
@@ -315,7 +314,7 @@
   </div>
 </div>
 
-<div *ngIf="isAddVehicleModalOpen" class="modal-overlay" (click)="closeAddVehicleModal()">
+<div *ngIf="isAddVehicleModalOpen" class="modal-overlay">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <app-add-vehicle-form 
       (close)="closeAddVehicleModal()" 
