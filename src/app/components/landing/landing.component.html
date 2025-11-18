@@ -1,0 +1,558 @@
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-container">
+    <div class="hero-content">
+      <!-- Badge -->
+      <div class="hero-badge">
+        <svg class="badge-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1L10.472 5.99598L16 6.80902L12 10.708L12.944 16.25L8 13.67L3.056 16.25L4 10.708L0 6.80902L5.528 5.99598L8 1Z" fill="currentColor"/>
+        </svg>
+        <span>Egypt's Most Trusted Automotive Service Marketplace</span>
+      </div>
+
+      <!-- Main Heading -->
+      <h1 class="hero-title">
+        Egypt's Most Trusted<br>
+        Automotive Service<br>
+        Marketplace
+      </h1>
+
+      <!-- Subheading with red accent -->
+      <h2 class="hero-subtitle-accent">
+        Automotive Service
+      </h2>
+      <h2 class="hero-subtitle">
+        Marketplace
+      </h2>
+
+      <!-- Description -->
+      <p class="hero-description">
+        Connect with verified workshops and mechanics. Get transparent pricing, instant booking, and guaranteed workmanship.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="hero-buttons">
+        <a routerLink="/signup" class="btn btn-primary">
+          Get Started
+          <svg class="btn-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <button class="btn btn-secondary" (click)="scrollToSection('about')">
+          <svg class="play-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M5 3L12 8L5 13V3Z" fill="currentColor"/>
+          </svg>
+          Learn More
+        </button>
+      </div>
+
+      <!-- Social Proof -->
+      <div class="hero-social-proof">
+        <div class="user-avatars">
+          <div class="avatar"></div>
+          <div class="avatar"></div>
+          <div class="avatar"></div>
+        </div>
+        <div class="social-proof-text">
+          <span class="users-count">10,000+</span>
+          <span class="users-label">Happy Users</span>
+        </div>
+        <div class="rating">
+          <svg class="star-icon" width="16" height="16" viewBox="0 0 16 16" fill="#ef4444">
+            <path d="M8 1L10.472 5.99598L16 6.80902L12 10.708L12.944 16.25L8 13.67L3.056 16.25L4 10.708L0 6.80902L5.528 5.99598L8 1Z"/>
+          </svg>
+          <span class="rating-value">4.8/5</span>
+          <span class="rating-label">Rating</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Image -->
+    <div class="hero-image">
+      <div class="hero-image-card">
+        <img src="/Assets/images/mechanic.png" alt="Professional Mechanic" class="mechanic-image">
+        
+        <!-- Floating badges -->
+        <div class="floating-badge badge-verified">
+          <svg class="badge-check-icon" width="20" height="20" viewBox="0 0 20 20" fill="#10b981">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+          </svg>
+          <div>
+            <div class="badge-title">Verified</div>
+            <div class="badge-subtitle">500+ Workshops</div>
+          </div>
+        </div>
+
+        <div class="floating-badge badge-fast">
+          <svg class="badge-clock-icon" width="20" height="20" viewBox="0 0 20 20" fill="#ef4444">
+            <circle cx="10" cy="10" r="8" fill="currentColor"/>
+            <path d="M10 5v5l3 3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <div class="badge-title">Fast</div>
+            <div class="badge-subtitle">Instant Booking</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="scroll-indicator">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M12 5v14m0 0l-7-7m7 7l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+  <div class="stats-container">
+    <div class="stat-card" *ngFor="let stat of stats">
+      <div class="stat-icon" [class]="'icon-' + stat.icon"></div>
+      <div class="stat-value">{{ stat.value }}</div>
+      <div class="stat-label">{{ stat.label }}</div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features-section">
+  <div class="section-container">
+    <!-- Section Badge -->
+    <div class="section-badge">Why Choose Korek?</div>
+    
+    <!-- Section Title -->
+    <h2 class="section-title">Why Choose Korek?</h2>
+    
+    <!-- Section Description -->
+    <p class="section-description">
+      We make car servicing simple, transparent, and trustworthy
+    </p>
+
+    <!-- Features with Car Animation -->
+    <div class="features-car-container">
+      <!-- Road Track -->
+      <div class="road-track">
+        <div class="road-line"></div>
+        <div class="road-line"></div>
+        <div class="road-line"></div>
+      </div>
+
+      <!-- Car Icon -->
+      <div class="car-icon">
+        <svg viewBox="0 0 220 84" class="car-svg">
+          <defs>
+            <linearGradient id="modernBody" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#f97316" />
+              <stop offset="70%" stop-color="#fb923c" />
+              <stop offset="100%" stop-color="#ea580c" />
+            </linearGradient>
+            <linearGradient id="modernAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#facc15" />
+              <stop offset="100%" stop-color="#fb923c" />
+            </linearGradient>
+            <radialGradient id="modernWheel" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#0f172a" />
+              <stop offset="70%" stop-color="#1f2937" />
+              <stop offset="100%" stop-color="#111827" />
+            </radialGradient>
+          </defs>
+
+          <ellipse cx="110" cy="80" rx="70" ry="8" fill="rgba(15, 23, 42, 0.4)" />
+
+          <path d="M 20 62 L 32 44 L 64 32 L 112 28 L 158 32 L 192 50 L 206 62 L 210 64 L 210 70 L 190 74 L 30 74 Z"
+            fill="url(#modernBody)" stroke="#c2410c" stroke-width="3" />
+
+          <path d="M 64 32 L 92 26 L 148 26 L 174 36 L 188 52" fill="none" stroke="#b45309" stroke-width="3" />
+
+          <path d="M 92 32 L 122 32 L 138 36 L 162 42" fill="url(#modernAccent)" stroke="#b45309" stroke-width="1.8" />
+          <path d="M 110 40 L 118 40 L 126 36" fill="url(#modernAccent)" stroke="#b45309" stroke-width="1.8" />
+
+          <rect x="70" y="44" width="50" height="20" rx="10" fill="#0f172a" opacity="0.25" />
+
+          <circle cx="54" cy="66" r="14" fill="url(#modernWheel)" stroke="#0f172a" stroke-width="2" />
+          <circle cx="54" cy="66" r="7" fill="#1e293b" />
+          <circle cx="166" cy="66" r="14" fill="url(#modernWheel)" stroke="#0f172a" stroke-width="2" />
+          <circle cx="166" cy="66" r="7" fill="#1e293b" />
+          <line x1="54" y1="54" x2="54" y2="78" stroke="#475569" stroke-width="1" />
+          <line x1="46" y1="66" x2="62" y2="66" stroke="#475569" stroke-width="1" />
+          <line x1="166" y1="54" x2="166" y2="78" stroke="#475569" stroke-width="1" />
+          <line x1="158" y1="66" x2="172" y2="66" stroke="#475569" stroke-width="1" />
+
+          <rect x="188" y="60" width="12" height="6" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
+          <rect x="12" y="56" width="10" height="8" rx="3" fill="#f87171" />
+        </svg>
+      </div>
+
+      <!-- Feature Stations -->
+      <div class="features-stations">
+        <div 
+          *ngFor="let feature of features; let i = index" 
+          class="feature-station"
+          [class.active]="i === currentFeatureIndex"
+          [class.visited]="i < currentFeatureIndex"
+          (click)="goToFeature(i)"
+          (mouseenter)="pauseAutoPlay()"
+          (mouseleave)="resumeAutoPlay()">
+          
+          <!-- Station Marker -->
+          <div class="station-marker">
+            <div class="marker-pulse"></div>
+            <div class="marker-icon">
+              <img [src]="feature.imagePath" [alt]="feature.title" class="marker-img">
+            </div>
+          </div>
+
+          <!-- Station Info -->
+          <div class="station-info">
+            <div class="station-number">{{ i + 1 }}</div>
+            <h3 class="station-title">{{ feature.title }}</h3>
+            <p class="station-description">{{ feature.description }}</p>
+          </div>
+
+          <!-- Progress Line -->
+          <div class="progress-line" *ngIf="i < features.length - 1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Details Panel -->
+    <div class="feature-details-panel">
+      <div class="details-content">
+        <div class="details-badge">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 1L10.472 5.99598L16 6.80902L12 10.708L12.944 16.25L8 13.67L3.056 16.25L4 10.708L0 6.80902L5.528 5.99598L8 1Z"/>
+          </svg>
+          Current Feature
+        </div>
+        <h3 class="details-title">{{ features[currentFeatureIndex].title }}</h3>
+        <p class="details-desc">{{ features[currentFeatureIndex].description }}</p>
+        
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="((currentFeatureIndex + 1) / features.length) * 100"></div>
+        </div>
+        <div class="progress-text">{{ currentFeatureIndex + 1 }} of {{ features.length }} features</div>
+      </div>
+    </div>
+
+    <!-- Workshop Owners Section -->
+    <div class="workshop-section">
+      <div class="workshop-content">
+        <!-- Badge -->
+        <div class="workshop-badge">For Workshop Owners</div>
+        
+        <h2 class="workshop-title">For Workshop Owners</h2>
+        
+        <p class="workshop-description">
+          Join hundreds of successful workshops already using Korek to<br>
+          expand their reach and increase revenue.
+        </p>
+
+        <ul class="workshop-benefits">
+          <li *ngFor="let benefit of workshopBenefits">
+            <svg class="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="#ef4444">
+              <circle cx="10" cy="10" r="10" fill="currentColor"/>
+              <path d="M6 10l2.5 2.5L14 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            {{ benefit }}
+          </li>
+        </ul>
+
+        <button class="btn btn-primary">
+          Register Your Workshop
+          <svg class="btn-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="workshop-image">
+        <img src="/Assets/images/professional-mechanic-working-on-the-engine-of-the-car-in-the-garage.png" alt="Workshop" class="workshop-img">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="about-section">
+  <div class="section-container">
+    <!-- Section Badge -->
+    <div class="section-badge">About Korek</div>
+    
+    <!-- Section Title -->
+    <h2 class="section-title">About Korek</h2>
+    
+    <!-- Section Description -->
+    <p class="section-description">
+      Korek (Arabic for "car jack") is revolutionizing Egypt's automotive aftermarket by<br>
+      solving trust, pricing, and convenience problems through technology.
+    </p>
+
+    <!-- About Cards -->
+    <div class="about-cards">
+      <div class="about-card" *ngFor="let card of aboutCards">
+        <div class="about-card-icon" [style.background-color]="card.iconColor"></div>
+        <h3 class="about-card-title">{{ card.title }}</h3>
+        <p class="about-card-description">{{ card.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="testimonials" class="testimonials-section">
+  <div class="testimonials-road">
+    <!-- Section Header -->
+    <div class="testimonials-header">
+      <div class="header-badge">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#ef4444">
+          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+        </svg>
+        <span>Real Stories from Real Drivers</span>
+      </div>
+      <h2 class="section-title">Driving Success Stories</h2>
+      <p class="section-description">See what car owners say about their Korek experience</p>
+    </div>
+
+    <!-- Testimonials Cards -->
+    <div class="testimonials-track">
+      <div class="testimonial-vehicle" *ngFor="let testimonial of testimonials; let i = index">
+        <!-- Speedometer Rating -->
+        <div class="speedometer">
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="25" fill="none" stroke="#e5e7eb" stroke-width="4"/>
+            <circle cx="30" cy="30" r="25" fill="none" stroke="#ef4444" stroke-width="4" 
+                    stroke-dasharray="157" stroke-dashoffset="0" stroke-linecap="round"
+                    transform="rotate(-90 30 30)"/>
+            <text x="30" y="35" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2937">5.0</text>
+          </svg>
+        </div>
+
+        <!-- Dashboard Card -->
+        <div class="dashboard-card">
+          <div class="card-header">
+            <svg class="steering-icon" width="20" height="20" viewBox="0 0 20 20" fill="#ef4444">
+              <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 2a6 6 0 014.472 10H5.528A6 6 0 0110 4zm0 10a2 2 0 100-4 2 2 0 000 4z"/>
+            </svg>
+            <span class="verified-driver">Verified Driver</span>
+          </div>
+
+          <blockquote class="testimonial-quote">
+            {{ testimonial.text }}
+          </blockquote>
+
+          <div class="driver-plate">
+            <div class="plate-info">
+              <div class="driver-avatar">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+                  <path d="M10 10a3 3 0 100-6 3 3 0 000 6zm0 2c-3.33 0-10 1.67-10 5v2h20v-2c0-3.33-6.67-5-10-5z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="driver-name">{{ testimonial.author }}</div>
+                <div class="driver-location">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="#6b7280">
+                    <path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5c-.83 0-1.5-.67-1.5-1.5S5.17 2.5 6 2.5 7.5 3.17 7.5 4 6.83 5.5 6 5.5z"/>
+                  </svg>
+                  {{ testimonial.location }}
+                </div>
+              </div>
+            </div>
+            <div class="car-badge">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="#ef4444">
+                <path d="M4 12l3-3h14l3 3v8H4v-8zm2-1l1.5-1.5h13L22 11H6zm1 3h14v4H7v-4zm2 1v2h2v-2H9zm8 0v2h2v-2h-2z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Road Stats -->
+    <div class="road-stats">
+      <div class="stat-milestone">
+        <div class="milestone-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="#ef4444">
+            <path d="M16 4L8 8v8c0 5 3.5 9.67 8 11 4.5-1.33 8-6 8-11V8l-8-4zm0 2.5l6 3v6.5c0 4-2.67 7.67-6 9-3.33-1.33-6-5-6-9V9.5l6-3z"/>
+          </svg>
+        </div>
+        <div class="milestone-data">
+          <div class="milestone-number">10,000+</div>
+          <div class="milestone-label">Journeys Completed</div>
+        </div>
+      </div>
+      <div class="road-divider"></div>
+      <div class="stat-milestone">
+        <div class="milestone-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="#fbbf24">
+            <path d="M16 4l3.09 6.26L26 11.27l-5 4.87 1.18 6.88L16 19.77l-6.18 3.25L11 16.14l-5-4.87 6.91-1.01L16 4z"/>
+          </svg>
+        </div>
+        <div class="milestone-data">
+          <div class="milestone-number">4.8/5</div>
+          <div class="milestone-label">Driver Rating</div>
+        </div>
+      </div>
+      <div class="road-divider"></div>
+      <div class="stat-milestone">
+        <div class="milestone-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="#10b981">
+            <path d="M16 6a4 4 0 00-4 4v2H8v16h16V12h-4v-2a4 4 0 00-4-4zm0 2a2 2 0 012 2v2h-4v-2a2 2 0 012-2z"/>
+          </svg>
+        </div>
+        <div class="milestone-data">
+          <div class="milestone-number">500+</div>
+          <div class="milestone-label">Trusted Garages</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Section -->
+<section id="faq" class="faq-section">
+  <div class="section-container">
+    <!-- Section Header -->
+    <div class="faq-header">
+      <span class="faq-label">FAQ</span>
+      <h2 class="section-title">Common Questions</h2>
+      <p class="section-description">Everything you need to know about Korek</p>
+    </div>
+
+    <!-- FAQ Grid -->
+    <div class="faq-grid">
+      <div class="faq-card" *ngFor="let faq of faqItems" [class.active]="faq.expanded" (click)="toggleFaq(faq.id)">
+        <div class="faq-card-header">
+          <h3 class="faq-title">{{ faq.question }}</h3>
+          <div class="faq-toggle">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="faq-card-body" *ngIf="faq.expanded">
+          <p>{{ faq.answer }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Support Card -->
+    <div class="support-card">
+      <div class="support-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Need More Help?</h3>
+      <p>Our support team is available 24/7</p>
+      <button class="support-button">Contact Support</button>
+    </div>
+  </div>
+</section>
+
+<!-- App Download Section -->
+<section id="app-section" class="app-section">
+  <div class="app-container">
+    <svg class="phone-icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
+      <rect x="16" y="8" width="32" height="48" rx="4" stroke="white" stroke-width="2"/>
+      <rect x="28" y="50" width="8" height="2" rx="1" fill="white"/>
+    </svg>
+    
+    <h2 class="app-title">Download the Korek App</h2>
+    
+    <p class="app-description">
+      Get the best experience with our mobile app. Book services, track appointments, and<br>
+      manage everything on the go.
+    </p>
+
+    <div class="app-buttons">
+      <button class="app-btn app-store">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+        </svg>
+        <span>App Store</span>
+      </button>
+      <button class="app-btn google-play">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+        </svg>
+        <span>Google Play</span>
+      </button>
+    </div>
+
+    <div class="app-stats">
+      <div class="app-stat">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0L10.472 4.99598L16 5.80902L12 9.708L12.944 15.25L8 12.67L3.056 15.25L4 9.708L0 5.80902L5.528 4.99598L8 0Z"/>
+        </svg>
+        <span>50,000+ Downloads</span>
+      </div>
+      <div class="app-stat">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0L10.472 4.99598L16 5.80902L12 9.708L12.944 15.25L8 12.67L3.056 15.25L4 9.708L0 5.80902L5.528 4.99598L8 0Z"/>
+        </svg>
+        <span>4.8 Rating</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-container">
+    <!-- Footer Main Content -->
+    <div class="footer-main">
+      <!-- Company Info -->
+      <div class="footer-column">
+        <div class="footer-logo">
+          <img src="/Assets/logo.png" alt="Korek Logo" class="footer-logo-img">
+        </div>
+        <p class="footer-tagline">Egypt's largest trusted automotive<br>service marketplace</p>
+        <div class="footer-social">
+          <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="footer-column">
+        <h4 class="footer-title">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a (click)="scrollToSection('about')">About Us</a></li>
+          <li><a (click)="scrollToSection('features')">Features</a></li>
+          <li><a (click)="scrollToSection('testimonials')">Testimonials</a></li>
+          <li><a (click)="scrollToSection('faq')">FAQ</a></li>
+        </ul>
+      </div>
+
+      <!-- For Business -->
+      <div class="footer-column">
+        <h4 class="footer-title">For Business</h4>
+        <ul class="footer-links">
+          <li><a href="#">Register Your Workshop</a></li>
+          <li><a href="#">Partner With Us</a></li>
+          <li><a href="#">Business Solutions</a></li>
+          <li><a href="#">Terms & Conditions</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="footer-column">
+        <h4 class="footer-title">Contact Us</h4>
+        <ul class="footer-contact">
+          <li><span>📞</span> +20 123 456 7890</li>
+          <li><span>✉️</span> info@korek.com</li>
+          <li><span>📍</span> Cairo, Egypt</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <p>© 2025 Korek. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
