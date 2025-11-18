@@ -4,12 +4,6 @@ import { authGuard } from './guards/auth.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/select-role',
-    pathMatch: 'full'
-    loadComponent: () => import('./components/landing/landing.component').then(m => m.LandingComponent)
-  },
-  {
-    path: 'landing',
     loadComponent: () => import('./components/landing/landing.component').then(m => m.LandingComponent)
   },
   {
