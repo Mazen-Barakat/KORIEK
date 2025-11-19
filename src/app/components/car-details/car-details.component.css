@@ -253,7 +253,8 @@
 }
 
 .maintenance-info-section {
-  background: rgba(255, 255, 255, 0.95);\n  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
   border: 1px solid rgba(239,68,68,0.08);
   border-radius: 20px;
   padding: 2rem;

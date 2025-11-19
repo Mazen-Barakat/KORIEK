@@ -1,6 +1,6 @@
 import { Component, OnInit, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { CarsService, MakeModels } from '../../services/cars.service';
 import { map, catchError } from 'rxjs/operators';
@@ -9,7 +9,7 @@ import { of } from 'rxjs';
 @Component({
   selector: 'app-add-vehicle-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, NgIf, NgFor],
   templateUrl: './add-vehicle-form.component.html',
   styleUrls: ['./add-vehicle-form.component.css']
 })
