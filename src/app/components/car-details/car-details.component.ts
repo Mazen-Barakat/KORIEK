@@ -1023,7 +1023,7 @@ export class CarDetailsComponent implements OnInit {
 
   scheduleService(indicator: ConditionIndicator): void {
     if (this.vehicle?.id) {
-      this.router.navigate(['/edit-car', this.vehicle.id], { 
+      this.router.navigate(['/edit-car', this.vehicle.id], {
         fragment: 'condition-indicators'
       });
     }
