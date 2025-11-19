@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 export interface UserProfile {
   id: number;
@@ -27,13 +28,23 @@ export class ProfileService {
   private readonly API_URL = 'https://localhost:44316/api/CarOwnerProfile';
   private readonly BACKEND_BASE_URL = 'https://localhost:44316';
 
+  private profileDataSubject = new BehaviorSubject<{ profilePicture: string | null } | null>(null);
+  public profileData$ = this.profileDataSubject.asObservable();
+
   constructor(private http: HttpClient) {}
 
   /**
    * Fetch user profile data
    */
   getProfile(): Observable<ProfileResponse> {
-    return this.http.get<ProfileResponse>(`${this.API_URL}/profile`);
+    return this.http.get<ProfileResponse>(`${this.API_URL}/profile`).pipe(
+      tap((response) => {
+        if (response.success && response.data) {
+          const fullImageUrl = this.getFullImageUrl(response.data.profileImageUrl);
+          this.profileDataSubject.next({ profilePicture: fullImageUrl });
+        }
+      })
+    );
   }
 
   /**
@@ -57,7 +68,14 @@ export class ProfileService {
       formData.append('profileImage', profileImage, profileImage.name);
     }
 
-    return this.http.put<ProfileResponse>(`${this.API_URL}/`, formData);
+    return this.http.put<ProfileResponse>(`${this.API_URL}/`, formData).pipe(
+      tap((response) => {
+        if (response.success && response.data) {
+          const fullImageUrl = this.getFullImageUrl(response.data.profileImageUrl);
+          this.profileDataSubject.next({ profilePicture: fullImageUrl });
+        }
+      })
+    );
   }
 
   /**

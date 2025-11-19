@@ -1,0 +1,22 @@
+/* Shared app-level helpers */
+
+.app-container {
+	max-width: var(--container-width);
+	margin: 0 auto;
+	padding: 0 2rem;
+}
+
+.section { padding: 3rem 0; }
+.section--elevated { background: var(--surface); border-radius: var(--radius-lg); padding: 2rem; }
+
+.card--clean { background: var(--card-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow-soft); padding: 1.5rem; }
+
+.typography-lead { font-size: 1.125rem; color: var(--muted); line-height: 1.7; }
+
+.row { display:flex; gap:1rem; align-items:center; }
+.col { flex:1; }
+
+.center { display:flex; align-items:center; justify-content:center; }
+
+.small { font-size:0.875rem; }
+

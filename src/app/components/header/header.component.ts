@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, RouterLink, NavigationEnd } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { ProfileButtonComponent } from '../profile/profile-button.component';
@@ -7,7 +7,7 @@ import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterLink, ProfileButtonComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, ProfileButtonComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
 })
@@ -15,6 +15,7 @@ export class HeaderComponent implements OnInit {
   currentLanguage = 'English';
   isAuthenticated = false;
   isLandingPage = false;
+  isLogoSpinning = false;
 
   constructor(
     private authService: AuthService,
@@ -35,6 +36,7 @@ export class HeaderComponent implements OnInit {
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         this.checkLandingPage();
+        this.animateLogo();
       });
   }
 
@@ -60,5 +62,12 @@ export class HeaderComponent implements OnInit {
 
   logout() {
     this.authService.logout();
+  }
+
+  animateLogo() {
+    this.isLogoSpinning = true;
+    setTimeout(() => {
+      this.isLogoSpinning = false;
+    }, 400); // Match animation duration
   }
 }
