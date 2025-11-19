@@ -1,0 +1,261 @@
+/* ===============================================
+   BEAUTIFUL CUSTOM DATEPICKER STYLING
+   =============================================== */
+
+::ng-deep .custom-datepicker {
+  width: 100%;
+}
+
+::ng-deep .custom-datepicker .mat-mdc-form-field {
+  width: 100%;
+}
+
+/* Input field styling */
+::ng-deep .custom-datepicker .mat-mdc-text-field-wrapper {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(254, 250, 250, 0.9) 100%);
+  border-radius: 10px;
+  border: 2px solid rgba(239, 68, 68, 0.15);
+  padding: 0.75rem 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+::ng-deep .custom-datepicker .mat-mdc-text-field-wrapper:hover {
+  background: white;
+  border-color: rgba(239, 68, 68, 0.25);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.08);
+  transform: translateY(-1px);
+}
+
+::ng-deep .custom-datepicker.mat-focused .mat-mdc-text-field-wrapper {
+  background: white;
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08),
+              0 4px 12px rgba(239, 68, 68, 0.15);
+  transform: translateY(-1px);
+}
+
+::ng-deep .custom-datepicker .mat-mdc-input-element {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 0;
+}
+
+::ng-deep .custom-datepicker .mat-mdc-form-field-label {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+::ng-deep .custom-datepicker.mat-focused .mat-mdc-form-field-label {
+  color: #ef4444;
+}
+
+/* Calendar toggle icon */
+::ng-deep .custom-datepicker .mat-datepicker-toggle {
+  color: #ef4444;
+}
+
+::ng-deep .custom-datepicker .mat-datepicker-toggle:hover {
+  transform: scale(1.1);
+}
+
+::ng-deep .custom-datepicker .mat-datepicker-toggle-active {
+  color: #dc2626;
+}
+
+/* Error state */
+::ng-deep .custom-datepicker.has-error .mat-mdc-text-field-wrapper {
+  border-color: #ef4444;
+  background: rgba(254, 242, 242, 0.5);
+}
+
+/* ===============================================
+   CALENDAR POPUP STYLING (Large & Beautiful)
+   =============================================== */
+
+::ng-deep .mat-datepicker-content {
+  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(239, 68, 68, 0.2),
+              0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transform: scale(1.3) !important;
+  transform-origin: top center;
+  border: 2px solid rgba(239, 68, 68, 0.1);
+}
+
+::ng-deep .mat-calendar {
+  width: 380px !important;
+  height: auto !important;
+  font-family: inherit;
+  padding: 1.5rem;
+}
+
+/* Calendar header */
+::ng-deep .mat-calendar-header {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 16px 16px 0 0;
+  margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+}
+
+::ng-deep .mat-calendar-period-button {
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+::ng-deep .mat-calendar-period-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+::ng-deep .mat-calendar-arrow {
+  fill: white;
+}
+
+/* Navigation buttons */
+::ng-deep .mat-calendar-previous-button,
+::ng-deep .mat-calendar-next-button {
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+::ng-deep .mat-calendar-previous-button:hover,
+::ng-deep .mat-calendar-next-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Weekday labels */
+::ng-deep .mat-calendar-table-header th {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 1rem 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Calendar cells */
+::ng-deep .mat-calendar-body-cell {
+  position: relative;
+}
+
+::ng-deep .mat-calendar-body-cell-content {
+  width: 44px;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+}
+
+/* Hover state */
+::ng-deep .mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover .mat-calendar-body-cell-content {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.15) 100%);
+  color: #ef4444;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* Selected date */
+::ng-deep .mat-calendar-body-selected {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  color: white !important;
+  font-weight: 700;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+::ng-deep .mat-calendar-body-selected:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  transform: scale(1.15);
+}
+
+/* Today's date */
+::ng-deep .mat-calendar-body-today:not(.mat-calendar-body-selected) {
+  border: 2px solid #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* Disabled dates */
+::ng-deep .mat-calendar-body-disabled {
+  color: #d1d5db;
+  opacity: 0.4;
+}
+
+/* Other month dates */
+::ng-deep .mat-calendar-body-cell-content.mat-calendar-body-comparison-identical {
+  color: #9ca3af;
+}
+
+/* Action buttons (Today, Clear) */
+::ng-deep .mat-datepicker-actions {
+  padding: 1rem 1.5rem;
+  border-top: 2px solid rgba(239, 68, 68, 0.1);
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+::ng-deep .mat-datepicker-actions button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+::ng-deep .mat-datepicker-actions .mat-button-base {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+::ng-deep .mat-datepicker-actions .mat-button-base:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Animation for calendar opening */
+@keyframes calendarSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(1.2) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.3) translateY(0);
+  }
+}
+
+::ng-deep .mat-datepicker-content {
+  animation: calendarSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Month/Year view styling */
+::ng-deep .mat-calendar-body-label {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+::ng-deep .mat-calendar-body-cell.mat-calendar-body-active .mat-calendar-body-cell-content {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
