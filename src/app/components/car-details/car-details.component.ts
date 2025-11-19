@@ -128,6 +128,25 @@ export class CarDetailsComponent implements OnInit {
     };
   }
 
+  updateMileage(miles: number): void {
+    if (this.vehicle) {
+      this.vehicle.currentMileage = miles;
+    }
+  }
+
+  updateVehicleInfo(info: any): void {
+    if (!this.vehicle) return;
+
+    // Update only the header/basic fields coming from the API
+    if (info.make !== undefined) this.vehicle.make = info.make;
+    if (info.model !== undefined) this.vehicle.model = info.model;
+    if (info.year !== undefined) this.vehicle.year = info.year;
+    if (info.licensePlate !== undefined) this.vehicle.licensePlate = info.licensePlate;
+    if (info.currentMileage !== undefined) this.vehicle.currentMileage = info.currentMileage;
+    // If engineCapacity is present and you want to show it elsewhere, map it accordingly
+    // Leave maintenance and condition indicators untouched
+  }
+
   goBack(): void {
     this.router.navigate(['/my-vehicles']);
   }

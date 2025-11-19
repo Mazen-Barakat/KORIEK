@@ -94,119 +94,53 @@
     <!-- Existing Indicators -->
     <div class="indicators-title">Existing Indicators</div>
 
-    <div class="indicators-list">
-      <!-- Oil Change Indicator -->
-      <div class="indicator-card">
-        <div class="indicator-header">
-          <div class="indicator-name">
-            <span class="indicator-emoji">🛢️</span>
-            <span class="indicator-status-badge good">Good</span>
-          </div>
-          <button class="delete-btn" (click)="deleteIndicator('oil-change')">
-            🗑️
-          </button>
-        </div>
-
-        <div class="indicator-label">Oil Change</div>
-
-        <div class="indicator-details">
-          <div class="detail-row">
-            <span class="detail-label">Last Inspected Date</span>
-            <span class="detail-label">Next Inspected Date</span>
-            <span class="detail-label">Next Mileage (km)</span>
-          </div>
-          <div class="detail-row">
-            <input type="text" value="10/08/2025" class="detail-input" />
-            <input type="text" value="11/25/2025" class="detail-input" />
-            <input type="number" value="50000" class="detail-input" />
-          </div>
-        </div>
+    <!-- Empty State -->
+    @if (!indicators || indicators.length === 0) {
+      <div class="empty-indicators">
+        <p>No indicators yet. Click "Add Indicator" to create one.</p>
       </div>
+    }
 
-      <!-- Tire Rotation Indicator -->
-      <div class="indicator-card">
-        <div class="indicator-header">
-          <div class="indicator-name">
-            <span class="indicator-emoji">⚙️</span>
-            <span class="indicator-status-badge attention">Attention</span>
-          </div>
-          <button class="delete-btn" (click)="deleteIndicator('tire-rotation')">
-            🗑️
-          </button>
-        </div>
+    <!-- Dynamic Indicators List -->
+    @if (indicators && indicators.length > 0) {
+      <div class="indicators-list">
+        @for (indicator of indicators; track indicator.id) {
+          <div class="indicator-card">
+            <div class="indicator-header">
+              <div class="indicator-name">
+                <span class="indicator-emoji">{{ indicator.icon }}</span>
+                <span class="indicator-status-badge" 
+                      [ngClass]="{
+                        'good': indicator.status === 'Good',
+                        'attention': indicator.status === 'Attention',
+                        'urgent': indicator.status === 'Urgent'
+                      }">
+                  {{ indicator.status }}
+                </span>
+              </div>
+              <button class="delete-btn" (click)="deleteIndicator(indicator)">
+                🗑️
+              </button>
+            </div>
 
-        <div class="indicator-label">Tire Rotation</div>
+            <div class="indicator-label">{{ indicator.name }}</div>
 
-        <div class="indicator-details">
-          <div class="detail-row">
-            <span class="detail-label">Last Inspected Date</span>
-            <span class="detail-label">Next Inspected Date</span>
-            <span class="detail-label">Next Mileage (km)</span>
+            <div class="indicator-details">
+              <div class="detail-row">
+                <span class="detail-label">Last Inspected Date</span>
+                <span class="detail-label">Next Inspected Date</span>
+                <span class="detail-label">Next Mileage (km)</span>
+              </div>
+              <div class="detail-row">
+                <input type="date" [(ngModel)]="indicator.lastInspectedDate" class="detail-input" />
+                <input type="date" [(ngModel)]="indicator.nextInspectedDate" class="detail-input" />
+                <input type="number" [(ngModel)]="indicator.nextMileage" class="detail-input" />
+              </div>
+            </div>
           </div>
-          <div class="detail-row">
-            <input type="text" value="09/10/2025" class="detail-input" />
-            <input type="text" value="11/10/2025" class="detail-input" />
-            <input type="number" value="45000" class="detail-input" />
-          </div>
-        </div>
+        }
       </div>
-
-      <!-- Battery Health Indicator -->
-      <div class="indicator-card">
-        <div class="indicator-header">
-          <div class="indicator-name">
-            <span class="indicator-emoji">🔋</span>
-            <span class="indicator-status-badge good">Good</span>
-          </div>
-          <button class="delete-btn" (click)="deleteIndicator('battery-health')">
-            🗑️
-          </button>
-        </div>
-
-        <div class="indicator-label">Battery Health</div>
-
-        <div class="indicator-details">
-          <div class="detail-row">
-            <span class="detail-label">Last Inspected Date</span>
-            <span class="detail-label">Next Inspected Date</span>
-            <span class="detail-label">Next Mileage (km)</span>
-          </div>
-          <div class="detail-row">
-            <input type="text" value="08/10/2025" class="detail-input" />
-            <input type="text" value="02/10/2026" class="detail-input" />
-            <input type="number" value="0" class="detail-input" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Air Filter Indicator -->
-      <div class="indicator-card">
-        <div class="indicator-header">
-          <div class="indicator-name">
-            <span class="indicator-emoji">⚠️</span>
-            <span class="indicator-status-badge urgent">Urgent</span>
-          </div>
-          <button class="delete-btn" (click)="deleteIndicator('air-filter')">
-            🗑️
-          </button>
-        </div>
-
-        <div class="indicator-label">Air Filter</div>
-
-        <div class="indicator-details">
-          <div class="detail-row">
-            <span class="detail-label">Last Inspected Date</span>
-            <span class="detail-label">Next Inspected Date</span>
-            <span class="detail-label">Next Mileage (km)</span>
-          </div>
-          <div class="detail-row">
-            <input type="text" value="06/10/2025" class="detail-input" />
-            <input type="text" value="12/10/2025" class="detail-input" />
-            <input type="number" value="45000" class="detail-input" />
-          </div>
-        </div>
-      </div>
-    </div>
+    }
   </div>
 
   <!-- Select Top 4 Indicators Section -->
@@ -254,3 +188,49 @@
     </button>
   </div>
 </div>
+
+<!-- Add Indicator Modal -->
+@if (isAddingIndicator) {
+  <div class="modal-overlay" (click)="cancelAddIndicator()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Add New Indicator</h3>
+        <button class="modal-close-btn" (click)="cancelAddIndicator()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="indicatorType">Indicator Type</label>
+          <select id="indicatorType" [(ngModel)]="newIndicator.indicatorType" class="form-input">
+            <option value="">Select an indicator type</option>
+            @for (type of indicatorTypeOptions; track type.value) {
+              <option [value]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="lastInspectedDate">Last Inspected Date</label>
+          <input type="date" id="lastInspectedDate" [(ngModel)]="newIndicator.lastInspectedDate" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label for="nextInspectedDate">Next Inspected Date</label>
+          <input type="date" id="nextInspectedDate" [(ngModel)]="newIndicator.nextInspectedDate" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label for="nextMileage">Next Mileage (km)</label>
+          <input type="number" id="nextMileage" [(ngModel)]="newIndicator.nextMileage" class="form-input" min="0" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cancelAddIndicator()">Cancel</button>
+        <button class="btn-save" (click)="saveNewIndicator()" [disabled]="isSavingIndicator">
+          {{ isSavingIndicator ? 'Saving...' : 'Save Indicator' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
