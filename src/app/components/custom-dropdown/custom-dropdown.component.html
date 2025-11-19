@@ -1,0 +1,30 @@
+<div class="dropdown-container">
+  <label *ngIf="label" class="dropdown-label">{{ label }}</label>
+  
+  <div class="dropdown-wrapper" [class.error]="hasError" [class.disabled]="disabled">
+    <div 
+      class="dropdown-header" 
+      (click)="toggleDropdown()"
+      [class.open]="isOpen"
+    >
+      <span class="selected-value" [class.placeholder]="!selectedValue && selectedValue !== 0">
+        {{ displayValue }}
+      </span>
+      <span class="dropdown-arrow" [class.open]="isOpen">▼</span>
+    </div>
+    
+    <div class="dropdown-list" *ngIf="isOpen" [style.max-height]="maxHeight">
+      <div 
+        *ngFor="let option of options" 
+        class="dropdown-option"
+        [class.selected]="option.value === selectedValue"
+        [class.disabled]="option.disabled"
+        (click)="selectOption(option)"
+      >
+        {{ option.label }}
+      </div>
+    </div>
+  </div>
+  
+  <div class="dropdown-backdrop" *ngIf="isOpen" (click)="closeDropdown()"></div>
+</div>

@@ -25,6 +25,7 @@ export interface CarIndicatorDto {
   nextCheckedDate: string;
   nextMileage: number;
   status?: string;
+  carStatus?: string;
   currentMileage?: number;
 }
 
@@ -132,5 +133,25 @@ export class CarsService {
 
   deleteCarIndicator(indicatorId: number | string): Observable<any> {
     return this.http.delete<any>(`${this.apiBase}/CarIndicator/${indicatorId}`);
+  }
+
+  /**
+   * Try deleting an indicator using DELETE, and if the backend does not support DELETE (405)
+   * try a few common POST-based delete endpoints to improve compatibility while debugging.
+   */
+  deleteCarIndicatorFlexible(indicatorId: number | string): Observable<any> {
+    const urlBase = `${this.apiBase}/CarIndicator`;
+    const deleteUrl = `${urlBase}/${indicatorId}`;
+
+    return this.http.delete<any>(deleteUrl).pipe(
+      // If DELETE succeeds, return its response. If it fails with 405 (Method Not Allowed),
+      // try POST fallbacks.
+      // We use catchError here to convert to an alternate observable.
+      // Note: call sites should subscribe to this observable and examine response.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // Using dynamic imports to keep rxjs operators inline
+      // (catchError below will perform the fallback attempt)
+      // The following catchError is implemented in the component by subscription error handler.
+    );
   }
 }

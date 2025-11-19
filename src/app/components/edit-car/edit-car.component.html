@@ -1,11 +1,18 @@
 <div class="edit-car-container">
+  <!-- Back Button -->
+  <button class="back-button" (click)="goBack()" aria-label="Go back to car details">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    <span>Back to Details</span>
+  </button>
+
   <!-- Car Information Section -->
   <div class="car-info-section">
     <div class="section-header">
-      <span class="car-icon">🚗</span>
       <h2>Car Information</h2>
     </div>
-    <p class="section-subtitle">Update your car details</p>
+    <p class="section-subtitle">Update your vehicle details below</p>
 
     <!-- Success / Error message -->
     <div *ngIf="message" class="alert" [ngClass]="messageType === 'success' ? 'success' : 'error'">
@@ -17,63 +24,54 @@
       <div class="update-form-grid">
         <!-- Engine Capacity -->
         <div class="form-group">
-          <label for="engine-capacity">Engine Capacity</label>
-          <select 
-            id="engine-capacity" 
-            [(ngModel)]="updateModel.engineCapacity" 
-            class="form-input"
-          >
-            <option *ngFor="let capacity of engineCapacities" [value]="capacity">
-              {{ capacity }} CC
-            </option>
-          </select>
+          <app-custom-dropdown
+            label="⚙️ Engine Capacity"
+            [options]="engineCapacityOptions"
+            [(ngModel)]="updateModel.engineCapacity"
+            placeholder="Select Engine Capacity"
+            maxHeight="200px"
+          ></app-custom-dropdown>
         </div>
 
         <!-- Current Mileage -->
         <div class="form-group">
-          <label for="current-mileage">Current Mileage (km)</label>
+          <label for="current-mileage"><span style="font-size: 16px;">🚀</span> Current Mileage (km)</label>
           <input 
             type="number" 
             id="current-mileage" 
             [(ngModel)]="updateModel.currentMileage" 
             class="form-input"
+            placeholder="e.g., 15963"
+            aria-label="Enter current mileage in kilometers"
           />
         </div>
 
         <!-- Transmission Type -->
         <div class="form-group">
-          <label for="transmission-type">Transmission Type</label>
-          <select 
-            id="transmission-type" 
-            [(ngModel)]="updateModel.transmissionType" 
-            class="form-input"
-          >
-            <option value="" disabled>Select Transmission</option>
-            <option *ngFor="let type of transmissionTypes" [value]="type">
-              {{ type }}
-            </option>
-          </select>
+          <app-custom-dropdown
+            label="🔧 Transmission Type"
+            [options]="transmissionOptions"
+            [(ngModel)]="updateModel.transmissionType"
+            placeholder="Select Transmission"
+            maxHeight="150px"
+          ></app-custom-dropdown>
         </div>
 
         <!-- Fuel Type -->
         <div class="form-group">
-          <label for="fuel-type">Fuel Type</label>
-          <select 
-            id="fuel-type" 
-            [(ngModel)]="updateModel.fuelType" 
-            class="form-input"
-          >
-            <option value="" disabled>Select Fuel Type</option>
-            <option *ngFor="let fuel of fuelTypes" [value]="fuel">
-              {{ fuel }}
-            </option>
-          </select>
+          <app-custom-dropdown
+            label="⛽ Fuel Type"
+            [options]="fuelOptions"
+            [(ngModel)]="updateModel.fuelType"
+            placeholder="Select Fuel Type"
+            maxHeight="150px"
+          ></app-custom-dropdown>
         </div>
       </div>
 
       <!-- Save Button -->
       <div class="form-actions">
-        <button type="button" class="btn-save" (click)="saveVehicleInfo()" [disabled]="isSaving">
+        <button type="button" class="btn-save" (click)="saveVehicleInfo()" [disabled]="isSaving" aria-label="Save vehicle information">
           {{ isSaving ? 'Saving...' : 'Save Vehicle Info' }}
         </button>
       </div>
@@ -87,9 +85,9 @@
         <span class="indicator-icon">🔧</span>
         <h2>Condition Indicators</h2>
       </div>
-      <button class="btn-save" (click)="addIndicator()">Add Indicator</button>
+      <button class="btn-save" (click)="addIndicator()">➕ Add Indicator</button>
     </div>
-    <p class="section-subtitle">Manage maintenance indicators for your car</p>
+    <p class="section-subtitle">📊 Track and manage all maintenance indicators for your vehicle</p>
 
     <!-- Existing Indicators -->
     <div class="indicators-title">Existing Indicators</div>
@@ -97,7 +95,7 @@
     <!-- Empty State -->
     @if (!indicators || indicators.length === 0) {
       <div class="empty-indicators">
-        <p>No indicators yet. Click "Add Indicator" to create one.</p>
+        <p>💡 No indicators yet. Click <strong>"Add Indicator"</strong> to create your first maintenance tracker.</p>
       </div>
     }
 
@@ -112,14 +110,23 @@
                 <span class="indicator-status-badge" 
                       [ngClass]="{
                         'good': indicator.status === 'Good',
+                        'normal': indicator.status === 'Normal',
                         'attention': indicator.status === 'Attention',
-                        'urgent': indicator.status === 'Urgent'
+                        'warning': indicator.status === 'Warning',
+                        'urgent': indicator.status === 'Urgent',
+                        'critical': indicator.status === 'Critical',
+                        'unknown': indicator.status === 'Unknown'
                       }">
                   {{ indicator.status }}
                 </span>
               </div>
-              <button class="delete-btn" (click)="deleteIndicator(indicator)">
-                🗑️
+              <button class="delete-btn" (click)="openDeleteModal(indicator)" [disabled]="deletingIndicatorId === indicator.backendId">
+                @if (deletingIndicatorId !== indicator.backendId) {
+                  <span>🗑️</span>
+                }
+                @if (deletingIndicatorId === indicator.backendId) {
+                  <span>Deleting...</span>
+                }
               </button>
             </div>
 
@@ -146,47 +153,43 @@
   <!-- Select Top 4 Indicators Section -->
   <div class="dashboard-section">
     <div class="section-header">
-      <span class="dashboard-icon">✓</span>
+      <span class="dashboard-icon">📌</span>
       <h2>Select Top 4 Indicators for Dashboard</h2>
     </div>
-    <p class="section-subtitle">Select exactly 4 indicators to display on the car owner dashboard <span class="link-text">(4/4 Selected)</span></p>
+    <p class="section-subtitle">🎯 Choose exactly 4 key indicators to display on your dashboard <span class="link-text">({{ dashboardSelectionCount }}/4 Selected)</span></p>
 
     <div class="dashboard-grid">
-      <div class="dashboard-card selected">
-        <button class="remove-btn">✕</button>
-        <span class="dashboard-emoji">🛢️</span>
-        <span class="dashboard-label">Oil Change</span>
-      </div>
-
-      <div class="dashboard-card selected">
-        <button class="remove-btn">✕</button>
-        <span class="dashboard-emoji">⚙️</span>
-        <span class="dashboard-label">Tire Rotation</span>
-      </div>
-
-      <div class="dashboard-card selected">
-        <button class="remove-btn">✕</button>
-        <span class="dashboard-emoji">🔋</span>
-        <span class="dashboard-label">Battery Health</span>
-      </div>
-
-      <div class="dashboard-card selected">
-        <button class="remove-btn">✕</button>
-        <span class="dashboard-emoji">⚠️</span>
-        <span class="dashboard-label">Air Filter</span>
-      </div>
+      @for (indicator of dashboardIndicators; track indicator.value) {
+        <div class="dashboard-card" 
+             [ngClass]="{'selected': indicator.selected, 'disabled': !indicator.selected && dashboardSelectionCount >= 4}" 
+             (click)="toggleDashboardIndicator(indicator)"
+             role="button"
+             tabindex="0"
+             [attr.aria-pressed]="indicator.selected"
+             [attr.aria-label]="'Toggle ' + indicator.label + ' indicator'"
+             (keydown.enter)="toggleDashboardIndicator(indicator)"
+             (keydown.space)="$event.preventDefault(); toggleDashboardIndicator(indicator)">
+          @if (indicator.selected) {
+            <button class="remove-btn" 
+                    (click)="$event.stopPropagation(); toggleDashboardIndicator(indicator)"
+                    aria-label="Remove indicator">✕</button>
+          }
+          <span class="dashboard-emoji">{{ indicator.icon }}</span>
+          <span class="dashboard-label">{{ indicator.label }}</span>
+        </div>
+      }
+    </div>
+    <!-- Dashboard Actions (local to dashboard section) -->
+    <div class="dashboard-actions" style="margin-top:16px; display:flex; gap:12px; justify-content:flex-end;">
+      <button class="cancel-btn" (click)="cancelDashboardChanges()" [disabled]="dashboardSelectionCount === 0">
+        ✕ Clear
+      </button>
+      <button class="save-btn" (click)="saveDashboardSelection()" [disabled]="dashboardSelectionCount !== 4">
+        Save Changes
+      </button>
     </div>
   </div>
 
-  <!-- Action Buttons -->
-  <div class="action-buttons">
-    <button class="cancel-btn" (click)="cancel()">
-      ✕ Cancel
-    </button>
-    <button class="save-btn" (click)="saveChanges()">
-      Save Changes
-    </button>
-  </div>
 </div>
 
 <!-- Add Indicator Modal -->
@@ -198,39 +201,102 @@
         <button class="modal-close-btn" (click)="cancelAddIndicator()">✕</button>
       </div>
 
+      <!-- Modal Message (Success/Error) -->
+      @if (modalMessage) {
+        <div class="modal-message" [ngClass]="modalMessageType">
+          @if (modalMessageType === 'success') {
+            <span class="message-icon">✓</span>
+          }
+          @if (modalMessageType === 'error') {
+            <span class="message-icon">✕</span>
+          }
+          <span class="message-text">{{ modalMessage }}</span>
+        </div>
+      }
+
       <div class="modal-body">
         <div class="form-group">
-          <label for="indicatorType">Indicator Type</label>
-          <select id="indicatorType" [(ngModel)]="newIndicator.indicatorType" class="form-input">
-            <option value="">Select an indicator type</option>
-            @for (type of indicatorTypeOptions; track type.value) {
-              <option [value]="type.value">{{ type.label }}</option>
-            }
-          </select>
+          <app-custom-dropdown
+            label="Indicator Type"
+            [options]="indicatorOptions"
+            [(ngModel)]="newIndicator.indicatorType"
+            placeholder="Select an indicator type"
+            [hasError]="!!formErrors.indicatorType"
+            maxHeight="220px"
+          ></app-custom-dropdown>
+          @if (formErrors.indicatorType) {
+            <span class="error-message">{{ formErrors.indicatorType }}</span>
+          }
         </div>
 
         <div class="form-group">
           <label for="lastInspectedDate">Last Inspected Date</label>
-          <input type="date" id="lastInspectedDate" [(ngModel)]="newIndicator.lastInspectedDate" class="form-input" />
+          <input type="date" id="lastInspectedDate" [(ngModel)]="newIndicator.lastInspectedDate" class="form-input" [ngClass]="{'input-error': formErrors.lastInspectedDate}" />
+          @if (formErrors.lastInspectedDate) {
+            <span class="error-message">{{ formErrors.lastInspectedDate }}</span>
+          }
         </div>
 
         <div class="form-group">
           <label for="nextInspectedDate">Next Inspected Date</label>
-          <input type="date" id="nextInspectedDate" [(ngModel)]="newIndicator.nextInspectedDate" class="form-input" />
+          <input type="date" id="nextInspectedDate" [(ngModel)]="newIndicator.nextInspectedDate" class="form-input" [ngClass]="{'input-error': formErrors.nextInspectedDate}" />
+          @if (formErrors.nextInspectedDate) {
+            <span class="error-message">{{ formErrors.nextInspectedDate }}</span>
+          }
         </div>
 
         <div class="form-group">
           <label for="nextMileage">Next Mileage (km)</label>
-          <input type="number" id="nextMileage" [(ngModel)]="newIndicator.nextMileage" class="form-input" min="0" />
+          <input type="number" id="nextMileage" [(ngModel)]="newIndicator.nextMileage" class="form-input" [ngClass]="{'input-error': formErrors.nextMileage}" min="0" />
+          @if (formErrors.nextMileage) {
+            <span class="error-message">{{ formErrors.nextMileage }}</span>
+          }
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn-cancel" (click)="cancelAddIndicator()">Cancel</button>
+        <button class="btn-cancel" (click)="cancelAddIndicator()" [disabled]="isSavingIndicator">Clear</button>
         <button class="btn-save" (click)="saveNewIndicator()" [disabled]="isSavingIndicator">
           {{ isSavingIndicator ? 'Saving...' : 'Save Indicator' }}
         </button>
       </div>
     </div>
+  </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirm Deletion</h3>
+        <button class="modal-close-btn" (click)="cancelDelete()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong>{{ pendingDeleteIndicator?.name }}</strong>?</p>
+        <p class="muted">This will permanently remove the indicator from your car.</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cancelDelete()">Clear</button>
+        <button class="btn-save" (click)="confirmDelete()">Delete Indicator</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Toast Notification -->
+@if (showToast) {
+  <div class="toast-notification" [ngClass]="toastType">
+    <div class="toast-icon">
+      @if (toastType === 'success') {
+        <span>✓</span>
+      }
+      @if (toastType === 'error') {
+        <span>✕</span>
+      }
+    </div>
+    <div class="toast-message">{{ toastMessage }}</div>
   </div>
 }

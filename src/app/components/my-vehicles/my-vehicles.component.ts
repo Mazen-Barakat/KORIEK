@@ -16,6 +16,7 @@ interface Vehicle {
   currentMileage: number;
   engineCapacity?: number;
   maintenanceItems?: MaintenanceItem[];
+  dashboardIndicators?: Array<{ label: string; icon: string }>;
 }
 
 interface MaintenanceItem {
@@ -190,16 +191,30 @@ export class MyVehiclesComponent implements OnInit {
           const rawCars = response.data.cars;
           if (Array.isArray(rawCars)) {
             // Normalize data to ensure numeric IDs and numbers for mileage/year
-            this.vehicles = rawCars.map((c: any) => ({
-              id: Number(c.id),
-              year: Number(c.year),
-              make: c.make,
-              model: c.model,
-              licensePlate: c.licensePlate,
-              currentMileage: Number(c.currentMileage),
-              engineCapacity: c.engineCapacity ? Number(c.engineCapacity) : undefined,
-              maintenanceItems: c.maintenanceItems || []
-            } as Vehicle));
+            this.vehicles = rawCars.map((c: any) => {
+              const carId = Number(c.id);
+              // Load dashboard indicators from localStorage
+              const savedIndicators = localStorage.getItem(`car_${carId}_dashboard`);
+              let dashboardIndicators: Array<{ label: string; icon: string }> = [];
+              if (savedIndicators) {
+                try {
+                  dashboardIndicators = JSON.parse(savedIndicators);
+                } catch (e) {
+                  console.error('Failed to parse dashboard indicators', e);
+                }
+              }
+              return {
+                id: carId,
+                year: Number(c.year),
+                make: c.make,
+                model: c.model,
+                licensePlate: c.licensePlate,
+                currentMileage: Number(c.currentMileage),
+                engineCapacity: c.engineCapacity ? Number(c.engineCapacity) : undefined,
+                maintenanceItems: c.maintenanceItems || [],
+                dashboardIndicators
+              } as Vehicle;
+            });
           } else {
             this.vehicles = [];
           }
