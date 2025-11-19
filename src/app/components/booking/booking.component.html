@@ -1,0 +1,556 @@
+<div class="booking-page">
+  <!-- Draft Resume Banner -->
+  <div class="draft-banner" *ngIf="showDraftBanner">
+    <div class="draft-content">
+      <div class="draft-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="draft-text">
+        <h4>You have an unfinished booking</h4>
+        <p>Resume where you left off or start fresh</p>
+      </div>
+      <div class="draft-actions">
+        <button class="btn-resume" (click)="resumeDraft()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+          Resume
+        </button>
+        <button class="btn-dismiss" (click)="dismissDraft()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="booking-container">
+    <!-- Header (hidden on success step) -->
+    <div class="booking-header" *ngIf="currentStep !== 5">
+      <h1>Book a Service</h1>
+      <p class="subtitle">Schedule maintenance with verified workshops</p>
+      
+      <!-- Progress Stepper -->
+      <div class="progress-stepper">
+        <div class="step" 
+             [class.active]="currentStep === 1" 
+             [class.completed]="currentStep > 1"
+             (click)="goToStep(1)">
+          <div class="step-circle">
+            <svg *ngIf="currentStep > 1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span *ngIf="currentStep <= 1">1</span>
+          </div>
+          <span class="step-label">Service</span>
+        </div>
+        
+        <div class="step-line" [class.completed]="currentStep > 1"></div>
+        
+        <div class="step" 
+             [class.active]="currentStep === 2" 
+             [class.completed]="currentStep > 2"
+             (click)="goToStep(2)">
+          <div class="step-circle">
+            <svg *ngIf="currentStep > 2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span *ngIf="currentStep <= 2">2</span>
+          </div>
+          <span class="step-label">Date & Time</span>
+        </div>
+        
+        <div class="step-line" [class.completed]="currentStep > 2"></div>
+        
+        <div class="step" 
+             [class.active]="currentStep === 3" 
+             [class.completed]="currentStep > 3"
+             (click)="goToStep(3)">
+          <div class="step-circle">
+            <svg *ngIf="currentStep > 3" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span *ngIf="currentStep <= 3">3</span>
+          </div>
+          <span class="step-label">Workshop</span>
+        </div>
+        
+        <div class="step-line" [class.completed]="currentStep > 3"></div>
+        
+        <div class="step" 
+             [class.active]="currentStep === 4" 
+             [class.completed]="currentStep > 4">
+          <div class="step-circle">
+            <svg *ngIf="currentStep > 4" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span *ngIf="currentStep <= 4">4</span>
+          </div>
+          <span class="step-label">Review</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 1: Service Selection -->
+    <div class="step-content" *ngIf="currentStep === 1">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Select Your Vehicle</h2>
+            <p class="section-subtitle">Choose which vehicle needs service</p>
+          </div>
+        </div>
+
+        <div class="vehicle-grid">
+          <div class="vehicle-card" 
+               *ngFor="let vehicle of userVehicles"
+               [class.selected]="selectedVehicle?.id === vehicle.id"
+               (click)="selectVehicle(vehicle)">
+            <div class="vehicle-check" *ngIf="selectedVehicle?.id === vehicle.id">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="vehicle-info">
+              <h3>{{ vehicle.make }} {{ vehicle.model }}</h3>
+              <p class="vehicle-details">{{ vehicle.year }} • {{ vehicle.licensePlate }}</p>
+              <p class="vehicle-mileage">{{ vehicle.mileage.toLocaleString() }} km</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="userVehicles.length === 0">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <h3>No vehicles found</h3>
+          <p>Add a vehicle to your garage to continue</p>
+          <button class="btn-primary" (click)="goToMyVehicles()">Go to My Vehicles</button>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Choose Service Type</h2>
+            <p class="section-subtitle">What does your vehicle need?</p>
+          </div>
+        </div>
+
+        <div class="service-grid">
+          <div class="service-card"
+               *ngFor="let service of serviceTypes"
+               [class.selected]="selectedServiceType?.id === service.id"
+               (click)="selectServiceType(service)">
+            <div class="service-check" *ngIf="selectedServiceType?.id === service.id">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="service-icon">{{ service.icon }}</div>
+            <h3>{{ service.name }}</h3>
+            <p class="service-description">{{ service.description }}</p>
+            <div class="service-details">
+              <span class="service-duration">⏱️ {{ service.estimatedDuration }}</span>
+              <span class="service-price">From {{ service.basePrice }} EGP</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="notes-section" *ngIf="selectedServiceType">
+          <label for="serviceNotes">Additional Notes (Optional)</label>
+          <textarea 
+            id="serviceNotes" 
+            [(ngModel)]="serviceNotes"
+            placeholder="Any specific issues or requests? e.g., Strange noise when braking, AC not cooling properly..."
+            rows="3"></textarea>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button class="btn-secondary" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Previous
+        </button>
+        <button class="btn-primary" [disabled]="!isStep1Valid()" (click)="nextStep()">
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Date & Time Selection -->
+    <div class="step-content" *ngIf="currentStep === 2">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Select Date</h2>
+            <p class="section-subtitle">Choose your preferred service date</p>
+          </div>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="date-card"
+               *ngFor="let date of availableDates.slice(0, 14)"
+               [class.selected]="isDateSelected(date)"
+               (click)="selectDate(date)">
+            <span class="date-day">{{ formatDate(date).split(' ')[0] }}</span>
+            <span class="date-number">{{ formatDate(date).split(' ')[2] }}</span>
+            <span class="date-month">{{ formatDate(date).split(' ')[1] }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card" *ngIf="selectedDate">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Select Time Slot</h2>
+            <p class="section-subtitle">{{ formatDateLong(selectedDate) }}</p>
+          </div>
+        </div>
+
+        <div class="timeslot-grid">
+          <button class="timeslot-btn"
+                  *ngFor="let slot of availableTimeSlots"
+                  [class.selected]="selectedTimeSlot === slot"
+                  [class.unavailable]="!isTimeSlotAvailable(slot)"
+                  [disabled]="!isTimeSlotAvailable(slot)"
+                  (click)="selectTimeSlot(slot)">
+            {{ slot }}
+            <span class="unavailable-label" *ngIf="!isTimeSlotAvailable(slot)">Booked</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button class="btn-secondary" (click)="previousStep()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Previous
+        </button>
+        <button class="btn-primary" [disabled]="!isStep2Valid()" (click)="nextStep()">
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Workshop Selection -->
+    <div class="step-content" *ngIf="currentStep === 3">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Choose Workshop</h2>
+            <p class="section-subtitle">Select from verified service centers near you</p>
+          </div>
+        </div>
+
+        <div class="workshop-list">
+          <div class="workshop-card"
+               *ngFor="let workshop of workshops"
+               [class.selected]="selectedWorkshop?.id === workshop.id"
+               (click)="selectWorkshop(workshop)">
+            <div class="workshop-header">
+              <div class="workshop-main">
+                <div class="workshop-check" *ngIf="selectedWorkshop?.id === workshop.id">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div class="workshop-info">
+                  <h3>{{ workshop.name }}</h3>
+                  <div class="workshop-rating">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    <span class="rating-value">{{ workshop.rating }}</span>
+                    <span class="rating-count">({{ workshop.reviewCount }} reviews)</span>
+                  </div>
+                </div>
+              </div>
+              <div class="workshop-badges">
+                <span class="badge-availability" [class.available-today]="workshop.availability === 'Available Today'">
+                  {{ workshop.availability }}
+                </span>
+              </div>
+            </div>
+
+            <div class="workshop-details">
+              <div class="detail-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>{{ workshop.distance }} km away • {{ workshop.eta }}</span>
+              </div>
+              <div class="detail-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                <span>{{ workshop.phone }}</span>
+              </div>
+              <div class="detail-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>{{ workshop.address }}</span>
+              </div>
+            </div>
+
+            <div class="workshop-services">
+              <span class="service-tag" *ngFor="let service of workshop.services">{{ service }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button class="btn-secondary" (click)="previousStep()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Previous
+        </button>
+        <button class="btn-primary" [disabled]="!isStep3Valid()" (click)="nextStep()">
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 4: Review & Confirm -->
+    <div class="step-content" *ngIf="currentStep === 4">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Review Your Booking</h2>
+            <p class="section-subtitle">Please verify all details before confirming</p>
+          </div>
+        </div>
+
+        <div class="review-section">
+          <div class="review-item">
+            <div class="review-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span>Vehicle</span>
+            </div>
+            <div class="review-value">
+              <strong>{{ selectedVehicle?.make }} {{ selectedVehicle?.model }}</strong>
+              <span class="review-subtext">{{ selectedVehicle?.year }} • {{ selectedVehicle?.licensePlate }}</span>
+            </div>
+            <button class="review-edit" (click)="goToStep(1)">Edit</button>
+          </div>
+
+          <div class="review-item">
+            <div class="review-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+              <span>Service</span>
+            </div>
+            <div class="review-value">
+              <strong>{{ selectedServiceType?.name }}</strong>
+              <span class="review-subtext">{{ selectedServiceType?.estimatedDuration }}</span>
+              <span class="review-notes" *ngIf="serviceNotes">Note: {{ serviceNotes }}</span>
+            </div>
+            <button class="review-edit" (click)="goToStep(1)">Edit</button>
+          </div>
+
+          <div class="review-item">
+            <div class="review-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <span>Date & Time</span>
+            </div>
+            <div class="review-value">
+              <strong>{{ formatDateLong(selectedDate!) }}</strong>
+              <span class="review-subtext">{{ selectedTimeSlot }}</span>
+            </div>
+            <button class="review-edit" (click)="goToStep(2)">Edit</button>
+          </div>
+
+          <div class="review-item">
+            <div class="review-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>Workshop</span>
+            </div>
+            <div class="review-value">
+              <strong>{{ selectedWorkshop?.name }}</strong>
+              <span class="review-subtext">{{ selectedWorkshop?.address }}</span>
+              <span class="review-subtext">{{ selectedWorkshop?.distance }} km away</span>
+            </div>
+            <button class="review-edit" (click)="goToStep(3)">Edit</button>
+          </div>
+        </div>
+
+        <div class="price-breakdown">
+          <h3>Price Estimate</h3>
+          <div class="price-item">
+            <span>Service Fee</span>
+            <span>{{ getSubtotal().toFixed(2) }} EGP</span>
+          </div>
+          <div class="price-item">
+            <span>Tax (14%)</span>
+            <span>{{ getTax().toFixed(2) }} EGP</span>
+          </div>
+          <div class="price-divider"></div>
+          <div class="price-item price-total">
+            <span>Total Estimate</span>
+            <span>{{ calculateTotalPrice().toFixed(2) }} EGP</span>
+          </div>
+          <p class="price-note">*Final price may vary based on actual service requirements</p>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button class="btn-secondary" (click)="previousStep()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Previous
+        </button>
+        <button class="btn-primary btn-confirm" (click)="confirmBooking()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Confirm Booking
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 5: Success -->
+    <div class="success-content" *ngIf="currentStep === 5">
+      <div class="success-animation">
+        <div class="success-circle">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+      </div>
+
+      <h1 class="success-title">Booking Confirmed!</h1>
+      <p class="success-subtitle">Your service has been successfully scheduled</p>
+
+      <div class="confirmation-card">
+        <div class="confirmation-number">
+          <span class="label">Confirmation Number</span>
+          <span class="number">{{ confirmationNumber }}</span>
+        </div>
+
+        <div class="confirmation-details">
+          <div class="confirmation-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            </svg>
+            <div>
+              <strong>{{ selectedVehicle?.make }} {{ selectedVehicle?.model }}</strong>
+              <span>{{ selectedVehicle?.licensePlate }}</span>
+            </div>
+          </div>
+
+          <div class="confirmation-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <div>
+              <strong>{{ formatDateLong(selectedDate!) }}</strong>
+              <span>{{ selectedTimeSlot }}</span>
+            </div>
+          </div>
+
+          <div class="confirmation-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <div>
+              <strong>{{ selectedWorkshop?.name }}</strong>
+              <span>{{ selectedWorkshop?.address }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="confirmation-info">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <p>A confirmation email has been sent to your registered email address. Please arrive 10 minutes early.</p>
+        </div>
+      </div>
+
+      <div class="success-actions">
+        <button class="btn-primary" (click)="goToMyVehicles()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+          Go to My Vehicles
+        </button>
+        <button class="btn-secondary" (click)="startNewBooking()">Book Another Service</button>
+      </div>
+    </div>
+  </div>
+</div>

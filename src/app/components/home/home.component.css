@@ -89,7 +89,8 @@
 
 .btn-secondary:hover {
   background: white;
-  border-color: var(--brand-primary);\n  transform: translateY(-3px);
+  border-color: var(--brand-primary);
+  transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(239,68,68,0.16);
 }
 

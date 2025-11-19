@@ -1,10 +1,274 @@
+/* Realistic vehicle information design */
+.vehicle-info-section.realistic {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(239,68,68,0.08);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+.vehicle-info-section.realistic h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+}
+
+/* Egyptian License Plate Design */
+.license-plate-egypt {
+  width: 320px;
+  height: 160px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%);
+  border: 3px solid #1a1a1a;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  position: relative;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+}
+
+.plate-top {
+  height: 45%;
+  background: linear-gradient(180deg, #0066cc 0%, #004a99 100%);
+  border-bottom: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.plate-country-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.egypt-label-en {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #1a1a1a;
+  letter-spacing: 2px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.egypt-label-ar {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #1a1a1a;
+  font-family: 'Arial', sans-serif;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.plate-bottom {
+  height: 55%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 1.5rem;
+  position: relative;
+}
+
+.plate-letters,
+.plate-numbers {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1a1a1a;
+  letter-spacing: 3px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.plate-letters {
+  font-family: 'Arial', sans-serif;
+  text-transform: uppercase;
+}
+
+.plate-numbers {
+  font-family: 'Courier New', monospace;
+}
+
+.plate-divider {
+  width: 2px;
+  height: 50px;
+  background: linear-gradient(180deg, transparent 0%, #999 20%, #999 80%, transparent 100%);
+}
+
+.plate-screws {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.screw {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #d4d4d4 0%, #999 50%, #666 100%);
+  border-radius: 50%;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.screw::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  height: 2px;
+  background: #333;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.screw-tl { top: 8px; left: 8px; }
+.screw-tr { top: 8px; right: 8px; }
+.screw-bl { bottom: 8px; left: 8px; }
+.screw-br { bottom: 8px; right: 8px; }
+
+/* Car Details Card */
+.car-details-card {
+  width: 100%;
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid #f3f4f6;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+}
+
+.car-details-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-color: #e5e7eb;
+}
+
+.manufacturer-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.manufacturer-logo img {
+  max-width: 120px;
+  max-height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+}
+
+.manufacturer-name {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.manufacturer-name h3 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.car-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #f3f4f6;
+  transition: all 0.25s ease;
+}
+
+.info-item:hover {
+  background: white;
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .license-plate-egypt {
+    width: 280px;
+    height: 140px;
+  }
+
+  .plate-letters,
+  .plate-numbers {
+    font-size: 1.5rem;
+  }
+
+  .egypt-label-en {
+    font-size: 1rem;
+  }
+
+  .egypt-label-ar {
+    font-size: 1.5rem;
+  }
+
+  .car-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .loading-state,
 .error-state {
-  padding: 20px;
+  padding: 40px 20px;
   text-align: center;
   color: #666;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  margin-top: 2rem;
 }
 
 .error-state {
   color: #dc3545;
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(254, 226, 226, 0.5);
 }

@@ -36,6 +36,17 @@ interface Expense {
   receipt?: string;
 }
 
+interface Tip {
+  id: number;
+  title: string;
+  excerpt: string;
+  category: string;
+  icon: string;
+  timeAgo: string;
+  readTime: number;
+  content: string;
+}
+
 interface NewExpenseForm {
   expenseType: ExpenseType | '';
   expenseDate: string; // yyyy-MM-dd
@@ -82,8 +93,41 @@ export class MyVehiclesComponent implements OnInit {
     carId: null,
     icon: '⛽'
   };
-  expenseTypes: ExpenseType[] = ['Fuel', 'Maintainance', 'Repair', 'Insurance', 'Other'];
+  expenseTypes: ExpenseType[] = ['Fuel', 'Maintenance', 'Repair', 'Insurance', 'Other'];
   welcomeMessage: string = '';
+  aiInputText: string = '';
+  tips: Tip[] = [
+    {
+      id: 1,
+      title: 'Winter Tire Safety: When to Switch',
+      excerpt: 'Learn the optimal time to switch to winter tires and how they can significantly improve your vehicle\'s safety during cold months.',
+      category: 'Seasonal',
+      icon: '❄️',
+      timeAgo: '2 hours ago',
+      readTime: 4,
+      content: 'Full article content here...'
+    },
+    {
+      id: 2,
+      title: 'Top 5 Fuel-Saving Driving Habits',
+      excerpt: 'Discover proven techniques to reduce fuel consumption and save money on every trip.',
+      category: 'Fuel',
+      icon: '⛽',
+      timeAgo: '1 day ago',
+      readTime: 3,
+      content: 'Full article content here...'
+    },
+    {
+      id: 3,
+      title: 'Essential Oil Change Intervals',
+      excerpt: 'Understanding when to change your oil can extend engine life and prevent costly repairs.',
+      category: 'Maintenance',
+      icon: '🔧',
+      timeAgo: '3 days ago',
+      readTime: 5,
+      content: 'Full article content here...'
+    }
+  ];
 
   constructor(private router: Router, private carsService: CarsService, private cdr: ChangeDetectorRef, private carExpenseService: CarExpenseService) {}
 
@@ -473,5 +517,117 @@ export class MyVehiclesComponent implements OnInit {
 
   navigateToProfile(): void {
     this.router.navigate(['/profile']);
+  }
+
+  // Get car image URL from imagin.studio API
+  getCarImageUrl(vehicle: Vehicle): string {
+    const make = vehicle.make.toLowerCase().replace(/\s+/g, '');
+    const model = vehicle.model.toLowerCase().replace(/\s+/g, '');
+    return `https://cdn.imagin.studio/getimage?customer=hrjavascript-mastery&make=${make}&modelFamily=${model}&zoomType=fullscreen&zoomLevel=0&angle=01`;
+  }
+
+  // Get car logo URL from carlogos.org
+  getCarLogoUrl(vehicle: Vehicle): string {
+    const make = vehicle.make.toLowerCase().replace(/\s+/g, '-');
+    return `https://www.carlogos.org/car-logos/${make}-logo.png`;
+  }
+
+  // Handle image loading error
+  handleImageError(event: any): void {
+    event.target.src = '/Assets/images/Generic-Car2.jpg';
+  }
+
+  // Handle logo loading error
+  handleLogoError(event: any): void {
+    event.target.style.display = 'none';
+  }
+
+  // Navigate to booking page
+  navigateToBooking(): void {
+    this.router.navigate(['/booking']);
+  }
+
+  // Book service for specific vehicle
+  bookService(vehicle: Vehicle, event: Event): void {
+    event.stopPropagation();
+    // Navigate to booking with vehicle pre-selected
+    this.router.navigate(['/booking'], { queryParams: { vehicleId: vehicle.id } });
+  }
+
+  // Get indicator status from maintenance items
+  getIndicatorStatus(vehicle: Vehicle, indicatorType: string): 'good' | 'warning' | 'critical' {
+    if (!vehicle.maintenanceItems || vehicle.maintenanceItems.length === 0) return 'good';
+    
+    const indicatorMap: Record<string, string[]> = {
+      'oil': ['Oil Change', 'Engine Oil', 'Oil'],
+      'tires': ['Tire Rotation', 'Tires', 'Tire'],
+      'battery': ['Battery', 'Battery Check'],
+      'brakes': ['Brake Pads', 'Brakes', 'Brake Fluid', 'Brake']
+    };
+    
+    const matchingItems = vehicle.maintenanceItems.filter(item => 
+      indicatorMap[indicatorType]?.some(name => item.name.toLowerCase().includes(name.toLowerCase()))
+    );
+    
+    if (matchingItems.length === 0) return 'good';
+    
+    const minKm = Math.min(...matchingItems.map(item => item.remainingKm));
+    
+    if (minKm <= 1000) return 'critical';
+    if (minKm <= 3000) return 'warning';
+    return 'good';
+  }
+
+  // Get indicator label
+  getIndicatorLabel(vehicle: Vehicle, indicatorType: string): string {
+    const status = this.getIndicatorStatus(vehicle, indicatorType);
+    
+    if (status === 'critical') return 'Service Now';
+    if (status === 'warning') return 'Service Soon';
+    return 'Good';
+  }
+
+  // AI Assistant Methods
+  handleAIPrompt(action: string): void {
+    console.log('AI Assistant action:', action);
+    
+    switch(action) {
+      case 'maintenance':
+        // Navigate to booking page
+        this.navigateToBooking();
+        break;
+      case 'tips':
+        // Show AI tips (placeholder for future implementation)
+        this.aiInputText = 'Give me maintenance tips for my vehicles';
+        break;
+      case 'diagnostics':
+        // Show diagnostics (placeholder for future implementation)
+        this.aiInputText = 'Check diagnostics for all vehicles';
+        break;
+      case 'history':
+        // Show history (placeholder for future implementation)
+        this.aiInputText = 'Show me maintenance history';
+        break;
+    }
+  }
+
+  sendAIMessage(): void {
+    if (!this.aiInputText.trim()) return;
+    
+    console.log('AI message sent:', this.aiInputText);
+    
+    // Placeholder for AI integration
+    // In production, this would call an AI service endpoint
+    
+    // For now, just clear the input
+    this.aiInputText = '';
+    this.cdr.detectChanges();
+  }
+
+  // Tips & News Methods
+  openTipDetails(tip: Tip): void {
+    console.log('Opening tip:', tip);
+    // Future implementation: Navigate to tip details page or open modal
+    // this.router.navigate(['/tips', tip.id]);
   }
 }

@@ -9,7 +9,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserProfile, ProfileService } from '../../services/profile.service';
 import { ProfileValidationService, ValidationError } from '../profile/profile-validation.service';
@@ -17,7 +17,7 @@ import { ProfileValidationService, ValidationError } from '../profile/profile-va
 @Component({
   selector: 'app-profile-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIf, NgFor],
   templateUrl: './profile-form.component.html',
   styleUrls: ['./profile-form.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +32,7 @@ export class ProfileFormComponent implements OnInit, OnChanges {
   isEditMode = false;
   validationErrors: ValidationError[] = [];
   showValidationSummary = false;
+  showSuccessState = false;
 
   formData: UserProfile = {
     id: 0,
@@ -205,6 +206,15 @@ export class ProfileFormComponent implements OnInit, OnChanges {
     this.validationErrors = [];
     this.showValidationSummary = false;
     this.onSubmit.emit(this.formData);
+    
+    // Show success state briefly after save
+    this.showSuccessState = true;
+    setTimeout(() => {
+      this.showSuccessState = false;
+      this.isEditMode = false;
+      this.cdr.markForCheck();
+    }, 2000);
+    
     this.cdr.markForCheck();
   }
 

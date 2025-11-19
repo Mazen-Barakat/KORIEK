@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { ProfileButtonComponent } from '../profile/profile-button.component';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterLink, RouterLinkActive, ProfileButtonComponent],
+  standalone: true,
+  imports: [CommonModule, RouterLink, RouterLinkActive, ProfileButtonComponent, FormsModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
 })
@@ -16,6 +18,16 @@ export class HeaderComponent implements OnInit {
   isAuthenticated = false;
   isLandingPage = false;
   isLogoSpinning = false;
+  isContactModalOpen = false;
+  
+  // Contact form data
+  contactForm = {
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  };
 
   constructor(
     private authService: AuthService,
@@ -68,6 +80,38 @@ export class HeaderComponent implements OnInit {
     this.isLogoSpinning = true;
     setTimeout(() => {
       this.isLogoSpinning = false;
-    }, 400); // Match animation duration
+    }, 300); // Match animation duration
+  }
+
+  openContactModal() {
+    this.isContactModalOpen = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeContactModal() {
+    this.isContactModalOpen = false;
+    document.body.style.overflow = '';
+    this.resetContactForm();
+  }
+
+  resetContactForm() {
+    this.contactForm = {
+      name: '',
+      email: '',
+      phone: '',
+      subject: '',
+      message: ''
+    };
+  }
+
+  submitContactForm() {
+    // TODO: Implement form submission logic
+    console.log('Contact form submitted:', this.contactForm);
+    
+    // Show success message (placeholder)
+    alert('Thank you for contacting us! We will get back to you soon.');
+    
+    // Close modal
+    this.closeContactModal();
   }
 }

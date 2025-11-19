@@ -199,9 +199,11 @@
             [disabled]="isSaving || isLoading"
             class="save-button"
             [class.loading]="isSaving"
+            [class.success]="showSuccessState"
           >
-            <span *ngIf="!isSaving">Save Changes</span>
+            <span *ngIf="!isSaving && !showSuccessState">Save Changes</span>
             <span *ngIf="isSaving">Saving...</span>
+            <span *ngIf="showSuccessState" style="opacity: 0;">Saved!</span>
           </button>
         </div>
       </div>

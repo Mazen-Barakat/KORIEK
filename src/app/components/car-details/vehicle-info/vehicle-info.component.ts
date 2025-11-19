@@ -53,6 +53,54 @@ export class VehicleInfoComponent implements OnInit {
     }
   }
 
+  parseLicensePlate(plate: string): { letters: string; numbers: string } {
+    if (!plate) return { letters: '', numbers: '' };
+
+    // Extract letters and numbers from the plate
+    const letters = plate.replace(/[0-9]/g, '').trim();
+    const numbers = plate.replace(/[^0-9]/g, '').trim();
+
+    return { letters, numbers };
+  }
+
+  getCarLogo(make: string): string {
+    const makeNormalized = make?.toLowerCase().trim() || '';
+    const logoMap: { [key: string]: string } = {
+      'toyota': 'https://www.carlogos.org/car-logos/toyota-logo.png',
+      'honda': 'https://www.carlogos.org/car-logos/honda-logo.png',
+      'ford': 'https://www.carlogos.org/car-logos/ford-logo.png',
+      'chevrolet': 'https://www.carlogos.org/car-logos/chevrolet-logo.png',
+      'bmw': 'https://www.carlogos.org/car-logos/bmw-logo.png',
+      'mercedes': 'https://www.carlogos.org/car-logos/mercedes-benz-logo.png',
+      'mercedes-benz': 'https://www.carlogos.org/car-logos/mercedes-benz-logo.png',
+      'audi': 'https://www.carlogos.org/car-logos/audi-logo.png',
+      'volkswagen': 'https://www.carlogos.org/car-logos/volkswagen-logo.png',
+      'nissan': 'https://www.carlogos.org/car-logos/nissan-logo.png',
+      'hyundai': 'https://www.carlogos.org/car-logos/hyundai-logo.png',
+      'kia': 'https://www.carlogos.org/car-logos/kia-logo.png',
+      'mazda': 'https://www.carlogos.org/car-logos/mazda-logo.png',
+      'subaru': 'https://www.carlogos.org/car-logos/subaru-logo.png',
+      'lexus': 'https://www.carlogos.org/car-logos/lexus-logo.png',
+      'tesla': 'https://www.carlogos.org/car-logos/tesla-logo.png',
+      'porsche': 'https://www.carlogos.org/car-logos/porsche-logo.png',
+      'jeep': 'https://www.carlogos.org/car-logos/jeep-logo.png',
+      'dodge': 'https://www.carlogos.org/car-logos/dodge-logo.png',
+      'ram': 'https://www.carlogos.org/car-logos/ram-logo.png',
+      'volvo': 'https://www.carlogos.org/car-logos/volvo-logo.png',
+      'land rover': 'https://www.carlogos.org/car-logos/land-rover-logo.png',
+      'jaguar': 'https://www.carlogos.org/car-logos/jaguar-logo.png',
+      'mitsubishi': 'https://www.carlogos.org/car-logos/mitsubishi-logo.png',
+      'peugeot': 'https://www.carlogos.org/car-logos/peugeot-logo.png',
+      'renault': 'https://www.carlogos.org/car-logos/renault-logo.png',
+      'fiat': 'https://www.carlogos.org/car-logos/fiat-logo.png',
+      'alfa romeo': 'https://www.carlogos.org/car-logos/alfa-romeo-logo.png',
+      'mini': 'https://www.carlogos.org/car-logos/mini-logo.png',
+      'skoda': 'https://www.carlogos.org/car-logos/skoda-logo.png',
+      'seat': 'https://www.carlogos.org/car-logos/seat-logo.png'
+    };
+    return logoMap[makeNormalized] || '';
+  }
+
   loadVehicleInfo(): void {
     const id = Number(this._vehicleId);
     if (!id || Number.isNaN(id) || id <= 0) {
