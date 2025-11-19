@@ -1,6 +1,6 @@
-<div class="vehicle-info-section vertical-list">
+<div class="vehicle-info-section realistic">
   <h2>Vehicle Information</h2>
-  
+
   <div *ngIf="loading" class="loading-state">
     <p>Loading vehicle information...</p>
   </div>
@@ -9,26 +9,54 @@
     <p>{{ errorMessage }}</p>
   </div>
 
-  <div *ngIf="vehicleInfo && !loading" class="info-list">
-    <div class="info-row">
-      <label>Make</label>
-      <p>{{ vehicleInfo.make }}</p>
+  <div *ngIf="vehicleInfo && !loading" class="info-container">
+    <!-- Egyptian License Plate -->
+    <div class="license-plate-egypt">
+      <div class="plate-top">
+        <div class="plate-country-section">
+          <div class="egypt-label-en">EGYPT</div>
+          <div class="egypt-label-ar">مصر</div>
+        </div>
+      </div>
+      <div class="plate-bottom">
+        <div class="plate-letters">{{ parseLicensePlate(vehicleInfo.licensePlate).letters }}</div>
+        <div class="plate-divider"></div>
+        <div class="plate-numbers">{{ parseLicensePlate(vehicleInfo.licensePlate).numbers }}</div>
+      </div>
+      <div class="plate-screws">
+        <div class="screw screw-tl"></div>
+        <div class="screw screw-tr"></div>
+        <div class="screw screw-bl"></div>
+        <div class="screw screw-br"></div>
+      </div>
     </div>
-    <div class="info-row">
-      <label>Model</label>
-      <p>{{ vehicleInfo.model }}</p>
-    </div>
-    <div class="info-row">
-      <label>Year</label>
-      <p>{{ vehicleInfo.year }}</p>
-    </div>
-    <div class="info-row">
-      <label>License Plate</label>
-      <p>{{ vehicleInfo.licensePlate }}</p>
-    </div>
-    <div class="info-row">
-      <label>Engine Capacity</label>
-      <p>{{ vehicleInfo.engineCapacity }}</p>
+
+    <!-- Car Manufacturer Logo & Details -->
+    <div class="car-details-card">
+      <div class="manufacturer-logo" *ngIf="getCarLogo(vehicleInfo.make)">
+        <img [src]="getCarLogo(vehicleInfo.make)" [alt]="vehicleInfo.make + ' Logo'" (error)="$event.target.style.display='none'">
+      </div>
+      <div class="manufacturer-name" *ngIf="!getCarLogo(vehicleInfo.make)">
+        <h3>{{ vehicleInfo.make }}</h3>
+      </div>
+      <div class="car-info-grid">
+        <div class="info-item">
+          <span class="info-label">Make</span>
+          <span class="info-value">{{ vehicleInfo.make }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Model</span>
+          <span class="info-value">{{ vehicleInfo.model }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Year</span>
+          <span class="info-value">{{ vehicleInfo.year }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Engine</span>
+          <span class="info-value">{{ vehicleInfo.engineCapacity }}L</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>

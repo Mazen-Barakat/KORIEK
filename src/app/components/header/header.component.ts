@@ -80,7 +80,7 @@ export class HeaderComponent implements OnInit {
     this.isLogoSpinning = true;
     setTimeout(() => {
       this.isLogoSpinning = false;
-    }, 400); // Match animation duration
+    }, 300); // Match animation duration
   }
 
   openContactModal() {

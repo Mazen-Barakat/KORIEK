@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export type ExpenseType = 'Fuel' | 'Maintainance' | 'Repair' | 'Insurance' | 'Other';
+export type ExpenseType = 'Fuel' | 'Maintenance' | 'Repair' | 'Insurance' | 'Other';
 
 export interface CreateCarExpenseRequest {
   amount: number;

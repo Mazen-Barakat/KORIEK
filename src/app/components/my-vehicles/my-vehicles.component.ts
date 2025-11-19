@@ -92,7 +92,7 @@ export class MyVehiclesComponent implements OnInit {
     carId: null,
     icon: '⛽'
   };
-  expenseTypes: ExpenseType[] = ['Fuel', 'Maintainance', 'Repair', 'Insurance', 'Other'];
+  expenseTypes: ExpenseType[] = ['Fuel', 'Maintenance', 'Repair', 'Insurance', 'Other'];
   welcomeMessage: string = '';
   aiInputText: string = '';
   tips: Tip[] = [
