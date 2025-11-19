@@ -1,38 +1,119 @@
 <div class="car-details-page">
   <div class="header-section">
     <button class="back-btn" (click)="goBack()">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" width="16" height="16">
-        <path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/>
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
       </svg>
+      Back to My Vehicles
     </button>
     <div class="title-section">
-      <h1>{{ vehicle?.year }} {{ vehicle?.make }} {{ vehicle?.model }}</h1>
-      <p class="license-plate">{{ vehicle?.licensePlate }}</p>
+      <div class="title-with-logo">
+        <img *ngIf="vehicle && getCarLogo(vehicle.make)"
+             [src]="getCarLogo(vehicle.make)"
+             [alt]="vehicle.make + ' Logo'"
+             class="brand-logo"
+             (error)="$event.target.style.display='none'">
+        <h1>{{ vehicle?.year }} {{ vehicle?.make }} {{ vehicle?.model }}</h1>
+      </div>
     </div>
     <button class="edit-btn" (click)="editCarAndIndicators()">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16">
-        <path d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.7-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160V416c0 53 43 96 96 96H352c53 0 96-43 96-96V320c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96z"/>
+      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
       </svg>
       Edit Car and Indicators
     </button>
   </div>
 
+  <!-- Quick Actions Bar -->
+  <div class="quick-actions-bar" *ngIf="vehicle">
+    <button class="action-btn primary">
+      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      Schedule Maintenance
+    </button>
+    <button class="action-btn secondary">
+      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"></line>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+      </svg>
+      Add Expense
+    </button>
+    <button class="action-btn secondary">
+      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Export PDF
+    </button>
+  </div>
+
+  <!-- Summary Overview Card -->
+  <div class="summary-overview" *ngIf="vehicle">
+    <div class="summary-card status-good">
+      <div class="summary-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div class="summary-content">
+        <h3>{{ getGoodCount() }}</h3>
+        <p>All Good</p>
+      </div>
+    </div>
+    <div class="summary-card status-attention">
+      <div class="summary-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <div class="summary-content">
+        <h3>{{ getAttentionCount() }}</h3>
+        <p>Need Attention</p>
+      </div>
+    </div>
+    <div class="summary-card status-urgent">
+      <div class="summary-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="summary-content">
+        <h3>{{ getUrgentCount() }}</h3>
+        <p>Urgent</p>
+      </div>
+    </div>
+    <div class="summary-card mileage-card">
+      <div class="summary-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="summary-content">
+        <h3>{{ vehicle.currentMileage | number }}</h3>
+        <p>Current Mileage (km)</p>
+      </div>
+    </div>
+  </div>
+
   <div class="content-grid" *ngIf="vehicle">
     <!-- Left Column: Car Image and Vehicle Information -->
     <div class="left-column">
-      <!-- Car Image with placeholder until loaded -->
+      <!-- Car Image with loading state -->
       <div class="car-image-section">
-        <div class="car-placeholder" *ngIf="!imageLoaded || imageError">
-          <!-- simple inline SVG placeholder -->
-          <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect width="120" height="80" rx="8" fill="#f3f4f6"/>
-            <g fill="#d1d5db">
-              <path d="M10 60c0-8 10-18 30-18s30 10 40 10 20-6 30-6v24H10V60z"/>
-            </g>
-          </svg>
-        </div>
-
-        <img [src]="vehicle.imageUrl" [alt]="vehicle.year + ' ' + vehicle.make + ' ' + vehicle.model" class="car-image" (load)="onImageLoad()" (error)="onImageError()" [class.hidden]="!imageLoaded || imageError">
+        <img [src]="vehicle?.imageUrl" [alt]="vehicle?.year + ' ' + vehicle?.make + ' ' + vehicle?.model" class="car-image" loading="eager">
       </div>
 
       <!-- Vehicle Information (vertical list) -->
@@ -41,86 +122,325 @@
       </ng-container>
     </div>
 
-    <!-- Right Column: Maintenance Information and Condition Indicators -->
+    <!-- Right Column: Condition Indicators (PRIORITY) and Maintenance -->
     <div class="right-column">
-      <!-- Maintenance Information -->
-      <div class="maintenance-info-section">
-        <div class="section-header">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20">
-            <path d="M78.6 5C69.1-2.4 55.6-1.5 47 7L7 47c-8.5 8.5-9.4 22-2.1 31.6l80 104c4.5 5.9 11.6 9.4 19 9.4h54.1l109 109c-14.7 29-10 65.4 14.3 89.6l112 112c12.5 12.5 32.8 12.5 45.3 0l64-64c12.5-12.5 12.5-32.8 0-45.3l-112-112c-24.2-24.2-60.6-29-89.6-14.3l-109-109V104c0-7.5-3.5-14.5-9.4-19L78.6 5zM19.9 396.1C7.2 408.8 0 426.1 0 444.1C0 481.6 30.4 512 67.9 512c18 0 35.3-7.2 48-19.9L233.7 374.3c-7.8-20.9-9-43.6-3.6-65.1l-61.7-61.7L19.9 396.1zM512 144c0-10.5-1.1-20.7-3.2-30.5c-2.4-11.2-16.1-14.1-24.2-6l-63.9 63.9c-3 3-7.1 4.7-11.3 4.7H352c-8.8 0-16-7.2-16-16V102.6c0-4.2 1.7-8.3 4.7-11.3l63.9-63.9c8.1-8.1 5.2-21.8-6-24.2C388.7 1.1 378.5 0 368 0C288.5 0 224 64.5 224 144l0 .8 85.3 85.3c36-9.1 75.8 .5 104 28.7L429 274.5c49-23 83-72.8 83-130.5zM56 432a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z"/>
-          </svg>
-          <span>Maintenance Information</span>
-        </div>
-        <div class="maintenance-details">
-          <div class="detail-item">
-            <label>Current Mileage</label>
-            <p class="highlight">{{ vehicle.currentMileage | number }} km</p>
-          </div>
-          <div class="detail-item">
-            <label>Last Maintenance Date</label>
-            <p>📅 {{ vehicle.lastMaintenanceDate }}</p>
-          </div>
-          <div class="maintenance-next">
-            <div class="next-item">
-              <label>Next Maintenance Date</label>
-              <p class="date-highlight">📅 {{ vehicle.nextMaintenanceDate }}</p>
-              <span class="badge">In 9 days</span>
+      <!-- CONDITION INDICATORS - TOP PRIORITY -->
+      <div class="condition-indicators-section">
+        <div class="section-header-main">
+          <div class="header-left">
+            <div class="section-icon-modern">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+              </svg>
             </div>
-            <div class="next-item">
-              <label>Next Maintenance Mileage</label>
-              <p class="mileage-highlight">{{ vehicle.nextMaintenanceMileage | number }} km</p>
-              <span class="badge-km">5,000 km remaining</span>
+            <div>
+              <h2>Vehicle Health Status</h2>
+              <span class="section-subtitle">{{ getUpcomingServicesCount() }} services needed soon</span>
+            </div>
+          </div>
+          <div class="health-score-badge" [ngClass]="getHealthScoreClass()">
+            <span class="score-value">{{ getVehicleHealthScore() }}</span>
+            <span class="score-label">/100</span>
+          </div>
+        </div>
+
+        <!-- Loading Skeleton for Indicators -->
+        <div class="indicators-compact-grid" *ngIf="isLoadingIndicators">
+          <div class="indicator-skeleton" *ngFor="let i of [1,2,3,4,5,6]">
+            <div class="skeleton-header">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-info">
+                <div class="skeleton-title"></div>
+                <div class="skeleton-meta"></div>
+              </div>
+              <div class="skeleton-status"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simplified Indicators Grid - Compact View -->
+        <div class="indicators-compact-grid" *ngIf="!isLoadingIndicators">
+          <div *ngFor="let indicator of getSortedIndicators(); let i = index"
+               class="indicator-compact-card"
+               [ngClass]="getStatusClass(indicator.status)"
+               (click)="toggleIndicator(i)">
+            <div class="indicator-compact-header">
+              <div class="indicator-icon-small">{{ indicator.icon }}</div>
+              <div class="indicator-compact-info">
+                <h4>{{ indicator.name }}</h4>
+                <div class="indicator-meta">
+                  <span class="next-service">{{ indicator.nextInspectionDate }}</span>
+                  <span class="remaining-mini" [ngClass]="getRemainingUrgencyClass(indicator.remaining, indicator.type)">
+                    {{ getRemainingDisplay(indicator) }}
+                  </span>
+                </div>
+              </div>
+              <div class="indicator-status-and-expand">
+                <div class="indicator-status-icon">
+                <svg *ngIf="indicator.status === 'Normal'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <svg *ngIf="indicator.status === 'Warning'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <svg *ngIf="indicator.status === 'Critical'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                </div>
+                <div class="expand-indicator" [class.expanded]="expandedIndicators.has(i)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expanded Details (only when clicked) -->
+            <div class="indicator-compact-details" *ngIf="expandedIndicators.has(i)">
+              <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value status-text" [ngClass]="getStatusClass(indicator.status)">{{ indicator.status }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">
+                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                    <path d="M2 17l10 5 10-5"></path>
+                    <path d="M2 12l10 5 10-5"></path>
+                  </svg>
+                  Remaining Mileage:
+                </span>
+                <span class="detail-value">{{ indicator.mileageDifference | number }} km</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">
+                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  Remaining Time:
+                </span>
+                <span class="detail-value">{{ formatTimeDifference(indicator.timeDifference) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">
+                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  Remaining Time (%):
+                </span>
+                <span class="detail-value" [ngClass]="getPercentageClass(indicator.timeDifferenceAsPercentage)">
+                  {{ indicator.timeDifferenceAsPercentage | number:'1.1-1' }}%
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">
+                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                  Estimated Cost:
+                </span>
+                <span class="detail-value">{{ getServiceCost(indicator) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">
+                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  Recommended:
+                </span>
+                <span class="detail-value">{{ getRecommendedProvider(indicator) }}</span>
+              </div>
+              <div class="detail-actions">
+                <button class="compact-action-btn primary" (click)="scheduleService(indicator); $event.stopPropagation()">
+                  Schedule
+                </button>
+                <button class="compact-action-btn secondary" (click)="shareIndicator(indicator); $event.stopPropagation()">
+                  Share
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Condition Indicators -->
-      <div class="condition-indicators-section">
-        <h2>Condition Indicators</h2>
-        <p class="subtitle">Monitor all maintenance indicators for your vehicle</p>
-        <div class="indicators-grid">
-          <div *ngFor="let indicator of vehicle.conditionIndicators" 
-               class="indicator-card" 
-               [ngClass]="getStatusClass(indicator.status)">
-            <div class="indicator-header">
-              <div class="indicator-title">
-                <span class="indicator-icon">{{ indicator.icon }}</span>
-                <span class="indicator-name">{{ indicator.name }}</span>
-              </div>
-              <div class="status-badge" [ngClass]="getStatusClass(indicator.status)">
-                <svg *ngIf="indicator.status === 'Good'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="12" height="12">
-                  <path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/>
+      <!-- Expenses Tracker Section -->
+      <div class="expenses-section">
+        <div class="expenses-header">
+          <div>
+            <h2 class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline; vertical-align: middle; margin-right: 8px;">
+                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+              </svg>
+              Expenses Tracker
+            </h2>
+            <p class="section-subtitle">Track fuel, maintenance, and other costs</p>
+          </div>
+          <button class="add-expense-btn" (click)="openAddExpenseModal()">+ Add Expense</button>
+        </div>
+        <div class="expense-list">
+          <div *ngIf="expenses.length === 0" class="no-expenses">
+            <p>No expenses recorded yet. Click "+ Add Expense" to get started!</p>
+          </div>
+          <div *ngFor="let expense of expenses" class="expense-item">
+            <div class="expense-icon">{{ expense.icon }}</div>
+            <div class="expense-info">
+              <h4>{{ expense.name }}</h4>
+              <p class="expense-meta">
+                <span class="expense-date">{{ expense.date | date:'MMM dd, yyyy' }}</span>
+                <span class="expense-description" *ngIf="expense.description">{{ expense.description }}</span>
+              </p>
+            </div>
+            <div class="expense-actions">
+              <span class="expense-amount">EGP {{ expense.amount | number:'1.2-2' }}</span>
+              <button class="delete-expense-btn" title="Delete expense" (click)="deleteExpense(expense.id)" [disabled]="expense.id && deletingExpenseIds.has(expense.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="14" height="14" aria-hidden="false" focusable="false">
+                  <path fill="currentColor" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16V64c0-17.7-14.3-32-32-32H320l-7.2-14.3C307.6 6 296.9 0 285 0H163c-11.9 0-22.6 6-27.8 17.7zM53.2 467c1.5 25.7 22.9 45 48.6 45h243.5c25.7 0 47.1-19.3 48.6-45L416 128H32l21.2 339z"/>
                 </svg>
-                <svg *ngIf="indicator.status === 'Attention'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="12" height="12">
-                  <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"/>
-                </svg>
-                <svg *ngIf="indicator.status === 'Urgent'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="12" height="12">
-                  <path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
-                </svg>
-                {{ indicator.status }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Expense Modal -->
+      <div *ngIf="isAddExpenseModalOpen" class="modal-overlay" (click)="closeAddExpenseModal()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Add New Expense</h3>
+            <button class="modal-close-btn" (click)="closeAddExpenseModal()">✕</button>
+          </div>
+          <div *ngIf="expenseMessage" class="alert" [ngClass]="expenseMessageType === 'success' ? 'success' : 'error'">
+            {{ expenseMessage }}
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="expense-type">Expense Type</label>
+              <select id="expense-type" [(ngModel)]="newExpenseForm.expenseType" (change)="updateExpenseType(newExpenseForm.expenseType)" class="form-input" required #typeModel="ngModel">
+                <option value="" disabled>Select Expense Type</option>
+                <option *ngFor="let type of expenseTypes" [value]="type">{{ type }}</option>
+              </select>
+              <div class="field-error" *ngIf="submittedExpense && typeModel.invalid">Expense type is required.</div>
+            </div>
+            <div class="form-group">
+              <label for="expense-date">Date</label>
+              <input id="expense-date" type="date" [(ngModel)]="newExpenseForm.expenseDate" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label for="expense-amount">Amount (EGP)</label>
+              <input id="expense-amount" type="number" min="0.01" step="0.01" [(ngModel)]="newExpenseForm.amount" placeholder="0.00" class="form-input" required #amountModel="ngModel" />
+              <div class="field-error" *ngIf="submittedExpense && (amountModel.invalid || (newExpenseForm.amount ?? 0) <= 0)">
+                Amount must be greater than 0.
               </div>
             </div>
-            <div class="indicator-details">
-              <div class="detail-row">
-                <span class="label">Last Inspection Date</span>
-                <span class="value">{{ indicator.lastInspectionDate }}</span>
+            <div class="form-group">
+              <label for="expense-desc">Description</label>
+              <textarea id="expense-desc" rows="3" class="form-input" [(ngModel)]="newExpenseForm.description" placeholder="Optional description..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeAddExpenseModal()" [disabled]="isSavingExpense">Cancel</button>
+            <button class="btn-save" (click)="addExpense()" [disabled]="isSavingExpense">Add Expense</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maintenance Overview - Secondary Information -->
+      <div class="maintenance-info-section">
+        <div class="section-header">
+          <div class="section-icon-modern small">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+          </div>
+          <span>Maintenance Overview</span>
+        </div>
+
+        <!-- Circular Progress Gauge -->
+        <div class="progress-gauge-container">
+          <div class="circular-gauge">
+            <svg viewBox="0 0 200 200" class="gauge-svg">
+              <circle cx="100" cy="100" r="85" class="gauge-background"/>
+              <circle cx="100" cy="100" r="85" class="gauge-progress"
+                      [style.stroke-dasharray]="getMileageCircumference()"
+                      [style.stroke-dashoffset]="getMileageProgress()"
+                      [ngClass]="getMileageUrgencyClass()"/>
+            </svg>
+            <div class="gauge-center">
+              <div class="gauge-value" (click)="editMileage = !editMileage">
+                <input *ngIf="editMileage"
+                       type="number"
+                       [(ngModel)]="vehicle.currentMileage"
+                       (blur)="saveMileage()"
+                       (keyup.enter)="saveMileage()"
+                       class="mileage-input"/>
+                <span *ngIf="!editMileage">{{ vehicle.currentMileage | number }}</span>
               </div>
-              <div class="detail-row">
-                <span class="label">Next Inspection Date</span>
-                <span class="value">{{ indicator.nextInspectionDate }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">Next Mileage</span>
-                <span class="value">{{ indicator.nextMileage | number }} km</span>
-              </div>
-              <div class="remaining-section">
-                <span class="label">Remaining</span>
-                <span class="remaining-value">{{ indicator.remaining | number }} km</span>
+              <div class="gauge-label">km traveled</div>
+              <div class="gauge-remaining">{{ getRemainingKm() }} km until service</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service History Timeline -->
+        <div class="service-history">
+          <div class="history-header">
+            <h3>Recent Service History</h3>
+          </div>
+          <div class="timeline">
+            <div *ngFor="let service of getRecentServices()" class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-date">{{ service.date }}</div>
+                <div class="timeline-title">{{ service.type }}</div>
+                <div class="timeline-details">
+                  <span class="timeline-mileage">{{ service.mileage | number }} km</span>
+                  <span class="timeline-cost">{{ service.cost }} EGP</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Cost Tracking Graph -->
+        <div class="cost-tracking">
+          <h3>Maintenance Spending</h3>
+          <div class="cost-graph">
+            <div class="graph-bars">
+              <div *ngFor="let month of getCostHistory()" class="bar-container">
+                <div class="bar" [style.height.%]="getBarHeight(month.cost)">
+                  <span class="bar-value">{{ month.cost }}</span>
+                </div>
+                <div class="bar-label">{{ month.month }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="cost-summary">
+            <div class="cost-stat">
+              <span class="stat-label">Total (6 months)</span>
+              <span class="stat-value">{{ getTotalCost() }} EGP</span>
+            </div>
+            <div class="cost-stat">
+              <span class="stat-label">Average/month</span>
+              <span class="stat-value">{{ getAverageCost() }} EGP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule Maintenance Button -->
+        <button class="schedule-maintenance-btn" (click)="scheduleMaintenanceDialog()">
+          <span style="font-size: 20px;">📅</span>
+          Schedule Maintenance Now
+        </button>
       </div>
     </div>
   </div>

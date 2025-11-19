@@ -81,7 +81,7 @@ export class MyVehiclesComponent implements OnInit {
     carId: null,
     icon: '⛽'
   };
-  expenseTypes: ExpenseType[] = ['Fuel', 'Maintainance', 'Repair', 'Insurance', 'Other'];
+  expenseTypes: ExpenseType[] = ['Fuel', 'Maintenance', 'Repair', 'Insurance', 'Other'];
   welcomeMessage: string = '';
 
   constructor(private router: Router, private carsService: CarsService, private cdr: ChangeDetectorRef, private carExpenseService: CarExpenseService) {}
