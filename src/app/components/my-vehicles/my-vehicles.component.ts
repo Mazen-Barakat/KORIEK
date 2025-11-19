@@ -124,12 +124,12 @@ export class MyVehiclesComponent implements OnInit {
           });
           // Extract profile information - check multiple possible field names
           this.profileName = response.data.name || response.data.firstName || 'Car Owner';
-          const candidate = response.data.profileImageUrl 
-            || response.data.profilePicture 
-            || response.data.profileImage 
-            || response.data.photoUrl 
-            || response.data.imageUrl 
-            || response.data.picture 
+          const candidate = response.data.profileImageUrl
+            || response.data.profilePicture
+            || response.data.profileImage
+            || response.data.photoUrl
+            || response.data.imageUrl
+            || response.data.picture
             || response.data.avatar;
           // Backend host used for serving uploaded files
           const backendHost = 'https://localhost:44316';
@@ -454,5 +454,9 @@ export class MyVehiclesComponent implements OnInit {
     const v = this.vehicles.find(v => v.id === Number(carId));
     if (!v) return `Car #${carId}`;
     return `${v.year} ${v.make} ${v.model} (${v.licensePlate})`;
+  }
+
+  navigateToProfile(): void {
+    this.router.navigate(['/profile']);
   }
 }

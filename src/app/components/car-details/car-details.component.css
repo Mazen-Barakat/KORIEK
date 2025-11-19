@@ -1,9 +1,22 @@
 .car-details-page {
-  padding: 2.5rem;
+  padding: 3rem 2.5rem;
   max-width: 1400px;
   margin: 0 auto;
-  background-color: #f9fafb;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
   min-height: 100vh;
+  position: relative;
+}
+
+.car-details-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(239,68,68,0.04) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 /* Header Section */
@@ -16,31 +29,35 @@
 }
 
 .back-btn {
-  background-color: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(239,68,68,0.1);
+  border-radius: 12px;
+  padding: 0.875rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  min-width: 48px;
-  height: 48px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 52px;
+  height: 52px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .back-btn svg {
-  fill: #374151;
+  fill: #6b7280;
+  transition: fill 0.3s ease;
 }
 
 .back-btn:hover {
-  background-color: #f3f4f6;
-  border-color: #ef4444;
-  transform: translateX(-2px);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
+  border-color: var(--brand-primary);
+  transform: translateX(-4px);
+  box-shadow: 0 6px 20px rgba(239,68,68,0.24);
 }
 
 .back-btn:hover svg {
-  fill: #ef4444;
+  fill: white;
 }
 
 .title-section {
@@ -65,7 +82,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.65rem 1.25rem;
-  background-color: #ef4444; /* match logout */
+  background-color: var(--brand-primary); /* match logout */
   color: white;
   border: none;
   border-radius: 10px;
@@ -101,11 +118,12 @@
 }
 
 .car-image-section {
-  background-color: #FBFBFB;
-  border: 1px solid #FBFBFB;
-  border-radius: 12px;
+  background: rgba(251, 251, 251, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(239,68,68,0.06);
+  border-radius: 16px;
   padding: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   height: 360px;
   overflow: hidden;
 }
@@ -120,11 +138,12 @@
 }
 
 .vehicle-info-section {
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(239,68,68,0.08);
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
 .vehicle-info-section h2 {
@@ -234,11 +253,11 @@
 }
 
 .maintenance-info-section {
-  background-color: white;
-  border: 1px solid #eef2f6;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 6px 20px rgba(2,6,23,0.04);
+  background: rgba(255, 255, 255, 0.95);\n  backdrop-filter: blur(20px);
+  border: 1px solid rgba(239,68,68,0.08);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
 .section-header {
@@ -336,11 +355,12 @@
 
 /* Condition Indicators Section */
 .condition-indicators-section {
-  background-color: white;
-  border: 1px solid #eef2f6;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 6px 20px rgba(2,6,23,0.04);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(239,68,68,0.08);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
 .condition-indicators-section h2 {
@@ -363,32 +383,37 @@
 }
 
 .indicator-card {
-  background-color: #ffffff;
-  border: 1px solid #eef2f6;
-  border-radius: 12px;
-  padding: 1rem;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(239,68,68,0.08);
+  border-radius: 14px;
+  padding: 1.125rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .indicator-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(2,6,23,0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
 }
 
-/* Status-specific border colors */
+/* Status-specific border colors with gradients */
 .indicator-card.status-good {
-  border-color: #10b981;
-  background-color: #f0fdf4;
+  border-color: rgba(16, 185, 129, 0.2);
+  background: linear-gradient(135deg, rgba(240, 253, 244, 0.95) 0%, rgba(220, 252, 231, 0.9) 100%);
+  backdrop-filter: blur(16px);
 }
 
 .indicator-card.status-attention {
-  border-color: #f59e0b;
-  background-color: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.2);
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.95) 0%, rgba(254, 243, 199, 0.9) 100%);
+  backdrop-filter: blur(16px);
 }
 
 .indicator-card.status-urgent {
-  border-color: #ef4444;
-  background-color: #fff5f5;
+  border-color: rgba(239, 68, 68, 0.2);
+  background: linear-gradient(135deg, rgba(255, 245, 245, 0.95) 0%, rgba(254, 226, 226, 0.9) 100%);
+  backdrop-filter: blur(16px);
 }
 
 .indicator-header {

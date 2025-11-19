@@ -5,11 +5,43 @@
 }
 
 .profile-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  padding: 32px;
-  border: 1px solid #f0f0f0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(30px);
+  border-radius: 28px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.3);
+  padding: 3.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: slideUp 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--brand-primary) 0%, #dc2626 50%, var(--brand-primary) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 0%; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .profile-content {
@@ -29,8 +61,9 @@
 
 .image-container {
   position: relative;
-  width: 180px;
-  height: 180px;
+  width: 200px;
+  height: 200px;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.15));
 }
 
 .profile-image {
@@ -38,14 +71,20 @@
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #E7F1FF;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  background: #f9f9f9;
-  transition: border-color 0.3s ease;
+  border: 5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(239, 68, 68, 0.1);
+  background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-image:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: scale(1.02);
 }
 
 .profile-image.error {
-  border-color: #E74C3C;
+  border-color: var(--brand-primary);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
 }
 
 .image-upload-label {
@@ -55,14 +94,14 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #E74C3C;
+  background-color: var(--brand-primary);
   border: 3px solid white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.25);
+  box-shadow: 0 2px 8px rgba(239,68,68,0.18);
   opacity: 1;
 }
 
@@ -101,11 +140,14 @@
 }
 
 .form-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2c3e50;
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0 0 8px 0;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.8px;
 }
 
 .form-subtitle {
@@ -115,36 +157,39 @@
 }
 
 .edit-button {
-  padding: 10px 24px;
-  background-color: transparent;
-  color: #3498db;
-  border: 2px solid #3498db;
-  border-radius: 8px;
+  padding: 12px 28px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  color: var(--brand-primary);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
 }
 
 .edit-button:hover {
-  background-color: #395F7D;
-  border-color: #395F7D;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
+  border-color: transparent;
   color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(57, 95, 125, 0.22);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
 }
 
 .edit-button.active {
-  background-color: #e74c3c;
-  border-color: #e74c3c;
+  background: linear-gradient(135deg, #2c5a7d 0%, #1e3a5f 100%);
+  border-color: transparent;
   color: white;
 }
 
 .edit-button.active:hover {
-  background-color: #395F7D;
-  border-color: #395F7D;
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f1f3f 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(30, 58, 95, 0.4);
 }
 
 /* Form Fields Grid */
@@ -180,38 +225,42 @@
 }
 
 .form-input {
-  padding: 12px 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 14px 18px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  font-size: 15px;
   font-family: inherit;
-  transition: all 0.3s ease;
-  background-color: #fafafa;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
   color: #2c3e50;
+  font-weight: 500;
 }
 
 .form-input:not(:disabled):hover {
-  border-color: #3498db;
-  background-color: #fff;
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .form-input:not(:disabled):focus {
   outline: none;
-  border-color: #3498db;
-  background-color: #fff;
-  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+  border-color: var(--brand-primary);
+  background: rgba(254, 242, 242, 0.5);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08), 0 4px 16px rgba(239, 68, 68, 0.15);
+  transform: translateY(-1px);
 }
 
 .form-input:disabled {
-  background-color: #f5f5f5;
-  color: #7f8c8d;
+  background: rgba(245, 245, 245, 0.6);
+  color: #95a5a6;
   cursor: not-allowed;
-  border-color: #e8e8e8;
+  border-color: rgba(0, 0, 0, 0.05);
 }
 
 /* Error State Styles */
 .form-input.error {
-  border-color: #E74C3C;
+  border-color: var(--brand-auth);
   background-color: #FFF5F5;
 }
 
@@ -330,7 +379,7 @@ select.form-input:disabled {
 
 .save-button {
   padding: 14px 36px;
-  background: linear-gradient(135deg, #E74C3C 0%, #c0392b 100%);
+  background: linear-gradient(135deg, var(--brand-auth) 0%, var(--brand-auth-2) 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -338,7 +387,7 @@ select.form-input:disabled {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  box-shadow: 0 4px 12px rgba(239,68,68,0.22);
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ProfileService } from '../../services/profile.service';
 
 @Component({
   selector: 'app-profile-button',
@@ -13,7 +14,15 @@ import { CommonModule } from '@angular/common';
       title="View Profile"
       aria-label="View Profile"
     >
+      <img
+        *ngIf="profileImageUrl"
+        [src]="profileImageUrl"
+        alt="Profile"
+        class="profile-image"
+        (error)="onImageError()"
+      />
       <svg
+        *ngIf="!profileImageUrl"
         width="20"
         height="20"
         viewBox="0 0 24 24"
@@ -34,32 +43,57 @@ import { CommonModule } from '@angular/common';
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        background-color: #e74c3c;
-        border: none;
+        background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
+        border: 3px solid rgba(255,255,255,0.95);
         cursor: pointer;
         color: white;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.22);
+        overflow: hidden;
       }
 
       .profile-btn:hover {
-        background-color: #c0392b;
-        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
-        transform: translateY(-2px);
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.32);
+        border-color: rgba(255,255,255,1);
       }
 
       .profile-btn:active {
-        transform: translateY(0);
+        transform: translateY(-1px) scale(1.02);
+      }
+
+      .profile-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
       }
 
       svg {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
       }
     `,
   ],
 })
-export class ProfileButtonComponent {}
+export class ProfileButtonComponent implements OnInit {
+  profileImageUrl: string | null = null;
+
+  constructor(private profileService: ProfileService) {}
+
+  ngOnInit() {
+    // Subscribe to profile data changes
+    this.profileService.profileData$.subscribe((profile) => {
+      if (profile?.profilePicture) {
+        this.profileImageUrl = profile.profilePicture;
+      }
+    });
+  }
+
+  onImageError() {
+    this.profileImageUrl = null;
+  }
+}

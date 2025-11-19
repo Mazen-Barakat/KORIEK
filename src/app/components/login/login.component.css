@@ -22,7 +22,7 @@
   right: -10%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(232, 69, 69, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(239,68,68,0.08) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
   animation: float 20s ease-in-out infinite;
@@ -47,10 +47,10 @@
   position: absolute;
   width: 12px;
   height: 12px;
-  background: linear-gradient(135deg, #E84545, #FFD93D);
+  background: linear-gradient(135deg, var(--brand-auth), var(--brand-warm));
   border-radius: 50%;
   opacity: 0.6;
-  box-shadow: 0 0 20px rgba(232, 69, 69, 0.7);
+  box-shadow: 0 0 20px rgba(239,68,68,0.6);
   animation: particleFloat 15s ease-in-out infinite;
 }
 
@@ -237,11 +237,11 @@ h2 {
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--brand-auth) 0%, var(--brand-auth-2) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 25px rgba(232, 69, 69, 0.4);
+  box-shadow: 0 8px 25px rgba(239,68,68,0.28);
 }
 
 .spinner-container.spinning .role-icon-wrapper {
@@ -302,7 +302,7 @@ h2 {
   font-size: 1.4rem;
   color: #1a1a1a;
   font-weight: 700;
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--brand-auth) 0%, var(--brand-auth-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -316,8 +316,8 @@ h2 {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FFD93D, #FF6B6B);
-  box-shadow: 0 0 10px rgba(255, 217, 61, 0.8);
+  background: linear-gradient(135deg, var(--brand-warm), var(--brand-auth-2));
+  box-shadow: 0 0 10px rgba(255, 200, 60, 0.7);
 }
 
 .spinner-container.spinning::before {
@@ -448,7 +448,7 @@ h2 {
 .input-wrapper.filled label {
   top: 8px;
   font-size: 0.75rem;
-  color: #E84545;
+  color: var(--brand-auth);
   font-weight: 600;
 }
 
@@ -456,7 +456,7 @@ h2 {
 .input-wrapper.focused input {
   border-color: transparent;
   background: white;
-  box-shadow: 0 0 0 2px #E84545, 0 4px 20px rgba(232, 69, 69, 0.15);
+  box-shadow: 0 0 0 2px rgba(232,69,69,0.12), 0 4px 20px rgba(232, 69, 69, 0.12);
   animation: borderGlow 0.3s ease-out;
 }
 
@@ -516,7 +516,7 @@ h2 {
   display: block;
   margin-top: 8px;
   font-size: 0.85rem;
-  color: #E84545;
+  color: var(--brand-auth);
   font-weight: 500;
   animation: fadeIn 0.3s ease-out;
 }
@@ -546,8 +546,8 @@ h2 {
 }
 
 .password-toggle:hover {
-  color: #E84545;
-  background-color: rgba(232, 69, 69, 0.08);
+  color: var(--brand-auth);
+  background-color: rgba(232, 69, 69, 0.06);
   transform: translateY(-50%) scale(1.1);
 }
 
@@ -658,13 +658,13 @@ h2 {
   font-size: 1.05rem;
   font-weight: 700;
   color: white;
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--brand-auth) 0%, var(--brand-auth-2) 100%);
   border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-top: 10px;
-  box-shadow: 0 4px 15px rgba(232, 69, 69, 0.3);
+  box-shadow: 0 4px 15px rgba(232, 69, 69, 0.24);
   letter-spacing: 0.3px;
   position: relative;
   overflow: hidden;
@@ -688,7 +688,7 @@ h2 {
 
 .submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(232, 69, 69, 0.4);
+  box-shadow: 0 8px 25px rgba(232, 69, 69, 0.32);
   background: linear-gradient(135deg, #d63535 0%, #FF5555 100%);
 }
 
@@ -817,8 +817,8 @@ h2 {
 
 .google-btn:hover:not(:disabled) {
   background: #ffffff;
-  border-color: #E84545;
-  box-shadow: 0 4px 15px rgba(232, 69, 69, 0.15);
+  border-color: var(--brand-auth);
+  box-shadow: 0 4px 15px rgba(232, 69, 69, 0.12);
   transform: translateY(-2px);
 }
 
