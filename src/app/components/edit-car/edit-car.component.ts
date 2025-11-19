@@ -2,10 +2,12 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CarsService } from '../../services/cars.service';
+import { CarsService, CarIndicatorDto, CreateCarIndicatorRequest } from '../../services/cars.service';
 
 interface Indicator {
   id: string;
+  backendId: number | null;
+  typeValue: string;
   name: string;
   icon: string;
   color: string;
@@ -16,6 +18,13 @@ interface Indicator {
   nextMileage: number;
   selected: boolean;
 }
+
+type NewIndicatorForm = {
+  indicatorType?: string;
+  lastInspectedDate?: string;
+  nextInspectedDate?: string;
+  nextMileage?: number;
+};
 
 @Component({
   selector: 'app-edit-car',
@@ -87,56 +96,24 @@ export class EditCarComponent implements OnInit {
     fuelType?: string;
   } = {};
 
-  indicators: Indicator[] = [
-    {
-      id: 'oil-change',
-      name: 'Oil Change',
-      icon: '🛢️',
-      color: '#10B981',
-      status: 'Good',
-      lastInspectedDate: '10/08/2025',
-      nextInspectedDate: '11/25/2025',
-      currentMileage: 0,
-      nextMileage: 50000,
-      selected: true
-    },
-    {
-      id: 'tire-rotation',
-      name: 'Tire Rotation',
-      icon: '⚠️',
-      color: '#F59E0B',
-      status: 'Attention',
-      lastInspectedDate: '09/10/2025',
-      nextInspectedDate: '11/10/2025',
-      currentMileage: 0,
-      nextMileage: 45000,
-      selected: true
-    },
-    {
-      id: 'battery-health',
-      name: 'Battery Health',
-      icon: '🔋',
-      color: '#10B981',
-      status: 'Good',
-      lastInspectedDate: '08/10/2025',
-      nextInspectedDate: '02/10/2026',
-      currentMileage: 0,
-      nextMileage: 0,
-      selected: true
-    },
-    {
-      id: 'air-filter',
-      name: 'Air Filter',
-      icon: '⚠️',
-      color: '#EF4444',
-      status: 'Urgent',
-      lastInspectedDate: '06/10/2025',
-      nextInspectedDate: '12/10/2025',
-      currentMileage: 0,
-      nextMileage: 45000,
-      selected: true
-    }
-  ];
+  indicators: Indicator[] = [];
+  isAddingIndicator = false;
+  isSavingIndicator = false;
+  newIndicator: NewIndicatorForm = {};
+
+  private readonly indicatorTypeConfig: Record<string, { label: string; icon: string }> = {
+    ACService: { label: 'AC Service', icon: '❄️' },
+    CarLicenseAndInsuranceExpiry: { label: 'Car License & Insurance Expiry', icon: '📋' },
+    GeneralMaintenance: { label: 'General Maintenance', icon: '🔧' },
+    OilChange: { label: 'Oil Change', icon: '🛢️' },
+    BatteryHealth: { label: 'Battery Health', icon: '🔋' },
+    TireChange: { label: 'Tire Change', icon: '🔄' }
+  };
+
+  indicatorTypeOptions: Array<{ value: string; label: string }> = Object.entries(this.indicatorTypeConfig).map(([value, meta]) => ({
+    value,
+    label: meta.label
+  }));
 
   constructor(
     private route: ActivatedRoute,
@@ -152,6 +129,7 @@ export class EditCarComponent implements OnInit {
 
     if (!isNaN(this.carId)) {
       this.fetchCar(this.carId);
+      this.loadIndicators(this.carId);
     }
 
     // Keep form model defined to avoid ExpressionChanged errors
@@ -196,6 +174,25 @@ export class EditCarComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Failed to fetch car', err)
+    });
+  }
+
+  private loadIndicators(carId: number): void {
+    this.carsService.getCarIndicators(carId).subscribe({
+      next: (items: CarIndicatorDto[]) => {
+        this.indicators = items.map(dto => this.mapIndicatorDto(dto));
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        // If GET endpoint doesn't exist (404), just keep existing indicators
+        if (err.status === 404) {
+          console.warn('[LOAD INDICATORS] GET endpoint not available (404), keeping current indicators');
+        } else {
+          console.error('Failed to load indicators', err);
+        }
+        // Don't clear indicators on error, maintain current state
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -306,13 +303,162 @@ export class EditCarComponent implements OnInit {
     return false;
   }
 
-  deleteIndicator(indicatorId: string): void {
-    this.indicators = this.indicators.filter(i => i.id !== indicatorId);
+  private mapIndicatorDto(dto: CarIndicatorDto): Indicator {
+    const indicatorType = String(dto?.indicatorType ?? '').trim();
+    const backendId = typeof dto?.id === 'number' ? dto.id : null;
+    const id = backendId != null ? String(backendId) : `indicator-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const typeValue = indicatorType;
+    const label = this.toIndicatorLabel(typeValue);
+    return {
+      id,
+      backendId,
+      typeValue,
+      name: label,
+      icon: this.getIndicatorEmoji(typeValue),
+      color: '#10B981',
+      status: this.normalizeIndicatorStatus(dto?.status),
+      lastInspectedDate: this.toDateInputValue(dto?.lastCheckedDate),
+      nextInspectedDate: this.toDateInputValue(dto?.nextCheckedDate),
+      currentMileage: Number(dto?.currentMileage ?? 0),
+      nextMileage: Number(dto?.nextMileage ?? 0),
+      selected: false
+    };
+  }
+
+  private normalizeIndicatorStatus(raw: any): Indicator['status'] {
+    if (typeof raw === 'string') {
+      const lowered = raw.trim().toLowerCase();
+      if (lowered === 'attention') return 'Attention';
+      if (lowered === 'urgent') return 'Urgent';
+      if (lowered === 'good') return 'Good';
+    }
+    return 'Good';
+  }
+
+  private toDateInputValue(value: any): string {
+    if (!value) {
+      return '';
+    }
+    const str = String(value);
+    if (str.includes('T')) {
+      return str.split('T')[0];
+    }
+    return str;
+  }
+
+  deleteIndicator(indicator: Indicator): void {
+    if (!indicator) {
+      return;
+    }
+
+    if (indicator.backendId == null) {
+      this.indicators = this.indicators.filter(i => i.id !== indicator.id);
+      return;
+    }
+
+    const carId = this.carId;
+    if (carId == null || Number.isNaN(carId)) {
+      console.error('Cannot delete indicator because car id is unavailable');
+      return;
+    }
+
+    this.carsService.deleteCarIndicator(indicator.backendId).subscribe({
+      next: () => {
+        this.loadIndicators(carId);
+      },
+      error: (err) => {
+        console.error('Failed to delete indicator', err);
+        alert('Failed to delete indicator. Please try again.');
+      }
+    });
   }
 
   addIndicator(): void {
-    // Logic to add new indicator
-    console.log('Add indicator clicked');
+    this.isAddingIndicator = true;
+    this.newIndicator = {
+      indicatorType: '',
+      lastInspectedDate: '',
+      nextInspectedDate: '',
+      nextMileage: undefined
+    };
+  }
+
+  saveNewIndicator(): void {
+    if (!this.newIndicator.indicatorType || !this.newIndicator.lastInspectedDate ||
+        !this.newIndicator.nextInspectedDate || this.newIndicator.nextMileage == null) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    if (this.carId == null || Number.isNaN(this.carId)) {
+      alert('Missing car reference. Please reopen the edit page.');
+      return;
+    }
+
+    const nextMileage = Number(this.newIndicator.nextMileage);
+    if (!Number.isFinite(nextMileage) || nextMileage <= 0) {
+      alert('Next mileage must be a positive number.');
+      return;
+    }
+
+    const indicatorType = this.newIndicator.indicatorType as string;
+    const lastCheckedDate = this.newIndicator.lastInspectedDate as string;
+    const nextCheckedDate = this.newIndicator.nextInspectedDate as string;
+
+    const payload: CreateCarIndicatorRequest = {
+      carId: this.carId,
+      indicatorType,
+      lastCheckedDate: this.toBackendDateValue(lastCheckedDate),
+      nextCheckedDate: this.toBackendDateValue(nextCheckedDate),
+      nextMileage,
+      currentMileage: Number(this.updateModel.currentMileage ?? this.currentMileage ?? 0)
+    };
+
+    console.log('[ADD INDICATOR] Car ID:', this.carId);
+    console.log('[ADD INDICATOR] Payload:', JSON.stringify(payload, null, 2));
+
+    this.isSavingIndicator = true;
+    this.carsService.createCarIndicator(payload).subscribe({
+      next: (response) => {
+        this.isSavingIndicator = false;
+        this.isAddingIndicator = false;
+        this.newIndicator = {};
+        console.log('[ADD INDICATOR] Success response:', response);
+        this.loadIndicators(this.carId);
+      },
+      error: (err) => {
+        this.isSavingIndicator = false;
+        console.error('Failed to create indicator', err);
+        const message = this.extractMessage(err?.error) || 'Failed to save indicator. Please try again.';
+        alert(message);
+      }
+    });
+  }
+
+  cancelAddIndicator(): void {
+    this.isAddingIndicator = false;
+    this.newIndicator = {};
+  }
+
+  private getIndicatorEmoji(indicatorType: string): string {
+    if (!indicatorType) {
+      return '🔍';
+    }
+    return this.indicatorTypeConfig[indicatorType]?.icon ?? '🔍';
+  }
+
+  private toBackendDateValue(value: string): string {
+    if (!value) {
+      return value;
+    }
+    return value.includes('T') ? value : `${value}T00:00:00`;
+  }
+
+  private toIndicatorLabel(indicatorType: string): string {
+    if (!indicatorType) {
+      return 'Indicator';
+    }
+    return this.indicatorTypeConfig[indicatorType]?.label ?? indicatorType;
   }
 
   toggleIndicatorSelection(indicator: Indicator): void {

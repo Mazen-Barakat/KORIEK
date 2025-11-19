@@ -36,7 +36,9 @@
       </div>
 
       <!-- Vehicle Information (vertical list) -->
-      <app-vehicle-info [vehicleId]="vehicleId!"></app-vehicle-info>
+      <ng-container *ngIf="vehicle as currentVehicle">
+        <app-vehicle-info [vehicleId]="currentVehicle.id" (mileageLoaded)="updateMileage($event)" (infoLoaded)="updateVehicleInfo($event)"></app-vehicle-info>
+      </ng-container>
     </div>
 
     <!-- Right Column: Maintenance Information and Condition Indicators -->

@@ -8,12 +8,33 @@ export interface MakeModels {
   models: string[];
 }
 
+export interface CreateCarIndicatorRequest {
+  carId: number;
+  indicatorType: string;
+  lastCheckedDate: string;
+  nextCheckedDate: string;
+  nextMileage: number;
+  currentMileage?: number;
+}
+
+export interface CarIndicatorDto {
+  id: number;
+  carId: number;
+  indicatorType: string;
+  lastCheckedDate: string;
+  nextCheckedDate: string;
+  nextMileage: number;
+  status?: string;
+  currentMileage?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class CarsService {
   private jsonUrl = 'cars-data.json';
   private cache$!: Observable<MakeModels[]>;
+  private readonly apiBase = 'https://localhost:44316/api';
 
   constructor(private http: HttpClient) {}
 
@@ -36,14 +57,13 @@ export class CarsService {
     transmissionType: string;
     fuelType: string;
   }): Observable<any> {
-    const apiUrl = 'https://localhost:44316/api/Car';
-    return this.http.post<any>(apiUrl, vehicleData);
+    return this.http.post<any>(`${this.apiBase}/Car`, vehicleData);
   }
 
   // Check if a license plate is already in use. Returns Observable<boolean>
   // Note: Adjust the endpoint path if your backend exposes a different route.
   checkLicensePlate(licensePlate: string): Observable<boolean> {
-    const url = `https://localhost:44316/api/Car/GetByLicensePlate?licensePlate=${encodeURIComponent(licensePlate)}`;
+    const url = `${this.apiBase}/Car/GetByLicensePlate?licensePlate=${encodeURIComponent(licensePlate)}`;
     return this.http.get<any>(url).pipe(
       // The backend is expected to return an object like { success: true, message: '', data: boolean }
       // Map to boolean for convenience in the frontend.
@@ -59,26 +79,22 @@ export class CarsService {
 
   // Fetch car owner profile with their cars
   getProfileWithCars(): Observable<any> {
-    const url = 'https://localhost:44316/api/CarOwnerProfile/profile-with-cars';
-    return this.http.get<any>(url);
+    return this.http.get<any>(`${this.apiBase}/CarOwnerProfile/profile-with-cars`);
   }
 
   // Fetch specific car by id
   getCarById(id: number): Observable<any> {
-    const url = `https://localhost:44316/api/Car/${id}`;
-    return this.http.get<any>(url);
+    return this.http.get<any>(`${this.apiBase}/Car/${id}`);
   }
 
   // Delete a car by id
   deleteCar(id: number): Observable<any> {
-    const url = `https://localhost:44316/api/Car/${id}`;
-    return this.http.delete<any>(url);
+    return this.http.delete<any>(`${this.apiBase}/Car/${id}`);
   }
 
   // Update specific car by id
   updateCar(id: number, payload: any): Observable<any> {
-    const url = `https://localhost:44316/api/Car/${id}`;
-    return this.http.put<any>(url, payload);
+    return this.http.put<any>(`${this.apiBase}/Car/${id}`, payload);
   }
 
   // Update a car using the full body (PUT /api/Car)
@@ -93,7 +109,28 @@ export class CarsService {
     transmissionType: string;
     fuelType: string;
   }): Observable<any> {
-    const url = 'https://localhost:44316/api/Car';
-    return this.http.put<any>(url, payload);
+    return this.http.put<any>(`${this.apiBase}/Car`, payload);
+  }
+
+  createCarIndicator(payload: CreateCarIndicatorRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiBase}/CarIndicator`, payload);
+  }
+
+  getCarIndicators(carId: number): Observable<CarIndicatorDto[]> {
+    return this.http.get<any>(`${this.apiBase}/CarIndicator/car/${carId}`).pipe(
+      map((resp: any) => {
+        if (resp && Array.isArray(resp.data)) {
+          return resp.data as CarIndicatorDto[];
+        }
+        if (Array.isArray(resp)) {
+          return resp as CarIndicatorDto[];
+        }
+        return [];
+      })
+    );
+  }
+
+  deleteCarIndicator(indicatorId: number | string): Observable<any> {
+    return this.http.delete<any>(`${this.apiBase}/CarIndicator/${indicatorId}`);
   }
 }
