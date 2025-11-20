@@ -72,7 +72,8 @@ export class AddVehicleFormComponent implements OnInit {
       make: ['', Validators.required],
       model: ['', Validators.required],
       year: ['', Validators.required],
-      licensePlate: ['', [Validators.required, Validators.maxLength(20)], [this.licensePlateAsyncValidator.bind(this)]],
+      // License plate must be 2-3 letters followed by 3-4 digits (only alphanumeric allowed)
+      licensePlate: ['', [Validators.required, Validators.maxLength(7), this.plateFormatValidator.bind(this)], [this.licensePlateAsyncValidator.bind(this)]],
       mileage: ['', [Validators.required, Validators.min(0)]],
       engineCapacity: ['', [Validators.required, this.greaterThanZeroValidator]],
       transmissionType: ['', Validators.required],
@@ -113,6 +114,45 @@ export class AddVehicleFormComponent implements OnInit {
     this.filteredYears = this.years.map(y => y.toString());
     this.filteredTransmissions = [...this.transmissionTypes];
     this.filteredFuels = [...this.fuelTypes];
+  }
+
+  /**
+   * Synchronous validator that enforces final license plate format:
+   *  - 2 or 3 letters (A-Z)
+   *  - followed immediately by 3 or 4 digits (0-9)
+   * Returns { plateFormat: true } when invalid.
+   */
+  plateFormatValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control && control.value ? String(control.value).trim() : '';
+    if (!value) return null; // required validator handles emptiness
+
+    // Only uppercase letters and digits considered for validation
+    const normalized = value.replace(/\s+/g, '').toUpperCase();
+    const ok = /^[A-Z]{2,3}\d{3,4}$/.test(normalized);
+    return ok ? null : { plateFormat: true };
+  }
+
+  /**
+   * Keep license plate input strictly alphanumeric while typing.
+   * This strips any non-alphanumeric chars and uppercases letters.
+   */
+  onPlateInput(ev: Event): void {
+    const input = ev.target as HTMLInputElement;
+    if (!input) return;
+    const raw = input.value || '';
+    // Remove any non-alphanumeric characters (no spaces, no symbols)
+    const filtered = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+    // If value changed, update control and input value to keep them in sync
+    if (filtered !== raw) {
+      input.value = filtered;
+    }
+
+    // Update form control value without re-emitting to avoid double handling
+    const ctrl = this.addVehicleForm.get('licensePlate');
+    if (ctrl && ctrl.value !== filtered) {
+      ctrl.setValue(filtered);
+    }
   }
 
   private loadEngineCapacities(): void {

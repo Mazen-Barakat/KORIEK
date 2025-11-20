@@ -307,6 +307,30 @@ export class MyVehiclesComponent implements OnInit {
     event.stopPropagation();
     this.router.navigate(['/car-details', vehicle.id]);
   }
+
+  /**
+   * Handle clicks on dashboard indicators inside the vehicle card.
+   * If the indicator status is 'unknown', navigate to the car details page
+   * and scroll to the Vehicle Health Status section using a fragment.
+   */
+  onIndicatorClick(vehicle: Vehicle, indicator: { label: string; icon: string; status?: string }, event: Event): void {
+    event.stopPropagation();
+    try {
+      const status = this.getIndicatorStatusByLabel(vehicle, indicator.label);
+      // Only redirect when the indicator has a known status (good/warning/critical).
+      // Do NOT redirect when status is 'unknown' or not available.
+      if (status === 'good' || status === 'warning' || status === 'critical') {
+        // Navigate to car-details and include fragment so the details page scrolls to the health section
+        this.router.navigate(['/car-details', vehicle.id], { fragment: 'vehicle-health' });
+      } else {
+        // Unknown status: do not redirect. Optionally we could show a tooltip or message here.
+        return;
+      }
+    } catch (err) {
+      console.error('Error handling indicator click', err);
+      this.router.navigate(['/car-details', vehicle.id]);
+    }
+  }
   // Open a confirmation dialog for deletion
   promptDelete(vehicle: Vehicle, event: Event): void {
     event.stopPropagation();
