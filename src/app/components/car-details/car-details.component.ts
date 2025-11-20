@@ -153,6 +153,7 @@ export class CarDetailsComponent implements OnInit {
   expenseTypes: ExpenseType[] = ['Fuel', 'Maintenance', 'Repair', 'Insurance', 'Other'];
 
   private apiUrl = 'https://localhost:44316/api/CarIndicator/car';
+  private pendingFragment: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -169,6 +170,14 @@ export class CarDetailsComponent implements OnInit {
     this.vehicleId = this.route.snapshot.paramMap.get('id');
     this.loadVehicleDetails();
     this.loadExpensesForCar();
+
+    // Listen for fragment navigation (e.g., from My Vehicles indicators)
+    this.route.fragment.subscribe(fragment => {
+      if (!fragment) return;
+      // store pending fragment and attempt to scroll when indicators are ready
+      this.pendingFragment = fragment;
+      this.tryScrollToFragment();
+    });
   }
 
   loadVehicleDetails(): void {
@@ -237,14 +246,39 @@ export class CarDetailsComponent implements OnInit {
           );
         }
         this.isLoadingIndicators = false;
+          // Attempt to scroll if navigation requested a fragment
+          this.tryScrollToFragment();
       },
       error: (error) => {
         console.error('Error loading indicators:', error);
         // Load fallback mock data
         this.loadMockIndicators();
         this.isLoadingIndicators = false;
+        // Attempt to scroll if navigation requested a fragment
+        this.tryScrollToFragment();
       }
     });
+  }
+
+  private tryScrollToFragment(): void {
+    if (!this.pendingFragment) return;
+    // Only scroll when indicators have finished loading
+    if (this.isLoadingIndicators) return;
+
+    // Small timeout to ensure DOM has rendered
+    setTimeout(() => {
+      const fragment = this.pendingFragment as string;
+      this.pendingFragment = null;
+      if (fragment === 'vehicle-health') {
+        const el = document.getElementById('vehicle-health-status');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // add a temporary highlight for visibility
+          el.classList.add('highlight-fragment');
+          setTimeout(() => el.classList.remove('highlight-fragment'), 2200);
+        }
+      }
+    }, 120);
   }
 
   mapIndicatorFromAPI(apiIndicator: any): ConditionIndicator {

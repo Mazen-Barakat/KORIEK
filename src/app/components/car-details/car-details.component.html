@@ -37,13 +37,7 @@
       </svg>
       Schedule Maintenance
     </button>
-    <button class="action-btn secondary">
-      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"></line>
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-      </svg>
-      Add Expense
-    </button>
+    <!-- Export PDF moved to take the place of the removed Add Expense button -->
     <button class="action-btn secondary">
       <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -126,7 +120,7 @@
     <div class="right-column">
       <!-- CONDITION INDICATORS - TOP PRIORITY -->
       <div class="condition-indicators-section">
-        <div class="section-header-main">
+        <div id="vehicle-health-status" class="section-header-main">
           <div class="header-left">
             <div class="section-icon-modern">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -138,9 +132,12 @@
               <span class="section-subtitle">{{ getUpcomingServicesCount() }} services needed soon</span>
             </div>
           </div>
-          <div class="health-score-badge" [ngClass]="getHealthScoreClass()">
-            <span class="score-value">{{ getVehicleHealthScore() }}</span>
-            <span class="score-label">/100</span>
+          <!-- Replace health score with Add Indicator CTA -->
+          <div class="add-indicator-wrapper">
+            <button class="action-btn primary add-indicator-btn" (click)="editCarAndIndicators()" title="Add or edit indicators">
+              <span class="plus-icon">+</span>
+              <span class="btn-text">Add Indicator</span>
+            </button>
           </div>
         </div>
 

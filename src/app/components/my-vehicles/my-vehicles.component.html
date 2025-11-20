@@ -52,10 +52,15 @@
             
             <!-- Car Image from API -->
             <div class="vehicle-image-section">
-              <img [src]="getCarImageUrl(vehicle)" 
-                   [alt]="vehicle.make + ' ' + vehicle.model" 
+              <img [src]="getCarImageUrl(vehicle)"
+                   [alt]="vehicle.make + ' ' + vehicle.model"
                    class="vehicle-image"
-                   (error)="handleImageError($event)" />
+                   (error)="handleImageError($event)"
+                   role="link"
+                   tabindex="0"
+                   style="cursor: pointer;"
+                   (click)="navigateToCarDetails(vehicle, $event)"
+                   (keydown.enter)="navigateToCarDetails(vehicle, $event)" />
             </div>
 
             <!-- Vehicle Header with Title and Actions -->
@@ -66,7 +71,14 @@
                        [alt]="vehicle.make + ' logo'" 
                        class="car-logo"
                        (error)="handleLogoError($event)" />
-                  <h2 class="vehicle-title">{{ vehicle.make }} {{ vehicle.model }}</h2>
+                  <h2 class="vehicle-title"
+                      role="link"
+                      tabindex="0"
+                      style="cursor: pointer;"
+                      (click)="navigateToCarDetails(vehicle, $event)"
+                      (keydown.enter)="navigateToCarDetails(vehicle, $event)">
+                    {{ vehicle.make }} {{ vehicle.model }}
+                  </h2>
                 </div>
                 <div class="vehicle-meta">
                   <span class="vehicle-year">
@@ -122,8 +134,10 @@
 
             <!-- 4 Car Indicators (Dynamic from Dashboard Selection) -->
             <div class="car-indicators" *ngIf="vehicle.dashboardIndicators && vehicle.dashboardIndicators.length > 0">
-              <div *ngFor="let indicator of vehicle.dashboardIndicators" 
-                   class="indicator-item" 
+                  <div *ngFor="let indicator of vehicle.dashboardIndicators" 
+                    class="indicator-item" 
+                    (click)="onIndicatorClick(vehicle, indicator, $event)"
+                    role="button" tabindex="0"
                    [class.indicator-good]="getIndicatorStatusByLabel(vehicle, indicator.label) === 'good'"
                    [class.indicator-warning]="getIndicatorStatusByLabel(vehicle, indicator.label) === 'warning'" 
                    [class.indicator-critical]="getIndicatorStatusByLabel(vehicle, indicator.label) === 'critical'"

@@ -133,6 +133,24 @@
   height: 48px;
   object-fit: contain;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+  /* Ensure logo is visually static: no transitions or hover animations */
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+  will-change: auto !important;
+  pointer-events: none !important;
+}
+
+.brand-logo:hover,
+.brand-logo:focus,
+.brand-logo:active {
+  transform: none !important;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1)) !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  transition: none !important;
+  animation: none !important;
+  scale: 1 !important;
 }
 
 .title-section h1 {
@@ -399,6 +417,19 @@
 .status-urgent .summary-icon {
   background: #fef2f2;
   border: 1px solid #fecaca;
+}
+
+/* Highlight for fragment navigation */
+.highlight-fragment {
+  animation: fragmentPulse 2s ease-in-out;
+  border-radius: 8px;
+}
+
+@keyframes fragmentPulse {
+  0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.0); }
+  10% { box-shadow: 0 8px 30px rgba(239,68,68,0.12); }
+  50% { box-shadow: 0 12px 40px rgba(239,68,68,0.18); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.0); }
 }
 
 .status-urgent .summary-icon svg {
@@ -3267,6 +3298,29 @@
   background: #fef2f2;
   color: #dc2626;
   border: 1px solid #fecaca;
+}
+
+/* Add Indicator Button (replaces health score badge) */
+.add-indicator-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* Use the shared .action-btn.secondary styles for appearance; keep small spacing tweak if needed */
+.add-indicator-btn {
+  padding: 0.6rem 1rem;
+}
+
+.add-indicator-btn .plus-icon {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.add-indicator-btn .btn-text {
+  display: inline-block;
 }
 
 /* Responsive Design for New Features */
