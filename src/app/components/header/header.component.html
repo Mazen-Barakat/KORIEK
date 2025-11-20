@@ -2,9 +2,9 @@
   <div class="header-container">
     <!-- Logo Section -->
     <div class="logo">
-      <a [routerLink]="isAuthenticated ? '/my-vehicles' : '/'" (click)="animateLogo()">
+      <a [routerLink]="isAuthenticated ? '/my-vehicles' : '/'">
         <!-- Use the provided logo file: logo.png -->
-        <img src="/Assets/logo.png" alt="Korek Logo" class="logo-image" [class.spinning]="isLogoSpinning" />
+        <img src="/Assets/logo.png" alt="Korek Logo" class="logo-image" />
       </a>
     </div>
 
@@ -22,35 +22,47 @@
       <!-- My Vehicles Link (only show when authenticated) -->
       <a *ngIf="isAuthenticated" routerLink="/my-vehicles" class="nav-link" routerLinkActive="active">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-          <rect x="1" y="14" width="4" height="6" rx="1"/>
-          <rect x="9" y="10" width="14" height="10" rx="2"/>
+          <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
+          <circle cx="7.5" cy="17.5" r="1.5"/>
+          <circle cx="16.5" cy="17.5" r="1.5"/>
         </svg>
         <span>My Vehicles</span>
       </a>
 
-      <!-- About Section Link -->
-      <a [routerLink]="isAuthenticated ? '/' : null" class="nav-link" (click)="scrollToSection('about')">
+      <!-- Booking Link (only show when authenticated) -->
+      <a *ngIf="isAuthenticated" routerLink="/booking" class="nav-link" routerLinkActive="active">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="16" x2="12" y2="12"/>
-          <line x1="12" y1="8" x2="12.01" y2="8"/>
+          <rect x="3" y="6" width="18" height="15" rx="2"/>
+          <path d="M3 10h18"/>
+          <path d="M8 3v4"/>
+          <path d="M16 3v4"/>
         </svg>
-        <span>About</span>
+        <span>Booking</span>
       </a>
 
-      <!-- Features Section Link -->
-      <a [routerLink]="isAuthenticated ? '/' : null" class="nav-link" (click)="scrollToSection('features')">
+      <!-- Testimonials Link (only show on landing) -->
+      <a *ngIf="!isAuthenticated" [routerLink]="null" class="nav-link" (click)="scrollToSection('testimonials')">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/>
         </svg>
-        <span>Features</span>
+        <span>Testimonials</span>
+      </a>
+
+      <!-- FAQs Link (only show on landing) -->
+      <a *ngIf="!isAuthenticated" [routerLink]="null" class="nav-link" (click)="scrollToSection('faq')">
+        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>FAQs</span>
       </a>
 
       <!-- Contact Link -->
-      <a [routerLink]="isAuthenticated ? '/' : null" class="nav-link" (click)="scrollToSection('contact')">
+      <a class="nav-link" (click)="openContactModal()">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
         </svg>
         <span>Contact</span>
       </a>
@@ -88,6 +100,15 @@
 
       <!-- Show Profile Button and Logout when user IS authenticated -->
       <ng-container *ngIf="isAuthenticated">
+        <!-- Notification Bell -->
+        <button class="notification-btn" title="Notifications">
+          <svg class="notification-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="notification-badge">3</span>
+        </button>
+
         <!-- Profile Button -->
         <app-profile-button></app-profile-button>
 
@@ -97,3 +118,176 @@
     </div>
   </div>
 </header>
+
+<!-- Contact Modal -->
+<div class="contact-modal-overlay" *ngIf="isContactModalOpen" (click)="closeContactModal()">
+  <div class="contact-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-title-section">
+        <div class="modal-icon-wrapper">
+          <svg class="modal-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Get in Touch</h2>
+          <p class="modal-subtitle">We're here to help you</p>
+        </div>
+      </div>
+      <button class="modal-close-btn" (click)="closeContactModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <!-- Contact Information -->
+      <div class="contact-info-section">
+        <h3 class="section-label">Contact Information</h3>
+        <div class="contact-info-grid">
+          <div class="info-card">
+            <div class="info-icon phone">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <div class="info-content">
+              <div class="info-label">Phone</div>
+              <div class="info-value">+20 123 456 7890</div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon email">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <div class="info-content">
+              <div class="info-label">Email</div>
+              <div class="info-value">support@korek.com</div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon location">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="info-content">
+              <div class="info-label">Location</div>
+              <div class="info-value">Cairo, Egypt</div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon hours">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="info-content">
+              <div class="info-label">Working Hours</div>
+              <div class="info-value">24/7 Support</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Form -->
+      <div class="contact-form-section">
+        <h3 class="section-label">Send Us a Message</h3>
+        <form class="contact-form" (ngSubmit)="submitContactForm()">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contact-name">Full Name <span class="required">*</span></label>
+              <input 
+                type="text" 
+                id="contact-name" 
+                class="form-input" 
+                placeholder="Enter your name"
+                [(ngModel)]="contactForm.name"
+                name="name"
+                required>
+            </div>
+
+            <div class="form-group">
+              <label for="contact-email">Email Address <span class="required">*</span></label>
+              <input 
+                type="email" 
+                id="contact-email" 
+                class="form-input" 
+                placeholder="your.email@example.com"
+                [(ngModel)]="contactForm.email"
+                name="email"
+                required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contact-phone">Phone Number <span class="required">*</span></label>
+              <input 
+                type="tel" 
+                id="contact-phone" 
+                class="form-input" 
+                placeholder="+20 123 456 7890"
+                [(ngModel)]="contactForm.phone"
+                name="phone"
+                required>
+            </div>
+
+            <div class="form-group">
+              <label for="contact-subject">Subject <span class="required">*</span></label>
+              <select 
+                id="contact-subject" 
+                class="form-input" 
+                [(ngModel)]="contactForm.subject"
+                name="subject"
+                required>
+                <option value="" disabled selected>Select a subject</option>
+                <option value="general">General Inquiry</option>
+                <option value="complaint">Complaint</option>
+                <option value="support">Technical Support</option>
+                <option value="feedback">Feedback</option>
+                <option value="partnership">Partnership</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="contact-message">Message <span class="required">*</span></label>
+            <textarea 
+              id="contact-message" 
+              class="form-input form-textarea" 
+              placeholder="Tell us how we can help you..."
+              [(ngModel)]="contactForm.message"
+              name="message"
+              rows="4"
+              required></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" (click)="closeContactModal()">Cancel</button>
+            <button type="submit" class="btn-submit">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+              Send Message
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -57,4 +57,9 @@ export const routes: Routes = [
     loadComponent: () => import('./components/edit-car/edit-car.component').then(m => m.EditCarComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'booking',
+    loadComponent: () => import('./components/booking/booking.component').then(m => m.BookingComponent),
+    canActivate: [authGuard]
+  },
 ];

@@ -1,13 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { ProfileService } from '../../services/profile.service';
 import { ProfileButtonComponent } from '../profile/profile-button.component';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterLink, RouterLinkActive, ProfileButtonComponent],
+  standalone: true,
+  imports: [CommonModule, RouterLink, RouterLinkActive, ProfileButtonComponent, FormsModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
 })
@@ -16,9 +19,20 @@ export class HeaderComponent implements OnInit {
   isAuthenticated = false;
   isLandingPage = false;
   isLogoSpinning = false;
+  isContactModalOpen = false;
+  
+  // Contact form data
+  contactForm = {
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  };
 
   constructor(
     private authService: AuthService,
+    private profileService: ProfileService,
     private router: Router
   ) {}
 
@@ -26,17 +40,34 @@ export class HeaderComponent implements OnInit {
     // Subscribe to authentication state changes
     this.authService.isAuthenticated$.subscribe((isAuth) => {
       this.isAuthenticated = isAuth;
+      // When authenticated, proactively fetch the profile so the profile button
+      // receives the profile image without requiring a user click.
+      if (isAuth) {
+        // Trigger a profile fetch. The ProfileService tap operator will push
+        // the image URL into the BehaviorSubject used by ProfileButtonComponent.
+        this.profileService.getProfile().subscribe({
+          next: () => {},
+          error: () => {
+            // Ignore profile fetch errors here; ProfileButton will show placeholder.
+          }
+        });
+      }
     });
 
     // Check if on landing page
     this.checkLandingPage();
+
+    // If already authenticated on init (token persisted), fetch profile immediately
+    if (this.authService.isAuthenticated()) {
+      this.profileService.getProfile().subscribe({ next: () => {}, error: () => {} });
+    }
 
     // Listen to route changes
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         this.checkLandingPage();
-        this.animateLogo();
+        // Do NOT auto-animate logo on every navigation end — only animate on user click
       });
   }
 
@@ -65,9 +96,39 @@ export class HeaderComponent implements OnInit {
   }
 
   animateLogo() {
-    this.isLogoSpinning = true;
-    setTimeout(() => {
-      this.isLogoSpinning = false;
-    }, 300); // Match animation duration
+    // Disabled: Prevent logo from spinning even if called.
+    this.isLogoSpinning = false;
+  }
+
+  openContactModal() {
+    this.isContactModalOpen = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeContactModal() {
+    this.isContactModalOpen = false;
+    document.body.style.overflow = '';
+    this.resetContactForm();
+  }
+
+  resetContactForm() {
+    this.contactForm = {
+      name: '',
+      email: '',
+      phone: '',
+      subject: '',
+      message: ''
+    };
+  }
+
+  submitContactForm() {
+    // TODO: Implement form submission logic
+    console.log('Contact form submitted:', this.contactForm);
+    
+    // Show success message (placeholder)
+    alert('Thank you for contacting us! We will get back to you soon.');
+    
+    // Close modal
+    this.closeContactModal();
   }
 }

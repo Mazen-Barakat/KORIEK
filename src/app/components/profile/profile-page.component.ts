@@ -6,13 +6,14 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ProfileService, UserProfile } from '../../services/profile.service';
 import { ProfileFormComponent } from './profile-form.component';
 
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, ProfileFormComponent],
+  imports: [CommonModule, RouterLink, ProfileFormComponent],
   templateUrl: './profile-page.component.html',
   styleUrls: ['./profile-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +26,11 @@ export class ProfilePageComponent implements OnInit {
   isSaving = false;
   error: string | null = null;
   successMessage: string | null = null;
+
+  // Quick Stats
+  vehicleCount: number = 0;
+  bookingCount: number = 0; // Placeholder for future implementation
+  loyaltyPoints: number = 0; // Placeholder for future implementation
 
   constructor(private profileService: ProfileService, private cdr: ChangeDetectorRef) {}
 
@@ -45,6 +51,7 @@ export class ProfilePageComponent implements OnInit {
         if (response.success && response.data) {
           this.profile = response.data;
           console.log('Profile loaded:', this.profile);
+          this.loadQuickStats();
         } else {
           this.error = response.message || 'Failed to load profile';
         }
@@ -57,6 +64,36 @@ export class ProfilePageComponent implements OnInit {
         this.isLoading = false;
         this.cdr.markForCheck();
       },
+    });
+  }
+
+  /**
+   * Load quick stats for profile dashboard
+   */
+  loadQuickStats() {
+    // Import CarsService dynamically to avoid circular dependencies
+    import('../../services/cars.service').then(({ CarsService }) => {
+      const carsService = new (CarsService as any)(this.profileService['http']);
+
+      carsService.getProfileWithCars().subscribe({
+        next: (response: any) => {
+          if (response.success && response.data) {
+            this.vehicleCount = response.data.cars?.length || 0;
+            // Future: fetch actual booking and loyalty data
+            this.bookingCount = 0; // Placeholder
+            this.loyaltyPoints = 150; // Placeholder
+            this.cdr.markForCheck();
+          }
+        },
+        error: (err: any) => {
+          console.error('Error loading quick stats:', err);
+          // Gracefully fallback to 0
+          this.vehicleCount = 0;
+          this.bookingCount = 0;
+          this.loyaltyPoints = 0;
+          this.cdr.markForCheck();
+        },
+      });
     });
   }
 

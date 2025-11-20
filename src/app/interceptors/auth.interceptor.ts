@@ -20,12 +20,6 @@ export class AuthInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.authService.getToken();
 
-    // Check if token is expired before making the request
-    if (token && this.isTokenExpired(token)) {
-      console.log('Token expired, attempting refresh...');
-      return this.handleTokenRefresh(req, next);
-    }
-
     // Add token to request if available
     if (token) {
       req = this.addTokenToRequest(req, token);
@@ -49,6 +43,13 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Check if should auto-refresh based on Remember Me
+    if (!this.authService.shouldAutoRefresh()) {
+      console.log('Token expired without Remember Me - logging out');
+      this.logout('expired');
+      return throwError(() => new Error('Session expired'));
+    }
+
     if (!this.isRefreshing) {
       return this.handleTokenRefresh(request, next);
     }
@@ -67,55 +68,52 @@ export class AuthInterceptor implements HttpInterceptor {
     this.isRefreshing = true;
     this.refreshTokenSubject.next(null);
 
+    console.log('🔄 Attempting to refresh token...');
+
     return this.authService.refreshAccessToken().pipe(
       switchMap((response: any) => {
         this.isRefreshing = false;
 
-        // Extract new token from response
-        const newToken = response.data?.token || response.token;
+        // Check if response is successful
+        if (response.success) {
+          console.log('✅ Token refresh successful!');
+          console.log('📦 Refresh Response:', response);
 
-        if (newToken) {
-          this.authService.saveToken(newToken);
-          this.refreshTokenSubject.next(newToken);
-          console.log('Token refreshed successfully');
+          // Save full auth response including new refresh token
+          this.authService.saveAuthResponse(response);
 
-          // Retry original request with new token
-          return next.handle(this.addTokenToRequest(request, newToken));
+          // Extract new token
+          const newToken = response.data?.token || response.token;
+
+          if (newToken) {
+            console.log('🔑 New Access Token:', newToken.substring(0, 50) + '...');
+            console.log('🔑 New Refresh Token:', (response.data?.refreshToken || '').substring(0, 30) + '...');
+            console.log('⏰ Token Expiry:', response.data?.tokenExpiryTime);
+            console.log('⏰ Refresh Token Expiry:', response.data?.refreshTokenExpiryTime);
+            console.log('💾 Tokens saved to localStorage');
+
+            this.refreshTokenSubject.next(newToken);
+
+            // Retry original request with new token
+            return next.handle(this.addTokenToRequest(request, newToken));
+          }
         }
 
-        // If no token in response, logout
-        this.logout();
+        // If no token in response or unsuccessful, logout
+        console.error('❌ Token refresh failed - no token in response');
+        this.logout('refresh_failed');
         return throwError(() => new Error('Token refresh failed'));
       }),
       catchError((error) => {
         this.isRefreshing = false;
-        console.error('Token refresh failed:', error);
-        this.logout();
+        console.error('❌ Token refresh failed with error:', error);
+        this.logout('expired');
         return throwError(() => error);
       })
     );
   }
 
-  private isTokenExpired(token: string): boolean {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiry = payload.exp;
-
-      if (!expiry) {
-        return false; // If no expiry, assume token is valid
-      }
-
-      // Check if token expires in less than 5 minutes (300 seconds)
-      const currentTime = Math.floor(Date.now() / 1000);
-      return (expiry - currentTime) < 300;
-    } catch (e) {
-      console.error('Error decoding token:', e);
-      return true; // If cannot decode, consider expired
-    }
-  }
-
-  private logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+  private logout(reason?: string): void {
+    this.authService.logout(reason);
   }
 }
