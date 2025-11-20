@@ -18,6 +18,7 @@ interface Indicator {
   currentMileage: number;
   nextMileage: number;
   selected: boolean;
+  isSet: boolean;
 }
 
 type NewIndicatorForm = {
@@ -130,6 +131,8 @@ export class EditCarComponent implements OnInit {
   // Persisted selection (what's saved) and initial snapshot for cancel
   savedDashboardSelection: string[] = [];
   initialDashboardSelection: string[] = [];
+  isEditingDashboard = false;
+  tempDashboardSelection: string[] = [];
 
   private readonly indicatorTypeConfig: Record<string, { label: string; icon: string }> = {
     ACService: { label: 'AC Service', icon: '❄️' },
@@ -197,12 +200,29 @@ export class EditCarComponent implements OnInit {
       selected: false
     }));
 
-    // Capture initial/saved selection (empty by default) so Cancel can revert
+    // Load saved dashboard selection from localStorage
+    if (!isNaN(this.carId)) {
+      const savedData = localStorage.getItem(`car_${this.carId}_dashboard`);
+      if (savedData) {
+        try {
+          const savedIndicators = JSON.parse(savedData);
+          // Extract the values from saved indicators
+          const savedLabels = savedIndicators.map((ind: any) => ind.label);
+          // Find matching values and mark as selected
+          this.dashboardIndicators.forEach(i => {
+            if (savedLabels.includes(i.label)) {
+              i.selected = true;
+              this.savedDashboardSelection.push(i.value);
+            }
+          });
+        } catch (e) {
+          console.error('Failed to parse saved dashboard indicators', e);
+        }
+      }
+    }
+
+    // Capture initial/saved selection so Cancel can revert
     this.initialDashboardSelection = [...this.savedDashboardSelection];
-    // Reflect saved selection into dashboardIndicators
-    this.dashboardIndicators.forEach(i => {
-      i.selected = this.initialDashboardSelection.includes(i.value);
-    });
     this.dashboardSelectionCount = this.dashboardIndicators.filter(i => i.selected).length;
 
     // Keep form model defined to avoid ExpressionChanged errors
@@ -394,7 +414,8 @@ export class EditCarComponent implements OnInit {
       nextInspectedDate: this.toDateInputValue(dto?.nextCheckedDate),
       currentMileage: Number(dto?.currentMileage ?? 0),
       nextMileage: Number(dto?.nextMileage ?? 0),
-      selected: false
+      selected: false,
+      isSet: true // Indicators from backend are already set
     };
   }
 
@@ -732,6 +753,11 @@ export class EditCarComponent implements OnInit {
   }
 
   toggleDashboardIndicator(indicator: any): void {
+    // Only allow toggling in edit mode
+    if (!this.isEditingDashboard) {
+      return;
+    }
+
     if (indicator.selected) {
       // Unselecting
       indicator.selected = false;
@@ -781,12 +807,20 @@ export class EditCarComponent implements OnInit {
   }
 
   cancelDashboardChanges(): void {
-    // Deselect all cards
+    // Revert to saved selection
     this.dashboardIndicators.forEach(i => {
-      i.selected = false;
+      i.selected = this.initialDashboardSelection.includes(i.value);
     });
-    this.dashboardSelectionCount = 0;
-    this.showToastMessage('All selections cleared', 'success');
+    this.dashboardSelectionCount = this.dashboardIndicators.filter(i => i.selected).length;
+    this.isEditingDashboard = false;
+    this.showToastMessage('Changes cancelled', 'success');
+    this.cdr.detectChanges();
+  }
+
+  startEditingDashboard(): void {
+    // Enter edit mode and save temp selection
+    this.isEditingDashboard = true;
+    this.tempDashboardSelection = this.dashboardIndicators.filter(i => i.selected).map(i => i.value);
     this.cdr.detectChanges();
   }
 

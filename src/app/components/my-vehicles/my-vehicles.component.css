@@ -507,8 +507,20 @@
   stroke-width: 2;
 }
 
+.indicator-icon-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .indicator-item:hover .indicator-icon {
   color: var(--brand-primary);
+  transform: scale(1.1);
+}
+
+.indicator-item:hover .indicator-icon-emoji {
   transform: scale(1.1);
 }
 
@@ -537,9 +549,20 @@
 .indicator-status {
   font-size: 0.75rem;
   font-weight: 700;
+  color: #6B7280;
+}
+
+/* Good/Normal status */
+.indicator-item.indicator-good {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(22, 163, 74, 0.12) 100%);
+}
+
+.indicator-item.indicator-good .indicator-status {
   color: #22c55e;
 }
 
+/* Warning status */
 .indicator-item.indicator-warning {
   border-color: rgba(251, 146, 60, 0.3);
   background: linear-gradient(135deg, rgba(251, 146, 60, 0.08) 0%, rgba(249, 115, 22, 0.12) 100%);
@@ -549,6 +572,7 @@
   color: #f97316;
 }
 
+/* Critical status */
 .indicator-item.indicator-critical {
   border-color: rgba(239, 68, 68, 0.3);
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.12) 100%);
@@ -556,6 +580,44 @@
 
 .indicator-item.indicator-critical .indicator-status {
   color: #ef4444;
+}
+
+/* Unknown status */
+.indicator-item.indicator-unknown {
+  border-color: rgba(156, 163, 175, 0.3);
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.08) 0%, rgba(107, 114, 128, 0.12) 100%);
+}
+
+.indicator-item.indicator-unknown .indicator-status {
+  color: #6B7280;
+}
+
+/* Placeholder when no indicators selected */
+.car-indicators-placeholder {
+  padding: 1.5rem 1.5rem;
+  background: #F9FAFB;
+  border-radius: 10px;
+  margin: 0 1.5rem 1rem 1.5rem;
+  border: 1px dashed #D1D5DB;
+}
+
+.placeholder-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6B7280;
+  text-align: center;
+}
+
+.setup-link {
+  color: #EF4444;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.setup-link:hover {
+  color: #DC2626;
+  text-decoration: underline;
 }
 
 /* ==================== Quick Actions ==================== */
