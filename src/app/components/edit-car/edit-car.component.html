@@ -10,9 +10,13 @@
   <!-- Car Information Section -->
   <div class="car-info-section">
     <div class="section-header">
-      <h2>Car Information</h2>
+      <svg class="section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      <h2>Vehicle Information</h2>
     </div>
-    <p class="section-subtitle">Update your vehicle details below</p>
+    <p class="section-subtitle">Update your vehicle details and specifications</p>
 
     <!-- Success / Error message -->
     <div *ngIf="message" class="alert" [ngClass]="messageType === 'success' ? 'success' : 'error'">
@@ -24,8 +28,14 @@
       <div class="update-form-grid">
         <!-- Engine Capacity -->
         <div class="form-group">
+          <label for="engine-capacity">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6m4.22-13.22l-2.83 2.83m0 5.66l2.83 2.83m-5.66 0l2.83-2.83m0-5.66L7.78 4.78"/>
+            </svg>
+            Engine Capacity
+          </label>
           <app-custom-dropdown
-            label="⚙️ Engine Capacity"
             [options]="engineCapacityOptions"
             [(ngModel)]="updateModel.engineCapacity"
             placeholder="Select Engine Capacity"
@@ -35,21 +45,33 @@
 
         <!-- Current Mileage -->
         <div class="form-group">
-          <label for="current-mileage"><span style="font-size: 16px;">🚀</span> Current Mileage (km)</label>
+          <label for="current-mileage">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Current Mileage (km)
+          </label>
           <input 
             type="number" 
             id="current-mileage" 
             [(ngModel)]="updateModel.currentMileage" 
             class="form-input"
-            placeholder="e.g., 15963"
+            placeholder="e.g., 15,963"
             aria-label="Enter current mileage in kilometers"
           />
         </div>
 
         <!-- Transmission Type -->
         <div class="form-group">
+          <label for="transmission-type">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M9 9h6v6H9z"/>
+            </svg>
+            Transmission Type
+          </label>
           <app-custom-dropdown
-            label="🔧 Transmission Type"
             [options]="transmissionOptions"
             [(ngModel)]="updateModel.transmissionType"
             placeholder="Select Transmission"
@@ -59,8 +81,13 @@
 
         <!-- Fuel Type -->
         <div class="form-group">
+          <label for="fuel-type">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 22h12M4 9h10M5 2h8l-2 7h5l-8 13 2-8H5z"/>
+            </svg>
+            Fuel Type
+          </label>
           <app-custom-dropdown
-            label="⛽ Fuel Type"
             [options]="fuelOptions"
             [(ngModel)]="updateModel.fuelType"
             placeholder="Select Fuel Type"
@@ -72,7 +99,10 @@
       <!-- Save Button -->
       <div class="form-actions">
         <button type="button" class="btn-save" (click)="saveVehicleInfo()" [disabled]="isSaving" aria-label="Save vehicle information">
-          {{ isSaving ? 'Saving...' : 'Save Vehicle Info' }}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          {{ isSaving ? 'Saving...' : 'Save Changes' }}
         </button>
       </div>
     </div>
@@ -82,12 +112,20 @@
   <div class="indicators-section">
     <div class="indicators-header">
       <div class="section-header">
-        <span class="indicator-icon">🔧</span>
-        <h2>Condition Indicators</h2>
+        <svg class="section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+        <h2>Maintenance Indicators</h2>
       </div>
-      <button class="btn-save" (click)="addIndicator()">➕ Add Indicator</button>
+      <button class="btn-add" (click)="addIndicator()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Indicator
+      </button>
     </div>
-    <p class="section-subtitle">📊 Track and manage all maintenance indicators for your vehicle</p>
+    <p class="section-subtitle">Track and manage all maintenance indicators for your vehicle</p>
 
     <!-- Existing Indicators -->
     <div class="indicators-title">Existing Indicators</div>
@@ -95,7 +133,11 @@
     <!-- Empty State -->
     @if (!indicators || indicators.length === 0) {
       <div class="empty-indicators">
-        <p>💡 No indicators yet. Click <strong>"Add Indicator"</strong> to create your first maintenance tracker.</p>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4m0-4h.01"/>
+        </svg>
+        <p>No indicators yet. Click <strong>"Add Indicator"</strong> to create your first maintenance tracker.</p>
       </div>
     }
 
@@ -106,31 +148,39 @@
           <div class="indicator-card">
             <div class="indicator-header">
               <div class="indicator-name">
-                <span class="indicator-emoji">{{ indicator.icon }}</span>
-                <span class="indicator-status-badge" 
-                      [ngClass]="{
-                        'good': indicator.status === 'Good',
-                        'normal': indicator.status === 'Normal',
-                        'attention': indicator.status === 'Attention',
-                        'warning': indicator.status === 'Warning',
-                        'urgent': indicator.status === 'Urgent',
-                        'critical': indicator.status === 'Critical',
-                        'unknown': indicator.status === 'Unknown'
-                      }">
-                  {{ indicator.status }}
-                </span>
+                <div class="indicator-icon-wrapper">
+                  <span class="indicator-emoji">{{ indicator.icon }}</span>
+                </div>
+                <div class="indicator-info">
+                  <div class="indicator-label">{{ indicator.name }}</div>
+                  <span class="indicator-status-badge" 
+                        [ngClass]="{
+                          'good': indicator.status === 'Good',
+                          'normal': indicator.status === 'Normal',
+                          'attention': indicator.status === 'Attention',
+                          'warning': indicator.status === 'Warning',
+                          'urgent': indicator.status === 'Urgent',
+                          'critical': indicator.status === 'Critical',
+                          'unknown': indicator.status === 'Unknown'
+                        }">
+                    {{ indicator.status }}
+                  </span>
+                </div>
               </div>
               <button class="delete-btn" (click)="openDeleteModal(indicator)" [disabled]="deletingIndicatorId === indicator.backendId">
                 @if (deletingIndicatorId !== indicator.backendId) {
-                  <span>🗑️</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    <line x1="10" y1="11" x2="10" y2="17"/>
+                    <line x1="14" y1="11" x2="14" y2="17"/>
+                  </svg>
                 }
                 @if (deletingIndicatorId === indicator.backendId) {
                   <span>Deleting...</span>
                 }
               </button>
             </div>
-
-            <div class="indicator-label">{{ indicator.name }}</div>
 
             <div class="indicator-details">
               <div class="detail-row">
@@ -139,9 +189,9 @@
                 <span class="detail-label">Next Mileage (km)</span>
               </div>
               <div class="detail-row">
-                <input type="date" [(ngModel)]="indicator.lastInspectedDate" class="detail-input" />
-                <input type="date" [(ngModel)]="indicator.nextInspectedDate" class="detail-input" />
-                <input type="number" [(ngModel)]="indicator.nextMileage" class="detail-input" />
+                <input type="date" [(ngModel)]="indicator.lastInspectedDate" class="detail-input" [disabled]="indicator.isSet" />
+                <input type="date" [(ngModel)]="indicator.nextInspectedDate" class="detail-input" [disabled]="indicator.isSet" />
+                <input type="number" [(ngModel)]="indicator.nextMileage" class="detail-input" [disabled]="indicator.isSet" />
               </div>
             </div>
           </div>
@@ -153,40 +203,70 @@
   <!-- Select Top 4 Indicators Section -->
   <div class="dashboard-section">
     <div class="section-header">
-      <span class="dashboard-icon">📌</span>
-      <h2>Select Top 4 Indicators for Dashboard</h2>
+      <svg class="section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/>
+        <rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <h2>Dashboard Indicators</h2>
     </div>
-    <p class="section-subtitle">🎯 Choose exactly 4 key indicators to display on your dashboard <span class="link-text">({{ dashboardSelectionCount }}/4 Selected)</span></p>
+    <p class="section-subtitle">Choose exactly 4 key indicators to display on your dashboard <span class="selection-count">({{ dashboardSelectionCount }}/4 Selected)</span></p>
 
     <div class="dashboard-grid">
       @for (indicator of dashboardIndicators; track indicator.value) {
         <div class="dashboard-card" 
-             [ngClass]="{'selected': indicator.selected, 'disabled': !indicator.selected && dashboardSelectionCount >= 4}" 
+             [ngClass]="{'selected': indicator.selected, 'disabled': !isEditingDashboard || (!indicator.selected && dashboardSelectionCount >= 4), 'view-only': !isEditingDashboard}" 
              (click)="toggleDashboardIndicator(indicator)"
              role="button"
-             tabindex="0"
+             [tabindex]="isEditingDashboard ? 0 : -1"
              [attr.aria-pressed]="indicator.selected"
              [attr.aria-label]="'Toggle ' + indicator.label + ' indicator'"
              (keydown.enter)="toggleDashboardIndicator(indicator)"
              (keydown.space)="$event.preventDefault(); toggleDashboardIndicator(indicator)">
-          @if (indicator.selected) {
+          @if (indicator.selected && isEditingDashboard) {
             <button class="remove-btn" 
                     (click)="$event.stopPropagation(); toggleDashboardIndicator(indicator)"
-                    aria-label="Remove indicator">✕</button>
+                    aria-label="Remove indicator">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
           }
-          <span class="dashboard-emoji">{{ indicator.icon }}</span>
+          <div class="dashboard-icon-wrapper">
+            <span class="dashboard-emoji">{{ indicator.icon }}</span>
+          </div>
           <span class="dashboard-label">{{ indicator.label }}</span>
         </div>
       }
     </div>
     <!-- Dashboard Actions (local to dashboard section) -->
-    <div class="dashboard-actions" style="margin-top:16px; display:flex; gap:12px; justify-content:flex-end;">
-      <button class="cancel-btn" (click)="cancelDashboardChanges()" [disabled]="dashboardSelectionCount === 0">
-        ✕ Clear
-      </button>
-      <button class="save-btn" (click)="saveDashboardSelection()" [disabled]="dashboardSelectionCount !== 4">
-        Save Changes
-      </button>
+    <div class="dashboard-actions">
+      @if (!isEditingDashboard) {
+        <button class="btn-edit" (click)="startEditingDashboard()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit Selection
+        </button>
+      }
+      @if (isEditingDashboard) {
+        <button class="cancel-btn" (click)="cancelDashboardChanges()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Cancel
+        </button>
+        <button class="save-btn" (click)="saveDashboardSelection()" [disabled]="dashboardSelectionCount !== 4">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Save Changes
+        </button>
+      }
     </div>
   </div>
 

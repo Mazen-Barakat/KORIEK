@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AddVehicleFormComponent } from '../add-vehicle-form/add-vehicle-form.component';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CarsService } from '../../services/cars.service';
 import { CarExpenseService, CreateCarExpenseRequest, ExpenseType } from '../../services/car-expense.service';
 import { forkJoin } from 'rxjs';
@@ -16,7 +16,7 @@ interface Vehicle {
   currentMileage: number;
   engineCapacity?: number;
   maintenanceItems?: MaintenanceItem[];
-  dashboardIndicators?: Array<{ label: string; icon: string }>;
+  dashboardIndicators?: Array<{ label: string; icon: string; status?: string }>;
 }
 
 interface MaintenanceItem {
@@ -59,7 +59,7 @@ interface NewExpenseForm {
 @Component({
   selector: 'app-my-vehicles',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddVehicleFormComponent],
+  imports: [CommonModule, FormsModule, AddVehicleFormComponent, RouterLink],
   templateUrl: './my-vehicles.component.html',
   styleUrls: ['./my-vehicles.component.css']
 })
@@ -195,7 +195,7 @@ export class MyVehiclesComponent implements OnInit {
               const carId = Number(c.id);
               // Load dashboard indicators from localStorage
               const savedIndicators = localStorage.getItem(`car_${carId}_dashboard`);
-              let dashboardIndicators: Array<{ label: string; icon: string }> = [];
+              let dashboardIndicators: Array<{ label: string; icon: string; status?: string }> = [];
               if (savedIndicators) {
                 try {
                   dashboardIndicators = JSON.parse(savedIndicators);
@@ -221,6 +221,8 @@ export class MyVehiclesComponent implements OnInit {
           console.log('Loaded cars:', this.vehicles);
           // Force change detection in case data arrives after initial render
           this.cdr.detectChanges();
+          // Fetch indicator statuses from backend for all vehicles
+          this.loadIndicatorStatusesForAllVehicles();
           // After vehicles are loaded, fetch all expenses for each car
           this.loadAllExpensesForOwner();
           this.welcomeMessage = `Hello ${this.profileName}, ready to hit the road? Here are your vehicles:`;
@@ -584,6 +586,116 @@ export class MyVehiclesComponent implements OnInit {
     
     if (status === 'critical') return 'Service Now';
     if (status === 'warning') return 'Service Soon';
+    return 'Good';
+  }
+
+  // Load indicator statuses from backend for all vehicles
+  private loadIndicatorStatusesForAllVehicles(): void {
+    if (!this.vehicles.length) return;
+
+    this.vehicles.forEach(vehicle => {
+      if (!vehicle.dashboardIndicators || vehicle.dashboardIndicators.length === 0) return;
+
+      this.carsService.getCarIndicators(vehicle.id).subscribe({
+        next: (indicators) => {
+          console.log(`Loaded indicators for car ${vehicle.id}:`, indicators);
+          // Map backend indicators to dashboard indicators
+          if (vehicle.dashboardIndicators) {
+            vehicle.dashboardIndicators = vehicle.dashboardIndicators.map(dashIndicator => {
+              // Find matching backend indicator by type
+              const backendIndicator = indicators.find(ind => 
+                this.matchIndicatorType(ind.indicatorType, dashIndicator.label)
+              );
+              
+              if (backendIndicator) {
+                console.log(`Matched ${dashIndicator.label} with backend status: ${backendIndicator.carStatus}`);
+                return {
+                  ...dashIndicator,
+                  status: backendIndicator.carStatus
+                };
+              } else {
+                console.log(`No match found for ${dashIndicator.label} - marking as Unknown`);
+                return {
+                  ...dashIndicator,
+                  status: 'Unknown'
+                };
+              }
+            });
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error(`Failed to load indicators for car ${vehicle.id}:`, err);
+        }
+      });
+    });
+  }
+
+  // Helper to match indicator types
+  private matchIndicatorType(backendType: string, dashboardLabel: string): boolean {
+    // Normalize both strings by removing spaces, underscores, hyphens and converting to lowercase
+    const normalizedBackend = backendType.toLowerCase().replace(/[\s-_]/g, '');
+    const normalizedLabel = dashboardLabel.toLowerCase().replace(/[\s-_&]/g, '');
+    
+    // Direct match
+    if (normalizedBackend === normalizedLabel) return true;
+    
+    // Map dashboard labels to backend indicator types
+    const labelToBackendType: Record<string, string[]> = {
+      'acservice': ['acservice'],
+      'licenseinsuranceexpiry': ['carlicenseandensuranceexpiry', 'carlicenseandensuanceexpiry', 'carlicenseandinsuranceexpiry'],
+      'generalmaintenance': ['generalmaintenance', 'maintenance'],
+      'oilchange': ['oilchange', 'oil'],
+      'batteryhealth': ['batteryhealth', 'battery'],
+      'tirechange': ['tirechange', 'tire', 'tires']
+    };
+    
+    // Check if normalized label maps to any backend type
+    const mappedTypes = labelToBackendType[normalizedLabel];
+    if (mappedTypes && mappedTypes.some(type => normalizedBackend === type || normalizedBackend.includes(type) || type.includes(normalizedBackend))) {
+      return true;
+    }
+    
+    // Fallback: check if one contains the other
+    return normalizedBackend.includes(normalizedLabel) || normalizedLabel.includes(normalizedBackend);
+  }
+
+  // Get indicator status by label (for dynamic dashboard indicators)
+  getIndicatorStatusByLabel(vehicle: Vehicle, indicatorLabel: string): 'good' | 'warning' | 'critical' | 'unknown' {
+    // First check if we have status from backend
+    if (vehicle.dashboardIndicators) {
+      const indicator = vehicle.dashboardIndicators.find(ind => ind.label === indicatorLabel);
+      if (indicator?.status) {
+        const status = indicator.status.toLowerCase();
+        if (status === 'critical') return 'critical';
+        if (status === 'warning') return 'warning';
+        if (status === 'normal' || status === 'good') return 'good';
+        if (status === 'unknown') return 'unknown';
+        return 'good'; // Default to good for any other status
+      }
+    }
+
+    // Fallback to local calculation if backend status not available
+    const labelToType: Record<string, string> = {
+      'AC Service': 'ac',
+      'License & Insurance Expiry': 'license',
+      'General Maintenance': 'maintenance',
+      'Oil Change': 'oil',
+      'Battery Health': 'battery',
+      'Tire Change': 'tires'
+    };
+
+    const indicatorType = labelToType[indicatorLabel] || indicatorLabel.toLowerCase();
+    return this.getIndicatorStatus(vehicle, indicatorType);
+  }
+
+  // Get indicator label by name (for dynamic dashboard indicators)
+  getIndicatorLabelByName(vehicle: Vehicle, indicatorLabel: string): string {
+    const status = this.getIndicatorStatusByLabel(vehicle, indicatorLabel);
+    
+    if (status === 'critical') return 'Critical';
+    if (status === 'warning') return 'Warning';
+    if (status === 'unknown') return 'Unknown';
     return 'Good';
   }
 
