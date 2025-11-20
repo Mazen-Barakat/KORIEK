@@ -2,9 +2,9 @@
   <div class="header-container">
     <!-- Logo Section -->
     <div class="logo">
-      <a [routerLink]="isAuthenticated ? '/my-vehicles' : '/'" (click)="animateLogo()">
+      <a [routerLink]="isAuthenticated ? '/my-vehicles' : '/'">
         <!-- Use the provided logo file: logo.png -->
-        <img src="/Assets/logo.png" alt="Korek Logo" class="logo-image" [class.spinning]="isLogoSpinning" />
+        <img src="/Assets/logo.png" alt="Korek Logo" class="logo-image" />
       </a>
     </div>
 

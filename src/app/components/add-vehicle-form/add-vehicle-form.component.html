@@ -281,7 +281,8 @@
               <rect x="2" y="7" width="20" height="10" rx="2"/>
               <line x1="7" y1="12" x2="17" y2="12"/>
             </svg>
-            <input type="text" id="licensePlate" formControlName="licensePlate" placeholder="e.g., ABC 1234">
+            <input type="text" id="licensePlate" formControlName="licensePlate" placeholder="e.g., ABC1234"
+              maxlength="7" (input)="onPlateInput($event)" autocomplete="off">
           </div>
           
           <div class="error-message" *ngIf="addVehicleForm.get('licensePlate')?.invalid && (addVehicleForm.get('licensePlate')?.dirty || addVehicleForm.get('licensePlate')?.touched)">
@@ -291,7 +292,8 @@
               <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
             <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['required']">License plate is required</span>
-            <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['maxlength']">Cannot exceed 20 characters</span>
+            <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['maxlength']">Cannot exceed 7 characters</span>
+            <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['plateFormat']">Format must be 2–3 letters followed by 3–4 digits (alphanumeric only)</span>
             <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['licenseNotUnique']">This plate is already registered</span>
           </div>
         </div>

@@ -290,6 +290,13 @@ form {
   font-family: inherit;
 }
 
+/* License plate specific styling: show uppercase and slightly wider letter-spacing */
+#licensePlate {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
 .form-group input:focus {
   outline: none;
   background: white;

@@ -323,12 +323,21 @@
   padding: 4px;
   background: #FAFAFA;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Remove transition and hover animation to prevent popup effect */
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+  pointer-events: none;
 }
 
-.car-logo:hover {
-  transform: scale(1.05);
-  border-color: rgba(239, 68, 68, 0.2);
+.car-logo:hover,
+.car-logo:focus,
+.car-logo:active {
+  transform: none !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  transition: none !important;
+  animation: none !important;
+  scale: 1 !important;
 }
 
 .vehicle-title {
