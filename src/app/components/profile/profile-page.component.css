@@ -22,6 +22,45 @@
   z-index: 1;
 }
 
+/* Back Button - Page Level */
+.back-button-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #FFFFFF;
+  color: #1D1D1F;
+  border: 2px solid #E5E5EA;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.back-button-page:hover {
+  background: #F5F5F7;
+  border-color: #FF3B30;
+  color: #FF3B30;
+  transform: translateX(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.back-button-page:active {
+  transform: translateX(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.back-button-page svg {
+  transition: transform 0.3s ease;
+}
+
+.back-button-page:hover svg {
+  transform: translateX(-3px);
+}
+
 /* Hero Stats Section */
 .hero-stats-section {
   margin-bottom: 2.5rem;
@@ -281,38 +320,38 @@
   .profile-page-container {
     padding: 4rem 1rem 2rem;
   }
-  
+
   .hero-stats-section {
     margin-bottom: 2rem;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .stat-card {
     padding: 1.5rem;
   }
-  
+
   .stat-icon-wrapper {
     width: 48px;
     height: 48px;
   }
-  
+
   .stat-icon-wrapper svg {
     width: 24px;
     height: 24px;
   }
-  
+
   .stat-value {
     font-size: 2rem;
   }
-  
+
   .stat-label {
     font-size: 0.85rem;
   }
-  
+
   .stat-badge {
     font-size: 0.7rem;
     padding: 0.2rem 0.6rem;

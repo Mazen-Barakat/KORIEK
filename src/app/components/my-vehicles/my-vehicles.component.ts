@@ -559,22 +559,22 @@ export class MyVehiclesComponent implements OnInit {
   // Get indicator status from maintenance items
   getIndicatorStatus(vehicle: Vehicle, indicatorType: string): 'good' | 'warning' | 'critical' {
     if (!vehicle.maintenanceItems || vehicle.maintenanceItems.length === 0) return 'good';
-    
+
     const indicatorMap: Record<string, string[]> = {
       'oil': ['Oil Change', 'Engine Oil', 'Oil'],
       'tires': ['Tire Rotation', 'Tires', 'Tire'],
       'battery': ['Battery', 'Battery Check'],
       'brakes': ['Brake Pads', 'Brakes', 'Brake Fluid', 'Brake']
     };
-    
-    const matchingItems = vehicle.maintenanceItems.filter(item => 
+
+    const matchingItems = vehicle.maintenanceItems.filter(item =>
       indicatorMap[indicatorType]?.some(name => item.name.toLowerCase().includes(name.toLowerCase()))
     );
-    
+
     if (matchingItems.length === 0) return 'good';
-    
+
     const minKm = Math.min(...matchingItems.map(item => item.remainingKm));
-    
+
     if (minKm <= 1000) return 'critical';
     if (minKm <= 3000) return 'warning';
     return 'good';
@@ -583,7 +583,7 @@ export class MyVehiclesComponent implements OnInit {
   // Get indicator label
   getIndicatorLabel(vehicle: Vehicle, indicatorType: string): string {
     const status = this.getIndicatorStatus(vehicle, indicatorType);
-    
+
     if (status === 'critical') return 'Service Now';
     if (status === 'warning') return 'Service Soon';
     return 'Good';
@@ -603,10 +603,10 @@ export class MyVehiclesComponent implements OnInit {
           if (vehicle.dashboardIndicators) {
             vehicle.dashboardIndicators = vehicle.dashboardIndicators.map(dashIndicator => {
               // Find matching backend indicator by type
-              const backendIndicator = indicators.find(ind => 
+              const backendIndicator = indicators.find(ind =>
                 this.matchIndicatorType(ind.indicatorType, dashIndicator.label)
               );
-              
+
               if (backendIndicator) {
                 console.log(`Matched ${dashIndicator.label} with backend status: ${backendIndicator.carStatus}`);
                 return {
@@ -636,10 +636,10 @@ export class MyVehiclesComponent implements OnInit {
     // Normalize both strings by removing spaces, underscores, hyphens and converting to lowercase
     const normalizedBackend = backendType.toLowerCase().replace(/[\s-_]/g, '');
     const normalizedLabel = dashboardLabel.toLowerCase().replace(/[\s-_&]/g, '');
-    
+
     // Direct match
     if (normalizedBackend === normalizedLabel) return true;
-    
+
     // Map dashboard labels to backend indicator types
     const labelToBackendType: Record<string, string[]> = {
       'acservice': ['acservice'],
@@ -649,13 +649,13 @@ export class MyVehiclesComponent implements OnInit {
       'batteryhealth': ['batteryhealth', 'battery'],
       'tirechange': ['tirechange', 'tire', 'tires']
     };
-    
+
     // Check if normalized label maps to any backend type
     const mappedTypes = labelToBackendType[normalizedLabel];
     if (mappedTypes && mappedTypes.some(type => normalizedBackend === type || normalizedBackend.includes(type) || type.includes(normalizedBackend))) {
       return true;
     }
-    
+
     // Fallback: check if one contains the other
     return normalizedBackend.includes(normalizedLabel) || normalizedLabel.includes(normalizedBackend);
   }
@@ -692,7 +692,7 @@ export class MyVehiclesComponent implements OnInit {
   // Get indicator label by name (for dynamic dashboard indicators)
   getIndicatorLabelByName(vehicle: Vehicle, indicatorLabel: string): string {
     const status = this.getIndicatorStatusByLabel(vehicle, indicatorLabel);
-    
+
     if (status === 'critical') return 'Critical';
     if (status === 'warning') return 'Warning';
     if (status === 'unknown') return 'Unknown';
@@ -702,7 +702,7 @@ export class MyVehiclesComponent implements OnInit {
   // AI Assistant Methods
   handleAIPrompt(action: string): void {
     console.log('AI Assistant action:', action);
-    
+
     switch(action) {
       case 'maintenance':
         // Navigate to booking page
@@ -725,12 +725,12 @@ export class MyVehiclesComponent implements OnInit {
 
   sendAIMessage(): void {
     if (!this.aiInputText.trim()) return;
-    
+
     console.log('AI message sent:', this.aiInputText);
-    
+
     // Placeholder for AI integration
     // In production, this would call an AI service endpoint
-    
+
     // For now, just clear the input
     this.aiInputText = '';
     this.cdr.detectChanges();
@@ -741,5 +741,29 @@ export class MyVehiclesComponent implements OnInit {
     console.log('Opening tip:', tip);
     // Future implementation: Navigate to tip details page or open modal
     // this.router.navigate(['/tips', tip.id]);
+  }
+
+  getIndicatorIconPath(indicatorLabel: string): string {
+    console.log('My Vehicles Icon Path for:', indicatorLabel); // Debug log
+    const iconMap: { [key: string]: string } = {
+      // Dashboard indicator labels (from indicatorTypeConfig)
+      'AC Service': 'M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
+      'License & Insurance Expiry': 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 13H9v-2h4v2zm0-4H9V9h4v2z',
+      'General Maintenance': 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
+      'Oil Change': 'M7 13v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6M8 5l4-3 4 3M12 2v10',
+      'Battery Health': 'M6 7h11v10H6V7zm11 5h4m-4-2h4',
+      'Tire Change': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z',
+      // Additional maintenance indicator labels (from regular indicators)
+      'Brake Fluid': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 14v-2m2 0v2m-2-6v-2m2 0v2',
+      'Engine Air Filter': 'M3 3h18v18H3V3zm0 6h18M9 9v12',
+      'Coolant': 'M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z',
+      'Tire Rotation': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z',
+      'Spark Plugs': 'M12 2v6m0 4v10M4.93 4.93l4.24 4.24m5.66 5.66l4.24 4.24M2 12h6m8 0h6M4.93 19.07l4.24-4.24m5.66-5.66l4.24-4.24',
+      'Transmission Fluid': 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0-7v4m0 6v8M8.22 8.22l2.83 2.83m5.9 5.9l2.83 2.83m-14.83 0l2.83-2.83m5.9-5.9l2.83-2.83',
+      'Cabin Air Filter': 'M2 7h20v10H2V7zm0 5h20',
+      'Windshield Wipers': 'M2 12l10-5 10 5m-20 5l10-5 10 5',
+      'Brake Pads': 'M5 11h14v10H5V11zm7-6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'
+    };
+    return iconMap[indicatorLabel] || 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z';
   }
 }

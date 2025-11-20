@@ -413,13 +413,24 @@ select.form-input option:checked {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F3F4F6;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+  border-radius: 10px;
   flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
-.indicator-emoji {
-  font-size: 1.25rem;
+.indicator-icon-wrapper svg {
+  color: #EF4444;
+  transition: transform 0.3s ease;
+}
+
+.indicator-card:hover .indicator-icon-wrapper {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #FECACA 0%, #FCA5A5 100%);
+}
+
+.indicator-card:hover .indicator-icon-wrapper svg {
+  transform: rotate(5deg);
 }
 
 .indicator-info {
@@ -790,11 +801,20 @@ select.form-input:not([value=""]) {
 }
 
 .dashboard-card.selected .dashboard-icon-wrapper {
-  background: #FEE2E2;
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
 }
 
-.dashboard-emoji {
-  font-size: 1.75rem;
+.dashboard-card.selected .dashboard-icon-wrapper svg {
+  color: white;
+}
+
+.dashboard-icon-wrapper svg {
+  color: #EF4444;
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover:not(.disabled) .dashboard-icon-wrapper svg {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .dashboard-label {

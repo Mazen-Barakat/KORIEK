@@ -52,10 +52,10 @@
             </svg>
             Current Mileage (km)
           </label>
-          <input 
-            type="number" 
-            id="current-mileage" 
-            [(ngModel)]="updateModel.currentMileage" 
+          <input
+            type="number"
+            id="current-mileage"
+            [(ngModel)]="updateModel.currentMileage"
             class="form-input"
             placeholder="e.g., 15,963"
             aria-label="Enter current mileage in kilometers"
@@ -149,11 +149,13 @@
             <div class="indicator-header">
               <div class="indicator-name">
                 <div class="indicator-icon-wrapper">
-                  <span class="indicator-emoji">{{ indicator.icon }}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path [attr.d]="getIndicatorIconPath(indicator.name)"/>
+                  </svg>
                 </div>
                 <div class="indicator-info">
                   <div class="indicator-label">{{ indicator.name }}</div>
-                  <span class="indicator-status-badge" 
+                  <span class="indicator-status-badge"
                         [ngClass]="{
                           'good': indicator.status === 'Good',
                           'normal': indicator.status === 'Normal',
@@ -215,8 +217,8 @@
 
     <div class="dashboard-grid">
       @for (indicator of dashboardIndicators; track indicator.value) {
-        <div class="dashboard-card" 
-             [ngClass]="{'selected': indicator.selected, 'disabled': !isEditingDashboard || (!indicator.selected && dashboardSelectionCount >= 4), 'view-only': !isEditingDashboard}" 
+        <div class="dashboard-card"
+             [ngClass]="{'selected': indicator.selected, 'disabled': !isEditingDashboard || (!indicator.selected && dashboardSelectionCount >= 4), 'view-only': !isEditingDashboard}"
              (click)="toggleDashboardIndicator(indicator)"
              role="button"
              [tabindex]="isEditingDashboard ? 0 : -1"
@@ -225,7 +227,7 @@
              (keydown.enter)="toggleDashboardIndicator(indicator)"
              (keydown.space)="$event.preventDefault(); toggleDashboardIndicator(indicator)">
           @if (indicator.selected && isEditingDashboard) {
-            <button class="remove-btn" 
+            <button class="remove-btn"
                     (click)="$event.stopPropagation(); toggleDashboardIndicator(indicator)"
                     aria-label="Remove indicator">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -235,7 +237,9 @@
             </button>
           }
           <div class="dashboard-icon-wrapper">
-            <span class="dashboard-emoji">{{ indicator.icon }}</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path [attr.d]="getDashboardIconPath(indicator.value)"/>
+            </svg>
           </div>
           <span class="dashboard-label">{{ indicator.label }}</span>
         </div>

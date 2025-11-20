@@ -56,6 +56,13 @@ export class LoginComponent implements OnInit {
       if (params['confirmed'] === 'true') {
         this.successMessage = 'Email confirmed successfully! You can now log in.';
       }
+
+      // Check for logout reason
+      if (params['reason'] === 'expired') {
+        this.errorMessage = 'Your session has expired. Please log in again.';
+      } else if (params['reason'] === 'refresh_failed') {
+        this.errorMessage = 'Session refresh failed. Please log in again.';
+      }
     });
 
     this.loadGoogleSdk();
@@ -106,24 +113,24 @@ export class LoginComponent implements OnInit {
 
           // Check if the response indicates success
           if (response.success === true || response.success === 'true') {
-            // Store the token using AuthService
-            if (response.data && response.data.token) {
-              this.authService.saveToken(response.data.token);
-            } else if (response.token) {
-              this.authService.saveToken(response.token);
+            // Handle Remember Me token storage first
+            this.handleRememberMe(response);
+
+            // Store the token with expiry using AuthService
+            const data = response.data || response;
+            if (data.token) {
+              this.authService.saveToken(data.token, data.tokenExpiryTime);
             }
 
             // Store user information using AuthService
-            if (response.data) {
-              this.authService.saveUser(response.data);
-            } else if (response.user) {
-              this.authService.saveUser(response.user);
+            if (data.id || data.userName || data.email) {
+              this.authService.saveUser(data);
             }
 
-            // Handle Remember Me token storage
-            this.handleRememberMe(response);
-
             this.successMessage = response.message || 'Login successful! Redirecting...';
+
+            // Start token expiry monitor
+            this.authService.startTokenExpiryMonitor();
 
             // Show success popup
             this.showSuccessPopup = true;
@@ -239,14 +246,23 @@ export class LoginComponent implements OnInit {
 
   // Handle Remember Me token storage
   private handleRememberMe(response: any): void {
-    if (this.rememberMe && response.data) {
-      // Store refresh token if Remember Me is enabled
-      if (response.data.refreshToken) {
-        localStorage.setItem('refreshToken', response.data.refreshToken);
+    const data = response.data || response;
+
+    // Save Remember Me preference
+    this.authService.saveRememberMe(this.rememberMe);
+
+    if (this.rememberMe && data) {
+      // Store refresh token with expiry if Remember Me is enabled
+      if (data.refreshToken) {
+        this.authService.saveRefreshToken(data.refreshToken, data.refreshTokenExpiryTime);
       }
-      if (response.data.userId || response.data.id) {
-        localStorage.setItem('userId', response.data.userId || response.data.id);
+      // Store user ID
+      if (data.id) {
+        this.authService.saveUserId(data.id);
       }
+    } else {
+      // Clear refresh token data if Remember Me is not enabled
+      this.authService.clearRefreshToken();
     }
   }
 
@@ -341,21 +357,26 @@ export class LoginComponent implements OnInit {
           console.log('Google sign-in response:', res);
 
           if (res.success === true || res.success === 'true') {
-            // Store the JWT token using AuthService
-            if (res.data && res.data.token) {
-              this.authService.saveToken(res.data.token);
-            } else if (res.token) {
-              this.authService.saveToken(res.token);
+            // Handle Remember Me for Google login (assume Remember Me is true for Google)
+            this.rememberMe = true;
+            this.handleRememberMe(res);
+
+            // Store the JWT token with expiry using AuthService
+            const data = res.data || res;
+            if (data.token) {
+              this.authService.saveToken(data.token, data.tokenExpiryTime);
             }
 
             // Store user information using AuthService
-            if (res.data) {
-              this.authService.saveUser(res.data);
-            } else if (res.user) {
-              this.authService.saveUser(res.user);
+            if (data.id || data.userName || data.email) {
+              this.authService.saveUser(data);
             }
 
             this.successMessage = res.message || 'Login successful! Redirecting...';
+
+            // Start token expiry monitor
+            this.authService.startTokenExpiryMonitor();
+
             this.cdr.detectChanges();
 
             // Redirect to my-vehicles page after short delay

@@ -6,13 +6,14 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ProfileService, UserProfile } from '../../services/profile.service';
 import { ProfileFormComponent } from './profile-form.component';
 
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, ProfileFormComponent],
+  imports: [CommonModule, RouterLink, ProfileFormComponent],
   templateUrl: './profile-page.component.html',
   styleUrls: ['./profile-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,7 +26,7 @@ export class ProfilePageComponent implements OnInit {
   isSaving = false;
   error: string | null = null;
   successMessage: string | null = null;
-  
+
   // Quick Stats
   vehicleCount: number = 0;
   bookingCount: number = 0; // Placeholder for future implementation
@@ -65,7 +66,7 @@ export class ProfilePageComponent implements OnInit {
       },
     });
   }
-  
+
   /**
    * Load quick stats for profile dashboard
    */
@@ -73,7 +74,7 @@ export class ProfilePageComponent implements OnInit {
     // Import CarsService dynamically to avoid circular dependencies
     import('../../services/cars.service').then(({ CarsService }) => {
       const carsService = new (CarsService as any)(this.profileService['http']);
-      
+
       carsService.getProfileWithCars().subscribe({
         next: (response: any) => {
           if (response.success && response.data) {
