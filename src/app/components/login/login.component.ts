@@ -136,9 +136,10 @@ export class LoginComponent implements OnInit {
             this.showSuccessPopup = true;
             this.cdr.detectChanges();
 
-            // Redirect to my-vehicles page after 1.5 seconds
+            // Redirect after short delay (role-aware)
+            const respData = data || {};
             setTimeout(() => {
-              this.router.navigate(['/my-vehicles']);
+              this.redirectAfterLogin(respData);
             }, 1500);
           } else {
             // Handle unsuccessful response (success: false)
@@ -379,9 +380,10 @@ export class LoginComponent implements OnInit {
 
             this.cdr.detectChanges();
 
-            // Redirect to my-vehicles page after short delay
+            // Redirect after short delay (role-aware)
+            const respData = data || res || {};
             setTimeout(() => {
-              this.router.navigate(['/my-vehicles']);
+              this.redirectAfterLogin(respData);
             }, 1600);
           } else {
             this.errorMessage = res.message || 'Google sign-in failed. Please try again.';
@@ -410,5 +412,52 @@ export class LoginComponent implements OnInit {
           this.cdr.detectChanges();
         }
       });
+  }
+
+  // Redirect helper: route users based on selected role and available data
+  private redirectAfterLogin(data: any): void {
+    // If role selected is a workshop-type role, route to the workshop profile edit page
+    try {
+      const userObj = data || {};
+
+      // Normalize selected role and fallback to stored user role if missing
+      const selectedRoleNorm = (this.selectedRole || this.authService.getUserRole() || '').toString().toLowerCase();
+
+      // Possible fields where backend may put workshop id (cover multiple response shapes)
+      const workshopIdCandidates = [
+        userObj.workshopId,
+        userObj.workshop?.id,
+        userObj.workshopOwnerId,
+        userObj.ownerId,
+        userObj.id,
+        userObj.userId,
+        userObj.data?.workshopId,
+        userObj.data?.id
+      ];
+
+      const workshopId = workshopIdCandidates.find(v => v) || this.authService.getUserId();
+
+      console.debug('redirectAfterLogin:', { selectedRole: this.selectedRole, selectedRoleNorm, workshopId, data: userObj });
+
+      // Check if user is a workshop owner - redirect to profile view page
+      if (selectedRoleNorm === 'workshop' || selectedRoleNorm === 'workshopowner') {
+        // Redirect workshop owners to their profile view page with their ID
+        this.router.navigate(['/workshop-profile', workshopId]);
+        return;
+      }
+
+      // If user role from stored user object is workshop-like, prefer that
+      const storedRole = (this.authService.getUserRole() || '').toString().toLowerCase();
+      if (storedRole === 'workshop' || storedRole === 'workshopowner') {
+        this.router.navigate(['/workshop-profile', workshopId]);
+        return;
+      }
+
+      // Default fallback: go to my-vehicles (existing behavior for car owners)
+      this.router.navigate(['/my-vehicles']);
+    } catch (err) {
+      console.error('Redirect after login failed:', err);
+      this.router.navigate(['/my-vehicles']);
+    }
   }
 }

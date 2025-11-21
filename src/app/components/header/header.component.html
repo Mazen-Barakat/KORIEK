@@ -40,6 +40,16 @@
         <span>Booking</span>
       </a>
 
+      <!-- Workshop Profile Link (only show for workshop owners when authenticated) -->
+      <a *ngIf="isAuthenticated && isWorkshopOwner" routerLink="/workshop-profile-edit" class="nav-link" routerLinkActive="active">
+        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        <span>My Workshop</span>
+      </a>
+
       <!-- Testimonials Link (only show on landing) -->
       <a *ngIf="!isAuthenticated" [routerLink]="null" class="nav-link" (click)="scrollToSection('testimonials')">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -108,6 +118,8 @@
           </svg>
           <span class="notification-badge">3</span>
         </button>
+        <!-- Show user name next to profile (if available) -->
+        <span class="header-username" *ngIf="isAuthenticated && userName">{{ userName }}</span>
 
         <!-- Profile Button -->
         <app-profile-button></app-profile-button>

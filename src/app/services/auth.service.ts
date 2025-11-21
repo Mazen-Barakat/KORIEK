@@ -155,6 +155,20 @@ export class AuthService {
     return localStorage.getItem(this.USER_ID_KEY);
   }
 
+  // Get user's display name (various backend fields)
+  getUserName(): string | null {
+    const user = this.getUser();
+    if (!user) return null;
+    return (
+      user.userName ||
+      user.name ||
+      user.fullName ||
+      user.displayName ||
+      user.email ||
+      null
+    );
+  }
+
   // Save Remember Me flag
   saveRememberMe(rememberMe: boolean): void {
     localStorage.setItem(this.REMEMBER_ME_KEY, rememberMe.toString());

@@ -17,9 +17,11 @@ import { filter } from 'rxjs/operators';
 export class HeaderComponent implements OnInit {
   currentLanguage = 'English';
   isAuthenticated = false;
+  userName: string | null = null;
   isLandingPage = false;
   isLogoSpinning = false;
   isContactModalOpen = false;
+  isWorkshopOwner = false;
   
   // Contact form data
   contactForm = {
@@ -40,6 +42,16 @@ export class HeaderComponent implements OnInit {
     // Subscribe to authentication state changes
     this.authService.isAuthenticated$.subscribe((isAuth) => {
       this.isAuthenticated = isAuth;
+      // update userName when auth state changes
+      if (isAuth) {
+        this.userName = this.authService.getUserName();
+        // Check if user is workshop owner
+        const role = this.authService.getUserRole();
+        this.isWorkshopOwner = role?.toLowerCase() === 'workshop' || role?.toLowerCase() === 'workshopowner';
+      } else {
+        this.userName = null;
+        this.isWorkshopOwner = false;
+      }
       // When authenticated, proactively fetch the profile so the profile button
       // receives the profile image without requiring a user click.
       if (isAuth) {
@@ -59,8 +71,15 @@ export class HeaderComponent implements OnInit {
 
     // If already authenticated on init (token persisted), fetch profile immediately
     if (this.authService.isAuthenticated()) {
+      // ensure username is available on init
+      this.userName = this.authService.getUserName();
       this.profileService.getProfile().subscribe({ next: () => {}, error: () => {} });
     }
+
+    // Also subscribe to user data changes to update displayed name dynamically
+    this.authService.currentUser$.subscribe(user => {
+      this.userName = user ? (user.userName || user.name || user.fullName || user.email) : null;
+    });
 
     // Listen to route changes
     this.router.events

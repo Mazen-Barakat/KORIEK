@@ -62,4 +62,14 @@ export const routes: Routes = [
     loadComponent: () => import('./components/booking/booking.component').then(m => m.BookingComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'workshop-profile/:id',
+    loadComponent: () => import('./components/workshop-profile/workshop-profile.component').then(m => m.WorkshopProfileComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'workshop-profile-edit',
+    loadComponent: () => import('./components/workshop-profile-edit/workshop-profile-edit.component').then(m => m.WorkshopProfileEditComponent),
+    canActivate: [authGuard]
+  },
 ];
