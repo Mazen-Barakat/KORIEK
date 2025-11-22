@@ -8,7 +8,7 @@ import { WorkshopProfileData } from '../models/workshop-profile.model';
 })
 export class WorkshopProfileService {
   private apiUrl = 'https://localhost:44316/api/Workshop';
-  
+
   // WorkShopProfile endpoints (separate controller)
   private profileApiBase = 'https://localhost:44316/api/WorkShopProfile';
 
@@ -62,7 +62,7 @@ export class WorkshopProfileService {
     images.forEach((image, index) => {
       formData.append(`images`, image, image.name);
     });
-    
+
     return this.http.post(`${this.apiUrl}/${workshopId}/gallery`, formData);
   }
 
@@ -81,7 +81,7 @@ export class WorkshopProfileService {
   uploadBusinessLicense(workshopId: string, license: File): Observable<any> {
     const formData = new FormData();
     formData.append('license', license, license.name);
-    
+
     return this.http.post(`${this.apiUrl}/${workshopId}/license`, formData);
   }
 
@@ -91,7 +91,7 @@ export class WorkshopProfileService {
   uploadWorkshopLogo(workshopId: string, logo: File): Observable<any> {
     const formData = new FormData();
     formData.append('logo', logo, logo.name);
-    
+
     return this.http.post(`${this.apiUrl}/${workshopId}/logo`, formData);
   }
 }

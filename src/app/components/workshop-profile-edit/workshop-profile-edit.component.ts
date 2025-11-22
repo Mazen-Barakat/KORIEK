@@ -213,7 +213,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
 
   onSubmit(): void {
     console.log('Current profileData:', this.profileData);
-    
+
     if (!this.validateForm()) {
       return;
     }
@@ -307,18 +307,18 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
             // If the server provided specific validation errors, iterate and display them
             const validationErrors = error.error.errors;
             const errorMessages: string[] = [];
-            
+
             for (const key in validationErrors) {
               if (validationErrors.hasOwnProperty(key)) {
                 // validationErrors[key] might be an array of strings
-                const messages = Array.isArray(validationErrors[key]) 
-                  ? validationErrors[key] 
+                const messages = Array.isArray(validationErrors[key])
+                  ? validationErrors[key]
                   : [validationErrors[key]];
                 errorMessages.push(`${key}: ${messages.join(', ')}`);
               }
             }
-            
-            displayMessage = errorMessages.length > 0 
+
+            displayMessage = errorMessages.length > 0
               ? 'Please correct the following:\n' + errorMessages.join('\n')
               : 'Validation failed. Please check your inputs.';
           } else if (error.error?.title) {
