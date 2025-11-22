@@ -16,7 +16,7 @@
   left: -10%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(232, 69, 69, 0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.06) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -34,10 +34,10 @@
   position: absolute;
   width: 12px;
   height: 12px;
-  background: linear-gradient(135deg, var(--brand-auth), #FFD93D);
+  background: linear-gradient(135deg, var(--brand-primary), #dc2626);
   border-radius: 50%;
-  opacity: 0.6;
-  box-shadow: 0 0 20px rgba(232, 69, 69, 0.7);
+  opacity: 0.5;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
   animation: particleFloat 15s ease-in-out infinite;
 }
 
@@ -103,10 +103,12 @@
 }
 
 .role-selection-card {
-  background: white;
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
   padding: 60px 50px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.08);
   max-width: 1000px;
   width: 100%;
   text-align: center;
@@ -129,16 +131,19 @@
 h1 {
   font-size: 2.8rem;
   margin-bottom: 12px;
-  color: #1a1a1a;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  letter-spacing: -1px;
 }
 
 .subtitle {
   font-size: 1.15rem;
-  color: #666;
+  color: #6b7280;
   margin-bottom: 50px;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .roles-grid {
@@ -187,15 +192,15 @@ h1 {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(90deg, var(--brand-primary) 0%, #dc2626 100%);
   transform: scaleX(0);
   transition: transform 0.3s ease;
 }
 
 .auth-btn:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(232, 69, 69, 0.2);
-  border-color: #E84545;
+  box-shadow: 0 16px 48px rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.15);
   background: white;
 }
 
@@ -207,12 +212,12 @@ h1 {
   width: 90px;
   height: 90px;
   margin: 0 auto 24px;
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(232, 69, 69, 0.25);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.24);
 }
 
 .auth-icon svg {
@@ -240,22 +245,22 @@ h1 {
   position: absolute;
   top: 24px;
   left: 24px;
-  background: rgba(232, 69, 69, 0.1);
+  background: rgba(239, 68, 68, 0.1);
   border: none;
   padding: 10px 18px;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #E84545;
+  color: var(--brand-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .back-btn:hover {
-  background: rgba(232, 69, 69, 0.15);
+  background: rgba(239, 68, 68, 0.15);
   transform: translateX(-4px);
 }
 
@@ -268,11 +273,13 @@ h1 {
 }
 
 .role-card {
-  background: #ffffff;
-  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
   padding: 40px 30px;
-  transition: all 0.3s ease;
-  border: 2px solid #f0f0f0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(239, 68, 68, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   position: relative;
   overflow: hidden;
   animation: cardFadeIn 0.5s ease-out backwards;
@@ -299,15 +306,15 @@ h1 {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(90deg, var(--brand-primary) 0%, #dc2626 100%);
   transform: scaleX(0);
   transition: transform 0.3s ease;
 }
 
 .role-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 40px rgba(232, 69, 69, 0.15);
-  border-color: rgba(232, 69, 69, 0.3);
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.15);
 }
 
 .role-card:hover::before {
@@ -318,12 +325,12 @@ h1 {
   width: 90px;
   height: 90px;
   margin: 0 auto 24px;
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(232, 69, 69, 0.25);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.24);
 }
 
 .role-icon svg {
@@ -336,14 +343,14 @@ h1 {
 .role-card h2 {
   font-size: 1.75rem;
   margin-bottom: 12px;
-  color: #1a1a1a;
+  color: #1f2937;
   font-weight: 700;
   letter-spacing: -0.3px;
 }
 
 .role-description {
   font-size: 1.05rem;
-  color: #666;
+  color: #6b7280;
   margin: 0;
   line-height: 1.7;
   min-height: 50px;
@@ -388,28 +395,30 @@ h1 {
 }
 
 .login-btn {
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(232, 69, 69, 0.3);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.24);
 }
 
 .login-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(232, 69, 69, 0.4);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(239, 68, 68, 0.32);
 }
 
 .signup-btn {
-  background: white;
-  color: #E84545;
-  border: 2px solid #E84545;
-  box-shadow: 0 4px 12px rgba(232, 69, 69, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  color: var(--brand-primary);
+  border: 2px solid rgba(239, 68, 68, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .signup-btn:hover {
-  background: #E84545;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(232, 69, 69, 0.3);
+  background: white;
+  border-color: var(--brand-primary);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.16);
 }
 
 @media (max-width: 768px) {
