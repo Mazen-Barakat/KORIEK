@@ -228,29 +228,31 @@ export class WorkshopProfileEditComponent
     this.workshopProfileService.getWorkshopWorkingHours(workshopId).subscribe({
       next: (apiHours) => {
         console.log('Working Hours API Response:', apiHours);
-        
+
         // Convert API format to display format
         const convertedHours = this.workshopProfileService.convertAPIWorkingHours(apiHours);
-        
+
         // Update working hours ensuring all days are present
-        const daysMap = new Map(convertedHours.map(h => [h.day, h]));
-        
-        this.profileData.workingHours = DAYS_OF_WEEK.map(day => {
+        const daysMap = new Map(convertedHours.map((h) => [h.day, h]));
+
+        this.profileData.workingHours = DAYS_OF_WEEK.map((day) => {
           const existing = daysMap.get(day);
-          return existing || {
-            day,
-            openTime: '09:00',
-            closeTime: '17:00',
-            isClosed: false
-          };
+          return (
+            existing || {
+              day,
+              openTime: '09:00',
+              closeTime: '17:00',
+              isClosed: false,
+            }
+          );
         });
-        
+
         console.log('Working Hours loaded and converted:', this.profileData.workingHours);
       },
       error: (error) => {
         console.error('Error loading working hours:', error);
         // Keep default working hours if API fails
-      }
+      },
     });
   }
 
@@ -357,113 +359,64 @@ export class WorkshopProfileEditComponent
     // Send PUT request with FormData
     this.workshopProfileService.updateMyWorkshopProfile(fd).subscribe({
       next: (response) => {
-        this.isLoading = false;
-        this.successMessage = 'Workshop profile updated successfully!';
-        this.isFormDirty = false;
+        // If there are working hours, update them after successful profile save
+        if (
+          this.profileData.workingHours &&
+          this.profileData.workingHours.length > 0 &&
+          this.profileData.id
+        ) {
+          const apiWorkingHours = this.workshopProfileService.convertToAPIWorkingHours(
+            this.profileData.workingHours,
+            parseInt(this.profileData.id)
+          );
 
-        if (this.toast) {
-          this.toast.show('Workshop profile updated successfully!', 'success');
+          this.workshopProfileService.updateWorkshopWorkingHours(apiWorkingHours).subscribe({
+            next: () => this.completeProfileUpdate(),
+            error: (err: any) => {
+              console.error('Error updating working hours:', err);
+              this.completeProfileUpdate();
+              if (this.toast) {
+                this.toast.show(
+                  'Profile updated, but working hours may not have saved. Please try again.',
+                  'warning'
+                );
+              }
+            },
+          });
+        } else {
+          this.completeProfileUpdate();
         }
-
-        // Reset file selections after successful save
-        this.selectedLogoFile = null;
-        this.selectedGalleryFiles = [];
-        this.galleryPreviewUrls = [];
-        this.selectedLicenseFile = null;
-
-        setTimeout(() => {
-          // After successful update, reload profile to reflect any server-side changes
-          this.loadWorkshopProfile();
-          this.router.navigate([`/workshop-profile/${this.workshopId}`]);
-        }, 1200);
       },
-      error: (error) => {
+      error: (err: any) => {
         this.isLoading = false;
-        console.error('Error updating workshop profile:', error);
-        console.error('Validation errors:', error.error?.errors);
-        console.error('Error details:', JSON.stringify(error.error, null, 2));
+        console.error('Error updating workshop profile:', err);
+        console.error('Validation errors:', err.error?.errors);
+        console.error('Error details:', JSON.stringify(err.error, null, 2));
 
-        let displayMessage = 'Failed to update profile. Please try again.';
-
-        if (error.error && error.error.errors) {
-          // If the server provided specific validation errors, iterate and display them
-          const validationErrors = error.error.errors;
-          const errorMessages: string[] = [];
-
+        const errorMessages: string[] = [];
+        if (err.error && err.error.errors) {
+          const validationErrors = err.error.errors;
           for (const key in validationErrors) {
-            if (validationErrors.hasOwnProperty(key)) {
-              // validationErrors[key] might be an array of strings
+            if (Object.prototype.hasOwnProperty.call(validationErrors, key)) {
               const messages = Array.isArray(validationErrors[key])
                 ? validationErrors[key]
                 : [validationErrors[key]];
               errorMessages.push(`${key}: ${messages.join(', ')}`);
-    // Send PUT request with JSON body
-    this.workshopProfileService.updateMyWorkshopProfile(profileData)
-      .subscribe({
-        next: (response) => {
-          // After profile update, save working hours
-          if (this.profileData.workingHours && this.profileData.workingHours.length > 0) {
-            const apiWorkingHours = this.workshopProfileService.convertToAPIWorkingHours(
-              this.profileData.workingHours,
-              parseInt(this.profileData.id!)
-            );
-            
-            this.workshopProfileService.updateWorkshopWorkingHours(apiWorkingHours)
-              .subscribe({
-                next: () => {
-                  console.log('Working hours updated successfully');
-                  this.completeProfileUpdate();
-                },
-                error: (err) => {
-                  console.error('Error updating working hours:', err);
-                  // Still complete the profile update even if working hours fail
-                  this.completeProfileUpdate();
-                  if (this.toast) {
-                    this.toast.show('Profile updated, but working hours may not have saved. Please try again.', 'warning');
-                  }
-                }
-              });
-          } else {
-            this.completeProfileUpdate();
-          }
-        },
-        error: (error) => {
-          this.isLoading = false;
-          console.error('Error updating workshop profile:', error);
-          console.error('Validation errors:', error.error?.errors);
-          console.error('Error details:', JSON.stringify(error.error, null, 2));
-
-          let displayMessage = 'Failed to update profile. Please try again.';
-
-          if (error.error && error.error.errors) {
-            // If the server provided specific validation errors, iterate and display them
-            const validationErrors = error.error.errors;
-            const errorMessages: string[] = [];
-
-            for (const key in validationErrors) {
-              if (validationErrors.hasOwnProperty(key)) {
-                // validationErrors[key] might be an array of strings
-                const messages = Array.isArray(validationErrors[key])
-                  ? validationErrors[key]
-                  : [validationErrors[key]];
-                errorMessages.push(`${key}: ${messages.join(', ')}`);
-              }
             }
           }
-
-          displayMessage =
-            errorMessages.length > 0
-              ? 'Please correct the following:\n' + errorMessages.join('\n')
-              : 'Validation failed. Please check your inputs.';
-        } else if (error.error?.title) {
-          displayMessage = error.error.title;
-        } else if (error.error?.message) {
-          displayMessage = error.error.message;
-        } else if (error.message) {
-          displayMessage = error.message;
         }
 
-        this.errorMessage = displayMessage;
+        if (errorMessages.length > 0) {
+          this.errorMessage = 'Please correct the following:\n' + errorMessages.join('\n');
+        } else if (err.error?.title) {
+          this.errorMessage = err.error.title;
+        } else if (err.error?.message) {
+          this.errorMessage = err.error.message;
+        } else if (err.message) {
+          this.errorMessage = err.message;
+        } else {
+          this.errorMessage = 'Failed to update profile. Please try again.';
+        }
 
         if (this.toast) {
           this.toast.show(this.errorMessage, 'error');
