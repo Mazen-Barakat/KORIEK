@@ -14,36 +14,80 @@
       </div>
     </div>
 
-    <!-- Key Metrics Row -->
-    <div class="metrics-row">
-      <app-stat-card
-        icon="💰"
-        label="Monthly Revenue"
-        [value]="formatCurrency(metrics.monthlyRevenue)"
-        [trend]="metrics.revenueChange"
-        variant="success">
-      </app-stat-card>
+    <!-- Key Metrics Row - Enhanced -->
+    <div class="smart-metrics-grid">
+      <!-- Primary Metric - Featured -->
+      <div class="metric-card featured-metric revenue-card">
+        <div class="metric-badge pulse">💰</div>
+        <div class="metric-content">
+          <div class="metric-header">
+            <span class="metric-label">Monthly Revenue</span>
+            <div class="trend-badge positive" *ngIf="metrics.revenueChange > 0">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 14l5-5 5 5z"/>
+              </svg>
+              <span>{{ metrics.revenueChange }}%</span>
+            </div>
+          </div>
+          <div class="metric-value-large">{{ formatCurrency(metrics.monthlyRevenue) }}</div>
+          <div class="metric-subtitle">vs last month</div>
+        </div>
+        <div class="metric-sparkline">
+          <svg viewBox="0 0 100 30" preserveAspectRatio="none">
+            <path d="M0,20 L25,15 L50,10 L75,12 L100,5" stroke="currentColor" fill="none" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
 
-      <app-stat-card
-        icon="🔧"
-        label="Active Jobs"
-        [value]="metrics.activeJobs"
-        variant="primary">
-      </app-stat-card>
+      <!-- Secondary Metrics -->
+      <div class="metric-card jobs-card">
+        <div class="metric-icon-wrapper jobs-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="metric-info">
+          <div class="metric-label-small">Active Jobs</div>
+          <div class="metric-value-medium">{{ metrics.activeJobs }}</div>
+          <div class="metric-progress">
+            <div class="progress-bar" [style.width]="(metrics.activeJobs / 20 * 100) + '%'"></div>
+          </div>
+        </div>
+      </div>
 
-      <app-stat-card
-        icon="📋"
-        label="New Requests"
-        [value]="metrics.newBookingRequests"
-        variant="warning">
-      </app-stat-card>
+      <div class="metric-card requests-card">
+        <div class="metric-icon-wrapper requests-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+          </svg>
+        </div>
+        <div class="metric-info">
+          <div class="metric-label-small">New Requests</div>
+          <div class="metric-value-medium">{{ metrics.newBookingRequests }}</div>
+          <div class="metric-status-badge" *ngIf="metrics.newBookingRequests > 0">
+            {{ metrics.newBookingRequests }} pending
+          </div>
+        </div>
+      </div>
 
-      <app-stat-card
-        icon="⭐"
-        label="Shop Rating"
-        [value]="metrics.shopRating + '/5.0'"
-        variant="info">
-      </app-stat-card>
+      <div class="metric-card rating-card">
+        <div class="metric-icon-wrapper rating-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+        <div class="metric-info">
+          <div class="metric-label-small">Shop Rating</div>
+          <div class="metric-value-medium">{{ metrics.shopRating }}<span class="rating-max">/5.0</span></div>
+          <div class="star-rating">
+            <span class="star filled" *ngFor="let star of [1,2,3,4,5].slice(0, Math.floor(metrics.shopRating))">★</span>
+            <span class="star" *ngFor="let star of [1,2,3,4,5].slice(Math.floor(metrics.shopRating))">★</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

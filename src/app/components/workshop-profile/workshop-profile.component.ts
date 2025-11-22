@@ -120,6 +120,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
         // Load photos if we have workshop ID
         if (this.profileData.id) {
           this.loadPhotos(this.profileData.id);
+          this.loadWorkingHours(this.profileData.id);
         }
       },
       error: (error) => {
@@ -127,6 +128,70 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
         this.errorMessage = 'Failed to load workshop profile. Please try again.';
         this.profileData = {};
       }
+    });
+  }
+
+  loadWorkingHours(workshopId: number): void {
+    this.workshopProfileService.getWorkshopWorkingHours(workshopId).subscribe({
+      next: (apiHours) => {
+        console.log('Working Hours API Response:', apiHours);
+        
+        // Convert API format to display format and organize by day
+        const hoursMap: any = {};
+        const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        apiHours.forEach(hour => {
+          hoursMap[hour.day] = {
+            openTime: this.formatTimeFromISO(hour.from),
+            closeTime: this.formatTimeFromISO(hour.to),
+            isClosed: hour.isClosed
+          };
+        });
+
+        // Ensure all days are present
+        daysOrder.forEach(day => {
+          if (!hoursMap[day]) {
+            hoursMap[day] = {
+              openTime: '09:00',
+              closeTime: '17:00',
+              isClosed: false
+            };
+          }
+        });
+
+        this.workingHours = hoursMap;
+        console.log('Working Hours loaded:', this.workingHours);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading working hours:', error);
+        // Set default working hours if API fails
+        this.setDefaultWorkingHours();
+      }
+    });
+  }
+
+  private formatTimeFromISO(isoString: string): string {
+    if (!isoString) return '09:00';
+    try {
+      const date = new Date(isoString);
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    } catch {
+      return '09:00';
+    }
+  }
+
+  private setDefaultWorkingHours(): void {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    this.workingHours = {};
+    days.forEach(day => {
+      this.workingHours[day] = {
+        openTime: '09:00',
+        closeTime: '17:00',
+        isClosed: false
+      };
     });
   }
 
@@ -309,14 +374,15 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   formatWorkingHours(day: string): string {
     const hours = this.workingHours[day];
-    if (!hours) return '';
-    if (hours === 'closed') {
+    if (!hours) return 'Not set';
+    if (hours.isClosed) {
       return 'Closed';
     }
-    return hours.open && hours.close ? `${hours.open} - ${hours.close}` : '';
+    return hours.openTime && hours.closeTime ? `${hours.openTime} - ${hours.closeTime}` : 'Not set';
   }
 
   isWorkingHoursClosed(day: string): boolean {
-    return !this.workingHours || this.workingHours[day] === 'closed';
+    const hours = this.workingHours[day];
+    return !hours || hours.isClosed === true;
   }
 }

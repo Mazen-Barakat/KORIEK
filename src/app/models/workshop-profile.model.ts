@@ -5,6 +5,15 @@ export interface WorkingHours {
   isClosed: boolean;
 }
 
+// API Response interface for WorkShop Working Hours
+export interface WorkShopWorkingHoursAPI {
+  day: string;
+  from: string; // ISO 8601 time string
+  to: string;   // ISO 8601 time string
+  isClosed: boolean;
+  workShopProfileId: number;
+}
+
 export interface WorkshopLocation {
   governorate: string;
   city: string;

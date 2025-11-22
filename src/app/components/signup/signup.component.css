@@ -20,7 +20,7 @@
   right: -10%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(232, 69, 69, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
   animation: float 20s ease-in-out infinite;
@@ -45,10 +45,10 @@
   position: absolute;
   width: 12px;
   height: 12px;
-  background: linear-gradient(135deg, #E84545, #FFD93D);
+  background: linear-gradient(135deg, var(--brand-primary), #dc2626);
   border-radius: 50%;
-  opacity: 0.6;
-  box-shadow: 0 0 20px rgba(232, 69, 69, 0.7);
+  opacity: 0.5;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
   animation: particleFloat 15s ease-in-out infinite;
 }
 
@@ -117,11 +117,10 @@
 .signup-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
-  border-radius: 24px;
+  border-radius: 20px;
   padding: 50px 45px;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.08);
   width: 100%;
   max-width: 540px;
   position: relative;
@@ -163,11 +162,10 @@
 h2 {
   margin: 0 0 12px 0;
   font-size: 2.2rem;
-  color: #1a1a1a;
   text-align: center;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%);
+  font-weight: 800;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -176,9 +174,9 @@ h2 {
 .subtitle {
   margin: 0 0 35px 0;
   font-size: 1.05rem;
-  color: #666;
+  color: #6b7280;
   text-align: center;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 /* Back Button */
@@ -186,22 +184,22 @@ h2 {
   position: absolute;
   top: 24px;
   left: 24px;
-  background: rgba(232, 69, 69, 0.1);
+  background: rgba(239, 68, 68, 0.1);
   border: none;
   padding: 10px 18px;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #E84545;
+  color: var(--brand-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .back-btn:hover {
-  background: rgba(232, 69, 69, 0.15);
+  background: rgba(239, 68, 68, 0.15);
   transform: translateX(-4px);
 }
 
@@ -245,10 +243,10 @@ h2 {
   height: 100%;
   border-radius: 50%;
   border: 4px solid transparent;
-  border-top: 4px solid #E84545;
-  border-right: 4px solid #FF6B6B;
-  border-bottom: 4px solid #FFD93D;
-  box-shadow: 0 0 20px rgba(232, 69, 69, 0.3);
+  border-top: 4px solid var(--brand-primary);
+  border-right: 4px solid #dc2626;
+  border-bottom: 4px solid var(--brand-warm);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
   animation: none;
 }
 
@@ -267,11 +265,11 @@ h2 {
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 25px rgba(232, 69, 69, 0.4);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.24);
 }
 
 .spinner-container.spinning .role-icon-wrapper {
@@ -330,9 +328,8 @@ h2 {
 
 .role-text strong {
   font-size: 1.4rem;
-  color: #1a1a1a;
   font-weight: 700;
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -422,7 +419,7 @@ h2 {
 
 .alert-error {
   background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
-  color: #E84545;
+  color: var(--brand-primary);
   border: 1px solid #ffcccc;
 }
 
@@ -467,7 +464,7 @@ h2 {
 .input-wrapper.filled label {
   top: 8px;
   font-size: 0.75rem;
-  color: #E84545;
+  color: var(--brand-primary);
   font-weight: 600;
 }
 
@@ -475,16 +472,16 @@ h2 {
 .input-wrapper.focused input {
   border-color: transparent;
   background: white;
-  box-shadow: 0 0 0 2px #E84545, 0 4px 20px rgba(232, 69, 69, 0.15);
+  box-shadow: 0 0 0 2px var(--brand-primary), 0 4px 20px rgba(239, 68, 68, 0.15);
   animation: borderGlow 0.3s ease-out;
 }
 
 @keyframes borderGlow {
   0% {
-    box-shadow: 0 0 0 0 rgba(232, 69, 69, 0);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
   }
   100% {
-    box-shadow: 0 0 0 2px #E84545, 0 4px 20px rgba(232, 69, 69, 0.15);
+    box-shadow: 0 0 0 2px var(--brand-primary), 0 4px 20px rgba(239, 68, 68, 0.15);
   }
 }
 
@@ -521,7 +518,7 @@ h2 {
 
 /* Error State */
 .input-wrapper.error input {
-  border-color: #E84545;
+  border-color: var(--brand-primary);
   background-color: #fff5f5;
   animation: errorShake 0.3s ease-out;
 }
@@ -536,7 +533,7 @@ h2 {
   display: block;
   margin-top: 8px;
   font-size: 0.85rem;
-  color: #E84545;
+  color: var(--brand-primary);
   font-weight: 500;
   animation: fadeIn 0.3s ease-out;
 }
@@ -566,8 +563,8 @@ h2 {
 }
 
 .password-toggle:hover {
-  color: #E84545;
-  background-color: rgba(232, 69, 69, 0.08);
+  color: var(--brand-primary);
+  background-color: rgba(239, 68, 68, 0.08);
   transform: translateY(-50%) scale(1.1);
 }
 
@@ -579,15 +576,15 @@ h2 {
 .submit-btn {
   width: 100%;
   padding: 16px 24px;
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
   color: white;
   border: none;
   border-radius: 12px;
   font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(232, 69, 69, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.24);
   position: relative;
   overflow: hidden;
   margin-bottom: 20px;
@@ -609,8 +606,9 @@ h2 {
 }
 
 .submit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(232, 69, 69, 0.4);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(239, 68, 68, 0.32);
 }
 
 .submit-btn:active {
@@ -652,7 +650,7 @@ h2 {
 
 .login-link a,
 .signup-link a {
-  color: #E84545;
+  color: var(--brand-primary);
   font-weight: 600;
   text-decoration: none;
   transition: all 0.3s ease;
@@ -660,7 +658,7 @@ h2 {
 
 .login-link a:hover,
 .signup-link a:hover {
-  color: #FF6B6B;
+  color: #dc2626;
   text-decoration: underline;
 }
 
@@ -723,8 +721,8 @@ h2 {
 
 .google-btn:hover:not(:disabled) {
   background: #ffffff;
-  border-color: #E84545;
-  box-shadow: 0 4px 15px rgba(232, 69, 69, 0.15);
+  border-color: var(--brand-primary);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
   transform: translateY(-2px);
 }
 
@@ -796,8 +794,8 @@ h2 {
 }
 
 .strength-progress.weak {
-  background: linear-gradient(135deg, #E84545 0%, #FF6B6B 100%);
-  box-shadow: 0 0 10px rgba(232, 69, 69, 0.4);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
 .strength-progress.fair {
@@ -823,7 +821,7 @@ h2 {
   transition: color 0.3s ease;
 }
 
-.strength-label.weak { color: #E84545; }
+.strength-label.weak { color: var(--brand-primary); }
 .strength-label.fair { color: #FFB703; }
 .strength-label.good { color: #219ebc; }
 .strength-label.strong { color: #52b788; }
@@ -844,14 +842,14 @@ h2 {
   position: absolute;
   width: 10px;
   height: 10px;
-  background: #E84545;
+  background: var(--brand-primary);
   top: -10%;
   animation: confettiFall 3s linear forwards;
 }
 
 .confetti:nth-child(2n) { background: #FFD93D; }
 .confetti:nth-child(3n) { background: #6BCF7F; }
-.confetti:nth-child(4n) { background: #FF6B6B; }
+.confetti:nth-child(4n) { background: #dc2626; }
 .confetti:nth-child(5n) { background: #8ecae6; }
 
 .confetti:nth-child(odd) { width: 8px; height: 16px; }
@@ -896,7 +894,7 @@ h2 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(232, 69, 69, 0.98) 0%, rgba(255, 107, 107, 0.98) 100%);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.98) 0%, rgba(220, 38, 38, 0.98) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1120,7 +1118,7 @@ h2 {
 
 .feature-item:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(232, 69, 69, 0.15);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
 }
 
 .feature-icon {
@@ -1188,10 +1186,10 @@ h2 {
 
 .loader-progress {
   height: 100%;
-  background: linear-gradient(90deg, #E84545 0%, #FF6B6B 50%, #FFD93D 100%);
+  background: linear-gradient(90deg, var(--brand-primary) 0%, #dc2626 50%, #FFD93D 100%);
   border-radius: 10px;
   animation: loading 4.5s ease-out forwards;
-  box-shadow: 0 0 15px rgba(232, 69, 69, 0.5);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
   position: relative;
 }
 
