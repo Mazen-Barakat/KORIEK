@@ -8,7 +8,7 @@ import { WorkshopProfileData } from '../models/workshop-profile.model';
 })
 export class WorkshopProfileService {
   private apiUrl = 'https://localhost:44316/api/Workshop';
-  
+
   // WorkShopProfile endpoints (separate controller)
   private profileApiBase = 'https://localhost:44316/api/WorkShopProfile';
 
@@ -36,11 +36,15 @@ export class WorkshopProfileService {
   }
 
   /**
-   * Update the current user's workshop profile. The backend expects multipart/form-data
-   * (supports files such as LicenceImage and LogoImage). Pass a FormData instance.
+   * Update the current user's workshop profile. The backend expects JSON body with URL strings.
    */
-  updateMyWorkshopProfile(formData: FormData): Observable<any> {
-    return this.http.post(`${this.profileApiBase}/Update-WorkShop-Profile`, formData);
+  updateMyWorkshopProfile(profileData: any): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    console.log('Service: Making PUT request to:', `${this.profileApiBase}/Update-WorkShop-Profile`);
+    console.log('Service: Request body:', profileData);
+    return this.http.put(`${this.profileApiBase}/Update-WorkShop-Profile`, profileData, { headers });
   }
 
   /**
@@ -58,7 +62,7 @@ export class WorkshopProfileService {
     images.forEach((image, index) => {
       formData.append(`images`, image, image.name);
     });
-    
+
     return this.http.post(`${this.apiUrl}/${workshopId}/gallery`, formData);
   }
 
@@ -77,7 +81,7 @@ export class WorkshopProfileService {
   uploadBusinessLicense(workshopId: string, license: File): Observable<any> {
     const formData = new FormData();
     formData.append('license', license, license.name);
-    
+
     return this.http.post(`${this.apiUrl}/${workshopId}/license`, formData);
   }
 
@@ -87,7 +91,7 @@ export class WorkshopProfileService {
   uploadWorkshopLogo(workshopId: string, logo: File): Observable<any> {
     const formData = new FormData();
     formData.append('logo', logo, logo.name);
-    
+
     return this.http.post(`${this.apiUrl}/${workshopId}/logo`, formData);
   }
 }

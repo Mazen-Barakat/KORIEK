@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { UnsavedChangesGuard } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
   // {
@@ -70,7 +71,8 @@ export const routes: Routes = [
   {
     path: 'workshop-profile-edit',
     loadComponent: () => import('./components/workshop-profile-edit/workshop-profile-edit.component').then(m => m.WorkshopProfileEditComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard],
+    canDeactivate: [UnsavedChangesGuard]
   },
   {
     path: 'workshop/dashboard',

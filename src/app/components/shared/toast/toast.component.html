@@ -1,0 +1,5 @@
+<div class="toast-container" [class.visible]="visible" [class]="'toast-' + type">
+  <div class="toast-icon">{{ getIcon() }}</div>
+  <div class="toast-message">{{ message }}</div>
+  <button class="toast-close" (click)="hide()" aria-label="Close">✕</button>
+</div>

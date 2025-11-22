@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
@@ -7,31 +7,37 @@ import { forkJoin, Observable, of } from 'rxjs';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
-import { 
-  WorkshopProfileData, 
-  WorkingHours, 
-  WorkshopLocation, 
-  WORKSHOP_TYPES, 
+import { ToastComponent } from '../shared/toast/toast.component';
+import { CanComponentDeactivate } from '../../guards/unsaved-changes.guard';
+import {
+  WorkshopProfileData,
+  WorkingHours,
+  WorkshopLocation,
+  WORKSHOP_TYPES,
   DAYS_OF_WEEK,
-  GOVERNORATES 
+  GOVERNORATES,
+  EGYPTIAN_CITIES_BY_GOVERNORATE
 } from '../../models/workshop-profile.model';
 
 @Component({
   selector: 'app-workshop-profile-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ToastComponent],
   templateUrl: './workshop-profile-edit.component.html',
   styleUrls: ['./workshop-profile-edit.component.css']
 })
-export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDestroy {
+export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDestroy, CanComponentDeactivate {
   // Leaflet map properties
   private map: L.Map | null = null;
   private marker: L.Marker | null = null;
+
+  @ViewChild(ToastComponent) toast!: ToastComponent;
+
   profileData: WorkshopProfileData = {
     workshopName: '',
     workshopType: '',
     phoneNumber: '',
-    technicianCount: 0,
+    NumbersOfTechnicians: 0,
     description: '',
     workingHours: this.initializeWorkingHours(),
     location: {
@@ -43,13 +49,16 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     },
     galleryImages: [],
     isVerified: false,
-    rating: 0
+    Rating: 0,
+    Country: 'Egypt',
+    VerificationStatus: 'Pending'
   };
 
   workshopTypes = WORKSHOP_TYPES;
   governorates = GOVERNORATES;
   daysOfWeek = DAYS_OF_WEEK;
-  
+  filteredCities: string[] = [];
+
   isLoading = false;
   errorMessage = '';
   successMessage = '';
@@ -60,6 +69,9 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
   licensePreviewUrl: string = '';
   selectedLogoFile: File | null = null;
   logoPreviewUrl: string = '';
+  isFormDirty: boolean = false;
+
+  private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
   constructor(
     private authService: AuthService,
@@ -79,6 +91,20 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     } else {
       this.errorMessage = 'Unable to identify workshop. Please log in again.';
     }
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any): void {
+    if (this.isFormDirty) {
+      $event.returnValue = 'You have unsaved changes. Do you want to leave this page?';
+    }
+  }
+
+  canDeactivate(): boolean {
+    if (this.isFormDirty) {
+      return confirm('You have unsaved changes. Do you want to leave this page?');
+    }
+    return true;
   }
 
   ngAfterViewInit(): void {
@@ -112,7 +138,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
       next: (response) => {
         console.log('Workshop Profile API Response:', response);
         const data = response?.data ?? response;
-        
+
         if (data && data.id) {
           // Map backend fields to frontend model
           this.profileData = {
@@ -120,7 +146,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
             workshopName: data.name || '',
             workshopType: data.workShopType || '',
             phoneNumber: data.phoneNumber || '',
-            technicianCount: data.numbersOfTechnicians || 0,
+            NumbersOfTechnicians: data.numbersOfTechnicians || 0,
             description: data.description || '',
             workingHours: this.profileData.workingHours || this.initializeWorkingHours(),
             location: {
@@ -131,17 +157,32 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
               address: data.address || ''
             },
             galleryImages: this.profileData.galleryImages || [],
-            businessLicense: data.licenceImageUrl || '',
+            LicenceImageUrl: data.licenceImageUrl || '',
             isVerified: data.verificationStatus === 'Verified',
-            rating: data.rating || 0,
-            logoUrl: data.logoImageUrl || ''
+            Rating: data.rating || 0,
+            LogoImageUrl: data.logoImageUrl || '',
+            Country: data.country || 'Egypt',
+            VerificationStatus: data.verificationStatus || 'Pending',
+            CreatedAt: data.createdAt ? new Date(data.createdAt) : undefined,
+            UpdatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
+            ApplicationUserId: data.applicationUserId || ''
           };
-          
+
           // Load existing logo if available
-          if (this.profileData.logoUrl) {
-            this.logoPreviewUrl = this.profileData.logoUrl;
+          if (this.profileData.LogoImageUrl) {
+            this.logoPreviewUrl = this.profileData.LogoImageUrl;
           }
-          
+
+          // Load existing license if available
+          if (this.profileData.LicenceImageUrl) {
+            this.licensePreviewUrl = this.profileData.LicenceImageUrl;
+          }
+
+          // Populate cities based on governorate
+          if (this.profileData.location.governorate) {
+            this.onGovernorateChange(this.profileData.location.governorate);
+          }
+
           // Reinitialize map with loaded coordinates
           if (this.map) {
             const lat = this.profileData.location.latitude;
@@ -151,6 +192,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
           }
         }
         this.isLoading = false;
+        this.isFormDirty = false;
       },
       error: (error) => {
         console.error('Error loading workshop profile:', error);
@@ -170,7 +212,28 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
   }
 
   onSubmit(): void {
+    console.log('Current profileData:', this.profileData);
+
     if (!this.validateForm()) {
+      return;
+    }
+
+    // Validate Egyptian phone number format
+    const phoneRegex = /^(\+20|0)?1[0125]\d{8}$/;
+    if (!phoneRegex.test(this.profileData.phoneNumber)) {
+      this.errorMessage = 'Phone number must be a valid Egyptian number (e.g., 01012345678 or +201012345678)';
+      if (this.toast) {
+        this.toast.show(this.errorMessage, 'error');
+      }
+      return;
+    }
+
+    // Validate number of technicians
+    if (!this.profileData.NumbersOfTechnicians || this.profileData.NumbersOfTechnicians < 1) {
+      this.errorMessage = 'Number of technicians must be at least 1';
+      if (this.toast) {
+        this.toast.show(this.errorMessage, 'error');
+      }
       return;
     }
 
@@ -178,50 +241,48 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Build multipart/form-data body expected by the backend
-    const formData = new FormData();
+    // Build JSON body for PUT request with exact property names expected by backend
+    const profileData: any = {
+      Id: this.profileData.id ? Number(this.profileData.id) : 0,
+      Name: (this.profileData.workshopName || '').trim(),
+      Description: (this.profileData.description || '').trim(),
+      PhoneNumber: (this.profileData.phoneNumber || '').trim(),
+      NumbersOfTechnicians: Number(this.profileData.NumbersOfTechnicians) || 1,
+      Country: (this.profileData.Country || 'Egypt').trim(),
+      Governorate: (this.profileData.location?.governorate || '').trim(),
+      City: (this.profileData.location?.city || '').trim(),
+      Latitude: Number(this.profileData.location?.latitude) || 0,
+      Longitude: Number(this.profileData.location?.longitude) || 0,
+      WorkShopType: (this.profileData.workshopType || 'Independent').trim(),
+      ApplicationUserId: (this.profileData.ApplicationUserId || '').trim()
+    };
 
-    // Map fields from our model to API expected names
-    if (this.profileData.id) formData.append('Id', this.profileData.id);
-    formData.append('Name', this.profileData.workshopName || '');
-    formData.append('Description', this.profileData.description || '');
-    formData.append('PhoneNumber', this.profileData.phoneNumber || '');
-    formData.append('NumbersOfTechnicians', String(this.profileData.technicianCount || 0));
-    // Country is not present in the model; default to 'Egypt' unless provided elsewhere
-    formData.append('Country', 'Egypt');
-    formData.append('Governorate', this.profileData.location?.governorate || '');
-    formData.append('City', this.profileData.location?.city || '');
-    formData.append('Latitude', String(this.profileData.location?.latitude ?? 0));
-    formData.append('Longitude', String(this.profileData.location?.longitude ?? 0));
-    formData.append('WorkShopType', this.profileData.workshopType || '');
-
-    // Include existing URLs if available
-    if (this.profileData.businessLicense) formData.append('LicenceImageUrl', this.profileData.businessLicense);
-    if (this.profileData.logoUrl) formData.append('LogoImageUrl', this.profileData.logoUrl);
-
-    // Attach files if selected
-    if (this.selectedLicenseFile) {
-      formData.append('LicenceImage', this.selectedLicenseFile, this.selectedLicenseFile.name);
+    // Only include image URLs if they exist (don't send empty strings)
+    if (this.profileData.LicenceImageUrl && this.profileData.LicenceImageUrl.trim()) {
+      profileData.LicenceImageUrl = this.profileData.LicenceImageUrl.trim();
     }
-    // If logo file was selected but already uploaded immediately, backend may already have URL; include file only if selectedLogoFile is present
-    if (this.selectedLogoFile) {
-      formData.append('LogoImage', this.selectedLogoFile, this.selectedLogoFile.name);
+    if (this.profileData.LogoImageUrl && this.profileData.LogoImageUrl.trim()) {
+      profileData.LogoImageUrl = this.profileData.LogoImageUrl.trim();
     }
 
-    // ApplicationUserId: try to use current user id from AuthService
-    const user = this.authService.getUser();
-    if (user && user.id) {
-      formData.append('ApplicationUserId', user.id);
-    }
+    // Log the data being sent for debugging
+    console.log('=== SUBMITTING PROFILE UPDATE ===');
+    console.log('Original profileData:', this.profileData);
+    console.log('Sending to API:', JSON.stringify(profileData, null, 2));
+    console.log('API Endpoint: PUT https://localhost:44316/api/WorkShopProfile/Update-WorkShop-Profile');
 
-    // Call the new endpoint (multipart form)
-    this.workshopProfileService.updateMyWorkshopProfile(formData)
-      .pipe(
-        finalize(() => this.isLoading = false)
-      )
+    // Send PUT request with JSON body
+    this.workshopProfileService.updateMyWorkshopProfile(profileData)
       .subscribe({
         next: (response) => {
+          this.isLoading = false;
           this.successMessage = 'Workshop profile updated successfully!';
+          this.isFormDirty = false;
+
+          if (this.toast) {
+            this.toast.show('Workshop profile updated successfully!', 'success');
+          }
+
           // Reset file selections after successful save
           this.selectedLogoFile = null;
           this.selectedGalleryFiles = [];
@@ -235,8 +296,44 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
           }, 1200);
         },
         error: (error) => {
+          this.isLoading = false;
           console.error('Error updating workshop profile:', error);
-          this.errorMessage = error.error?.message || 'Failed to update profile. Please try again.';
+          console.error('Validation errors:', error.error?.errors);
+          console.error('Error details:', JSON.stringify(error.error, null, 2));
+
+          let displayMessage = 'Failed to update profile. Please try again.';
+
+          if (error.error && error.error.errors) {
+            // If the server provided specific validation errors, iterate and display them
+            const validationErrors = error.error.errors;
+            const errorMessages: string[] = [];
+
+            for (const key in validationErrors) {
+              if (validationErrors.hasOwnProperty(key)) {
+                // validationErrors[key] might be an array of strings
+                const messages = Array.isArray(validationErrors[key])
+                  ? validationErrors[key]
+                  : [validationErrors[key]];
+                errorMessages.push(`${key}: ${messages.join(', ')}`);
+              }
+            }
+
+            displayMessage = errorMessages.length > 0
+              ? 'Please correct the following:\n' + errorMessages.join('\n')
+              : 'Validation failed. Please check your inputs.';
+          } else if (error.error?.title) {
+            displayMessage = error.error.title;
+          } else if (error.error?.message) {
+            displayMessage = error.error.message;
+          } else if (error.message) {
+            displayMessage = error.message;
+          }
+
+          this.errorMessage = displayMessage;
+
+          if (this.toast) {
+            this.toast.show(this.errorMessage, 'error');
+          }
         }
       });
   }
@@ -254,8 +351,16 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
       this.errorMessage = 'Phone number is required';
       return false;
     }
+    if (!this.profileData.location.governorate || !this.profileData.location.governorate.trim()) {
+      this.errorMessage = 'Governorate is required';
+      return false;
+    }
     if (!this.profileData.location.city.trim()) {
       this.errorMessage = 'City is required';
+      return false;
+    }
+    if (!this.profileData.location.latitude || !this.profileData.location.longitude) {
+      this.errorMessage = 'Please select your location on the map';
       return false;
     }
     return true;
@@ -263,14 +368,68 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
 
   toggleDayClosed(index: number): void {
     this.profileData.workingHours[index].isClosed = !this.profileData.workingHours[index].isClosed;
+    this.isFormDirty = true;
   }
 
   setAllDaysClosed(): void {
     this.profileData.workingHours.forEach(day => day.isClosed = true);
+    this.isFormDirty = true;
   }
 
   setAllDaysOpen(): void {
     this.profileData.workingHours.forEach(day => day.isClosed = false);
+    this.isFormDirty = true;
+  }
+
+  onGovernorateChange(governorate: string): void {
+    this.filteredCities = EGYPTIAN_CITIES_BY_GOVERNORATE[governorate] || [];
+
+    // Validate if current city exists in the filtered list
+    if (this.profileData.location.city && !this.filteredCities.includes(this.profileData.location.city)) {
+      if (this.toast) {
+        this.toast.show(`City "${this.profileData.location.city}" is not in the list for ${governorate}. Please select a valid city.`, 'warning');
+      }
+    }
+
+    this.isFormDirty = true;
+  }
+
+  getStarArray(rating: number): boolean[] {
+    const stars: boolean[] = [];
+    const roundedRating = Math.round(rating);
+    for (let i = 0; i < 5; i++) {
+      stars.push(i < roundedRating);
+    }
+    return stars;
+  }
+
+  validateImageFile(file: File, allowPdf: boolean = false): { valid: boolean; error?: string } {
+    // Check file size
+    if (file.size > this.MAX_FILE_SIZE) {
+      return {
+        valid: false,
+        error: `File size must be less than ${this.MAX_FILE_SIZE / (1024 * 1024)}MB`
+      };
+    }
+
+    // Check file type
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const validTypes = allowPdf ? [...validImageTypes, 'application/pdf'] : validImageTypes;
+
+    if (!validTypes.includes(file.type)) {
+      return {
+        valid: false,
+        error: allowPdf
+          ? 'Only JPG, PNG, and PDF files are allowed'
+          : 'Only JPG and PNG files are allowed'
+      };
+    }
+
+    return { valid: true };
+  }
+
+  markFormDirty(): void {
+    this.isFormDirty = true;
   }
 
   onGalleryFilesSelected(event: any): void {
@@ -332,49 +491,52 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
 
   onLogoFileSelected(event: any): void {
     const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      this.selectedLogoFile = file;
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.logoPreviewUrl = e.target.result;
-      };
-      reader.readAsDataURL(file);
-      this.errorMessage = '';
-      
-      // Upload logo immediately for instant persistence
-      this.uploadLogoImmediately(file);
-    } else {
-      this.errorMessage = 'Please select a valid image file';
-    }
-  }
+    if (!file) return;
 
-  private uploadLogoImmediately(file: File): void {
-    this.workshopProfileService.uploadWorkshopLogo(this.workshopId, file).subscribe({
-      next: (response) => {
-        const logoUrl = response?.data?.logoUrl ?? response?.logoUrl;
-        if (logoUrl) {
-          this.profileData.logoUrl = logoUrl;
-          this.logoPreviewUrl = logoUrl;
-          console.log('Logo uploaded successfully:', logoUrl);
-        }
-        this.selectedLogoFile = null;
-      },
-      error: (error) => {
-        console.error('Error uploading logo:', error);
-        this.errorMessage = 'Failed to upload logo. Please try again.';
+    // Validate file
+    const validation = this.validateImageFile(file, false);
+    if (!validation.valid) {
+      this.errorMessage = validation.error || 'Invalid file';
+      if (this.toast) {
+        this.toast.show(validation.error || 'Invalid file', 'error');
       }
-    });
+      return;
+    }
+
+    this.selectedLogoFile = file;
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.logoPreviewUrl = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    this.errorMessage = '';
+    this.isFormDirty = true;
   }
 
   onLicenseFileSelected(event: any): void {
     const file = event.target.files[0];
-    if (file) {
+    if (!file) return;
+
+    // Validate file (images only, no PDF)
+    const validation = this.validateImageFile(file, false);
+    if (!validation.valid) {
+      this.errorMessage = validation.error || 'Invalid file';
+      if (this.toast) {
+        this.toast.show(validation.error || 'Invalid file', 'error');
+      }
+      return;
+    }
+
+    // Only show preview for image files
+    if (file.type.startsWith('image/')) {
       this.selectedLicenseFile = file;
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.licensePreviewUrl = e.target.result;
       };
       reader.readAsDataURL(file);
+      this.errorMessage = '';
+      this.isFormDirty = true;
     }
   }
 
@@ -424,7 +586,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
       next: (response) => {
         console.log('Business license uploaded successfully');
         if (response.data && response.data.licenseUrl) {
-          this.profileData.businessLicense = response.data.licenseUrl;
+          this.profileData.LicenceImageUrl = response.data.licenseUrl;
         }
       },
       error: (error) => {
@@ -441,9 +603,56 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     }
 
     // Get initial coordinates from profile or use Cairo as default
-    const lat = this.profileData.location.latitude || 30.0444;
-    const lng = this.profileData.location.longitude || 31.2357;
+    let lat = this.profileData.location.latitude || 0;
+    let lng = this.profileData.location.longitude || 0;
 
+    // If no coordinates exist, try to get user's location
+    if (lat === 0 || lng === 0) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Success - use user's location
+            lat = position.coords.latitude;
+            lng = position.coords.longitude;
+            this.profileData.location.latitude = lat;
+            this.profileData.location.longitude = lng;
+
+            // Initialize map with user's location
+            this.createMap(lat, lng);
+
+            if (this.toast) {
+              this.toast.show('Location detected successfully', 'success');
+            }
+          },
+          (error) => {
+            // Error or denied - fall back to Cairo
+            console.error('Geolocation error:', error);
+            lat = 30.0444;
+            lng = 31.2357;
+            this.profileData.location.latitude = lat;
+            this.profileData.location.longitude = lng;
+
+            // Initialize map with Cairo default
+            this.createMap(lat, lng);
+
+            if (this.toast) {
+              this.toast.show('Location access denied. Please click the map to set your location.', 'warning');
+            }
+          }
+        );
+        return; // Wait for geolocation response
+      } else {
+        // Geolocation not supported - use Cairo default
+        lat = 30.0444;
+        lng = 31.2357;
+      }
+    }
+
+    // Initialize map with existing or default coordinates
+    this.createMap(lat, lng);
+  }
+
+  private createMap(lat: number, lng: number): void {
     // Initialize Leaflet map
     this.map = L.map('map').setView([lat, lng], 13);
 
@@ -471,8 +680,9 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
       this.map.removeLayer(this.marker);
     }
 
-    // Create new marker at clicked location
+    // Create new draggable marker at location
     this.marker = L.marker([lat, lng], {
+      draggable: true,
       icon: L.icon({
         iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -489,6 +699,28 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
       `<strong>${this.profileData.workshopName || 'Workshop Location'}</strong><br>` +
       `Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`
     ).openPopup();
+
+    // Add dragend event listener
+    this.marker.on('dragend', (event: L.DragEndEvent) => {
+      this.onMarkerDragEnd(event);
+    });
+  }
+
+  onMarkerDragEnd(event: L.DragEndEvent): void {
+    const marker = event.target;
+    const position = marker.getLatLng();
+
+    // Update location coordinates
+    this.profileData.location.latitude = position.lat;
+    this.profileData.location.longitude = position.lng;
+
+    // Update popup content
+    marker.bindPopup(
+      `<strong>${this.profileData.workshopName || 'Workshop Location'}</strong><br>` +
+      `Lat: ${position.lat.toFixed(4)}<br>Lng: ${position.lng.toFixed(4)}`
+    ).openPopup();
+
+    this.isFormDirty = true;
   }
 
   onMapClick(lat: number, lng: number): void {
@@ -498,5 +730,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
 
     // Update marker position
     this.updateMarker(lat, lng);
+
+    this.isFormDirty = true;
   }
 }
