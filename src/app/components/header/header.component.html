@@ -20,7 +20,7 @@
       </a>
 
       <!-- My Vehicles Link (only show when authenticated and NOT a workshop owner) -->
-      <a *ngIf="isAuthenticated && !isWorkshopOwner" routerLink="/my-vehicles" class="nav-link" routerLinkActive="active">
+      <a *ngIf="isAuthenticated && !isWorkshopOwner && !isAuthFormPage" routerLink="/my-vehicles" class="nav-link" routerLinkActive="active">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
           <circle cx="7.5" cy="17.5" r="1.5"/>
@@ -30,7 +30,7 @@
       </a>
 
       <!-- Booking Link (only show when authenticated and NOT a workshop owner) -->
-      <a *ngIf="isAuthenticated && !isWorkshopOwner" routerLink="/booking" class="nav-link" routerLinkActive="active">
+      <a *ngIf="isAuthenticated && !isWorkshopOwner && !isAuthFormPage" routerLink="/booking" class="nav-link" routerLinkActive="active">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="6" width="18" height="15" rx="2"/>
           <path d="M3 10h18"/>
@@ -41,7 +41,7 @@
       </a>
 
       <!-- Workshop Manager Links (only show for workshop owners when authenticated) -->
-      <a *ngIf="isAuthenticated && isWorkshopOwner" routerLink="/workshop/dashboard" class="nav-link" routerLinkActive="active">
+      <a *ngIf="isAuthenticated && isWorkshopOwner && !isAuthFormPage" routerLink="/workshop/dashboard" class="nav-link" routerLinkActive="active">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="7" height="7"/>
           <rect x="14" y="3" width="7" height="7"/>
@@ -51,7 +51,7 @@
         <span>Dashboard</span>
       </a>
 
-      <a *ngIf="isAuthenticated && isWorkshopOwner" routerLink="/workshop/job-board" class="nav-link" routerLinkActive="active">
+      <a *ngIf="isAuthenticated && isWorkshopOwner && !isAuthFormPage" routerLink="/workshop/job-board" class="nav-link" routerLinkActive="active">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
           <line x1="9" y1="3" x2="9" y2="21"/>
@@ -59,17 +59,10 @@
         <span>Jobs</span>
       </a>
 
-      <a *ngIf="isAuthenticated && isWorkshopOwner" [routerLink]="getWorkshopProfileRoute()" class="nav-link" routerLinkActive="active">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-          <polyline points="17 21 17 13 7 13 7 21"/>
-          <polyline points="7 3 7 8 15 8"/>
-        </svg>
-        <span>Profile</span>
-      </a>
+      <!-- Profile link removed for workshop owners as requested -->
 
       <!-- Testimonials Link (only show on landing) -->
-      <a *ngIf="!isAuthenticated" [routerLink]="null" class="nav-link" (click)="scrollToSection('testimonials')">
+      <a *ngIf="!isAuthenticated && !isAuthFormPage" [routerLink]="null" class="nav-link" (click)="scrollToSection('testimonials')">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/>
         </svg>
@@ -77,7 +70,7 @@
       </a>
 
       <!-- FAQs Link (only show on landing) -->
-      <a *ngIf="!isAuthenticated" [routerLink]="null" class="nav-link" (click)="scrollToSection('faq')">
+      <a *ngIf="!isAuthenticated && !isAuthFormPage" [routerLink]="null" class="nav-link" (click)="scrollToSection('faq')">
         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
@@ -127,22 +120,10 @@
       </ng-container>
 
       <!-- Show Profile Button and Logout when user IS authenticated -->
-      <ng-container *ngIf="isAuthenticated">
-        <!-- Notification Bell -->
-        <button class="notification-btn" title="Notifications">
-          <svg class="notification-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-          <span class="notification-badge">3</span>
-        </button>
-        <!-- Show user name next to profile (if available) -->
-        <span class="header-username" *ngIf="isAuthenticated && userName">{{ userName }}</span>
-
-        <!-- Notification Panel -->
+      <ng-container *ngIf="isAuthenticated && !isAuthFormPage">
+        <!-- New notification/profile UI: keep the notification panel and profile button only -->
         <app-notification-panel *ngIf="isAuthenticated"></app-notification-panel>
 
-        <!-- Profile Button -->
         <app-profile-button></app-profile-button>
 
         <!-- Logout Button -->

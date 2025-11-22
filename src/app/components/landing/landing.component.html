@@ -32,7 +32,7 @@
 
       <!-- CTA Buttons -->
       <div class="hero-buttons">
-        <a routerLink="/signup" class="btn btn-primary">
+        <a [routerLink]="getStartedRoute" class="btn btn-primary">
           Get Started
           <svg class="btn-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -97,8 +97,15 @@
     </div>
   </div>
 
-  <!-- Scroll indicator -->
-  <div class="scroll-indicator">
+  <!-- Scroll indicator (click/enter/space to scroll to About section) -->
+  <div
+    class="scroll-indicator"
+    role="button"
+    tabindex="0"
+    aria-label="Scroll to About"
+    (click)="scrollToSection('about')"
+    (keydown.enter)="scrollToSection('about')"
+    (keydown.space)="scrollToSection('about')">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path d="M12 5v14m0 0l-7-7m7 7l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
@@ -240,9 +247,6 @@
     <!-- Workshop Owners Section -->
     <div class="workshop-section">
       <div class="workshop-content">
-        <!-- Badge -->
-        <div class="workshop-badge">For Workshop Owners</div>
-        
         <h2 class="workshop-title">For Workshop Owners</h2>
         
         <p class="workshop-description">
@@ -260,12 +264,7 @@
           </li>
         </ul>
 
-        <button class="btn btn-primary">
-          Register Your Workshop
-          <svg class="btn-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
+        <!-- 'Register Your Workshop' button removed from landing page per request -->
       </div>
 
       <div class="workshop-image">
@@ -447,7 +446,7 @@
       </div>
       <h3>Need More Help?</h3>
       <p>Our support team is available 24/7</p>
-      <button class="support-button">Contact Support</button>
+      <button class="support-button" (click)="openContactModal()">Contact Support</button>
     </div>
   </div>
 </section>
@@ -532,7 +531,7 @@
       <div class="footer-column">
         <h4 class="footer-title">For Business</h4>
         <ul class="footer-links">
-          <li><a href="#">Register Your Workshop</a></li>
+          <!-- Register Your Workshop link removed from landing footer -->
           <li><a href="#">Partner With Us</a></li>
           <li><a href="#">Business Solutions</a></li>
           <li><a href="#">Terms & Conditions</a></li>

@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { ContactService } from '../../services/contact.service';
 
 @Component({
   selector: 'app-landing',
@@ -10,6 +13,22 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./landing.component.css'],
 })
 export class LandingComponent implements OnInit, OnDestroy {
+  getStartedRoute = '/login';
+  private _authSub: Subscription | null = null;
+  private _userSub: Subscription | null = null;
+
+  constructor(private authService: AuthService, private router: Router, private contactService: ContactService) {}
+
+  openContactModal(): void {
+    try {
+      this.contactService.open();
+    } catch (e) {
+      // As a fallback, attempt to navigate to the contact anchor or open login
+      console.warn('ContactService not available', e);
+      // no-op
+    }
+  }
+
   // Stats data
   stats = [
     {
@@ -265,10 +284,44 @@ export class LandingComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Start auto-play carousel
     this.startAutoPlay();
+    // Compute initial Get Started route based on authentication and role
+    this.updateGetStartedRoute();
+
+    // Subscribe to auth changes to keep route in sync
+    this._authSub = this.authService.isAuthenticated$?.subscribe?.(() => this.updateGetStartedRoute()) || null;
+    this._userSub = this.authService.currentUser$?.subscribe?.(() => this.updateGetStartedRoute()) || null;
   }
 
   ngOnDestroy(): void {
     this.stopAutoPlay();
+    if (this._authSub) {
+      this._authSub.unsubscribe();
+      this._authSub = null;
+    }
+    if (this._userSub) {
+      this._userSub.unsubscribe();
+      this._userSub = null;
+    }
+  }
+
+  // Determine where the Get Started button should navigate
+  updateGetStartedRoute(): void {
+    try {
+      if (this.authService && this.authService.isAuthenticated && this.authService.isAuthenticated()) {
+        const role = this.authService.getUserRole?.() || this.authService.getUser?.()?.role || '';
+        const roleStr = (role || '').toString();
+        if (/workshop/i.test(roleStr)) {
+          this.getStartedRoute = '/workshop/dashboard';
+          return;
+        }
+        // Default authenticated route for non-workshop users (car owners) -> My Vehicles
+        this.getStartedRoute = '/my-vehicles';
+        return;
+      }
+    } catch (e) {
+      // ignore and fallback to login
+    }
+    this.getStartedRoute = '/login';
   }
 
   startAutoPlay(): void {
