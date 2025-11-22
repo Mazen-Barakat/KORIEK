@@ -4,17 +4,36 @@
       ← Back to Profile
     </button>
 
-    <h1 class="page-title">Workshop Profile</h1>
-    <p class="page-subtitle">Manage your business information, location, and schedule.</p>
+    <div class="header-title-row">
+      <div>
+        <h1 class="page-title">{{ profileData.workshopName || 'Workshop Profile' }}</h1>
+        <p class="page-subtitle">Manage your business information, location, and schedule.</p>
+      </div>
 
-    <div class="verification-badge" *ngIf="profileData.isVerified">
-      <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-      </svg>
-      <span>VERIFICATION STATUS</span>
-      <strong>Verified</strong>
+      <!-- Verification Badge -->
+      <span class="verification-badge-inline verified" *ngIf="profileData.VerificationStatus === 'Verified'">
+        <svg class="badge-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        Verified
+      </span>
+      <span class="verification-badge-inline pending" *ngIf="profileData.VerificationStatus === 'Pending'">
+        <svg class="badge-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+        </svg>
+        Pending
+      </span>
+      <span class="verification-badge-inline rejected" *ngIf="profileData.VerificationStatus === 'Rejected'">
+        <svg class="badge-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        Rejected
+      </span>
     </div>
   </div>
+
+  <!-- Toast Component -->
+  <app-toast></app-toast>
 
   <!-- Error/Success Messages -->
   <div class="message error-message" *ngIf="errorMessage">
@@ -25,7 +44,7 @@
   </div>
 
   <form (ngSubmit)="onSubmit()" class="profile-form">
-    
+
     <!-- Workshop Logo Section -->
     <div class="form-section logo-section">
       <div class="logo-circle clickable" (click)="logoInput.click()" [title]="'Click to upload logo'">
@@ -38,21 +57,24 @@
           </svg>
         </div>
       </div>
-      <input 
-        type="file" 
-        #logoInput 
-        (change)="onLogoFileSelected($event)" 
+      <input
+        type="file"
+        #logoInput
+        (change)="onLogoFileSelected($event)"
         accept="image/*"
         style="display: none;">
       <div class="logo-info">
         <h3>Workshop Logo</h3>
         <p class="text-muted">Recommended: 500x500px PNG</p>
-        <span class="rating">
-          <svg class="star-icon" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-          </svg>
-          {{ profileData.rating || 0 }} Rating
-        </span>
+        <div class="rating-display" *ngIf="profileData.Rating && profileData.Rating > 0">
+          <span class="stars">
+            <svg *ngFor="let filled of getStarArray(profileData.Rating)" class="star-icon" [class.filled]="filled" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+          </span>
+          <span class="rating-value">{{ profileData.Rating | number:'1.1-1' }}</span>
+        </div>
+        <span class="not-rated" *ngIf="!profileData.Rating || profileData.Rating === 0">Not yet rated</span>
       </div>
     </div>
 
@@ -64,20 +86,23 @@
         </svg>
         <h3>Business License</h3>
       </div>
-      <div class="upload-area" (click)="licenseInput.click()">
+      <div class="upload-area" (click)="licenseInput.click()" *ngIf="!licensePreviewUrl">
         <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
         </svg>
         <p>Click to upload license</p>
-        <p class="text-muted small">Required for "Verified" status.</p>
+        <p class="text-muted small">Required for "Verified" status. (JPG, PNG only)</p>
       </div>
-      <input 
-        type="file" 
-        #licenseInput 
-        (change)="onLicenseFileSelected($event)" 
-        accept=".pdf,.jpg,.jpeg,.png"
+      <div class="license-preview" *ngIf="licensePreviewUrl">
+        <img [src]="licensePreviewUrl" alt="Business License Preview" class="license-image-preview">
+        <button type="button" class="change-license-btn" (click)="licenseInput.click()">Change License</button>
+      </div>
+      <input
+        type="file"
+        #licenseInput
+        (change)="onLicenseFileSelected($event)"
+        accept=".jpg,.jpeg,.png"
         style="display: none;">
-      <p class="text-muted small" *ngIf="licensePreviewUrl">License selected</p>
     </div>
 
     <!-- Basic Information Section -->
@@ -92,23 +117,25 @@
       <div class="form-grid">
         <div class="form-group">
           <label for="workshopName" class="form-label">Workshop Name</label>
-          <input 
-            type="text" 
-            id="workshopName" 
+          <input
+            type="text"
+            id="workshopName"
             class="form-input"
             [(ngModel)]="profileData.workshopName"
             name="workshopName"
             placeholder="Enter workshop name"
+            (input)="markFormDirty()"
             required>
         </div>
 
         <div class="form-group">
           <label for="workshopType" class="form-label">Workshop Type</label>
-          <select 
-            id="workshopType" 
+          <select
+            id="workshopType"
             class="form-input"
             [(ngModel)]="profileData.workshopType"
             name="workshopType"
+            (change)="markFormDirty()"
             required>
             <option value="" disabled>Select type</option>
             <option *ngFor="let type of workshopTypes" [value]="type">{{ type }}</option>
@@ -119,38 +146,41 @@
           <label for="phoneNumber" class="form-label">Phone Number</label>
           <div class="phone-input-group">
             <span class="phone-prefix">📞</span>
-            <input 
-              type="tel" 
-              id="phoneNumber" 
+            <input
+              type="tel"
+              id="phoneNumber"
               class="form-input"
               [(ngModel)]="profileData.phoneNumber"
               name="phoneNumber"
               placeholder="+20 100 123 4567"
+              (input)="markFormDirty()"
               required>
           </div>
         </div>
 
         <div class="form-group">
           <label for="technicianCount" class="form-label">Technician Count</label>
-          <input 
-            type="number" 
-            id="technicianCount" 
+          <input
+            type="number"
+            id="technicianCount"
             class="form-input"
-            [(ngModel)]="profileData.technicianCount"
-            name="technicianCount"
+            [(ngModel)]="profileData.NumbersOfTechnicians"
+            name="NumbersOfTechnicians"
             min="0"
+            (input)="markFormDirty()"
             placeholder="0">
         </div>
       </div>
 
       <div class="form-group full-width">
         <label for="description" class="form-label">Description</label>
-        <textarea 
-          id="description" 
+        <textarea
+          id="description"
           class="form-textarea"
           [(ngModel)]="profileData.description"
           name="description"
           rows="4"
+          (input)="markFormDirty()"
           placeholder="Premier automotive repair center in Nasr City. We specialize in German and Korean vehicles."></textarea>
         <button type="button" class="edit-btn">
           <svg class="edit-icon" viewBox="0 0 20 20" fill="currentColor">
@@ -171,12 +201,25 @@
 
       <div class="form-grid">
         <div class="form-group">
+          <label for="country" class="form-label">Country</label>
+          <input
+            type="text"
+            id="country"
+            class="form-input"
+            [value]="'Egypt'"
+            name="country"
+            readonly
+            disabled>
+        </div>
+
+        <div class="form-group">
           <label for="governorate" class="form-label">Governorate</label>
-          <select 
-            id="governorate" 
+          <select
+            id="governorate"
             class="form-input"
             [(ngModel)]="profileData.location.governorate"
             name="governorate"
+            (ngModelChange)="onGovernorateChange($event)"
             required>
             <option *ngFor="let gov of governorates" [value]="gov">{{ gov }}</option>
           </select>
@@ -184,14 +227,17 @@
 
         <div class="form-group">
           <label for="city" class="form-label">City / Area</label>
-          <input 
-            type="text" 
-            id="city" 
+          <select
+            id="city"
             class="form-input"
             [(ngModel)]="profileData.location.city"
             name="city"
-            placeholder="Nasr City"
+            (change)="markFormDirty()"
+            [disabled]="!profileData.location.governorate || filteredCities.length === 0"
             required>
+            <option value="" disabled>Select city</option>
+            <option *ngFor="let city of filteredCities" [value]="city">{{ city }}</option>
+          </select>
         </div>
       </div>
 
@@ -208,8 +254,17 @@
       </div>
     </div>
 
-    <!-- Working Hours Section -->
-    <div class="form-section">
+    <!-- Save Basic Info Button -->
+    <div class="form-actions">
+      <button type="submit" class="submit-btn" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Save Basic Information</span>
+        <span *ngIf="isLoading">Saving...</span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Working Hours Section (Separate - will have its own save button) -->
+  <div class="form-section">
       <div class="section-header">
         <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
@@ -220,11 +275,11 @@
       <div class="working-hours-list">
         <div class="working-hours-item" *ngFor="let day of profileData.workingHours; let i = index">
           <span class="day-name">{{ day.day }}</span>
-          
+
           <div class="time-inputs" *ngIf="!day.isClosed">
             <div class="time-input-wrapper">
-              <input 
-                type="time" 
+              <input
+                type="time"
                 class="time-input"
                 [(ngModel)]="day.openTime"
                 [name]="'openTime' + i">
@@ -239,8 +294,8 @@
             <span class="time-separator">-</span>
 
             <div class="time-input-wrapper">
-              <input 
-                type="time" 
+              <input
+                type="time"
                 class="time-input"
                 [(ngModel)]="day.closeTime"
                 [name]="'closeTime' + i">
@@ -255,8 +310,8 @@
 
           <span class="closed-label" *ngIf="day.isClosed">Closed</span>
 
-          <button 
-            type="button" 
+          <button
+            type="button"
             class="toggle-status-btn"
             [class.closed]="day.isClosed"
             [class.open]="!day.isClosed"
@@ -267,8 +322,8 @@
       </div>
     </div>
 
-    <!-- Workshop Gallery Section -->
-    <div class="form-section">
+  <!-- Workshop Gallery Section (Separate - will have its own save button) -->
+  <div class="form-section">
       <div class="section-header">
         <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
@@ -296,21 +351,14 @@
         </div>
       </div>
 
-      <input 
-        type="file" 
-        #galleryInput 
-        (change)="onGalleryFilesSelected($event)" 
-        accept="image/*"
-        multiple
-        style="display: none;">
-    </div>
+    <input
+      type="file"
+      #galleryInput
+      (change)="onGalleryFilesSelected($event)"
+      accept="image/*"
+      multiple
+      style="display: none;">
+  </div>
 
-    <!-- Submit Button -->
-    <div class="form-actions">
-      <button type="submit" class="submit-btn" [disabled]="isLoading">
-        <span *ngIf="!isLoading">Save Changes</span>
-        <span *ngIf="isLoading">Saving...</span>
-      </button>
-    </div>
-  </form>
+<!-- Note: Working Hours and Gallery sections are separate and will have their own save functionality in future updates -->
 </div>

@@ -36,11 +36,15 @@ export class WorkshopProfileService {
   }
 
   /**
-   * Update the current user's workshop profile. The backend expects multipart/form-data
-   * (supports files such as LicenceImage and LogoImage). Pass a FormData instance.
+   * Update the current user's workshop profile. The backend expects JSON body with URL strings.
    */
-  updateMyWorkshopProfile(formData: FormData): Observable<any> {
-    return this.http.post(`${this.profileApiBase}/Update-WorkShop-Profile`, formData);
+  updateMyWorkshopProfile(profileData: any): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    console.log('Service: Making PUT request to:', `${this.profileApiBase}/Update-WorkShop-Profile`);
+    console.log('Service: Request body:', profileData);
+    return this.http.put(`${this.profileApiBase}/Update-WorkShop-Profile`, profileData, { headers });
   }
 
   /**
