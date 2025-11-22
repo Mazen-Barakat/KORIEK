@@ -1,4 +1,11 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  OnDestroy,
+  ViewChild,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
@@ -16,7 +23,7 @@ import {
   WORKSHOP_TYPES,
   DAYS_OF_WEEK,
   GOVERNORATES,
-  EGYPTIAN_CITIES_BY_GOVERNORATE
+  EGYPTIAN_CITIES_BY_GOVERNORATE,
 } from '../../models/workshop-profile.model';
 
 @Component({
@@ -24,9 +31,11 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule, ToastComponent],
   templateUrl: './workshop-profile-edit.component.html',
-  styleUrls: ['./workshop-profile-edit.component.css']
+  styleUrls: ['./workshop-profile-edit.component.css'],
 })
-export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDestroy, CanComponentDeactivate {
+export class WorkshopProfileEditComponent
+  implements OnInit, AfterViewInit, OnDestroy, CanComponentDeactivate
+{
   // Leaflet map properties
   private map: L.Map | null = null;
   private marker: L.Marker | null = null;
@@ -45,13 +54,13 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
       city: '',
       latitude: 30.0444,
       longitude: 31.2357,
-      address: ''
+      address: '',
     },
     galleryImages: [],
     isVerified: false,
     Rating: 0,
     Country: 'Egypt',
-    VerificationStatus: 'Pending'
+    VerificationStatus: 'Pending',
   };
 
   workshopTypes = WORKSHOP_TYPES;
@@ -71,6 +80,9 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
   logoPreviewUrl: string = '';
   isFormDirty: boolean = false;
 
+  // Backend base URL used to build absolute image URLs when backend returns relative paths
+  private readonly backendBaseUrl = 'https://localhost:44316';
+
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
   constructor(
@@ -82,7 +94,8 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
 
   ngOnInit(): void {
     // Prefer workshop id from route query param (when navigating from profile view)
-    const routeId = this.route.snapshot.queryParamMap.get('id') || this.route.snapshot.paramMap.get('id');
+    const routeId =
+      this.route.snapshot.queryParamMap.get('id') || this.route.snapshot.paramMap.get('id');
     const user = this.authService.getUser();
     this.workshopId = routeId || user?.id || user?.workshopId || '';
 
@@ -123,11 +136,11 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
   }
 
   private initializeWorkingHours(): WorkingHours[] {
-    return DAYS_OF_WEEK.map(day => ({
+    return DAYS_OF_WEEK.map((day) => ({
       day,
       openTime: '09:00',
       closeTime: '06:00',
-      isClosed: day === 'Friday'
+      isClosed: day === 'Friday',
     }));
   }
 
@@ -154,7 +167,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
               city: data.city || '',
               latitude: data.latitude || 30.0444,
               longitude: data.longitude || 31.2357,
-              address: data.address || ''
+              address: data.address || '',
             },
             galleryImages: this.profileData.galleryImages || [],
             LicenceImageUrl: data.licenceImageUrl || '',
@@ -165,16 +178,20 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
             VerificationStatus: data.verificationStatus || 'Pending',
             CreatedAt: data.createdAt ? new Date(data.createdAt) : undefined,
             UpdatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
-            ApplicationUserId: data.applicationUserId || ''
+            ApplicationUserId: data.applicationUserId || '',
           };
 
-          // Load existing logo if available
+          // Load existing logo if available (ensure full absolute URL)
           if (this.profileData.LogoImageUrl) {
+            this.profileData.LogoImageUrl = this.getFullBackendUrl(this.profileData.LogoImageUrl);
             this.logoPreviewUrl = this.profileData.LogoImageUrl;
           }
 
-          // Load existing license if available
+          // Load existing license if available (ensure full absolute URL)
           if (this.profileData.LicenceImageUrl) {
+            this.profileData.LicenceImageUrl = this.getFullBackendUrl(
+              this.profileData.LicenceImageUrl
+            );
             this.licensePreviewUrl = this.profileData.LicenceImageUrl;
           }
 
@@ -198,7 +215,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
         console.error('Error loading workshop profile:', error);
         // If profile doesn't exist, use defaults (new profile)
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -221,7 +238,8 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     // Validate Egyptian phone number format
     const phoneRegex = /^(\+20|0)?1[0125]\d{8}$/;
     if (!phoneRegex.test(this.profileData.phoneNumber)) {
-      this.errorMessage = 'Phone number must be a valid Egyptian number (e.g., 01012345678 or +201012345678)';
+      this.errorMessage =
+        'Phone number must be a valid Egyptian number (e.g., 01012345678 or +201012345678)';
       if (this.toast) {
         this.toast.show(this.errorMessage, 'error');
       }
@@ -241,101 +259,131 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Build JSON body for PUT request with exact property names expected by backend
-    const profileData: any = {
-      Id: this.profileData.id ? Number(this.profileData.id) : 0,
-      Name: (this.profileData.workshopName || '').trim(),
-      Description: (this.profileData.description || '').trim(),
-      PhoneNumber: (this.profileData.phoneNumber || '').trim(),
-      NumbersOfTechnicians: Number(this.profileData.NumbersOfTechnicians) || 1,
-      Country: (this.profileData.Country || 'Egypt').trim(),
-      Governorate: (this.profileData.location?.governorate || '').trim(),
-      City: (this.profileData.location?.city || '').trim(),
-      Latitude: Number(this.profileData.location?.latitude) || 0,
-      Longitude: Number(this.profileData.location?.longitude) || 0,
-      WorkShopType: (this.profileData.workshopType || 'Independent').trim(),
-      ApplicationUserId: (this.profileData.ApplicationUserId || '').trim()
-    };
+    // Build FormData for PUT request (backend expects [FromForm])
+    const fd = new FormData();
+    fd.append('Id', String(this.profileData.id ? Number(this.profileData.id) : 0));
+    fd.append('Name', (this.profileData.workshopName || '').trim());
+    fd.append('Description', (this.profileData.description || '').trim());
+    fd.append('PhoneNumber', (this.profileData.phoneNumber || '').trim());
+    fd.append('NumbersOfTechnicians', String(Number(this.profileData.NumbersOfTechnicians) || 1));
+    fd.append('Country', (this.profileData.Country || 'Egypt').trim());
+    fd.append('Governorate', (this.profileData.location?.governorate || '').trim());
+    fd.append('City', (this.profileData.location?.city || '').trim());
+    fd.append('Latitude', String(Number(this.profileData.location?.latitude) || 0));
+    fd.append('Longitude', String(Number(this.profileData.location?.longitude) || 0));
+    fd.append('WorkShopType', (this.profileData.workshopType || 'Independent').trim());
+    fd.append('ApplicationUserId', (this.profileData.ApplicationUserId || '').trim());
 
-    // Only include image URLs if they exist (don't send empty strings)
-    if (this.profileData.LicenceImageUrl && this.profileData.LicenceImageUrl.trim()) {
-      profileData.LicenceImageUrl = this.profileData.LicenceImageUrl.trim();
+    // If there are existing URL fields and no new file selected, include them as absolute URLs
+    if (
+      !this.selectedLicenseFile &&
+      this.profileData.LicenceImageUrl &&
+      this.profileData.LicenceImageUrl.trim()
+    ) {
+      const full = this.getFullBackendUrl(this.profileData.LicenceImageUrl);
+      if (full) fd.append('LicenceImageUrl', full);
     }
-    if (this.profileData.LogoImageUrl && this.profileData.LogoImageUrl.trim()) {
-      profileData.LogoImageUrl = this.profileData.LogoImageUrl.trim();
+    if (
+      !this.selectedLogoFile &&
+      this.profileData.LogoImageUrl &&
+      this.profileData.LogoImageUrl.trim()
+    ) {
+      const full = this.getFullBackendUrl(this.profileData.LogoImageUrl);
+      if (full) fd.append('LogoImageUrl', full);
     }
 
-    // Log the data being sent for debugging
-    console.log('=== SUBMITTING PROFILE UPDATE ===');
+    // Append selected files using the backend DTO property names so [FromForm] binds them
+    // The DTO defines: IFormFile? LicenceImage and IFormFile? LogoImage
+    if (this.selectedLogoFile) {
+      fd.append('LogoImage', this.selectedLogoFile, this.selectedLogoFile.name);
+    }
+    if (this.selectedLicenseFile) {
+      fd.append('LicenceImage', this.selectedLicenseFile, this.selectedLicenseFile.name);
+    }
+    // Note: gallery images are uploaded via `uploadGalleryImages` endpoint elsewhere;
+    // do not append them here unless the backend DTO expects a collection property.
+
+    // Debug: dump FormData entries to console so we can verify keys/values
+    try {
+      for (const pair of (fd as any).entries()) {
+        console.log('FormData entry:', pair[0], pair[1]);
+      }
+    } catch (e) {
+      console.log('Unable to enumerate FormData entries for debug:', e);
+    }
+
+    // Log the operation
+    console.log('=== SUBMITTING PROFILE UPDATE (FormData) ===');
     console.log('Original profileData:', this.profileData);
-    console.log('Sending to API:', JSON.stringify(profileData, null, 2));
-    console.log('API Endpoint: PUT https://localhost:44316/api/WorkShopProfile/Update-WorkShop-Profile');
+    console.log(
+      'API Endpoint: PUT https://localhost:44316/api/WorkShopProfile/Update-WorkShop-Profile'
+    );
 
-    // Send PUT request with JSON body
-    this.workshopProfileService.updateMyWorkshopProfile(profileData)
-      .subscribe({
-        next: (response) => {
-          this.isLoading = false;
-          this.successMessage = 'Workshop profile updated successfully!';
-          this.isFormDirty = false;
+    // Send PUT request with FormData
+    this.workshopProfileService.updateMyWorkshopProfile(fd).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.successMessage = 'Workshop profile updated successfully!';
+        this.isFormDirty = false;
 
-          if (this.toast) {
-            this.toast.show('Workshop profile updated successfully!', 'success');
+        if (this.toast) {
+          this.toast.show('Workshop profile updated successfully!', 'success');
+        }
+
+        // Reset file selections after successful save
+        this.selectedLogoFile = null;
+        this.selectedGalleryFiles = [];
+        this.galleryPreviewUrls = [];
+        this.selectedLicenseFile = null;
+
+        setTimeout(() => {
+          // After successful update, reload profile to reflect any server-side changes
+          this.loadWorkshopProfile();
+          this.router.navigate([`/workshop-profile/${this.workshopId}`]);
+        }, 1200);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Error updating workshop profile:', error);
+        console.error('Validation errors:', error.error?.errors);
+        console.error('Error details:', JSON.stringify(error.error, null, 2));
+
+        let displayMessage = 'Failed to update profile. Please try again.';
+
+        if (error.error && error.error.errors) {
+          // If the server provided specific validation errors, iterate and display them
+          const validationErrors = error.error.errors;
+          const errorMessages: string[] = [];
+
+          for (const key in validationErrors) {
+            if (validationErrors.hasOwnProperty(key)) {
+              // validationErrors[key] might be an array of strings
+              const messages = Array.isArray(validationErrors[key])
+                ? validationErrors[key]
+                : [validationErrors[key]];
+              errorMessages.push(`${key}: ${messages.join(', ')}`);
+            }
           }
 
-          // Reset file selections after successful save
-          this.selectedLogoFile = null;
-          this.selectedGalleryFiles = [];
-          this.galleryPreviewUrls = [];
-          this.selectedLicenseFile = null;
-
-          setTimeout(() => {
-            // After successful update, reload profile to reflect any server-side changes
-            this.loadWorkshopProfile();
-            this.router.navigate([`/workshop-profile/${this.workshopId}`]);
-          }, 1200);
-        },
-        error: (error) => {
-          this.isLoading = false;
-          console.error('Error updating workshop profile:', error);
-          console.error('Validation errors:', error.error?.errors);
-          console.error('Error details:', JSON.stringify(error.error, null, 2));
-
-          let displayMessage = 'Failed to update profile. Please try again.';
-
-          if (error.error && error.error.errors) {
-            // If the server provided specific validation errors, iterate and display them
-            const validationErrors = error.error.errors;
-            const errorMessages: string[] = [];
-
-            for (const key in validationErrors) {
-              if (validationErrors.hasOwnProperty(key)) {
-                // validationErrors[key] might be an array of strings
-                const messages = Array.isArray(validationErrors[key])
-                  ? validationErrors[key]
-                  : [validationErrors[key]];
-                errorMessages.push(`${key}: ${messages.join(', ')}`);
-              }
-            }
-
-            displayMessage = errorMessages.length > 0
+          displayMessage =
+            errorMessages.length > 0
               ? 'Please correct the following:\n' + errorMessages.join('\n')
               : 'Validation failed. Please check your inputs.';
-          } else if (error.error?.title) {
-            displayMessage = error.error.title;
-          } else if (error.error?.message) {
-            displayMessage = error.error.message;
-          } else if (error.message) {
-            displayMessage = error.message;
-          }
-
-          this.errorMessage = displayMessage;
-
-          if (this.toast) {
-            this.toast.show(this.errorMessage, 'error');
-          }
+        } else if (error.error?.title) {
+          displayMessage = error.error.title;
+        } else if (error.error?.message) {
+          displayMessage = error.error.message;
+        } else if (error.message) {
+          displayMessage = error.message;
         }
-      });
+
+        this.errorMessage = displayMessage;
+
+        if (this.toast) {
+          this.toast.show(this.errorMessage, 'error');
+        }
+      },
+    });
   }
 
   validateForm(): boolean {
@@ -372,12 +420,12 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
   }
 
   setAllDaysClosed(): void {
-    this.profileData.workingHours.forEach(day => day.isClosed = true);
+    this.profileData.workingHours.forEach((day) => (day.isClosed = true));
     this.isFormDirty = true;
   }
 
   setAllDaysOpen(): void {
-    this.profileData.workingHours.forEach(day => day.isClosed = false);
+    this.profileData.workingHours.forEach((day) => (day.isClosed = false));
     this.isFormDirty = true;
   }
 
@@ -385,9 +433,15 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     this.filteredCities = EGYPTIAN_CITIES_BY_GOVERNORATE[governorate] || [];
 
     // Validate if current city exists in the filtered list
-    if (this.profileData.location.city && !this.filteredCities.includes(this.profileData.location.city)) {
+    if (
+      this.profileData.location.city &&
+      !this.filteredCities.includes(this.profileData.location.city)
+    ) {
       if (this.toast) {
-        this.toast.show(`City "${this.profileData.location.city}" is not in the list for ${governorate}. Please select a valid city.`, 'warning');
+        this.toast.show(
+          `City "${this.profileData.location.city}" is not in the list for ${governorate}. Please select a valid city.`,
+          'warning'
+        );
       }
     }
 
@@ -408,7 +462,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     if (file.size > this.MAX_FILE_SIZE) {
       return {
         valid: false,
-        error: `File size must be less than ${this.MAX_FILE_SIZE / (1024 * 1024)}MB`
+        error: `File size must be less than ${this.MAX_FILE_SIZE / (1024 * 1024)}MB`,
       };
     }
 
@@ -421,7 +475,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
         valid: false,
         error: allowPdf
           ? 'Only JPG, PNG, and PDF files are allowed'
-          : 'Only JPG and PNG files are allowed'
+          : 'Only JPG and PNG files are allowed',
       };
     }
 
@@ -437,7 +491,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     this.selectedGalleryFiles.push(...files);
 
     // Create preview URLs
-    files.forEach(file => {
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.galleryPreviewUrls.push(e.target.result);
@@ -463,7 +517,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
         error: (error) => {
           console.error('Error removing image:', error);
           this.errorMessage = 'Failed to remove image';
-        }
+        },
       });
     }
   }
@@ -504,6 +558,10 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     }
 
     this.selectedLogoFile = file;
+    // Clear any previous URL value so we send the file instead of a URL
+    if (this.profileData.LogoImageUrl) {
+      this.profileData.LogoImageUrl = '';
+    }
     const reader = new FileReader();
     reader.onload = (e: any) => {
       this.logoPreviewUrl = e.target.result;
@@ -530,6 +588,10 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     // Only show preview for image files
     if (file.type.startsWith('image/')) {
       this.selectedLicenseFile = file;
+      // Clear any previous URL so we won't send an invalid relative URL
+      if (this.profileData.LicenceImageUrl) {
+        this.profileData.LicenceImageUrl = '';
+      }
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.licensePreviewUrl = e.target.result;
@@ -538,6 +600,23 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
       this.errorMessage = '';
       this.isFormDirty = true;
     }
+  }
+
+  /**
+   * Ensure a backend absolute URL for preview and validation. If path is already absolute, return as-is.
+   */
+  private getFullBackendUrl(path: string | undefined | null): string {
+    if (!path) return '';
+    const trimmed = path.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    // If server returned a relative path like '/uploads/..', prepend backend base
+    if (trimmed.startsWith('/')) {
+      return `${this.backendBaseUrl}${trimmed}`;
+    }
+    return `${this.backendBaseUrl}/${trimmed}`;
   }
 
   private createLogoUploadTask(): Observable<any> | null {
@@ -582,17 +661,19 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
   uploadBusinessLicense(): void {
     if (!this.selectedLicenseFile) return;
 
-    this.workshopProfileService.uploadBusinessLicense(this.workshopId, this.selectedLicenseFile).subscribe({
-      next: (response) => {
-        console.log('Business license uploaded successfully');
-        if (response.data && response.data.licenseUrl) {
-          this.profileData.LicenceImageUrl = response.data.licenseUrl;
-        }
-      },
-      error: (error) => {
-        console.error('Error uploading business license:', error);
-      }
-    });
+    this.workshopProfileService
+      .uploadBusinessLicense(this.workshopId, this.selectedLicenseFile)
+      .subscribe({
+        next: (response) => {
+          console.log('Business license uploaded successfully');
+          if (response.data && response.data.licenseUrl) {
+            this.profileData.LicenceImageUrl = response.data.licenseUrl;
+          }
+        },
+        error: (error) => {
+          console.error('Error uploading business license:', error);
+        },
+      });
   }
 
   private initializeMap(): void {
@@ -636,7 +717,10 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
             this.createMap(lat, lng);
 
             if (this.toast) {
-              this.toast.show('Location access denied. Please click the map to set your location.', 'warning');
+              this.toast.show(
+                'Location access denied. Please click the map to set your location.',
+                'warning'
+              );
             }
           }
         );
@@ -659,7 +743,7 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap contributors',
     }).addTo(this.map);
 
     // Add marker at current location
@@ -690,15 +774,17 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-      })
+        shadowSize: [41, 41],
+      }),
     }).addTo(this.map);
 
     // Add popup to marker
-    this.marker.bindPopup(
-      `<strong>${this.profileData.workshopName || 'Workshop Location'}</strong><br>` +
-      `Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`
-    ).openPopup();
+    this.marker
+      .bindPopup(
+        `<strong>${this.profileData.workshopName || 'Workshop Location'}</strong><br>` +
+          `Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`
+      )
+      .openPopup();
 
     // Add dragend event listener
     this.marker.on('dragend', (event: L.DragEndEvent) => {
@@ -715,10 +801,12 @@ export class WorkshopProfileEditComponent implements OnInit, AfterViewInit, OnDe
     this.profileData.location.longitude = position.lng;
 
     // Update popup content
-    marker.bindPopup(
-      `<strong>${this.profileData.workshopName || 'Workshop Location'}</strong><br>` +
-      `Lat: ${position.lat.toFixed(4)}<br>Lng: ${position.lng.toFixed(4)}`
-    ).openPopup();
+    marker
+      .bindPopup(
+        `<strong>${this.profileData.workshopName || 'Workshop Location'}</strong><br>` +
+          `Lat: ${position.lat.toFixed(4)}<br>Lng: ${position.lng.toFixed(4)}`
+      )
+      .openPopup();
 
     this.isFormDirty = true;
   }

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { WorkshopProfileData } from '../models/workshop-profile.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class WorkshopProfileService {
   private apiUrl = 'https://localhost:44316/api/Workshop';
@@ -39,12 +39,38 @@ export class WorkshopProfileService {
    * Update the current user's workshop profile. The backend expects JSON body with URL strings.
    */
   updateMyWorkshopProfile(profileData: any): Observable<any> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
+    // Backend expects form-data (UpdateWorkShopProfileDTO is bound from [FromForm]).
+    // If the caller passed a FormData already, send it as-is.
+    if (profileData instanceof FormData) {
+      console.log(
+        'Service: Sending FormData to:',
+        `${this.profileApiBase}/Update-WorkShop-Profile`
+      );
+      return this.http.put(`${this.profileApiBase}/Update-WorkShop-Profile`, profileData);
+    }
+
+    // Convert plain object to FormData so multipart/form-data is used and model binder accepts it.
+    const form = new FormData();
+    Object.keys(profileData || {}).forEach((key) => {
+      const value = profileData[key];
+      if (value === null || value === undefined) return;
+      // Arrays or objects should be json-stringified
+      if (typeof value === 'object' && !(value instanceof File)) {
+        try {
+          form.append(key, JSON.stringify(value));
+        } catch {
+          form.append(key, String(value));
+        }
+      } else {
+        form.append(key, String(value));
+      }
     });
-    console.log('Service: Making PUT request to:', `${this.profileApiBase}/Update-WorkShop-Profile`);
-    console.log('Service: Request body:', profileData);
-    return this.http.put(`${this.profileApiBase}/Update-WorkShop-Profile`, profileData, { headers });
+
+    console.log(
+      'Service: Sending converted FormData to:',
+      `${this.profileApiBase}/Update-WorkShop-Profile`
+    );
+    return this.http.put(`${this.profileApiBase}/Update-WorkShop-Profile`, form);
   }
 
   /**
@@ -71,7 +97,7 @@ export class WorkshopProfileService {
    */
   deleteGalleryImage(workshopId: string, imageUrl: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${workshopId}/gallery`, {
-      body: { imageUrl }
+      body: { imageUrl },
     });
   }
 
