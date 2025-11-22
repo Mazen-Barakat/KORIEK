@@ -72,4 +72,19 @@ export const routes: Routes = [
     loadComponent: () => import('./components/workshop-profile-edit/workshop-profile-edit.component').then(m => m.WorkshopProfileEditComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'workshop/dashboard',
+    loadComponent: () => import('./components/workshop-dashboard/workshop-dashboard.component').then(m => m.WorkshopDashboardComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'workshop/job-board',
+    loadComponent: () => import('./components/job-board/job-board.component').then(m => m.JobBoardComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'workshop/wallet',
+    loadComponent: () => import('./components/wallet/wallet.component').then(m => m.WalletComponent),
+    canActivate: [authGuard]
+  },
 ];

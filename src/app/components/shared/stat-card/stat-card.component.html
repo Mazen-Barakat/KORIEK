@@ -1,0 +1,21 @@
+<div class="stat-card" [class]="variantClass" [class.loading]="loading">
+  <div class="stat-icon">
+    <i [class]="icon"></i>
+  </div>
+  
+  <div class="stat-content">
+    <div class="stat-label">{{ label }}</div>
+    <div class="stat-value">
+      <span *ngIf="!loading">{{ value }}</span>
+      <div class="skeleton" *ngIf="loading"></div>
+    </div>
+    
+    <div class="stat-trend" *ngIf="trend !== undefined && !loading" [class]="trendClass">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" *ngIf="trendDirection !== 'neutral'">
+        <path *ngIf="trendDirection === 'up'" d="M7 14l5-5 5 5z"/>
+        <path *ngIf="trendDirection === 'down'" d="M7 10l5 5 5-5z"/>
+      </svg>
+      <span>{{ Math.abs(trend) }}%</span>
+    </div>
+  </div>
+</div>

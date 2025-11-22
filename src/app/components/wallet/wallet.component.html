@@ -1,0 +1,165 @@
+<div class="wallet-container">
+  <!-- Header -->
+  <div class="wallet-header">
+    <div class="header-content">
+      <h1 class="page-title">💰 Wallet & Financials</h1>
+      <p class="page-subtitle">Manage your earnings and transactions</p>
+    </div>
+    <button class="btn-primary" (click)="downloadStatement()">
+      📥 Download Statement
+    </button>
+  </div>
+
+  <!-- Balance Cards -->
+  <div class="balance-section" *ngIf="walletSummary">
+    <div class="balance-card main-balance">
+      <div class="balance-header">
+        <span class="balance-label">Available Balance</span>
+        <span class="balance-status">Ready to withdraw</span>
+      </div>
+      <div class="balance-amount">{{ formatCurrency(walletSummary.availableBalance) }}</div>
+      <button class="btn-withdraw" (click)="requestPayout()">
+        💸 Request Payout
+      </button>
+    </div>
+
+    <div class="balance-card pending-balance">
+      <div class="balance-header">
+        <span class="balance-label">Pending Balance</span>
+        <span class="balance-status">Processing</span>
+      </div>
+      <div class="balance-amount">{{ formatCurrency(walletSummary.pendingBalance) }}</div>
+      <p class="balance-info">Available after service completion</p>
+    </div>
+
+    <div class="balance-card next-payout">
+      <div class="balance-header">
+        <span class="balance-label">Next Payout</span>
+        <span class="balance-status">{{ formatShortDate(walletSummary.nextPayoutDate) }}</span>
+      </div>
+      <div class="balance-amount">{{ formatCurrency(walletSummary.nextPayoutAmount) }}</div>
+      <p class="balance-info">Scheduled weekly payout</p>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row" *ngIf="walletSummary">
+    <app-stat-card
+      icon="💵"
+      label="Total Earnings"
+      [value]="formatCurrency(walletSummary.totalEarnings)"
+      variant="success">
+    </app-stat-card>
+
+    <app-stat-card
+      icon="📊"
+      label="Monthly Revenue"
+      [value]="formatCurrency(walletSummary.monthlyRevenue)"
+      [trend]="walletSummary.revenueChange"
+      variant="primary">
+    </app-stat-card>
+
+    <app-stat-card
+      icon="📈"
+      label="Growth Rate"
+      [value]="'+' + walletSummary.revenueChange + '%'"
+      variant="info">
+    </app-stat-card>
+  </div>
+
+  <!-- Transaction History -->
+  <div class="transactions-section">
+    <div class="section-header-row">
+      <app-section-header
+        title="Transaction History"
+        subtitle="All your financial transactions"
+        icon="📜">
+      </app-section-header>
+
+      <div class="filter-tabs">
+        <button 
+          class="filter-tab" 
+          [class.active]="selectedFilter === 'all'"
+          (click)="setFilter('all')">
+          All
+        </button>
+        <button 
+          class="filter-tab" 
+          [class.active]="selectedFilter === 'credit'"
+          (click)="setFilter('credit')">
+          Credits
+        </button>
+        <button 
+          class="filter-tab" 
+          [class.active]="selectedFilter === 'debit'"
+          (click)="setFilter('debit')">
+          Debits
+        </button>
+      </div>
+    </div>
+
+    <div class="transactions-list">
+      <div 
+        class="transaction-item" 
+        *ngFor="let transaction of filteredTransactions"
+        (click)="viewTransactionDetails(transaction)">
+        
+        <div class="transaction-icon" [class.credit]="transaction.type === 'credit'" [class.debit]="transaction.type === 'debit'">
+          {{ getTransactionIcon(transaction) }}
+        </div>
+
+        <div class="transaction-info">
+          <div class="transaction-main">
+            <span class="transaction-description">{{ transaction.description }}</span>
+            <span class="transaction-amount" [class.credit]="transaction.type === 'credit'" [class.debit]="transaction.type === 'debit'">
+              {{ transaction.type === 'credit' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+            </span>
+          </div>
+          <div class="transaction-meta">
+            <span class="transaction-date">{{ formatDate(transaction.date) }}</span>
+            <span *ngIf="transaction.customerName" class="transaction-customer">
+              👤 {{ transaction.customerName }}
+            </span>
+            <span class="transaction-status" [class]="getStatusClass(transaction.status)">
+              {{ transaction.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="filteredTransactions.length === 0">
+        <div class="empty-icon">📭</div>
+        <p class="empty-message">No transactions found</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payout Schedule -->
+  <div class="payout-section">
+    <app-section-header
+      title="Payout Schedule"
+      subtitle="Upcoming and past payouts"
+      icon="💸">
+    </app-section-header>
+
+    <div class="payout-list">
+      <div 
+        class="payout-item" 
+        *ngFor="let payout of payoutSchedule"
+        [class]="getStatusClass(payout.status)">
+        
+        <div class="payout-info">
+          <div class="payout-amount">{{ formatCurrency(payout.amount) }}</div>
+          <div class="payout-meta">
+            <span class="payout-date">{{ formatDate(payout.scheduledDate) }}</span>
+            <span class="payout-account">→ {{ payout.bankAccount }}</span>
+          </div>
+        </div>
+
+        <div class="payout-status" [class]="getStatusClass(payout.status)">
+          {{ payout.status }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

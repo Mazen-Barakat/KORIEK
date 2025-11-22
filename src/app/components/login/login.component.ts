@@ -439,17 +439,17 @@ export class LoginComponent implements OnInit {
 
       console.debug('redirectAfterLogin:', { selectedRole: this.selectedRole, selectedRoleNorm, workshopId, data: userObj });
 
-      // Check if user is a workshop owner - redirect to profile view page
+      // Check if user is a workshop owner - redirect to dashboard
       if (selectedRoleNorm === 'workshop' || selectedRoleNorm === 'workshopowner') {
-        // Redirect workshop owners to their profile view page with their ID
-        this.router.navigate(['/workshop-profile', workshopId]);
+        // Redirect workshop owners to their dashboard
+        this.router.navigate(['/workshop/dashboard']);
         return;
       }
 
       // If user role from stored user object is workshop-like, prefer that
       const storedRole = (this.authService.getUserRole() || '').toString().toLowerCase();
       if (storedRole === 'workshop' || storedRole === 'workshopowner') {
-        this.router.navigate(['/workshop-profile', workshopId]);
+        this.router.navigate(['/workshop/dashboard']);
         return;
       }
 

@@ -1,0 +1,681 @@
+/* Job Board - Kanban View with Workshop Design Identity */
+
+.job-board-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  padding: 2rem 2.5rem;
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* View Toggle Button */
+.view-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #374151;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.view-toggle-btn:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);
+}
+
+/* Search Box */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  min-width: 300px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+}
+
+.search-box:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);
+}
+
+.search-box svg {
+  stroke: #9ca3af;
+  flex-shrink: 0;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 0.9375rem;
+  color: #1f2937;
+  background: transparent;
+}
+
+.search-box input::placeholder {
+  color: #9ca3af;
+}
+
+/* Kanban Board */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  overflow-x: auto;
+  padding-bottom: 2rem;
+}
+
+/* Kanban Column */
+.kanban-column {
+  background: white;
+  border-radius: 18px;
+  min-width: 320px;
+  max-height: calc(100vh - 240px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f3f4f6;
+}
+
+/* Column Header */
+.column-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 2px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  border-radius: 18px 18px 0 0;
+  z-index: 10;
+}
+
+.column-title {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.column-title svg {
+  flex-shrink: 0;
+}
+
+.column-count {
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.375rem 0.75rem;
+  border-radius: 10px;
+  min-width: 32px;
+  text-align: center;
+}
+
+/* Column Header Variants */
+.new-header {
+  border-bottom-color: #3b82f6;
+}
+
+.new-header .column-title {
+  color: #3b82f6;
+}
+
+.new-header .column-count {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.upcoming-header {
+  border-bottom-color: #f59e0b;
+}
+
+.upcoming-header .column-title {
+  color: #f59e0b;
+}
+
+.upcoming-header .column-count {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.inprogress-header {
+  border-bottom-color: var(--brand-primary);
+}
+
+.inprogress-header .column-title {
+  color: var(--brand-primary);
+}
+
+.inprogress-header .column-count {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--brand-primary);
+}
+
+.ready-header {
+  border-bottom-color: #10b981;
+}
+
+.ready-header .column-title {
+  color: #10b981;
+}
+
+.ready-header .column-count {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.completed-header {
+  border-bottom-color: #8b5cf6;
+}
+
+.completed-header .column-title {
+  color: #8b5cf6;
+}
+
+.completed-header .column-count {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+/* Column Content */
+.column-content {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Job Card */
+.job-card {
+  background: #fafafa;
+  border: 2px solid #f3f4f6;
+  border-radius: 14px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.job-card:hover {
+  background: white;
+  border-color: var(--brand-primary);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.12);
+  transform: translateY(-2px);
+}
+
+.job-card.completed {
+  opacity: 0.85;
+}
+
+.job-card.completed:hover {
+  opacity: 1;
+}
+
+/* Job Header */
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.job-customer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.customer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.customer-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.job-id {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+/* Urgency Badge */
+.urgency-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.urgency-urgent {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+.urgency-high {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--brand-primary);
+}
+
+.urgency-normal {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.urgency-low {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+/* Status Badge */
+.status-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.status-badge.ready {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.status-badge.completed {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.25);
+}
+
+/* Job Vehicle */
+.job-vehicle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.job-vehicle svg {
+  stroke: #6b7280;
+  flex-shrink: 0;
+}
+
+/* Job Complaint */
+.job-complaint {
+  margin: 0;
+}
+
+.job-complaint p {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Service Tags */
+.job-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.service-tag {
+  padding: 0.375rem 0.75rem;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.service-more {
+  padding: 0.375rem 0.75rem;
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* Progress Section */
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-primary) 0%, #f59e0b 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Job Technician */
+.job-technician {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.job-technician svg {
+  stroke: #9ca3af;
+}
+
+/* Invoice Info */
+.invoice-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.invoice-amount {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.invoice-amount .label {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.invoice-amount .amount {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.payment-status {
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.payment-status.paid {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.payment-status.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+/* Completion Info */
+.completion-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.completion-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.completion-date svg {
+  stroke: #10b981;
+}
+
+/* Job Footer */
+.job-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.job-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.job-time svg {
+  stroke: #9ca3af;
+  flex-shrink: 0;
+}
+
+.quote-status {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quote-status svg {
+  stroke: currentColor;
+}
+
+.revenue {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+/* Notify Button */
+.notify-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  width: 100%;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.notify-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.notify-btn svg {
+  stroke-width: 2.5;
+}
+
+/* Drag and Drop States */
+.job-card[draggable="true"] {
+  cursor: move;
+}
+
+.job-card.dragging {
+  opacity: 0.5;
+  transform: rotate(3deg);
+}
+
+.kanban-column.drag-over {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: var(--brand-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 1680px) {
+  .kanban-board {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .job-board-page {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .kanban-board {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .kanban-column {
+    max-height: 600px;
+  }
+
+  .search-box {
+    min-width: 100%;
+  }
+
+  .header-right {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .view-toggle-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

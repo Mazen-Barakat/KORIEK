@@ -1,0 +1,372 @@
+<div class="job-board-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Job Board</h1>
+      <p class="page-subtitle">Manage all workshop bookings and repairs</p>
+    </div>
+    <div class="header-right">
+      <!-- View Mode Toggle -->
+      <button class="view-toggle-btn" (click)="toggleViewMode()">
+        <svg *ngIf="viewMode === 'kanban'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/>
+          <line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <svg *ngIf="viewMode === 'list'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>{{ viewMode === 'kanban' ? 'List View' : 'Kanban View' }}</span>
+      </button>
+      
+      <!-- Search & Filter -->
+      <div class="search-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" placeholder="Search jobs..." [(ngModel)]="searchQuery">
+      </div>
+    </div>
+  </div>
+
+  <!-- Kanban View -->
+  <div class="kanban-board" *ngIf="viewMode === 'kanban'">
+    <!-- New Requests Column -->
+    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'new')">
+      <div class="column-header new-header">
+        <div class="column-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>New Requests</span>
+        </div>
+        <span class="column-count">{{ newJobs.length }}</span>
+      </div>
+      <div class="column-content">
+        <div class="job-card" 
+             *ngFor="let job of newJobs" 
+             draggable="true"
+             (dragstart)="onDragStart($event, job)"
+             (dragend)="onDragEnd()"
+             (click)="viewJobDetails(job.id)">
+          <div class="job-header">
+            <div class="job-customer">
+              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <div class="customer-info">
+                <span class="customer-name">{{ job.customer.name }}</span>
+                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+              </div>
+            </div>
+            <span class="urgency-badge" [ngClass]="getUrgencyClass(job.urgency)">
+              {{ getUrgencyLabel(job.urgency) }}
+            </span>
+          </div>
+          
+          <div class="job-vehicle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
+              <circle cx="7.5" cy="17.5" r="1.5"/>
+              <circle cx="16.5" cy="17.5" r="1.5"/>
+            </svg>
+            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+          </div>
+          
+          <div class="job-complaint">
+            <p>{{ job.customerComplaint }}</p>
+          </div>
+          
+          <div class="job-services">
+            <span class="service-tag" *ngFor="let service of job.requestedServices.slice(0, 2)">
+              {{ service }}
+            </span>
+            <span class="service-more" *ngIf="job.requestedServices.length > 2">
+              +{{ job.requestedServices.length - 2 }} more
+            </span>
+          </div>
+          
+          <div class="job-footer">
+            <span class="job-time">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {{ formatDate(job.scheduledDate) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming Column -->
+    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'upcoming')">
+      <div class="column-header upcoming-header">
+        <div class="column-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>Upcoming</span>
+        </div>
+        <span class="column-count">{{ upcomingJobs.length }}</span>
+      </div>
+      <div class="column-content">
+        <div class="job-card" 
+             *ngFor="let job of upcomingJobs" 
+             draggable="true"
+             (dragstart)="onDragStart($event, job)"
+             (dragend)="onDragEnd()"
+             (click)="viewJobDetails(job.id)">
+          <div class="job-header">
+            <div class="job-customer">
+              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <div class="customer-info">
+                <span class="customer-name">{{ job.customer.name }}</span>
+                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+              </div>
+            </div>
+            <span class="urgency-badge" [ngClass]="getUrgencyClass(job.urgency)">
+              {{ getUrgencyLabel(job.urgency) }}
+            </span>
+          </div>
+          
+          <div class="job-vehicle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
+              <circle cx="7.5" cy="17.5" r="1.5"/>
+              <circle cx="16.5" cy="17.5" r="1.5"/>
+            </svg>
+            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+          </div>
+          
+          <div class="job-complaint">
+            <p>{{ job.customerComplaint }}</p>
+          </div>
+          
+          <div class="job-services">
+            <span class="service-tag" *ngFor="let service of job.requestedServices.slice(0, 2)">
+              {{ service }}
+            </span>
+            <span class="service-more" *ngIf="job.requestedServices.length > 2">
+              +{{ job.requestedServices.length - 2 }} more
+            </span>
+          </div>
+          
+          <div class="job-footer">
+            <span class="job-time">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {{ formatDate(job.scheduledDate) }}
+            </span>
+            <span class="quote-status" *ngIf="job.quote">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              {{ job.quote.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- In Progress Column -->
+    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'in-progress')">
+      <div class="column-header inprogress-header">
+        <div class="column-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+          </svg>
+          <span>In Progress</span>
+        </div>
+        <span class="column-count">{{ inProgressJobs.length }}</span>
+      </div>
+      <div class="column-content">
+        <div class="job-card" 
+             *ngFor="let job of inProgressJobs" 
+             draggable="true"
+             (dragstart)="onDragStart($event, job)"
+             (dragend)="onDragEnd()"
+             (click)="viewJobDetails(job.id)">
+          <div class="job-header">
+            <div class="job-customer">
+              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <div class="customer-info">
+                <span class="customer-name">{{ job.customer.name }}</span>
+                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+              </div>
+            </div>
+            <span class="urgency-badge" [ngClass]="getUrgencyClass(job.urgency)">
+              {{ getUrgencyLabel(job.urgency) }}
+            </span>
+          </div>
+          
+          <div class="job-vehicle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
+              <circle cx="7.5" cy="17.5" r="1.5"/>
+              <circle cx="16.5" cy="17.5" r="1.5"/>
+            </svg>
+            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+          </div>
+          
+          <!-- Progress Bar -->
+          <div class="progress-section">
+            <div class="progress-label">
+              <span>{{ getStageLabel(job.stage) }}</span>
+              <span>{{ getStageProgress(job.stage) }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getStageProgress(job.stage)"></div>
+            </div>
+          </div>
+          
+          <div class="job-technician" *ngIf="job.assignedTechnicianName">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>{{ job.assignedTechnicianName }}</span>
+          </div>
+          
+          <div class="job-footer">
+            <span class="job-time">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              ETA: {{ formatDate(job.estimatedCompletionDate || job.scheduledDate) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ready Column -->
+    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'ready')">
+      <div class="column-header ready-header">
+        <div class="column-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span>Ready for Pickup</span>
+        </div>
+        <span class="column-count">{{ readyJobs.length }}</span>
+      </div>
+      <div class="column-content">
+        <div class="job-card" 
+             *ngFor="let job of readyJobs" 
+             draggable="true"
+             (dragstart)="onDragStart($event, job)"
+             (dragend)="onDragEnd()"
+             (click)="viewJobDetails(job.id)">
+          <div class="job-header">
+            <div class="job-customer">
+              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <div class="customer-info">
+                <span class="customer-name">{{ job.customer.name }}</span>
+                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+              </div>
+            </div>
+            <span class="status-badge ready">Ready</span>
+          </div>
+          
+          <div class="job-vehicle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
+              <circle cx="7.5" cy="17.5" r="1.5"/>
+              <circle cx="16.5" cy="17.5" r="1.5"/>
+            </svg>
+            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+          </div>
+          
+          <div class="invoice-info" *ngIf="job.invoice">
+            <div class="invoice-amount">
+              <span class="label">Total Amount:</span>
+              <span class="amount">{{ job.invoice.quote.total | currency:'EGP':'symbol':'1.0-0' }}</span>
+            </div>
+            <div class="payment-status" [ngClass]="job.invoice.paymentStatus">
+              {{ job.invoice.paymentStatus }}
+            </div>
+          </div>
+          
+          <div class="job-footer">
+            <button class="notify-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              Notify Customer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed Column -->
+    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'completed')">
+      <div class="column-header completed-header">
+        <div class="column-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 11 12 14 22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          <span>Completed</span>
+        </div>
+        <span class="column-count">{{ completedJobs.length }}</span>
+      </div>
+      <div class="column-content">
+        <div class="job-card completed" 
+             *ngFor="let job of completedJobs" 
+             (click)="viewJobDetails(job.id)">
+          <div class="job-header">
+            <div class="job-customer">
+              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <div class="customer-info">
+                <span class="customer-name">{{ job.customer.name }}</span>
+                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+              </div>
+            </div>
+            <span class="status-badge completed">✓ Done</span>
+          </div>
+          
+          <div class="job-vehicle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
+              <circle cx="7.5" cy="17.5" r="1.5"/>
+              <circle cx="16.5" cy="17.5" r="1.5"/>
+            </svg>
+            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+          </div>
+          
+          <div class="completion-info">
+            <span class="completion-date">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Completed: {{ formatDate(job.pickupDate || job.updatedAt) }}
+            </span>
+          </div>
+          
+          <div class="job-footer">
+            <span class="revenue">
+              Revenue: {{ (job.invoice?.quote?.total || 0) | currency:'EGP':'symbol':'1.0-0' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

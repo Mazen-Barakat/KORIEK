@@ -1,0 +1,15 @@
+<div class="section-header">
+  <div class="header-left">
+    <div class="header-icon" *ngIf="icon">
+      <i [class]="icon"></i>
+    </div>
+    <div class="header-text">
+      <h3 class="header-title">{{ title }}</h3>
+      <p class="header-subtitle" *ngIf="subtitle">{{ subtitle }}</p>
+    </div>
+  </div>
+  
+  <div class="header-badge" *ngIf="badge !== undefined" [class]="'badge-' + badgeVariant">
+    {{ badge }}
+  </div>
+</div>

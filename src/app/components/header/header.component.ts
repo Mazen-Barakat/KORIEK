@@ -5,12 +5,20 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { ProfileService } from '../../services/profile.service';
 import { ProfileButtonComponent } from '../profile/profile-button.component';
+import { NotificationPanelComponent } from '../notification-panel/notification-panel.component';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, ProfileButtonComponent, FormsModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    RouterLinkActive,
+    ProfileButtonComponent,
+    NotificationPanelComponent,
+    FormsModule
+  ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
 })
@@ -37,6 +45,18 @@ export class HeaderComponent implements OnInit {
     private profileService: ProfileService,
     private router: Router
   ) {}
+
+  getWorkshopProfileRoute(): string {
+    const userId = this.authService.getUserId() || this.authService.getUser()?.id;
+    return `/workshop-profile/${userId}`;
+  }
+
+  getLogoRoute(): string {
+    if (!this.isAuthenticated) {
+      return '/';
+    }
+    return this.isWorkshopOwner ? '/workshop/dashboard' : '/my-vehicles';
+  }
 
   ngOnInit() {
     // Subscribe to authentication state changes

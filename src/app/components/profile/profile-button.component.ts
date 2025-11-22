@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ProfileService } from '../../services/profile.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-profile-button',
@@ -9,7 +10,7 @@ import { ProfileService } from '../../services/profile.service';
   imports: [CommonModule, RouterLink],
   template: `
     <button
-      routerLink="/profile"
+      [routerLink]="profileRoute"
       class="profile-btn"
       title="View Profile"
       aria-label="View Profile"
@@ -81,10 +82,22 @@ import { ProfileService } from '../../services/profile.service';
 })
 export class ProfileButtonComponent implements OnInit {
   profileImageUrl: string | null = null;
+  profileRoute: string = '/profile';
 
-  constructor(private profileService: ProfileService) {}
+  constructor(private profileService: ProfileService, private authService: AuthService) {}
 
   ngOnInit() {
+    // Determine profile route based on user role
+    const role = this.authService.getUserRole();
+    const isWorkshopOwner = role?.toLowerCase() === 'workshop' || role?.toLowerCase() === 'workshopowner';
+    
+    if (isWorkshopOwner) {
+      const userId = this.authService.getUserId() || this.authService.getUser()?.id;
+      this.profileRoute = `/workshop-profile/${userId}`;
+    } else {
+      this.profileRoute = '/profile';
+    }
+
     // Subscribe to profile data changes
     this.profileService.profileData$.subscribe((profile) => {
       if (profile?.profilePicture) {

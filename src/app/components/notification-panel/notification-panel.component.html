@@ -1,0 +1,77 @@
+<div class="notification-wrapper">
+  <!-- Notification Bell Button -->
+  <button class="notification-bell" (click)="togglePanel()" [class.has-unread]="unreadCount > 0">
+    <span class="bell-icon">🔔</span>
+    <span class="unread-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+  </button>
+
+  <!-- Notification Panel -->
+  <div class="notification-panel" *ngIf="isOpen" [@slideDown]>
+    <div class="panel-header">
+      <div class="header-title">
+        <h3>Notifications</h3>
+        <span class="notification-count" *ngIf="unreadCount > 0">{{ unreadCount }} new</span>
+      </div>
+      <button class="btn-mark-all" *ngIf="unreadCount > 0" (click)="markAllAsRead()">
+        Mark all read
+      </button>
+    </div>
+
+    <div class="notifications-list">
+      <div 
+        class="notification-item" 
+        *ngFor="let notification of notifications"
+        [class.unread]="!notification.read"
+        [class]="getPriorityClass(notification.priority)"
+        (click)="handleNotificationClick(notification)">
+        
+        <div class="notification-icon">
+          {{ getNotificationIcon(notification.type) }}
+        </div>
+
+        <div class="notification-content">
+          <div class="notification-header">
+            <span class="notification-title">{{ notification.title }}</span>
+            <span class="notification-time">{{ formatTime(notification.timestamp) }}</span>
+          </div>
+          <p class="notification-message">{{ notification.message }}</p>
+          <button 
+            class="notification-action" 
+            *ngIf="notification.actionLabel && !notification.read">
+            {{ notification.actionLabel }} →
+          </button>
+        </div>
+
+        <div class="notification-actions">
+          <button 
+            class="btn-icon" 
+            *ngIf="!notification.read"
+            (click)="markAsRead(notification, $event)"
+            title="Mark as read">
+            ✓
+          </button>
+          <button 
+            class="btn-icon btn-delete" 
+            (click)="deleteNotification(notification, $event)"
+            title="Delete">
+            ×
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="notifications.length === 0">
+        <div class="empty-icon">🔕</div>
+        <p class="empty-message">No notifications</p>
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <button class="btn-view-all" (click)="closePanel()">
+        View All Notifications
+      </button>
+    </div>
+  </div>
+
+  <!-- Backdrop -->
+  <div class="notification-backdrop" *ngIf="isOpen" (click)="closePanel()"></div>
+</div>
