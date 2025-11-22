@@ -1208,37 +1208,31 @@
 .workshop-section {
   background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
   border-radius: 24px;
-  padding: 4rem;
+  padding: 3rem; /* reduced padding for better balance after removing CTA */
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4rem;
+  gap: 3rem; /* slightly smaller gap */
   align-items: center;
-  margin-top: 4rem;
+  margin-top: 3.5rem;
 }
 
 .workshop-badge {
-  display: inline-block;
-  background-color: #ef4444;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  display: none; /* badge removed from markup; keep rule to avoid layout shifts if reused elsewhere */
 }
 
 .workshop-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 1rem;
+  color: #ef4444; /* match site accent used for About heading and primary buttons */
+  margin-bottom: 0.75rem; /* tightened spacing after badge removal */
+  margin-top: 0; /* ensure title sits higher without the badge */
 }
 
 .workshop-description {
   font-size: 1rem;
   color: #6b7280;
   line-height: 1.7;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem; /* slightly reduced spacing to compensate */
 }
 
 .workshop-benefits {
@@ -1270,7 +1264,7 @@
 
 .workshop-img {
   width: 100%;
-  height: 400px;
+  height: 360px; /* slightly reduced height for better composition */
   object-fit: cover;
   filter: grayscale(20%);
 }

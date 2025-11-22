@@ -439,7 +439,7 @@ export class LoginComponent implements OnInit {
 
       console.debug('redirectAfterLogin:', { selectedRole: this.selectedRole, selectedRoleNorm, workshopId, data: userObj });
 
-      // Check if user is a workshop owner - redirect to dashboard
+      // Check if user is a workshop owner - redirect to workshop dashboard
       if (selectedRoleNorm === 'workshop' || selectedRoleNorm === 'workshopowner') {
         // Redirect workshop owners to their dashboard
         this.router.navigate(['/workshop/dashboard']);
