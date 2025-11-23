@@ -609,7 +609,10 @@
 .form-actions {
   display: flex;
   justify-content: center;
-  padding-top: 1rem;
+  align-items: center;
+  padding-top: 0.25rem;
+  padding-bottom: 1.5rem;
+  margin-top: -0.5rem;
 }
 
 .submit-btn {
@@ -623,6 +626,11 @@
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
+  /* Keep button stable width to avoid layout jump when text changes */
+  min-width: 240px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -872,6 +880,87 @@
 
 .small {
   font-size: 0.8rem;
+}
+
+/* Developer visible button to trigger location modal (for testing) */
+.dev-btn {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2000;
+  padding: 0.5rem 0.75rem;
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(17,24,39,0.6);
+  font-weight: 700;
+  cursor: pointer;
+}
+.dev-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Modal overlay and card (friendly UI matching site) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1600;
+  animation: overlayFadeIn 180ms ease-out;
+}
+
+.modal-card {
+  width: 92%;
+  max-width: 640px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+  border: 1px solid #eef2f6;
+  transform: translateY(8px);
+  animation: cardPopUp 220ms cubic-bezier(.2,.9,.3,1) both;
+  outline: none;
+}
+
+.modal-body {
+  display: flex;
+  gap: 1rem;
+  padding: 20px;
+  align-items: flex-start;
+}
+
+.modal-icon-wrapper { flex: 0 0 56px; display:flex; align-items:center; justify-content:center; }
+.modal-icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f3f4f6 0%, #fff 100%);
+  display:flex; align-items:center; justify-content:center; color:#ef4444; box-shadow:0 4px 18px rgba(239,68,68,0.08);
+}
+
+.modal-content { flex: 1; }
+.modal-title { margin: 0 0 6px 0; font-size: 1.15rem; color: var(--brand-dark, #1e3a5f); font-weight:700; }
+.modal-desc { margin: 0 0 12px 0; color: var(--muted,#6b7280); }
+.modal-error { color: #991b1b; background:#fff1f2; padding:8px 10px; border-radius:8px; margin-bottom:12px; border:1px solid #fecaca; }
+
+.modal-actions { display:flex; gap: 10px; margin-top: 8px; }
+.modal-actions .btn-secondary { padding: 0.6rem 1rem; border-radius: 8px; }
+.modal-actions .btn-primary { padding: 0.6rem 1rem; border-radius: 8px; }
+
+.modal-privacy { margin-top:12px; font-size:0.85rem; color: #6b7280; }
+
+.loading-spinner { display:inline-block; font-size:0.9rem; color: #fff; }
+
+@keyframes overlayFadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes cardPopUp { from { opacity:0; transform: translateY(10px) scale(.98) } to { opacity:1; transform: translateY(0) scale(1) } }
+
+@media (max-width: 480px) {
+  .modal-body { padding: 14px; gap: 0.75rem; }
+  .modal-title { font-size: 1rem; }
+  .modal-icon-circle { width: 48px; height: 48px; }
 }
 
 /* Header Title Row with Badge */

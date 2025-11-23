@@ -7,6 +7,7 @@ import { DashboardMetrics, Job } from '../../models/booking.model';
 import { ActionBadgeComponent } from '../shared/action-badge/action-badge.component';
 import { StatCardComponent } from '../shared/stat-card/stat-card.component';
 import { SectionHeaderComponent } from '../shared/section-header/section-header.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-workshop-dashboard',
@@ -51,9 +52,12 @@ export class WorkshopDashboardComponent implements OnInit {
   currentYear: number = 0;
   calendarDays: any[] = [];
 
+  // (Location modal moved to workshop profile edit page)
+
   constructor(
     private bookingService: BookingService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -61,6 +65,11 @@ export class WorkshopDashboardComponent implements OnInit {
     this.setupCalendar();
     this.loadRecentActivity();
   }
+
+  /**
+   * Check if we should request location and show the modal
+   */
+  // Location modal logic moved to `workshop-profile-edit` component
 
   private loadDashboardData(): void {
     this.bookingService.getDashboardMetrics().subscribe({

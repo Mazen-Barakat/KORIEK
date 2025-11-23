@@ -13,6 +13,9 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
+import { GeolocationService, GeolocationPosition, GeolocationError } from '../../services/geolocation.service';
+import { ChangeDetectorRef, NgZone } from '@angular/core';
+import { take } from 'rxjs/operators';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
 import { ToastComponent } from '../shared/toast/toast.component';
 import { CanComponentDeactivate } from '../../guards/unsaved-changes.guard';
@@ -84,13 +87,43 @@ export class WorkshopProfileEditComponent
   private readonly backendBaseUrl = 'https://localhost:44316';
 
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  private readonly STORAGE_KEY = 'workshop_profile_data';
 
   constructor(
     private authService: AuthService,
     private workshopProfileService: WorkshopProfileService,
     private router: Router,
     private route: ActivatedRoute
+    ,
+    private geolocationService: GeolocationService,
+    private cd: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
+
+  // Open modal helper that ensures the primary button receives focus for keyboard users
+  openLocationModal(): void {
+    this.showLocationModal = true;
+    // Give browser a moment to render modal then focus the allow button
+    setTimeout(() => {
+      try {
+        const el = document.getElementById('allow-location-btn') as HTMLElement | null;
+        if (el) el.focus();
+      } catch (e) {
+        // ignore
+      }
+    }, 120);
+  }
+
+  // Location modal state (moved from dashboard)
+  showLocationModal: boolean = false;
+  locationPermissionDenied: boolean = false;
+  locationError: string = '';
+  isLoadingLocation: boolean = false;
+  workshopLocation: GeolocationPosition | null = null;
+  // Developer-only control to show a visible button for triggering the location modal
+  showDevButton: boolean = false;
+  // When true, prevent automatic navigation after location detection/save
+  preventRedirectAfterLocation: boolean = false;
 
   ngOnInit(): void {
     // Prefer workshop id from route query param (when navigating from profile view)
@@ -98,6 +131,10 @@ export class WorkshopProfileEditComponent
       this.route.snapshot.queryParamMap.get('id') || this.route.snapshot.paramMap.get('id');
     const user = this.authService.getUser();
     this.workshopId = routeId || user?.id || user?.workshopId || '';
+
+    // Enable dev button if query param dev=1 or dev_modal=1, or if localStorage flag is set
+    const devParam = this.route.snapshot.queryParamMap.get('dev') || this.route.snapshot.queryParamMap.get('dev_modal');
+    this.showDevButton = devParam === '1' || localStorage.getItem('dev_show_location_button') === 'true';
 
     if (this.workshopId) {
       this.loadWorkshopProfile();
@@ -145,7 +182,16 @@ export class WorkshopProfileEditComponent
   }
 
   loadWorkshopProfile(): void {
-    this.isLoading = true;
+    // Ensure loading state is false when component initializes
+    this.isLoading = false;
+    
+    // Try to load data from localStorage first
+    const cachedData = this.loadFromLocalStorage();
+    if (cachedData) {
+      console.log('Loading profile data from localStorage');
+      this.applyProfileData(cachedData);
+    }
+    
     // Use the WorkShopProfile controller to get the current user's workshop profile
     this.workshopProfileService.getMyWorkshopProfile().subscribe({
       next: (response) => {
@@ -212,14 +258,19 @@ export class WorkshopProfileEditComponent
             this.map.setView([lat, lng], 13);
             this.updateMarker(lat, lng);
           }
+          
+          // Save to localStorage for persistence across reloads
+          this.saveToLocalStorage();
         }
-        this.isLoading = false;
+        // Don't touch isLoading here - it's only for the save button
+        // this.isLoading = false;
         this.isFormDirty = false;
       },
       error: (error) => {
         console.error('Error loading workshop profile:', error);
         // If profile doesn't exist, use defaults (new profile)
-        this.isLoading = false;
+        // Don't touch isLoading here
+        // this.isLoading = false;
       },
     });
   }
@@ -251,10 +302,17 @@ export class WorkshopProfileEditComponent
   }
 
   goToProfile(): void {
+    // Use centralized navigation helper so we consistently respect
+    // `preventRedirectAfterLocation` across this component.
     if (this.workshopId) {
-      this.router.navigate([`/workshop-profile/${this.workshopId}`]);
+      this.navigateToProfileIfAllowed(this.workshopId);
     } else {
       // Fallback: navigate to workshops list if ID missing
+      if (this.preventRedirectAfterLocation) {
+        // reset flag and stay on page
+        this.preventRedirectAfterLocation = false;
+        return;
+      }
       this.router.navigate(['/workshops']);
     }
   }
@@ -289,6 +347,14 @@ export class WorkshopProfileEditComponent
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
+    // Backup guard: if request hangs for some reason, ensure UI recovers
+    const backupTimeout = setTimeout(() => {
+      if (this.isLoading) {
+        this.isLoading = false;
+        if (this.toast) this.toast.show('Request timed out. Please try again.', 'error');
+        console.warn('Profile update backup timeout triggered; UI reset.');
+      }
+    }, 30000);
 
     // Build FormData for PUT request (backend expects [FromForm])
     const fd = new FormData();
@@ -351,37 +417,21 @@ export class WorkshopProfileEditComponent
     );
 
     // Send PUT request with FormData
-    this.workshopProfileService.updateMyWorkshopProfile(fd).subscribe({
+    this.workshopProfileService.updateMyWorkshopProfile(fd).pipe(
+      finalize(() => {
+        // clear backup timeout and ensure isLoading is reset
+        try { clearTimeout(backupTimeout); } catch {}
+        // Ensure isLoading is always reset, even if completeProfileUpdate doesn't run
+        this.isLoading = false;
+      })
+    ).subscribe({
       next: (response) => {
-        // If there are working hours, update them after successful profile save
-        if (
-          this.profileData.workingHours &&
-          this.profileData.workingHours.length > 0 &&
-          this.profileData.id
-        ) {
-          const apiWorkingHours = this.workshopProfileService.convertToAPIWorkingHours(
-            this.profileData.workingHours,
-            parseInt(this.profileData.id)
-          );
-
-          this.workshopProfileService.updateWorkshopWorkingHours(apiWorkingHours).subscribe({
-            next: () => this.completeProfileUpdate(),
-            error: (err: any) => {
-              console.error('Error updating working hours:', err);
-              this.completeProfileUpdate();
-              if (this.toast) {
-                this.toast.show(
-                  'Profile updated, but working hours may not have saved. Please try again.',
-                  'warning'
-                );
-              }
-            },
-          });
-        } else {
-          this.completeProfileUpdate();
-        }
+        console.log('Profile update response received:', response);
+        // Always call completeProfileUpdate to reset the UI state
+        this.completeProfileUpdate();
       },
       error: (err: any) => {
+        // isLoading is now handled in finalize(), but keep this for safety
         this.isLoading = false;
         console.error('Error updating workshop profile:', err);
         console.error('Validation errors:', err.error?.errors);
@@ -419,6 +469,64 @@ export class WorkshopProfileEditComponent
     });
   }
 
+  /**
+   * Helper to send current profileData to the Update-WorkShop-Profile endpoint
+   * using multipart/form-data. This method bypasses form validation and is
+   * intended for programmatic updates (e.g., invoked by a button or test).
+   */
+  updateProfileToApi(): void {
+    try {
+      const fd = new FormData();
+      fd.append('Id', String(this.profileData.id ? Number(this.profileData.id) : 0));
+      fd.append('Name', (this.profileData.workshopName || '').trim());
+      fd.append('Description', (this.profileData.description || '').trim());
+      fd.append('PhoneNumber', (this.profileData.phoneNumber || '').trim());
+      fd.append('NumbersOfTechnicians', String(Number(this.profileData.NumbersOfTechnicians) || 0));
+      fd.append('Country', (this.profileData.Country || 'Egypt').trim());
+      fd.append('Governorate', (this.profileData.location?.governorate || '').trim());
+      fd.append('City', (this.profileData.location?.city || '').trim());
+      fd.append('Latitude', String(Number(this.profileData.location?.latitude) || 0));
+      fd.append('Longitude', String(Number(this.profileData.location?.longitude) || 0));
+      fd.append('WorkShopType', (this.profileData.workshopType || 'Independent').trim());
+      fd.append('ApplicationUserId', (this.profileData.ApplicationUserId || '').trim());
+
+      // Include existing URL fields if no new file selected
+      if (!this.selectedLicenseFile && this.profileData.LicenceImageUrl) {
+        fd.append('LicenceImageUrl', this.getFullBackendUrl(this.profileData.LicenceImageUrl));
+      }
+      if (!this.selectedLogoFile && this.profileData.LogoImageUrl) {
+        fd.append('LogoImageUrl', this.getFullBackendUrl(this.profileData.LogoImageUrl));
+      }
+
+      // Append files if selected (backend expects IFormFile properties)
+      if (this.selectedLogoFile) {
+        fd.append('LogoImage', this.selectedLogoFile, this.selectedLogoFile.name);
+      }
+      if (this.selectedLicenseFile) {
+        fd.append('LicenceImage', this.selectedLicenseFile, this.selectedLicenseFile.name);
+      }
+
+      console.log('Sending profile update to API (manual):', fd);
+      this.isLoading = true;
+      this.workshopProfileService.updateMyWorkshopProfile(fd).subscribe({
+        next: (res) => {
+          console.log('Profile update response:', res);
+          this.isLoading = false;
+          this.isFormDirty = false;
+          if (this.toast) this.toast.show('Profile updated via API.', 'success');
+        },
+        error: (err) => {
+          console.error('Error updating profile via API:', err);
+          this.isLoading = false;
+          if (this.toast) this.toast.show('Failed to update profile. See console.', 'error');
+        }
+      });
+    } catch (e) {
+      console.error('Failed to prepare profile update:', e);
+      if (this.toast) this.toast.show('Failed to prepare request.', 'error');
+    }
+  }
+
   completeProfileUpdate(): void {
     this.isLoading = false;
     this.successMessage = 'Workshop profile updated successfully!';
@@ -427,6 +535,9 @@ export class WorkshopProfileEditComponent
     if (this.toast) {
       this.toast.show('Workshop profile updated successfully!', 'success');
     }
+    
+    // Save updated data to localStorage
+    this.saveToLocalStorage();
 
     // Reset file selections after successful save
     this.selectedLogoFile = null;
@@ -434,11 +545,16 @@ export class WorkshopProfileEditComponent
     this.galleryPreviewUrls = [];
     this.selectedLicenseFile = null;
 
+    // If location flow requested we should keep user on the edit page
+    if (this.preventRedirectAfterLocation) {
+      // reset the flag so future saves behave normally
+      this.preventRedirectAfterLocation = false;
+      return;
+    }
+
     setTimeout(() => {
-      // After successful update, reload profile to reflect any server-side changes
-      this.loadWorkshopProfile();
-      this.router.navigate([`/workshop-profile/${this.workshopId}`]);
-    }, 1200);
+      this.navigateToProfileIfAllowed(this.workshopId);
+    }, 1500);
   }
 
   validateForm(): boolean {
@@ -665,9 +781,9 @@ export class WorkshopProfileEditComponent
                   this.toast.show('All working hours saved successfully!', 'success');
                 }
                 this.isFormDirty = false;
-                // Redirect to profile page
+                // Redirect to profile page (respect preventRedirectAfterLocation)
                 setTimeout(() => {
-                  this.router.navigate([`/workshop-profile/${this.profileData.id}`]);
+                  this.navigateToProfileIfAllowed(this.profileData.id);
                 }, 1000);
               } else {
                 if (this.toast) {
@@ -692,6 +808,39 @@ export class WorkshopProfileEditComponent
           }
         });
     });
+  }
+
+  /**
+   * Centralized navigation helper that prevents redirecting when
+   * `preventRedirectAfterLocation` is set (used by the location flow).
+   * If a redirect is prevented, the flag is reset so subsequent saves
+   * behave normally.
+   */
+  private navigateToProfileIfAllowed(id: string | number | undefined | null): void {
+    if (!id) return;
+
+    // If sessionStorage indicates the location flow set a flag, respect it too.
+    const sessionFlag = sessionStorage.getItem('workshop_location_set');
+    const shouldPrevent = this.preventRedirectAfterLocation || sessionFlag === 'true';
+
+    if (shouldPrevent) {
+      // consume both flags and stay on the current page
+      this.preventRedirectAfterLocation = false;
+      try {
+        sessionStorage.removeItem('workshop_location_set');
+      } catch (e) {
+        // ignore session storage errors
+      }
+      console.log('Navigation suppressed due to preventRedirectAfterLocation/session flag.');
+      return;
+    }
+
+    // Normal navigation
+    try {
+      this.router.navigate([`/workshop-profile/${id}`]);
+    } catch (e) {
+      console.error('Failed to navigate to workshop profile:', e);
+    }
   }
 
   setAllDaysClosed(): void {
@@ -1095,5 +1244,144 @@ export class WorkshopProfileEditComponent
     this.updateMarker(lat, lng);
 
     this.isFormDirty = true;
+  }
+
+  // --- LocalStorage persistence methods ---
+  private saveToLocalStorage(): void {
+    try {
+      // Never save UI state like isLoading - only save profile data
+      const dataToStore = {
+        ...this.profileData,
+        timestamp: new Date().getTime()
+      };
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(dataToStore));
+      console.log('Profile data saved to localStorage');
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  }
+
+  private loadFromLocalStorage(): WorkshopProfileData | null {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Optional: Check if data is too old (e.g., older than 7 days)
+        const timestamp = parsed.timestamp;
+        if (timestamp) {
+          const age = new Date().getTime() - timestamp;
+          const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+          if (age > maxAge) {
+            console.log('Cached data is too old, will refresh from API');
+            localStorage.removeItem(this.STORAGE_KEY);
+            return null;
+          }
+        }
+        delete parsed.timestamp; // Remove timestamp before using
+        return parsed as WorkshopProfileData;
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+    }
+    return null;
+  }
+
+  private applyProfileData(data: WorkshopProfileData): void {
+    // Map the loaded data to profileData
+    this.profileData = {
+      ...data,
+      workingHours: data.workingHours || this.initializeWorkingHours()
+    };
+
+    // Load existing logo if available
+    if (this.profileData.LogoImageUrl) {
+      this.logoPreviewUrl = this.profileData.LogoImageUrl;
+    }
+
+    // Load existing license if available
+    if (this.profileData.LicenceImageUrl) {
+      this.licensePreviewUrl = this.profileData.LicenceImageUrl;
+    }
+
+    // Populate cities based on governorate
+    if (this.profileData.location.governorate) {
+      this.onGovernorateChange(this.profileData.location.governorate);
+    }
+
+    // Reinitialize map with loaded coordinates if map exists
+    if (this.map && this.profileData.location) {
+      const lat = this.profileData.location.latitude;
+      const lng = this.profileData.location.longitude;
+      this.map.setView([lat, lng], 13);
+      this.updateMarker(lat, lng);
+    }
+
+    this.isFormDirty = false;
+  }
+
+  // --- Location modal actions ---
+  requestLocation(): void {
+    this.isLoadingLocation = true;
+    this.locationError = '';
+
+    this.geolocationService.requestLocation().pipe(take(1)).subscribe({
+      next: (position: GeolocationPosition) => {
+        this.ngZone.run(() => {
+          this.workshopLocation = position;
+          this.isLoadingLocation = false;
+          this.showLocationModal = false;
+
+          // prevent any automatic redirects that may occur after saving location
+          this.preventRedirectAfterLocation = true;
+
+          // Mark location as set in this session
+          sessionStorage.setItem('workshop_location_set', 'true');
+
+          // Update profile coordinates and map
+          this.profileData.location.latitude = position.latitude;
+          this.profileData.location.longitude = position.longitude;
+          if (this.map) {
+            this.map.setView([position.latitude, position.longitude], 13);
+            this.updateMarker(position.latitude, position.longitude);
+          }
+          this.isFormDirty = true;
+
+          // Save to backend (non-blocking helper)
+          this.geolocationService.saveWorkshopLocation(position);
+
+          if (this.toast) this.toast.show('Location obtained and pinned.', 'success');
+          this.cd.detectChanges();
+        });
+      },
+      error: (err) => {
+        console.error('Error getting location:', err);
+        this.ngZone.run(() => {
+          this.isLoadingLocation = false;
+          this.locationError = err?.message || 'Failed to get location';
+          if (err && err.code === 1) {
+            this.locationPermissionDenied = true;
+            if (this.toast) this.toast.show('Location permission denied. Please enable it in your browser.', 'warning');
+          }
+          this.cd.detectChanges();
+        });
+      }
+    });
+
+    // Subscribe to error stream once
+    this.geolocationService.getLocationErrors().pipe(take(1)).subscribe({
+      next: (error: GeolocationError) => {
+        this.ngZone.run(() => {
+          this.locationError = error.message;
+          this.isLoadingLocation = false;
+          if (error.code === 1) this.locationPermissionDenied = true;
+          this.cd.detectChanges();
+        });
+      }
+    });
+  }
+
+  dismissLocationRequest(): void {
+    this.showLocationModal = false;
+    sessionStorage.setItem('workshop_location_set', 'dismissed');
   }
 }
