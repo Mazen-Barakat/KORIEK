@@ -32,6 +32,10 @@
     </div>
   </div>
 
+  <!-- Dev trigger button (visible when ?dev=1 or ?dev_modal=1 or localStorage.dev_show_location_button === 'true') -->
+  <button id="dev-open-location-modal" class="dev-btn" *ngIf="showDevButton" (click)="showLocationModal = true" title="Dev: Open Location Modal">
+    DEV: Open Location Modal
+  </button>
   <!-- Toast Component -->
   <app-toast></app-toast>
 
@@ -244,6 +248,9 @@
       <div class="map-container">
         <p class="map-label">Pin Location on Map</p>
         <p class="map-instruction text-muted small">Click on the map to set your workshop location</p>
+        <div class="location-actions" style="margin:8px 0;">
+          <button type="button" class="btn-secondary" (click)="showLocationModal = true">Use My Current Location</button>
+        </div>
         <div id="map" class="leaflet-map"></div>
         <div class="map-coordinates">
           <p class="text-muted small">
@@ -253,6 +260,59 @@
         </div>
       </div>
     </div>
+
+  <!-- Friendly Location Request Modal -->
+  <div
+    class="modal-overlay"
+    *ngIf="showLocationModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="location-modal-title"
+    (click)="dismissLocationRequest()"
+  >
+    <div class="modal-card" (click)="$event.stopPropagation()" tabindex="-1">
+      <div class="modal-body">
+        <div class="modal-icon-wrapper" aria-hidden="true">
+          <div class="modal-icon-circle">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="modal-content">
+          <h3 id="location-modal-title" class="modal-title">Enable Location Access</h3>
+          <p class="modal-desc">We can use your device location to pin your workshop on the map automatically.</p>
+
+          <div class="modal-error" *ngIf="locationError">{{ locationError }}</div>
+
+          <div class="modal-actions">
+            <button
+              id="maybe-later-btn"
+              class="btn-secondary"
+              (click)="dismissLocationRequest()"
+              [disabled]="isLoadingLocation"
+            >
+              Maybe Later
+            </button>
+
+            <button
+              id="allow-location-btn"
+              class="btn-primary"
+              (click)="requestLocation()"
+              [disabled]="isLoadingLocation"
+            >
+              <span *ngIf="!isLoadingLocation">Allow Location</span>
+              <span *ngIf="isLoadingLocation" class="loading-spinner">Getting...</span>
+            </button>
+          </div>
+
+          <p class="modal-privacy"><strong>Note:</strong> Your location is only used to help customers find your workshop.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
     <!-- Save Basic Info Button -->
     <div class="form-actions">
