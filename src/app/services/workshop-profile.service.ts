@@ -83,6 +83,16 @@ export class WorkshopProfileService {
   }
 
   /**
+   * Create working hours for a workshop
+   */
+  createWorkingHours(workingHour: WorkShopWorkingHoursAPI): Observable<any> {
+    return this.http.post(
+      'https://localhost:44316/api/WorkShopWorkingHours',
+      workingHour
+    );
+  }
+
+  /**
    * Update working hours for a workshop
    */
   updateWorkshopWorkingHours(workingHours: WorkShopWorkingHoursAPI[]): Observable<any> {
@@ -109,7 +119,7 @@ export class WorkshopProfileService {
    */
   convertToAPIWorkingHours(hours: WorkingHours[], workShopProfileId: number): WorkShopWorkingHoursAPI[] {
     return hours.map(hour => ({
-      day: hour.day,
+      day: (hour.dayNumber !== undefined ? hour.dayNumber.toString() : hour.day) || '0',
       from: this.formatTimeToISO(hour.openTime),
       to: this.formatTimeToISO(hour.closeTime),
       isClosed: hour.isClosed,

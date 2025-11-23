@@ -1,5 +1,7 @@
 export interface WorkingHours {
-  day: string;
+  day?: string;
+  dayNumber?: number;
+  dayName?: string;
   openTime: string;
   closeTime: string;
   isClosed: boolean;

@@ -272,53 +272,110 @@
         <h2>Working Hours</h2>
       </div>
 
-      <div class="working-hours-list">
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="profileData.workingHours.length === 0 && !isAddingWorkingHour">
+        <svg class="empty-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+        </svg>
+        <p class="empty-message">No working hours set yet</p>
+        <p class="empty-hint">Add your workshop's operating hours to let customers know when you're available</p>
+        <button type="button" class="add-hours-btn" (click)="startAddingWorkingHour()">
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
+          </svg>
+          Add Working Hours
+        </button>
+      </div>
+
+      <!-- Add Working Hour Form -->
+      <div class="add-working-hour-form" *ngIf="isAddingWorkingHour">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Day</label>
+            <select class="form-input" [(ngModel)]="newWorkingHour.dayNumber" (ngModelChange)="onDayChange()" name="newDay">
+              <option *ngFor="let day of availableDays" [value]="day.number">{{ day.name }}</option>
+            </select>
+          </div>
+
+          <div class="form-group" *ngIf="!newWorkingHour.isClosed">
+            <label class="form-label">Open Time</label>
+            <div class="time-with-ampm">
+              <input type="time" class="form-input" [(ngModel)]="newWorkingHour.openTime" name="newOpenTime">
+              <select class="form-input ampm-select" [(ngModel)]="newWorkingHour.openAmPm" name="openAmPm">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" *ngIf="!newWorkingHour.isClosed">
+            <label class="form-label">Close Time</label>
+            <div class="time-with-ampm">
+              <input type="time" class="form-input" [(ngModel)]="newWorkingHour.closeTime" name="newCloseTime">
+              <select class="form-input ampm-select" [(ngModel)]="newWorkingHour.closeAmPm" name="closeAmPm">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <button
+              type="button"
+              class="toggle-status-btn"
+              [class.closed]="newWorkingHour.isClosed"
+              [class.open]="!newWorkingHour.isClosed"
+              (click)="newWorkingHour.isClosed = !newWorkingHour.isClosed">
+              {{ newWorkingHour.isClosed ? 'CLOSED' : 'OPEN' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-actions-inline">
+          <button type="button" class="btn-secondary" (click)="cancelAddingWorkingHour()">Cancel</button>
+          <button type="button" class="btn-primary" (click)="addWorkingHour()">Add</button>
+        </div>
+      </div>
+
+      <!-- Working Hours List -->
+      <div class="working-hours-list" *ngIf="profileData.workingHours.length > 0">
         <div class="working-hours-item" *ngFor="let day of profileData.workingHours; let i = index">
-          <span class="day-name">{{ day.day }}</span>
+          <span class="day-name">{{ day.dayName || day.day }}</span>
 
-          <div class="time-inputs" *ngIf="!day.isClosed">
-            <div class="time-input-wrapper">
-              <input
-                type="time"
-                class="time-input"
-                [(ngModel)]="day.openTime"
-                [name]="'openTime' + i">
-              <span class="time-suffix">AM</span>
-              <button type="button" class="time-toggle-btn">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                </svg>
-              </button>
-            </div>
-
-            <span class="time-separator">-</span>
-
-            <div class="time-input-wrapper">
-              <input
-                type="time"
-                class="time-input"
-                [(ngModel)]="day.closeTime"
-                [name]="'closeTime' + i">
-              <span class="time-suffix">PM</span>
-              <button type="button" class="time-toggle-btn">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                </svg>
-              </button>
-            </div>
+          <div class="time-display" *ngIf="!day.isClosed">
+            <span class="time-text">{{ day.openTime }} - {{ day.closeTime }}</span>
           </div>
 
           <span class="closed-label" *ngIf="day.isClosed">Closed</span>
 
-          <button
-            type="button"
-            class="toggle-status-btn"
-            [class.closed]="day.isClosed"
-            [class.open]="!day.isClosed"
-            (click)="toggleDayClosed(i)">
-            {{ day.isClosed ? 'SET OPEN' : 'SET CLOSED' }}
+          <button type="button" class="remove-hour-btn" (click)="removeWorkingHour(i)" title="Remove">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
           </button>
         </div>
+
+        <button type="button" class="add-more-btn" (click)="startAddingWorkingHour()" *ngIf="profileData.workingHours.length < 7 && !isAddingWorkingHour">
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
+          </svg>
+          Add Another Day
+        </button>
+      </div>
+
+      <div class="form-actions" style="margin-top: 20px;" *ngIf="profileData.workingHours.length > 0">
+        <button
+          type="button"
+          class="save-hours-btn"
+          (click)="saveWorkingHours()"
+          [disabled]="isSavingWorkingHours">
+          <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z"/>
+          </svg>
+          <span *ngIf="!isSavingWorkingHours">Save Working Hours</span>
+          <span *ngIf="isSavingWorkingHours">Saving...</span>
+        </button>
       </div>
     </div>
 

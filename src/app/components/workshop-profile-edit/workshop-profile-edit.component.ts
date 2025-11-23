@@ -229,29 +229,23 @@ export class WorkshopProfileEditComponent
       next: (apiHours) => {
         console.log('Working Hours API Response:', apiHours);
 
+        // If no working hours exist, start with empty array for new workshops
+        if (!apiHours || apiHours.length === 0) {
+          this.profileData.workingHours = [];
+          console.log('No working hours found - starting with empty list');
+          return;
+        }
+
         // Convert API format to display format
         const convertedHours = this.workshopProfileService.convertAPIWorkingHours(apiHours);
-
-        // Update working hours ensuring all days are present
-        const daysMap = new Map(convertedHours.map((h) => [h.day, h]));
-
-        this.profileData.workingHours = DAYS_OF_WEEK.map((day) => {
-          const existing = daysMap.get(day);
-          return (
-            existing || {
-              day,
-              openTime: '09:00',
-              closeTime: '17:00',
-              isClosed: false,
-            }
-          );
-        });
+        this.profileData.workingHours = convertedHours;
 
         console.log('Working Hours loaded and converted:', this.profileData.workingHours);
       },
       error: (error) => {
         console.error('Error loading working hours:', error);
-        // Keep default working hours if API fails
+        // Start with empty array for new workshops
+        this.profileData.workingHours = [];
       },
     });
   }
@@ -478,6 +472,226 @@ export class WorkshopProfileEditComponent
   toggleDayClosed(index: number): void {
     this.profileData.workingHours[index].isClosed = !this.profileData.workingHours[index].isClosed;
     this.isFormDirty = true;
+  }
+
+  isAddingWorkingHour = false;
+  isSavingWorkingHours = false;
+  newWorkingHour: any = {
+    dayNumber: 0,
+    dayName: 'Monday',
+    openTime: '09:00',
+    closeTime: '17:00',
+    openAmPm: 'AM',
+    closeAmPm: 'PM',
+    isClosed: false
+  };
+  availableDays: any[] = [];
+
+  daysWithNumbers = [
+    { number: 0, name: 'Monday' },
+    { number: 1, name: 'Tuesday' },
+    { number: 2, name: 'Wednesday' },
+    { number: 3, name: 'Thursday' },
+    { number: 4, name: 'Friday' },
+    { number: 5, name: 'Saturday' },
+    { number: 6, name: 'Sunday' }
+  ];
+
+  updateAvailableDays(): void {
+    const usedDayNumbers = this.profileData.workingHours.map((h: any) => h.dayNumber);
+    this.availableDays = this.daysWithNumbers.filter(day => !usedDayNumbers.includes(day.number));
+    if (this.availableDays.length > 0) {
+      this.newWorkingHour.dayNumber = this.availableDays[0].number;
+      this.newWorkingHour.dayName = this.availableDays[0].name;
+    }
+  }
+
+  startAddingWorkingHour(): void {
+    this.updateAvailableDays();
+    if (this.availableDays.length === 0) {
+      if (this.toast) {
+        this.toast.show('All days already have working hours set.', 'info');
+      }
+      return;
+    }
+    this.isAddingWorkingHour = true;
+  }
+
+  cancelAddingWorkingHour(): void {
+    this.isAddingWorkingHour = false;
+    this.newWorkingHour = {
+      dayNumber: 0,
+      dayName: 'Monday',
+      openTime: '09:00',
+      closeTime: '17:00',
+      openAmPm: 'AM',
+      closeAmPm: 'PM',
+      isClosed: false
+    };
+  }
+
+  onDayChange(): void {
+    const selected = this.daysWithNumbers.find(d => d.number === this.newWorkingHour.dayNumber);
+    if (selected) {
+      this.newWorkingHour.dayName = selected.name;
+    }
+  }
+
+  convertTo24Hour(time: string, ampm: string): string {
+    const [hours, minutes] = time.split(':');
+    let hour = parseInt(hours, 10);
+    
+    if (ampm === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (ampm === 'AM' && hour === 12) {
+      hour = 0;
+    }
+    
+    return `${hour.toString().padStart(2, '0')}:${minutes}`;
+  }
+
+  addWorkingHour(): void {
+    // Validate times
+    const openTime24 = this.convertTo24Hour(this.newWorkingHour.openTime, this.newWorkingHour.openAmPm);
+    const closeTime24 = this.convertTo24Hour(this.newWorkingHour.closeTime, this.newWorkingHour.closeAmPm);
+    
+    if (!this.newWorkingHour.isClosed && openTime24 >= closeTime24) {
+      if (this.toast) {
+        this.toast.show('Close time must be after open time.', 'error');
+      }
+      return;
+    }
+
+    // Add to local array
+    this.profileData.workingHours.push({
+      dayNumber: this.newWorkingHour.dayNumber,
+      dayName: this.newWorkingHour.dayName,
+      openTime: openTime24,
+      closeTime: closeTime24,
+      isClosed: this.newWorkingHour.isClosed
+    });
+    this.isFormDirty = true;
+    
+    if (this.toast) {
+      this.toast.show(`${this.newWorkingHour.dayName} added. Click Save to store all hours.`, 'info');
+    }
+
+    // Reset form
+    this.newWorkingHour = {
+      dayNumber: 0,
+      dayName: 'Monday',
+      openTime: '09:00',
+      closeTime: '17:00',
+      openAmPm: 'AM',
+      closeAmPm: 'PM',
+      isClosed: false
+    };
+    
+    // Update available days
+    this.updateAvailableDays();
+    
+    // If all days are added, exit adding mode
+    if (this.availableDays.length === 0) {
+      this.isAddingWorkingHour = false;
+      if (this.toast) {
+        this.toast.show('All days added! Click Save Working Hours to store them.', 'success');
+      }
+    }
+  }
+
+  removeWorkingHour(index: number): void {
+    if (confirm('Are you sure you want to remove this working hour?')) {
+      this.profileData.workingHours.splice(index, 1);
+      this.isFormDirty = true;
+    }
+  }
+
+  saveWorkingHours(): void {
+    if (!this.profileData.id) {
+      if (this.toast) {
+        this.toast.show('Workshop ID not found. Please try again.', 'error');
+      }
+      return;
+    }
+
+    if (this.profileData.workingHours.length === 0) {
+      if (this.toast) {
+        this.toast.show('Please add at least one working hour before saving.', 'warning');
+      }
+      return;
+    }
+
+    this.isSavingWorkingHours = true;
+    
+    const apiWorkingHours = this.profileData.workingHours.map((hour: any) => ({
+      day: hour.dayNumber.toString(),
+      from: hour.openTime,
+      to: hour.closeTime,
+      isClosed: hour.isClosed,
+      workShopProfileId: parseInt(this.profileData.id!)
+    }));
+
+    console.log('Saving working hours:', apiWorkingHours);
+
+    let completedRequests = 0;
+    let hasError = false;
+    const totalRequests = apiWorkingHours.length;
+
+    const timeoutId = setTimeout(() => {
+      if (this.isSavingWorkingHours) {
+        console.error('Save timeout');
+        this.isSavingWorkingHours = false;
+        if (this.toast) {
+          this.toast.show('Save operation timed out. Please try again.', 'error');
+        }
+      }
+    }, 30000);
+
+    apiWorkingHours.forEach((hour, index) => {
+      console.log(`Sending working hour ${index + 1}:`, hour);
+      
+      this.workshopProfileService.createWorkingHours(hour)
+        .subscribe({
+          next: (response) => {
+            console.log(`Working hour ${index + 1} created:`, response);
+            completedRequests++;
+            
+            if (completedRequests === totalRequests) {
+              clearTimeout(timeoutId);
+              this.isSavingWorkingHours = false;
+              
+              if (!hasError) {
+                if (this.toast) {
+                  this.toast.show('All working hours saved successfully!', 'success');
+                }
+                this.isFormDirty = false;
+                // Redirect to profile page
+                setTimeout(() => {
+                  this.router.navigate([`/workshop-profile/${this.profileData.id}`]);
+                }, 1000);
+              } else {
+                if (this.toast) {
+                  this.toast.show('Some working hours failed to save.', 'warning');
+                }
+              }
+            }
+          },
+          error: (error) => {
+            console.error(`Error creating working hour ${index + 1}:`, error);
+            hasError = true;
+            completedRequests++;
+            
+            if (completedRequests === totalRequests) {
+              clearTimeout(timeoutId);
+              this.isSavingWorkingHours = false;
+              if (this.toast) {
+                const errorMsg = error.error?.message || 'Failed to save working hours';
+                this.toast.show(errorMsg, 'error');
+              }
+            }
+          }
+        });
+    });
   }
 
   setAllDaysClosed(): void {
