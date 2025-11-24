@@ -135,52 +135,30 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     this.workshopProfileService.getWorkshopWorkingHours(workshopId).subscribe({
       next: (apiHours) => {
         console.log('Working Hours API Response:', apiHours);
-        
+
         // Convert API format to display format and organize by day
         const hoursMap: any = {};
         const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        
+
         apiHours.forEach(hour => {
           hoursMap[hour.day] = {
-            openTime: this.formatTimeFromISO(hour.from),
-            closeTime: this.formatTimeFromISO(hour.to),
+            openTime: hour.from,
+            closeTime: hour.to,
             isClosed: hour.isClosed
           };
         });
 
-        // Ensure all days are present
-        daysOrder.forEach(day => {
-          if (!hoursMap[day]) {
-            hoursMap[day] = {
-              openTime: '09:00',
-              closeTime: '17:00',
-              isClosed: false
-            };
-          }
-        });
-
+        // Don't add default hours for days not in API response
         this.workingHours = hoursMap;
         console.log('Working Hours loaded:', this.workingHours);
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading working hours:', error);
-        // Set default working hours if API fails
-        this.setDefaultWorkingHours();
+        // Set empty working hours if API fails
+        this.workingHours = {};
       }
     });
-  }
-
-  private formatTimeFromISO(isoString: string): string {
-    if (!isoString) return '09:00';
-    try {
-      const date = new Date(isoString);
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
-    } catch {
-      return '09:00';
-    }
   }
 
   private setDefaultWorkingHours(): void {
@@ -378,7 +356,28 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     if (hours.isClosed) {
       return 'Closed';
     }
-    return hours.openTime && hours.closeTime ? `${hours.openTime} - ${hours.closeTime}` : 'Not set';
+    if (hours.openTime && hours.closeTime) {
+      const openTime12 = this.formatTime12Hour(hours.openTime);
+      const closeTime12 = this.formatTime12Hour(hours.closeTime);
+      return `${openTime12} - ${closeTime12}`;
+    }
+    return 'Not set';
+  }
+
+  formatTime12Hour(time: string): string {
+    if (!time) return '';
+
+    const [hours, minutes] = time.split(':');
+    let hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+
+    if (hour === 0) {
+      hour = 12;
+    } else if (hour > 12) {
+      hour = hour - 12;
+    }
+
+    return `${hour}:${minutes} ${ampm}`;
   }
 
   isWorkingHoursClosed(day: string): boolean {

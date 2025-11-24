@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { WorkshopProfileData, WorkShopWorkingHoursAPI, WorkingHours } from '../models/workshop-profile.model';
 
 @Injectable({
@@ -77,8 +78,14 @@ export class WorkshopProfileService {
    * Get working hours for a workshop
    */
   getWorkshopWorkingHours(workshopId: number): Observable<WorkShopWorkingHoursAPI[]> {
-    return this.http.get<WorkShopWorkingHoursAPI[]>(
-      `https://localhost:44316/api/WorkShopWorkingHours?workShopProfileId=${workshopId}`
+    return this.http.get<any>(
+      `https://localhost:44316/api/WorkShopWorkingHours/workshop/${workshopId}`
+    ).pipe(
+      map((response: any) => {
+        // Handle response that might be wrapped in data property
+        console.log('Raw API Response for working hours:', response);
+        return response?.data ?? response ?? [];
+      })
     );
   }
 
@@ -89,6 +96,24 @@ export class WorkshopProfileService {
     return this.http.post(
       'https://localhost:44316/api/WorkShopWorkingHours',
       workingHour
+    );
+  }
+
+  /**
+   * Delete all working hours for a workshop
+   */
+  deleteAllWorkingHours(workshopId: number): Observable<any> {
+    return this.http.delete(
+      `https://localhost:44316/api/WorkShopWorkingHours/workshop/${workshopId}`
+    );
+  }
+
+  /**
+   * Delete individual working hour by ID
+   */
+  deleteWorkingHour(id: number): Observable<any> {
+    return this.http.delete(
+      `https://localhost:44316/api/WorkShopWorkingHours/${id}`
     );
   }
 
@@ -105,59 +130,30 @@ export class WorkshopProfileService {
   /**
    * Convert API working hours format to display format
    */
-  convertAPIWorkingHours(apiHours: WorkShopWorkingHoursAPI[]): WorkingHours[] {
-    return apiHours.map(hour => ({
-      day: hour.day,
-      openTime: this.formatTimeFromISO(hour.from),
-      closeTime: this.formatTimeFromISO(hour.to),
-      isClosed: hour.isClosed
-    }));
+  convertAPIWorkingHours(apiHours: any[]): WorkingHours[] {
+    console.log('Converting API hours to display format:', apiHours);
+    const converted = apiHours.map(hour => {
+      const dayNumber = this.getDayNumber(hour.day);
+      return {
+        id: hour.id,
+        day: hour.day,
+        dayNumber: dayNumber,
+        dayName: hour.day,
+        openTime: hour.from,
+        closeTime: hour.to,
+        isClosed: hour.isClosed
+      };
+    });
+    console.log('Converted hours:', converted);
+    return converted;
   }
 
   /**
-   * Convert display working hours format to API format
+   * Get day number from day name
    */
-  convertToAPIWorkingHours(hours: WorkingHours[], workShopProfileId: number): WorkShopWorkingHoursAPI[] {
-    return hours.map(hour => ({
-      day: (hour.dayNumber !== undefined ? hour.dayNumber.toString() : hour.day) || '0',
-      from: this.formatTimeToISO(hour.openTime),
-      to: this.formatTimeToISO(hour.closeTime),
-      isClosed: hour.isClosed,
-      workShopProfileId: workShopProfileId
-    }));
-  }
-
-  /**
-   * Format ISO time string to HH:mm format
-   */
-  private formatTimeFromISO(isoString: string): string {
-    if (!isoString) return '09:00';
-    try {
-      const date = new Date(isoString);
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
-    } catch {
-      return '09:00';
-    }
-  }
-
-  /**
-   * Format HH:mm time string to ISO 8601
-   */
-  private formatTimeToISO(timeString: string): string {
-    if (!timeString) return new Date().toISOString();
-    try {
-      const [hours, minutes] = timeString.split(':');
-      const date = new Date();
-      date.setHours(parseInt(hours, 10));
-      date.setMinutes(parseInt(minutes, 10));
-      date.setSeconds(0);
-      date.setMilliseconds(0);
-      return date.toISOString();
-    } catch {
-      return new Date().toISOString();
-    }
+  private getDayNumber(dayName: string): number {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return days.indexOf(dayName);
   }
 
   /**

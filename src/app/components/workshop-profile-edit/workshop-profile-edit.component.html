@@ -332,13 +332,8 @@
         <h2>Working Hours</h2>
       </div>
 
-      <!-- Empty State -->
-      <div class="empty-state" *ngIf="profileData.workingHours.length === 0 && !isAddingWorkingHour">
-        <svg class="empty-icon" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-        </svg>
-        <p class="empty-message">No working hours set yet</p>
-        <p class="empty-hint">Add your workshop's operating hours to let customers know when you're available</p>
+      <!-- Add button when no hours exist -->
+      <div *ngIf="profileData.workingHours.length === 0 && !isAddingWorkingHour" style="text-align: center; padding: 1rem 0;">
         <button type="button" class="add-hours-btn" (click)="startAddingWorkingHour()">
           <svg viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
@@ -359,42 +354,32 @@
 
           <div class="form-group" *ngIf="!newWorkingHour.isClosed">
             <label class="form-label">Open Time</label>
-            <div class="time-with-ampm">
-              <input type="time" class="form-input" [(ngModel)]="newWorkingHour.openTime" name="newOpenTime">
-              <select class="form-input ampm-select" [(ngModel)]="newWorkingHour.openAmPm" name="openAmPm">
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
+            <input type="time" class="form-input" [(ngModel)]="newWorkingHour.openTime" name="newOpenTime">
           </div>
 
           <div class="form-group" *ngIf="!newWorkingHour.isClosed">
             <label class="form-label">Close Time</label>
-            <div class="time-with-ampm">
-              <input type="time" class="form-input" [(ngModel)]="newWorkingHour.closeTime" name="newCloseTime">
-              <select class="form-input ampm-select" [(ngModel)]="newWorkingHour.closeAmPm" name="closeAmPm">
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
+            <input type="time" class="form-input" [(ngModel)]="newWorkingHour.closeTime" name="newCloseTime">
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Status</label>
-            <button
-              type="button"
-              class="toggle-status-btn"
-              [class.closed]="newWorkingHour.isClosed"
-              [class.open]="!newWorkingHour.isClosed"
-              (click)="newWorkingHour.isClosed = !newWorkingHour.isClosed">
-              {{ newWorkingHour.isClosed ? 'CLOSED' : 'OPEN' }}
-            </button>
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                class="form-checkbox"
+                [(ngModel)]="newWorkingHour.isClosed"
+                name="isClosed">
+              <span class="checkbox-text">Mark as Closed</span>
+            </label>
           </div>
         </div>
 
         <div class="form-actions-inline">
-          <button type="button" class="btn-secondary" (click)="cancelAddingWorkingHour()">Cancel</button>
-          <button type="button" class="btn-primary" (click)="addWorkingHour()">Add</button>
+          <button type="button" class="btn-secondary" (click)="cancelAddingWorkingHour()" [disabled]="isSavingWorkingHours">Cancel</button>
+          <button type="button" class="btn-primary" (click)="addWorkingHour()" [disabled]="isSavingWorkingHours">
+            <span *ngIf="!isSavingWorkingHours">Add</span>
+            <span *ngIf="isSavingWorkingHours">Saving...</span>
+          </button>
         </div>
       </div>
 
@@ -404,7 +389,7 @@
           <span class="day-name">{{ day.dayName || day.day }}</span>
 
           <div class="time-display" *ngIf="!day.isClosed">
-            <span class="time-text">{{ day.openTime }} - {{ day.closeTime }}</span>
+            <span class="time-text">{{ formatTime12Hour(day.openTime) }} - {{ formatTime12Hour(day.closeTime) }}</span>
           </div>
 
           <span class="closed-label" *ngIf="day.isClosed">Closed</span>
@@ -424,19 +409,7 @@
         </button>
       </div>
 
-      <div class="form-actions" style="margin-top: 20px;" *ngIf="profileData.workingHours.length > 0">
-        <button
-          type="button"
-          class="save-hours-btn"
-          (click)="saveWorkingHours()"
-          [disabled]="isSavingWorkingHours">
-          <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z"/>
-          </svg>
-          <span *ngIf="!isSavingWorkingHours">Save Working Hours</span>
-          <span *ngIf="isSavingWorkingHours">Saving...</span>
-        </button>
-      </div>
+
     </div>
 
   <!-- Workshop Gallery Section (Separate - will have its own save button) -->
@@ -478,4 +451,42 @@
   </div>
 
 <!-- Note: Working Hours and Gallery sections are separate and will have their own save functionality in future updates -->
+</div>
+
+<!-- Delete Working Hour Modal -->
+<div class="modal-overlay" *ngIf="showDeleteWorkingHourModal" (click)="cancelDeleteWorkingHour()">
+  <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-icon delete-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </div>
+      <h3>Delete Working Hour</h3>
+    </div>
+    <div class="modal-body">
+      <p *ngIf="deleteWorkingHourIndex >= 0 && profileData.workingHours[deleteWorkingHourIndex]">
+        Are you sure you want to delete the working hours for
+        <strong>{{ profileData.workingHours[deleteWorkingHourIndex].dayName || profileData.workingHours[deleteWorkingHourIndex].day }}</strong>?
+      </p>
+      <p class="warning-text">This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn-cancel"
+        (click)="cancelDeleteWorkingHour()"
+        [disabled]="isDeletingWorkingHour">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn-delete"
+        (click)="confirmDeleteWorkingHour()"
+        [disabled]="isDeletingWorkingHour">
+        <span *ngIf="!isDeletingWorkingHour">Delete</span>
+        <span *ngIf="isDeletingWorkingHour">Deleting...</span>
+      </button>
+    </div>
+  </div>
 </div>
