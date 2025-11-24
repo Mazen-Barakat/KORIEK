@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -11,6 +11,7 @@ export type ToastType = 'success' | 'error' | 'warning' | 'info';
   styleUrls: ['./toast.component.css']
 })
 export class ToastComponent {
+  constructor(private cdr: ChangeDetectorRef) {}
   message: string = '';
   type: ToastType = 'info';
   visible: boolean = false;
@@ -20,6 +21,8 @@ export class ToastComponent {
     this.message = message;
     this.type = type;
     this.visible = true;
+    // Force change detection in zoneless mode so timers update the template
+    this.cdr.detectChanges();
 
     // Clear existing timeout
     if (this.timeoutId) {
@@ -33,8 +36,16 @@ export class ToastComponent {
   }
 
   hide(): void {
+    // Clear any pending auto-dismiss timeout
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = undefined;
+    }
+
     this.visible = false;
     this.message = '';
+    // Ensure template updates immediately
+    this.cdr.detectChanges();
   }
 
   getIcon(): string {

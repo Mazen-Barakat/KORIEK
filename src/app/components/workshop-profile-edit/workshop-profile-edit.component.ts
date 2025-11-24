@@ -9,9 +9,9 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
-import { Router, ActivatedRoute } from '@angular/router';
-import { forkJoin, Observable, of } from 'rxjs';
-import { finalize, map, switchMap, tap } from 'rxjs/operators';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { forkJoin, Observable, of, Subscription } from 'rxjs';
+import { finalize, map, switchMap, tap, filter } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { GeolocationService, GeolocationPosition, GeolocationError } from '../../services/geolocation.service';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
@@ -88,6 +88,7 @@ export class WorkshopProfileEditComponent
 
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   private readonly STORAGE_KEY = 'workshop_profile_data';
+  private routerEventsSub: Subscription | null = null;
 
   constructor(
     private authService: AuthService,
@@ -138,6 +139,25 @@ export class WorkshopProfileEditComponent
 
     if (this.workshopId) {
       this.loadWorkshopProfile();
+
+      // Also reload profile when user navigates back to this route (handles route reuse)
+      try {
+        this.routerEventsSub = this.router.events.pipe(
+          filter((e) => e instanceof NavigationEnd),
+          filter((e: any) => {
+            const nav = e as NavigationEnd;
+            const url = (nav && (nav.urlAfterRedirects || nav.url)) || '';
+            // Only reload when navigating to the workshop-profile-edit route
+            return url.indexOf('/workshop-profile-edit') !== -1;
+          })
+        ).subscribe(() => {
+          // Refresh profile data so images and previews are applied immediately
+          this.loadWorkshopProfile();
+        });
+      } catch (e) {
+        // ignore
+      }
+
     } else {
       this.errorMessage = 'Unable to identify workshop. Please log in again.';
     }
@@ -170,6 +190,13 @@ export class WorkshopProfileEditComponent
       this.map.remove();
       this.map = null;
     }
+    // Unsubscribe from router events
+    try {
+      if (this.routerEventsSub) {
+        this.routerEventsSub.unsubscribe();
+        this.routerEventsSub = null;
+      }
+    } catch (e) {}
   }
 
   private initializeWorkingHours(): WorkingHours[] {
@@ -261,6 +288,10 @@ export class WorkshopProfileEditComponent
           
           // Save to localStorage for persistence across reloads
           this.saveToLocalStorage();
+          // Ensure the view updates after loading and saving profile data
+          try {
+            this.ngZone.run(() => this.cd.detectChanges());
+          } catch (e) {}
         }
         // Don't touch isLoading here - it's only for the save button
         // this.isLoading = false;
@@ -419,10 +450,12 @@ export class WorkshopProfileEditComponent
     // Send PUT request with FormData
     this.workshopProfileService.updateMyWorkshopProfile(fd).pipe(
       finalize(() => {
-        // clear backup timeout and ensure isLoading is reset
-        try { clearTimeout(backupTimeout); } catch {}
-        // Ensure isLoading is always reset, even if completeProfileUpdate doesn't run
-        this.isLoading = false;
+        // Run reset inside Angular zone so change detection runs reliably.
+        this.ngZone.run(() => {
+          try { clearTimeout(backupTimeout); } catch {}
+          this.isLoading = false;
+          this.cd.detectChanges();
+        });
       })
     ).subscribe({
       next: (response) => {
@@ -431,8 +464,6 @@ export class WorkshopProfileEditComponent
         this.completeProfileUpdate();
       },
       error: (err: any) => {
-        // isLoading is now handled in finalize(), but keep this for safety
-        this.isLoading = false;
         console.error('Error updating workshop profile:', err);
         console.error('Validation errors:', err.error?.errors);
         console.error('Error details:', JSON.stringify(err.error, null, 2));
@@ -462,9 +493,12 @@ export class WorkshopProfileEditComponent
           this.errorMessage = 'Failed to update profile. Please try again.';
         }
 
-        if (this.toast) {
-          this.toast.show(this.errorMessage, 'error');
-        }
+        // Ensure UI updates occur inside Angular zone and detect changes after toast
+        this.ngZone.run(() => {
+          this.isLoading = false;
+          if (this.toast) this.toast.show(this.errorMessage, 'error');
+          this.cd.detectChanges();
+        });
       },
     });
   }
@@ -533,9 +567,13 @@ export class WorkshopProfileEditComponent
     this.isFormDirty = false;
 
     if (this.toast) {
-      this.toast.show('Workshop profile updated successfully!', 'success');
+      this.toast.show('Workshop profile updated successfully!', 'success', 2000);
     }
     
+    // Ensure UI updates immediately after showing toast
+    try {
+      this.ngZone.run(() => this.cd.detectChanges());
+    } catch (e) {}
     // Save updated data to localStorage
     this.saveToLocalStorage();
 
@@ -553,8 +591,13 @@ export class WorkshopProfileEditComponent
     }
 
     setTimeout(() => {
-      this.navigateToProfileIfAllowed(this.workshopId);
-    }, 1500);
+      try {
+        this.ngZone.run(() => {
+          this.navigateToProfileIfAllowed(this.workshopId);
+          try { this.cd.detectChanges(); } catch (e) {}
+        });
+      } catch (e) {}
+    }, 2000);
   }
 
   validateForm(): boolean {
@@ -988,7 +1031,17 @@ export class WorkshopProfileEditComponent
     }
     const reader = new FileReader();
     reader.onload = (e: any) => {
-      this.logoPreviewUrl = e.target.result;
+      // Ensure Angular updates the view when FileReader completes
+      try {
+        this.ngZone.run(() => {
+          this.logoPreviewUrl = e.target.result;
+          this.cd.detectChanges();
+        });
+      } catch (err) {
+        // Fallback: assign and mark for change detection
+        this.logoPreviewUrl = e.target.result;
+        try { this.cd.detectChanges(); } catch {}
+      }
     };
     reader.readAsDataURL(file);
     this.errorMessage = '';
@@ -1018,7 +1071,16 @@ export class WorkshopProfileEditComponent
       }
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        this.licensePreviewUrl = e.target.result;
+        // Ensure Angular updates the view when FileReader completes
+        try {
+          this.ngZone.run(() => {
+            this.licensePreviewUrl = e.target.result;
+            this.cd.detectChanges();
+          });
+        } catch (err) {
+          this.licensePreviewUrl = e.target.result;
+          try { this.cd.detectChanges(); } catch {}
+        }
       };
       reader.readAsDataURL(file);
       this.errorMessage = '';
@@ -1293,15 +1355,22 @@ export class WorkshopProfileEditComponent
       workingHours: data.workingHours || this.initializeWorkingHours()
     };
 
-    // Load existing logo if available
+    // Load existing logo if available (ensure full absolute URL)
     if (this.profileData.LogoImageUrl) {
+      this.profileData.LogoImageUrl = this.getFullBackendUrl(this.profileData.LogoImageUrl);
       this.logoPreviewUrl = this.profileData.LogoImageUrl;
     }
 
-    // Load existing license if available
+    // Load existing license if available (ensure full absolute URL)
     if (this.profileData.LicenceImageUrl) {
+      this.profileData.LicenceImageUrl = this.getFullBackendUrl(this.profileData.LicenceImageUrl);
       this.licensePreviewUrl = this.profileData.LicenceImageUrl;
     }
+
+    // Ensure change detection runs so previews update when applying cached data
+    try {
+      this.ngZone.run(() => this.cd.detectChanges());
+    } catch (e) {}
 
     // Populate cities based on governorate
     if (this.profileData.location.governorate) {
@@ -1349,7 +1418,7 @@ export class WorkshopProfileEditComponent
           // Save to backend (non-blocking helper)
           this.geolocationService.saveWorkshopLocation(position);
 
-          if (this.toast) this.toast.show('Location obtained and pinned.', 'success');
+          if (this.toast) this.toast.show('Location obtained and pinned.', 'success', 2000);
           this.cd.detectChanges();
         });
       },
