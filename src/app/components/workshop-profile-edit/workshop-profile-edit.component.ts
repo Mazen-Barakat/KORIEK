@@ -10,8 +10,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { forkJoin, Observable, of, Subscription } from 'rxjs';
-import { finalize, map, switchMap, tap, filter } from 'rxjs/operators';
+import { forkJoin, Observable, of, Subscription,throwError, TimeoutError } from 'rxjs';
+import { finalize, map, switchMap, tap, filter ,timeout, catchError} from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { GeolocationService, GeolocationPosition, GeolocationError } from '../../services/geolocation.service';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
@@ -82,6 +82,10 @@ export class WorkshopProfileEditComponent
   selectedLogoFile: File | null = null;
   logoPreviewUrl: string = '';
   isFormDirty: boolean = false;
+  hasUnsavedWorkingHours: boolean = false;
+  showDeleteWorkingHourModal: boolean = false;
+  deleteWorkingHourIndex: number = -1;
+  isDeletingWorkingHour: boolean = false;
 
   // Backend base URL used to build absolute image URLs when backend returns relative paths
   private readonly backendBaseUrl = 'https://localhost:44316';
@@ -171,9 +175,7 @@ export class WorkshopProfileEditComponent
   }
 
   canDeactivate(): boolean {
-    if (this.isFormDirty) {
-      return confirm('You have unsaved changes. Do you want to leave this page?');
-    }
+    // Allow navigation without alert
     return true;
   }
 
@@ -211,14 +213,14 @@ export class WorkshopProfileEditComponent
   loadWorkshopProfile(): void {
     // Ensure loading state is false when component initializes
     this.isLoading = false;
-    
+
     // Try to load data from localStorage first
     const cachedData = this.loadFromLocalStorage();
     if (cachedData) {
       console.log('Loading profile data from localStorage');
       this.applyProfileData(cachedData);
     }
-    
+
     // Use the WorkShopProfile controller to get the current user's workshop profile
     this.workshopProfileService.getMyWorkshopProfile().subscribe({
       next: (response) => {
@@ -285,7 +287,7 @@ export class WorkshopProfileEditComponent
             this.map.setView([lat, lng], 13);
             this.updateMarker(lat, lng);
           }
-          
+
           // Save to localStorage for persistence across reloads
           this.saveToLocalStorage();
           // Ensure the view updates after loading and saving profile data
@@ -307,27 +309,52 @@ export class WorkshopProfileEditComponent
   }
 
   loadWorkingHours(workshopId: number): void {
+    console.log('🔄 Loading working hours for workshop:', workshopId);
+
     this.workshopProfileService.getWorkshopWorkingHours(workshopId).subscribe({
       next: (apiHours) => {
         console.log('Working Hours API Response:', apiHours);
+        console.log('Number of hours returned from API:', apiHours?.length || 0);
 
-        // If no working hours exist, start with empty array for new workshops
-        if (!apiHours || apiHours.length === 0) {
-          this.profileData.workingHours = [];
-          console.log('No working hours found - starting with empty list');
-          return;
+        // Check if backend filtered out closed days
+        if (apiHours && apiHours.length > 0) {
+          console.log('Days returned:', apiHours.map((h: any) => `${h.day} (isClosed: ${h.isClosed})`));
         }
 
-        // Convert API format to display format
-        const convertedHours = this.workshopProfileService.convertAPIWorkingHours(apiHours);
-        this.profileData.workingHours = convertedHours;
+        // Use NgZone to ensure Angular picks up the change
+        this.ngZone.run(() => {
+          // Clear existing working hours first
+          this.profileData.workingHours = [];
+          console.log('🧹 Cleared old working hours');
 
-        console.log('Working Hours loaded and converted:', this.profileData.workingHours);
+          // Convert API format to display format
+          const convertedHours = this.workshopProfileService.convertAPIWorkingHours(apiHours || []);
+
+          // Sort by day of week (Monday first)
+          convertedHours.sort((a, b) => (a.dayNumber || 0) - (b.dayNumber || 0));
+
+          this.profileData.workingHours = convertedHours;
+          console.log('✅ Working Hours loaded and converted:', this.profileData.workingHours);
+          console.log('UI should now show', this.profileData.workingHours.length, 'days');
+
+          // Update available days after loading
+          this.updateAvailableDays();
+
+          // Mark as saved since loaded from database
+          this.hasUnsavedWorkingHours = false;
+
+          // Force change detection
+          this.cd.detectChanges();
+        });
       },
       error: (error) => {
         console.error('Error loading working hours:', error);
-        // Start with empty array for new workshops
-        this.profileData.workingHours = [];
+        // Use NgZone for error case too
+        this.ngZone.run(() => {
+          // Start with empty array for new workshops
+          this.profileData.workingHours = [];
+          this.cd.detectChanges();
+        });
       },
     });
   }
@@ -640,8 +667,6 @@ export class WorkshopProfileEditComponent
     dayName: 'Monday',
     openTime: '09:00',
     closeTime: '17:00',
-    openAmPm: 'AM',
-    closeAmPm: 'PM',
     isClosed: false
   };
   availableDays: any[] = [];
@@ -683,8 +708,6 @@ export class WorkshopProfileEditComponent
       dayName: 'Monday',
       openTime: '09:00',
       closeTime: '17:00',
-      openAmPm: 'AM',
-      closeAmPm: 'PM',
       isClosed: false
     };
   }
@@ -696,73 +719,271 @@ export class WorkshopProfileEditComponent
     }
   }
 
-  convertTo24Hour(time: string, ampm: string): string {
+  formatTime12Hour(time: string): string {
+    if (!time) return '';
+
     const [hours, minutes] = time.split(':');
     let hour = parseInt(hours, 10);
-    
-    if (ampm === 'PM' && hour !== 12) {
-      hour += 12;
-    } else if (ampm === 'AM' && hour === 12) {
-      hour = 0;
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+
+    if (hour === 0) {
+      hour = 12;
+    } else if (hour > 12) {
+      hour = hour - 12;
     }
-    
-    return `${hour.toString().padStart(2, '0')}:${minutes}`;
+
+    return `${hour}:${minutes} ${ampm}`;
   }
 
   addWorkingHour(): void {
-    // Validate times
-    const openTime24 = this.convertTo24Hour(this.newWorkingHour.openTime, this.newWorkingHour.openAmPm);
-    const closeTime24 = this.convertTo24Hour(this.newWorkingHour.closeTime, this.newWorkingHour.closeAmPm);
-    
-    if (!this.newWorkingHour.isClosed && openTime24 >= closeTime24) {
+    // Validate times only if not closed
+    if (!this.newWorkingHour.isClosed) {
+      if (!this.newWorkingHour.openTime || !this.newWorkingHour.closeTime) {
+        if (this.toast) {
+          this.toast.show('Please select both open and close times.', 'error');
+        }
+        return;
+      }
+      if (this.newWorkingHour.openTime >= this.newWorkingHour.closeTime) {
+        if (this.toast) {
+          this.toast.show('Close time must be after open time.', 'error');
+        }
+        return;
+      }
+    }
+
+    if (!this.profileData.id) {
       if (this.toast) {
-        this.toast.show('Close time must be after open time.', 'error');
+        this.toast.show('Workshop ID not found.', 'error');
       }
       return;
     }
 
-    // Add to local array
-    this.profileData.workingHours.push({
-      dayNumber: this.newWorkingHour.dayNumber,
-      dayName: this.newWorkingHour.dayName,
-      openTime: openTime24,
-      closeTime: closeTime24,
-      isClosed: this.newWorkingHour.isClosed
-    });
-    this.isFormDirty = true;
-    
-    if (this.toast) {
-      this.toast.show(`${this.newWorkingHour.dayName} added. Click Save to store all hours.`, 'info');
-    }
+    // Always provide valid times (backend has conflicting validation rules)
+    // The isClosed flag tells the system to ignore the times
+    const openTime = this.newWorkingHour.openTime || '09:00';
+    const closeTime = this.newWorkingHour.closeTime || '17:00';
 
-    // Reset form
-    this.newWorkingHour = {
-      dayNumber: 0,
-      dayName: 'Monday',
-      openTime: '09:00',
-      closeTime: '17:00',
-      openAmPm: 'AM',
-      closeAmPm: 'PM',
-      isClosed: false
+    // Save immediately to database
+    console.log('🔵 Starting add working hour operation');
+    this.isSavingWorkingHours = true;
+
+    // Emergency timeout to force reset after 6 seconds
+    const emergencyTimeout = setTimeout(() => {
+      if (this.isSavingWorkingHours) {
+        console.error('⚠️ EMERGENCY: Add timeout reached, forcing reset');
+        this.ngZone.run(() => {
+          this.isSavingWorkingHours = false;
+          this.cd.detectChanges();
+          if (this.toast) {
+            this.toast.show('Operation timed out', 'error');
+          }
+        });
+      }
+    }, 6000);
+
+    const workingHourData = {
+      day: this.newWorkingHour.dayName,
+      from: openTime,
+      to: closeTime,
+      isClosed: this.newWorkingHour.isClosed,
+      workShopProfileId: parseInt(this.profileData.id!)
     };
-    
-    // Update available days
-    this.updateAvailableDays();
-    
-    // If all days are added, exit adding mode
-    if (this.availableDays.length === 0) {
-      this.isAddingWorkingHour = false;
+
+    console.log('Saving working hour immediately:', workingHourData);
+
+    this.workshopProfileService.createWorkingHours(workingHourData).pipe(
+      timeout(5000),
+      catchError((error) => {
+        console.error('Error saving working hour:', error);
+        clearTimeout(emergencyTimeout);
+        return throwError(() => error);
+      })
+    ).subscribe({
+      next: (response) => {
+        console.log('====== ADD WORKING HOUR RESPONSE ======');
+        console.log('Full response:', JSON.stringify(response, null, 2));
+        console.log('Response.success:', response?.success);
+        console.log('=======================================');
+
+        clearTimeout(emergencyTimeout);
+        console.log('✅ Resetting isSavingWorkingHours to false');
+
+        // Use NgZone to ensure Angular picks up the change
+        this.ngZone.run(() => {
+          this.isSavingWorkingHours = false;
+          console.log('isSavingWorkingHours is now:', this.isSavingWorkingHours);
+
+          if (response && response.success === true) {
+            console.log('✅ Success - closing form and reloading');
+            if (this.toast) {
+              this.toast.show(response.message || `${this.newWorkingHour.dayName} added successfully!`, 'success');
+            }
+
+            // Close the form
+            this.isAddingWorkingHour = false;
+
+            // Force change detection
+            this.cd.detectChanges();
+
+            // Reload working hours to get fresh data with IDs
+            this.loadWorkingHours(parseInt(this.profileData.id!));
+          } else {
+            console.error('❌ Response success is false:', response);
+            if (this.toast) {
+              this.toast.show(response?.message || 'Failed to add working hour', 'error');
+            }
+          }
+        });
+      },
+      error: (error) => {
+        console.error('❌ Error adding working hour:', error);
+        clearTimeout(emergencyTimeout);
+
+        // Use NgZone to ensure Angular picks up the change
+        this.ngZone.run(() => {
+          this.isSavingWorkingHours = false;
+          this.cd.detectChanges();
+          if (this.toast) {
+            const msg = error instanceof TimeoutError ? 'Request timed out' : 'Failed to add working hour';
+            this.toast.show(msg, 'error');
+          }
+        });
+      }
+    });
+
+  }
+
+  removeWorkingHour(index: number): void {
+    this.deleteWorkingHourIndex = index;
+    this.showDeleteWorkingHourModal = true;
+  }
+
+  cancelDeleteWorkingHour(): void {
+    this.showDeleteWorkingHourModal = false;
+    this.deleteWorkingHourIndex = -1;
+  }
+
+  confirmDeleteWorkingHour(): void {
+    const index = this.deleteWorkingHourIndex;
+    if (index === -1) return;
+
+    const workingHour = this.profileData.workingHours[index];
+
+    // If it has an id, it's saved in database - delete from backend
+    if (workingHour.id) {
+      console.log('Starting delete operation for working hour ID:', workingHour.id);
+      this.isDeletingWorkingHour = true;
+
+      // Emergency timeout to force reset after 5 seconds
+      const emergencyTimeout = setTimeout(() => {
+        console.error('EMERGENCY: Delete timeout reached, forcing reset');
+        this.ngZone.run(() => {
+          this.isDeletingWorkingHour = false;
+          this.showDeleteWorkingHourModal = false;
+          this.deleteWorkingHourIndex = -1;
+          this.cd.detectChanges();
+          if (this.toast) {
+            this.toast.show('Operation timed out', 'error');
+          }
+        });
+      }, 5000);
+
+      this.workshopProfileService.deleteWorkingHour(workingHour.id).pipe(
+        timeout(4000), // 4 second timeout for the HTTP request
+        catchError((error) => {
+          console.error('Delete error caught:', error);
+          if (error instanceof TimeoutError) {
+            console.error('Request timed out');
+          }
+          return throwError(() => error);
+        })
+      ).subscribe({
+        next: (response) => {
+          console.log('====== DELETE WORKING HOUR RESPONSE ======');
+          console.log('Full response:', JSON.stringify(response, null, 2));
+          console.log('Response type:', typeof response);
+          console.log('Response.success:', response?.success);
+          console.log('Response.message:', response?.message);
+          console.log('Response.data:', response?.data);
+          console.log('==========================================');
+
+          // Clear emergency timeout
+          clearTimeout(emergencyTimeout);
+
+          // Use NgZone to ensure Angular picks up the change
+          this.ngZone.run(() => {
+            // Check if response indicates success
+            if (response && response.success === true) {
+              console.log('✅ Working hour deleted from database:', workingHour.id);
+              if (this.toast) {
+                this.toast.show(response.message || 'Working hour removed successfully', 'success');
+              }
+              // Reset modal state
+              this.isDeletingWorkingHour = false;
+              this.showDeleteWorkingHourModal = false;
+              this.deleteWorkingHourIndex = -1;
+
+              // Force change detection
+              this.cd.detectChanges();
+
+              // Reload working hours from database to get fresh data with IDs
+              if (this.profileData.id) {
+                console.log('Reloading working hours after delete...');
+                this.loadWorkingHours(parseInt(this.profileData.id));
+              }
+            } else {
+              console.error('❌ Delete response indicates failure:', response);
+              this.isDeletingWorkingHour = false;
+              this.showDeleteWorkingHourModal = false;
+              this.deleteWorkingHourIndex = -1;
+              this.cd.detectChanges();
+              if (this.toast) {
+                const errorMsg = response?.message || 'Failed to remove working hour';
+                this.toast.show(errorMsg, 'error');
+              }
+            }
+          });
+        },
+        error: (error) => {
+          console.error('❌ Error deleting working hour:', error);
+          clearTimeout(emergencyTimeout);
+
+          // Use NgZone to ensure Angular picks up the change
+          this.ngZone.run(() => {
+            this.isDeletingWorkingHour = false;
+            this.showDeleteWorkingHourModal = false;
+            this.deleteWorkingHourIndex = -1;
+            this.cd.detectChanges();
+            if (this.toast) {
+              const msg = error instanceof TimeoutError ? 'Request timed out' : 'Failed to remove working hour';
+              this.toast.show(msg, 'error');
+            }
+          });
+        }
+      });
+    } else {
+      // Not saved yet, just remove from local array
+      console.log('Removing unsaved working hour at index:', index);
+      this.profileData.workingHours = this.profileData.workingHours.filter((_, i) => i !== index);
+      console.log('Removed unsaved working hour, updated array:', this.profileData.workingHours);
+      this.isFormDirty = true;
+      this.hasUnsavedWorkingHours = true;
+      this.updateAvailableDays();
+      this.showDeleteWorkingHourModal = false;
+      this.deleteWorkingHourIndex = -1;
       if (this.toast) {
-        this.toast.show('All days added! Click Save Working Hours to store them.', 'success');
+        this.toast.show('Working hour removed', 'info');
       }
     }
   }
 
-  removeWorkingHour(index: number): void {
-    if (confirm('Are you sure you want to remove this working hour?')) {
-      this.profileData.workingHours.splice(index, 1);
-      this.isFormDirty = true;
+  areAllHoursSaved(): boolean {
+    // Check if all working hours have an ID (meaning they're saved in database)
+    if (this.profileData.workingHours.length === 0) {
+      return false;
     }
+    return this.profileData.workingHours.every(hour => hour.id !== undefined && hour.id !== null);
   }
 
   saveWorkingHours(): void {
@@ -780,72 +1001,204 @@ export class WorkshopProfileEditComponent
       return;
     }
 
+    console.log('🔵 Starting saveWorkingHours operation');
     this.isSavingWorkingHours = true;
-    
-    const apiWorkingHours = this.profileData.workingHours.map((hour: any) => ({
-      day: hour.dayNumber.toString(),
-      from: hour.openTime,
-      to: hour.closeTime,
-      isClosed: hour.isClosed,
-      workShopProfileId: parseInt(this.profileData.id!)
-    }));
+
+    // Emergency timeout to force reset after 12 seconds
+    const saveEmergencyTimeout = setTimeout(() => {
+      console.error('⚠️ EMERGENCY: Save timeout reached, forcing reset');
+      this.isSavingWorkingHours = false;
+      if (this.toast) {
+        this.toast.show('Save operation timed out. Please try again.', 'error');
+      }
+    }, 12000);
+
+    // Map working hours to API format
+    const apiWorkingHours = this.profileData.workingHours.map((hour: any) => {
+      // Backend validation expects actual times when open, but validation is weird for closed
+      // Let's send valid times regardless (backend will ignore them when isClosed is true)
+      const from = hour.openTime || '09:00';
+      const to = hour.closeTime || '17:00';
+
+      return {
+        day: hour.dayName || hour.day,
+        from: from,
+        to: to,
+        isClosed: hour.isClosed,
+        workShopProfileId: parseInt(this.profileData.id!)
+      };
+    });
 
     console.log('Saving working hours:', apiWorkingHours);
 
+    // First, delete all existing working hours to avoid duplicates
+    this.workshopProfileService.deleteAllWorkingHours(parseInt(this.profileData.id!)).pipe(
+      finalize(() => {
+        console.log('Delete operation finalized, proceeding with creation');
+      })
+    ).subscribe({
+      next: (deleteResponse) => {
+        console.log('====== DELETE ALL WORKING HOURS RESPONSE ======');
+        console.log('Full response:', JSON.stringify(deleteResponse, null, 2));
+        console.log('Response type:', typeof deleteResponse);
+        console.log('Response.success:', deleteResponse?.success);
+        console.log('Response.message:', deleteResponse?.message);
+        console.log('===============================================');
+        console.log('Existing working hours deleted, now creating new ones');
+        this.createWorkingHoursSequentially(apiWorkingHours, saveEmergencyTimeout);
+      },
+      error: (error) => {
+        console.log('No existing working hours to delete (or delete failed), proceeding with creation:', error);
+        // Even if delete fails (no hours exist), proceed with creation
+        this.createWorkingHoursSequentially(apiWorkingHours, saveEmergencyTimeout);
+      }
+    });
+  }
+
+  private createWorkingHoursSequentially(apiWorkingHours: any[], emergencyTimeout: any): void {
+    console.log('createWorkingHoursSequentially called with:', apiWorkingHours.length, 'hours');
+
+    // Safety check: if no hours to save, reset immediately
+    if (!apiWorkingHours || apiWorkingHours.length === 0) {
+      console.warn('No working hours to save');
+      clearTimeout(emergencyTimeout);
+      this.isSavingWorkingHours = false;
+      if (this.toast) {
+        this.toast.show('No working hours to save', 'warning');
+      }
+      return;
+    }
+
     let completedRequests = 0;
     let hasError = false;
+    let errorMessages: string[] = [];
     const totalRequests = apiWorkingHours.length;
 
     const timeoutId = setTimeout(() => {
       if (this.isSavingWorkingHours) {
-        console.error('Save timeout');
+        console.error('⏱️ Save timeout - forcing reset after 10 seconds');
+        clearTimeout(emergencyTimeout);
         this.isSavingWorkingHours = false;
+        console.log('✅ isSavingWorkingHours reset to false via timeout');
         if (this.toast) {
-          this.toast.show('Save operation timed out. Please try again.', 'error');
+          this.toast.show('Save operation timed out. Please refresh and try again.', 'error');
         }
+        // Reload working hours to show current state
+        this.loadWorkingHours(parseInt(this.profileData.id!));
       }
-    }, 30000);
+    }, 10000); // Reduced to 10 seconds for faster recovery
 
     apiWorkingHours.forEach((hour, index) => {
-      console.log(`Sending working hour ${index + 1}:`, hour);
-      
+      console.log(`Sending working hour ${index + 1}/${totalRequests}:`, hour);
+
       this.workshopProfileService.createWorkingHours(hour)
+        .pipe(
+          // Add timeout to each individual request
+          finalize(() => {
+            console.log(`Request ${index + 1} finalized (completed or errored)`);
+          })
+        )
         .subscribe({
           next: (response) => {
-            console.log(`Working hour ${index + 1} created:`, response);
+            console.log(`====== CREATE WORKING HOUR ${index + 1}/${totalRequests} RESPONSE ======`);
+            console.log('Request data:', hour);
+            console.log('Full response:', JSON.stringify(response, null, 2));
+            console.log('Response type:', typeof response);
+            console.log('Response.success:', response?.success);
+            console.log('Response.message:', response?.message);
+            console.log('Response.data:', response?.data);
+            console.log('=========================================================');
+
+            // Check if response indicates success
+            if (response && response.success === true) {
+              console.log(`✅ Working hour ${index + 1}/${totalRequests} created successfully`);
+            } else {
+              console.error(`❌ Working hour ${index + 1}/${totalRequests} response indicates failure:`, response);
+              hasError = true;
+              const errorMsg = response?.message || `Failed to save ${hour.day}`;
+              errorMessages.push(errorMsg);
+            }
+
             completedRequests++;
-            
+            console.log(`Progress: ${completedRequests}/${totalRequests} completed`);
+
             if (completedRequests === totalRequests) {
+              console.log('All requests completed. hasError:', hasError);
               clearTimeout(timeoutId);
+              clearTimeout(emergencyTimeout);
+              console.log('✅ Resetting isSavingWorkingHours to false');
               this.isSavingWorkingHours = false;
-              
+
               if (!hasError) {
+                console.log('All saves successful - reloading hours to get IDs');
                 if (this.toast) {
                   this.toast.show('All working hours saved successfully!', 'success');
                 }
                 this.isFormDirty = false;
-                // Redirect to profile page (respect preventRedirectAfterLocation)
-                setTimeout(() => {
-                  this.navigateToProfileIfAllowed(this.profileData.id);
-                }, 1000);
+
+                // Reload working hours from database to get fresh data with IDs
+                console.log('Reloading working hours after save...');
+                this.loadWorkingHours(parseInt(this.profileData.id!));
               } else {
+                console.log('Some saves failed - reloading hours');
+                // Reload working hours to show what was actually saved
+                this.loadWorkingHours(parseInt(this.profileData.id!));
+
                 if (this.toast) {
-                  this.toast.show('Some working hours failed to save.', 'warning');
+                  const errorMsg = errorMessages.length > 0 ? errorMessages.join(', ') : 'Some working hours failed to save';
+                  this.toast.show(`Partial save: ${errorMsg}`, 'warning');
                 }
               }
             }
           },
           error: (error) => {
-            console.error(`Error creating working hour ${index + 1}:`, error);
+            console.error(`❌ Error creating working hour ${index + 1}/${totalRequests}:`, error);
+            console.error('Full error response:', JSON.stringify(error, null, 2));
+            console.error('Error body:', error.error);
+
             hasError = true;
             completedRequests++;
-            
+            console.log(`Progress (with error): ${completedRequests}/${totalRequests} completed`);
+
+            // Extract detailed error message from backend
+            let errorMsg = 'Failed to save working hours';
+            if (error.error) {
+              if (typeof error.error === 'string') {
+                errorMsg = error.error;
+              } else if (error.error.message) {
+                errorMsg = error.error.message;
+              } else if (error.error.title) {
+                errorMsg = error.error.title;
+              } else if (error.error.errors) {
+                // Handle validation errors
+                const validationErrors = error.error.errors;
+                const validationErrorMsgs: string[] = [];
+                for (const key in validationErrors) {
+                  if (Object.prototype.hasOwnProperty.call(validationErrors, key)) {
+                    const messages = Array.isArray(validationErrors[key])
+                      ? validationErrors[key]
+                      : [validationErrors[key]];
+                    validationErrorMsgs.push(`${key}: ${messages.join(', ')}`);
+                  }
+                }
+                if (validationErrorMsgs.length > 0) {
+                  errorMsg = validationErrorMsgs.join('\n');
+                }
+              }
+            }
+
+            errorMessages.push(errorMsg);
+
             if (completedRequests === totalRequests) {
+              console.log('All requests completed (with errors). Resetting state.');
               clearTimeout(timeoutId);
               this.isSavingWorkingHours = false;
+
+              // Reload to show what was actually saved
+              this.loadWorkingHours(parseInt(this.profileData.id!));
+
               if (this.toast) {
-                const errorMsg = error.error?.message || 'Failed to save working hours';
-                this.toast.show(errorMsg, 'error');
+                this.toast.show(`Error: ${errorMsg}`, 'error');
               }
             }
           }

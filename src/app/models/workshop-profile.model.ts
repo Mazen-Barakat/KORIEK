@@ -1,4 +1,5 @@
 export interface WorkingHours {
+  id?: number;
   day?: string;
   dayNumber?: number;
   dayName?: string;
@@ -9,9 +10,9 @@ export interface WorkingHours {
 
 // API Response interface for WorkShop Working Hours
 export interface WorkShopWorkingHoursAPI {
-  day: string;
-  from: string; // ISO 8601 time string
-  to: string;   // ISO 8601 time string
+  day: string; // Day name like "Monday", "Tuesday", etc.
+  from: string; // Time in HH:mm format (24-hour)
+  to: string;   // Time in HH:mm format (24-hour)
   isClosed: boolean;
   workShopProfileId: number;
 }
