@@ -289,10 +289,19 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   }
 
   getDirections(): void {
+    // Prioritize latitude/longitude if available
+    const lat = this.profileData?.latitude;
+    const lng = this.profileData?.longitude;
+    if (lat && lng) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+      window.open(url, '_blank', 'noopener');
+      return;
+    }
+    // Fallback to address-based search if lat/lng missing
     const location = this.getLocation();
     if (location && location !== 'Location not provided') {
       const encodedLocation = encodeURIComponent(location);
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodedLocation}`, '_blank');
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodedLocation}`, '_blank', 'noopener');
     }
   }
 
