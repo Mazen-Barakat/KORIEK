@@ -364,6 +364,16 @@ export class AddVehicleFormComponent implements OnInit {
 
   isSubmitting = false;
 
+  /**
+   * Detects the CarOrigin based on the selected make by looking up
+   * the make in the loaded makes array and returning its CarOrigin.
+   * Returns an empty string if not found.
+   */
+  private detectCarOrigin(make: string): string {
+    const entry = this.makes.find(m => m.make === make);
+    return entry?.CarOrigin || '';
+  }
+
   onClose(): void {
     this.close.emit();
   }
@@ -386,6 +396,10 @@ export class AddVehicleFormComponent implements OnInit {
 
     if (this.addVehicleForm.valid) {
       this.isSubmitting = true;
+      
+      // Detect CarOrigin automatically based on selected make
+      const carOrigin = this.detectCarOrigin(this.addVehicleForm.value.make);
+      
       const requestBody = {
         make: this.addVehicleForm.value.make,
         model: this.addVehicleForm.value.model,
@@ -394,7 +408,8 @@ export class AddVehicleFormComponent implements OnInit {
         currentMileage: Number(this.addVehicleForm.value.mileage),
         licensePlate: this.addVehicleForm.value.licensePlate,
         transmissionType: this.addVehicleForm.value.transmissionType,
-        fuelType: this.addVehicleForm.value.fuelType
+        fuelType: this.addVehicleForm.value.fuelType,
+        origin: carOrigin
       };
 
       // Read engine capacity from the single control (can be a suggested value or custom text)
