@@ -1,0 +1,242 @@
+.unauthorized-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.unauthorized-container::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.unauthorized-content {
+  background: white;
+  border-radius: 24px;
+  padding: 60px 50px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Icon */
+.icon-wrapper {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
+  }
+}
+
+.icon-wrapper svg {
+  color: #ef4444;
+}
+
+/* Title */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -1px;
+}
+
+/* Message */
+.message {
+  font-size: 1.125rem;
+  color: #6b7280;
+  margin: 0 0 30px 0;
+  line-height: 1.7;
+}
+
+/* Info Box */
+.info-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.info-box svg {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.info-box p {
+  margin: 0;
+  color: #991b1b;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.info-box strong {
+  font-weight: 700;
+  color: #7f1d1d;
+}
+
+/* Current Role */
+.current-role {
+  margin: 0 0 30px 0;
+}
+
+.current-role p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9375rem;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin: 0 0 30px 0;
+  flex-wrap: wrap;
+}
+
+.btn {
+  flex: 1;
+  min-width: 200px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.btn-secondary {
+  background: white;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #ef4444;
+  color: #ef4444;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn svg {
+  flex-shrink: 0;
+}
+
+/* Help Text */
+.help-text {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .unauthorized-content {
+    padding: 40px 30px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .icon-wrapper {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 24px;
+  }
+
+  .icon-wrapper svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .message {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .unauthorized-content {
+    padding: 30px 20px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+}

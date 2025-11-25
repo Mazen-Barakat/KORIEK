@@ -1,0 +1,386 @@
+<div class="admin-dashboard">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1>Admin Dashboard</h1>
+        <p class="header-subtitle">Welcome back, {{ adminName }}</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-icon" title="Notifications">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+        <button class="btn-icon" title="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m4.22-13.22l-4.24 4.24m-2.82 2.82l-4.24 4.24m12.02-.02l-4.24-4.24m-2.82-2.82L4.64 4.64"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card" (click)="viewAllUsers()">
+      <div class="metric-icon users">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <div class="metric-label">Total Users</div>
+        <div class="metric-value">{{ metrics.totalUsers }}</div>
+        <div class="metric-detail">{{ metrics.activeUsers }} active</div>
+      </div>
+    </div>
+
+    <div class="metric-card" (click)="viewAllWorkshops()">
+      <div class="metric-icon workshops">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <div class="metric-label">Workshops</div>
+        <div class="metric-value">{{ metrics.totalWorkshops }}</div>
+        <div class="metric-detail">{{ metrics.pendingApprovals }} pending</div>
+      </div>
+    </div>
+
+    <div class="metric-card" (click)="viewAllBookings()">
+      <div class="metric-icon bookings">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="6" width="18" height="15" rx="2"/>
+          <path d="M3 10h18"/>
+          <path d="M8 3v4"/>
+          <path d="M16 3v4"/>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <div class="metric-label">Total Bookings</div>
+        <div class="metric-value">{{ metrics.totalBookings }}</div>
+        <div class="metric-detail">All time</div>
+      </div>
+    </div>
+
+    <div class="metric-card revenue">
+      <div class="metric-icon revenue-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <div class="metric-label">Monthly Revenue</div>
+        <div class="metric-value">{{ formatCurrency(metrics.monthlyRevenue) }}</div>
+        <div class="metric-detail" [ngClass]="getChangeClass(metrics.revenueChange)">
+          {{ getChangeIcon(metrics.revenueChange) }} {{ metrics.revenueChange }}% vs last month
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="content-grid">
+    <!-- Unverified Workshops -->
+    <div class="dashboard-section">
+      <div class="section-header">
+        <h2>Unverified Workshops ({{ metrics.pendingApprovals }})</h2>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <svg class="spinner" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" opacity="0.25"/>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+        </svg>
+        <p>Loading unverified workshops...</p>
+      </div>
+
+      <div class="approvals-list" *ngIf="!isLoading && pendingWorkshops.length > 0">
+        <div class="approval-card" *ngFor="let workshop of pendingWorkshops">
+          <div class="approval-info">
+            <div class="workshop-icon pending">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+            </div>
+            <div class="approval-details">
+              <h3>{{ workshop.name }}</h3>
+              <p class="owner-name">Type: {{ workshop.workShopType }}</p>
+              <p class="location">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                {{ getLocation(workshop) }}
+              </p>
+              <p class="status-badge pending-badge">Pending Verification</p>
+            </div>
+          </div>
+          <div class="approval-actions">
+            <button class="btn-view" (click)="openDetailModal(workshop)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              View Details
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoading && pendingWorkshops.length === 0">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <p>No unverified workshops</p>
+      </div>
+    </div>
+
+    <!-- Verified Workshops -->
+    <div class="dashboard-section">
+      <div class="section-header">
+        <h2>Verified Workshops ({{ metrics.totalWorkshops }})</h2>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoadingVerified">
+        <svg class="spinner" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" opacity="0.25"/>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+        </svg>
+        <p>Loading verified workshops...</p>
+      </div>
+
+      <div class="approvals-list" *ngIf="!isLoadingVerified && verifiedWorkshops.length > 0">
+        <div class="approval-card verified-card" *ngFor="let workshop of verifiedWorkshops">
+          <div class="approval-info">
+            <div class="workshop-icon verified">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+            </div>
+            <div class="approval-details">
+              <h3>{{ workshop.name }}</h3>
+              <p class="owner-name">Type: {{ workshop.workShopType }}</p>
+              <p class="location">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                {{ getLocation(workshop) }}
+              </p>
+              <p class="status-badge verified-badge">Verified ✓</p>
+            </div>
+          </div>
+          <div class="approval-actions">
+            <button class="btn-view" (click)="openDetailModal(workshop)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              View Details
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoadingVerified && verifiedWorkshops.length === 0">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <p>No verified workshops</p>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="dashboard-section">
+      <div class="section-header">
+        <h2>Recent Activity</h2>
+      </div>
+
+      <div class="activity-list">
+        <div class="activity-item" *ngFor="let activity of recentActivities" [attr.data-type]="activity.type">
+          <div class="activity-icon" [ngClass]="activity.color">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle *ngIf="activity.icon === 'user-plus'" cx="12" cy="12" r="10"/>
+              <polyline *ngIf="activity.icon === 'check-circle'" points="20 6 9 17 4 12"/>
+              <rect *ngIf="activity.icon === 'calendar'" x="3" y="6" width="18" height="15" rx="2"/>
+              <line *ngIf="activity.icon === 'dollar'" x1="12" y1="1" x2="12" y2="23"/>
+            </svg>
+          </div>
+          <div class="activity-content">
+            <h4>{{ activity.title }}</h4>
+            <p>{{ activity.description }}</p>
+            <span class="activity-time">{{ activity.time }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="actions-grid">
+      <button class="action-btn" (click)="navigateTo('/admin/users')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        </svg>
+        Manage Users
+      </button>
+      <button class="action-btn" (click)="navigateTo('/admin/workshops')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+        Manage Workshops
+      </button>
+      <button class="action-btn" (click)="navigateTo('/admin/reports')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        View Reports
+      </button>
+      <button class="action-btn" (click)="navigateTo('/admin/settings')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v6m0 6v6"/>
+        </svg>
+        System Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Workshop Detail Modal -->
+  <div class="modal-overlay" *ngIf="isDetailModalOpen" (click)="closeDetailModal()">
+    <div class="detail-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Workshop Details</h2>
+        <button class="modal-close-btn" (click)="closeDetailModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedWorkshop">
+        <div class="detail-grid">
+          <!-- Basic Information -->
+          <div class="detail-section">
+            <h3>Basic Information</h3>
+            <div class="detail-item">
+              <span class="label">Workshop Name:</span>
+              <span class="value">{{ selectedWorkshop.name || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Type:</span>
+              <span class="value">{{ selectedWorkshop.workShopType || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Description:</span>
+              <span class="value">{{ selectedWorkshop.description || 'No description provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Status:</span>
+              <span class="value status-tag" [ngClass]="selectedWorkshop.verificationStatus.toLowerCase()">
+                {{ selectedWorkshop.verificationStatus }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="detail-section">
+            <h3>Contact Information</h3>
+            <div class="detail-item">
+              <span class="label">Phone Number:</span>
+              <span class="value">{{ selectedWorkshop.phoneNumber || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Country:</span>
+              <span class="value">{{ selectedWorkshop.country || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Governorate:</span>
+              <span class="value">{{ selectedWorkshop.governorate || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">City:</span>
+              <span class="value">{{ selectedWorkshop.city || 'N/A' }}</span>
+            </div>
+          </div>
+
+          <!-- Additional Details -->
+          <div class="detail-section">
+            <h3>Additional Details</h3>
+            <div class="detail-item">
+              <span class="label">Number of Technicians:</span>
+              <span class="value">{{ selectedWorkshop.numbersOfTechnicians || 0 }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Rating:</span>
+              <span class="value">{{ selectedWorkshop.rating || 0 }} ⭐</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Location Coordinates:</span>
+              <span class="value">{{ selectedWorkshop.latitude }}, {{ selectedWorkshop.longitude }}</span>
+            </div>
+          </div>
+
+          <!-- License Image -->
+          <div class="detail-section full-width">
+            <h3>License Plate / Document</h3>
+            <div class="license-preview" *ngIf="selectedWorkshop.licenceImageUrl">
+              <img [src]="buildAssetUrl(selectedWorkshop.licenceImageUrl)" alt="License Document" />
+            </div>
+            <div class="no-image" *ngIf="!selectedWorkshop.licenceImageUrl">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <p>No license document uploaded</p>
+            </div>
+          </div>
+
+          <!-- Logo Image -->
+          <div class="detail-section full-width" *ngIf="selectedWorkshop.logoImageUrl">
+            <h3>Workshop Logo</h3>
+            <div class="logo-preview">
+              <img [src]="buildAssetUrl(selectedWorkshop.logoImageUrl)" alt="Workshop Logo" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="modal-actions" *ngIf="selectedWorkshop.verificationStatus === 'Pending'">
+          <button class="btn-modal-reject" (click)="rejectWorkshop(selectedWorkshop.id)" [disabled]="isLoading">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Reject (Set to Unverified)
+          </button>
+          <button class="btn-modal-approve" (click)="approveWorkshop(selectedWorkshop.id)" [disabled]="isLoading">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Verify Workshop
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

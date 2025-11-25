@@ -7,6 +7,7 @@ import { ContactService } from '../../services/contact.service';
 import { ProfileService } from '../../services/profile.service';
 import { ProfileButtonComponent } from '../profile/profile-button.component';
 import { NotificationPanelComponent } from '../notification-panel/notification-panel.component';
+import { RoleHelper } from '../../models/user-roles';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
@@ -32,9 +33,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isLogoSpinning = false;
   isContactModalOpen = false;
   isWorkshopOwner = false;
+  isAdmin = false;
   isRoleSelectionPage = false;
   isAuthFormPage = false;
-  
+
   // Contact form data
   contactForm = {
     name: '',
@@ -76,12 +78,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
       // update userName when auth state changes
       if (isAuth) {
         this.userName = this.authService.getUserName();
-        // Check if user is workshop owner
+        // Check user roles
         const role = this.authService.getUserRole();
-        this.isWorkshopOwner = role?.toLowerCase() === 'workshop' || role?.toLowerCase() === 'workshopowner';
+        this.isWorkshopOwner = RoleHelper.isWorkshop(role);
+        this.isAdmin = RoleHelper.isAdmin(role);
       } else {
         this.userName = null;
         this.isWorkshopOwner = false;
+        this.isAdmin = false;
       }
       // When authenticated, proactively fetch the profile so the profile button
       // receives the profile image without requiring a user click.
@@ -180,11 +184,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Authentication-related pages where nav should hide landing-only links
     const path = this.router.url || '';
     this.isAuthFormPage = path.startsWith('/select-role') || path.startsWith('/signup') || path.startsWith('/login');
-    // Recompute workshop owner flag on each navigation using latest stored user
+    // Recompute role flags on each navigation using latest stored user
     try {
       const storedUser = this.authService.getUser();
       const roleFromStored = storedUser?.roles?.length ? storedUser.roles[0] : (storedUser?.role || storedUser?.roleName || '');
-      this.isWorkshopOwner = !!storedUser && /workshop/i.test(roleFromStored);
+      this.isWorkshopOwner = !!storedUser && RoleHelper.isWorkshop(roleFromStored);
+      this.isAdmin = !!storedUser && RoleHelper.isAdmin(roleFromStored);
     } catch (e) {
       // ignore and keep previous value
     }
@@ -239,10 +244,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   submitContactForm() {
     // TODO: Implement form submission logic
     console.log('Contact form submitted:', this.contactForm);
-    
+
     // Show success message (placeholder)
     alert('Thank you for contacting us! We will get back to you soon.');
-    
+
     // Close modal
     this.closeContactModal();
   }
