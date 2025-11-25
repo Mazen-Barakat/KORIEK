@@ -339,38 +339,6 @@
               <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
               </svg>
-        <div class="services-header">
-          <h2 class="section-title">Select Services</h2>
-          <div style="display: flex; align-items: center; gap: 1rem">
-            <span class="available-count">{{ services.length }} available</span>
-            <button class="btn btn-primary add-service-btn" (click)="startAddService()">
-              + Add Service
-            </button>
-          </div>
-        </div>
-
-        <!-- Add / Edit Service Form -->
-        <div *ngIf="editingService !== null || serviceForm.name" class="service-form info-card">
-          <h3 class="card-title">{{ editingService ? 'Edit Service' : 'Add Service' }}</h3>
-          <div class="form-row">
-            <label>Name</label>
-            <input [(ngModel)]="serviceForm.name" placeholder="Service name" />
-          </div>
-          <div class="form-row">
-            <label>Description</label>
-            <textarea
-              [(ngModel)]="serviceForm.description"
-              placeholder="Short description"
-            ></textarea>
-          </div>
-          <div class="form-row">
-            <label>Duration (minutes)</label>
-            <input type="number" [(ngModel)]="serviceForm.duration" />
-          </div>
-          <div class="form-row two-cols">
-            <div>
-              <label>Min Price (EGP)</label>
-              <input type="number" [(ngModel)]="serviceForm.minPrice" />
             </div>
             <div class="empty-text">
               <h3 class="empty-heading">Build Your Service Catalog</h3>
@@ -433,88 +401,8 @@
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 6v6l4 2"/>
                     <circle cx="12" cy="12" r="10"/>
-          </div>
-          <div class="form-row">
-            <label>Image URL</label>
-            <input [(ngModel)]="serviceForm.imageUrl" placeholder="assets/images/example.jpg" />
-          </div>
-          <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem">
-            <button class="btn btn-primary" (click)="saveService()">Save</button>
-            <button class="btn" (click)="cancelEdit()">Cancel</button>
-          </div>
-        </div>
-
-        <div *ngIf="services.length === 0" class="info-card">
-          <p style="margin: 0 0.5rem">No services have been added yet.</p>
-          <p style="margin: 0.5rem 0 0 0; color: var(--muted); font-size: 0.95rem">
-            Workshop owners can add services to their catalog.
-          </p>
-        </div>
-
-        <div class="services-list" *ngIf="services.length > 0">
-          <div
-            class="service-card"
-            *ngFor="let service of services"
-            [class.selected]="service.selected"
-          >
-            <div class="service-info">
-              <h3 class="service-name">{{ service.name }}</h3>
-              <p class="service-description">{{ service.description }}</p>
-              <div class="service-meta">
-                <span class="duration">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 6v6l4 2" />
                   </svg>
                 </div>
-                <div class="availability-badge" [class.active]="service.isAvailable">
-                  <span class="badge-dot"></span>
-                </div>
-              </div>
-              <div class="card-actions">
-                <button class="action-btn-circle" (click)="startEditService(service)" title="Edit Service">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                  </svg>
-                </button>
-                <button class="action-btn-circle danger" (click)="deleteService(service)" title="Delete Service">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-            </div>
-            <div class="service-action">
-              <span class="service-price"
-                >{{ service.minPrice }} - {{ service.maxPrice }}
-                <span class="currency">EGP</span></span
-              >
-              <div style="display: flex; gap: 0.5rem; align-items: center">
-                <button class="btn" (click)="startEditService(service)">Edit</button>
-                <button class="btn" (click)="deleteService(service)">Delete</button>
-                <button
-                  class="select-btn"
-                  [class.selected]="service.selected"
-                  (click)="toggleServiceSelection(service)"
-                >
-                  <span *ngIf="!service.selected" class="plus-icon">+</span>
-                  <svg
-                    *ngIf="service.selected"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    stroke-width="3"
-                  >
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </button>
               </div>
             </div>
 
