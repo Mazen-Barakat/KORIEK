@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CarsService, CarIndicatorDto, CreateCarIndicatorRequest } from '../../services/cars.service';
+import { CarsService, CarIndicatorDto, CreateCarIndicatorRequest, MakeModels } from '../../services/cars.service';
 import { CustomDropdownComponent, DropdownOption } from '../custom-dropdown/custom-dropdown.component';
 
 interface Indicator {
@@ -60,6 +60,9 @@ export class EditCarComponent implements OnInit {
   lastMaintenanceDate: string = '10/08/2025';
   nextMaintenanceDate: string = '12/25/2025';
   nextMaintenanceMileage: number = 50000;
+
+  // Array to store makes with origins for CarOrigin detection
+  makes: MakeModels[] = [];
 
   // Dropdown options for the update form
   engineCapacities: string[] = [
@@ -192,6 +195,17 @@ export class EditCarComponent implements OnInit {
       this.loadIndicators(this.carId);
     }
 
+    // Load makes and models from JSON for CarOrigin detection
+    this.carsService.getAllMakesAndModels().subscribe({
+      next: (data) => {
+        this.makes = data;
+        console.log('Loaded makes for origin detection:', this.makes.length);
+      },
+      error: (err) => {
+        console.error('Error loading makes and models:', err);
+      }
+    });
+
     // Initialize dashboard indicators
     this.dashboardIndicators = Object.entries(this.indicatorTypeConfig).map(([value, meta]) => ({
       value,
@@ -289,6 +303,16 @@ export class EditCarComponent implements OnInit {
     });
   }
 
+  /**
+   * Detects the CarOrigin based on the make by looking up
+   * the make in the loaded makes array and returning its CarOrigin.
+   * Returns an empty string if not found.
+   */
+  private detectCarOrigin(make: string): string {
+    const entry = this.makes.find(m => m.make === make);
+    return entry?.CarOrigin || '';
+  }
+
   private normalizeCar(car: any) {
     const ecRaw = car?.engineCapacity ?? car?.engineType ?? car?.engine ?? undefined;
     const engineCapacity = ecRaw != null ? String(ecRaw) : undefined;
@@ -321,6 +345,18 @@ export class EditCarComponent implements OnInit {
       // Extract numeric part; if NaN (e.g., Electric), default to 0
       const engineCapacityNum = Number.parseInt(engineStr.replace(/[^0-9]/g, ''), 10);
 
+      // Detect CarOrigin automatically based on the make
+      const carOrigin = this.detectCarOrigin(this.fetchedCarCore.make);
+      
+      // Log the detected origin and payload for debugging
+      console.log('Detected CarOrigin:', carOrigin, 'for make:', this.fetchedCarCore.make);
+      console.log('Makes array loaded:', this.makes.length, 'entries');
+
+      // If origin is empty, validation will fail - warn in console
+      if (!carOrigin) {
+        console.warn('CarOrigin could not be detected. Makes data may not be loaded yet or make not found in cars-data.json');
+      }
+
       const payload = {
         id: this.fetchedCarCore.id,
         make: this.fetchedCarCore.make,
@@ -330,8 +366,11 @@ export class EditCarComponent implements OnInit {
         currentMileage: Number(this.updateModel.currentMileage ?? 0),
         licensePlate: this.fetchedCarCore.licensePlate,
         transmissionType: String(this.updateModel.transmissionType ?? 'Manual'),
-        fuelType: String(this.updateModel.fuelType ?? 'Gasoline')
+        fuelType: String(this.updateModel.fuelType ?? 'Gasoline'),
+        origin: carOrigin
       };
+      
+      console.log('Sending payload to backend:', payload);
 
       this.carsService.updateCarFull(payload).subscribe({
         next: (resp: any) => {
@@ -348,11 +387,20 @@ export class EditCarComponent implements OnInit {
         },
         error: (err) => {
           this.isSaving = false;
+          
+          // Log full error details for debugging
+          console.error('Failed to update vehicle via PUT /api/Car', err);
+          console.error('Error details:', err.error);
+          
+          // Extract validation errors if present
+          if (err.error?.errors) {
+            console.error('Validation errors:', err.error.errors);
+          }
+          
           const errorMsg = this.extractMessage(err.error) || this.extractMessage(err) || 'Failed to update Car information';
 
           // Show error message with auto-hide after 2 seconds
           this.showMessage(errorMsg, 'error');
-          console.error('Failed to update vehicle via PUT /api/Car', err);
         }
       });
     } else {

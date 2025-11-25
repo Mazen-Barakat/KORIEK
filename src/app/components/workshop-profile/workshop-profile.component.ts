@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -27,7 +27,7 @@ interface Service {
   standalone: true,
   imports: [CommonModule, FormsModule, AddServiceModalComponent],
   templateUrl: './workshop-profile.component.html',
-  styleUrls: ['./workshop-profile.component.css']
+  styleUrls: ['./workshop-profile.component.css'],
 })
 export class WorkshopProfileComponent implements OnInit, OnDestroy {
   // Direct API response data - no mapping needed
@@ -38,6 +38,10 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   selectedTab: 'services' | 'reviews' = 'services';
   errorMessage: string = '';
+
+  // Gallery slider state
+  currentImageIndex: number = 0;
+  isAnimating: boolean = false;
 
   private routeSubscription?: Subscription;
   private profileSubscription?: Subscription;
@@ -51,7 +55,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     duration: 30,
     minPrice: 0,
     maxPrice: 0,
-    imageUrl: ''
+    imageUrl: '',
   };
 
   services: Service[] = [];
@@ -70,6 +74,9 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private cdr: ChangeDetectorRef
   ) {}
+
+  // Auto-play interval (optional)
+  private sliderInterval?: any;
 
   ngOnInit(): void {
     console.log('ngOnInit called');
@@ -137,7 +144,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
         console.error('Error loading workshop profile:', error);
         this.errorMessage = 'Failed to load workshop profile. Please try again.';
         this.profileData = {};
-      }
+      },
     });
   }
 
@@ -148,13 +155,21 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
         // Convert API format to display format and organize by day
         const hoursMap: any = {};
-        const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const daysOrder = [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ];
 
-        apiHours.forEach(hour => {
+        apiHours.forEach((hour) => {
           hoursMap[hour.day] = {
             openTime: hour.from,
             closeTime: hour.to,
-            isClosed: hour.isClosed
+            isClosed: hour.isClosed,
           };
         });
 
@@ -167,18 +182,18 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
         console.error('Error loading working hours:', error);
         // Set empty working hours if API fails
         this.workingHours = {};
-      }
+      },
     });
   }
 
   private setDefaultWorkingHours(): void {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     this.workingHours = {};
-    days.forEach(day => {
+    days.forEach((day) => {
       this.workingHours[day] = {
         openTime: '09:00',
         closeTime: '17:00',
-        isClosed: false
+        isClosed: false,
       };
     });
   }
@@ -191,13 +206,101 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading photos:', error);
-      }
+      },
     });
   }
 
+  // Hero slider methods
+  selectImage(index: number): void {
+    if (this.isAnimating || index === this.currentImageIndex) return;
+    this.isAnimating = true;
+    this.currentImageIndex = index;
+    this.scrollThumbnailIntoView(index);
+
+    setTimeout(() => {
+      this.isAnimating = false;
+    }, 600);
+  }
+
+  nextImage(): void {
+    if (this.photos.length === 0 || this.isAnimating) return;
+    this.isAnimating = true;
+    this.currentImageIndex = (this.currentImageIndex + 1) % this.photos.length;
+    this.scrollThumbnailIntoView(this.currentImageIndex);
+
+    setTimeout(() => {
+      this.isAnimating = false;
+    }, 600);
+  }
+
+  previousImage(): void {
+    if (this.photos.length === 0 || this.isAnimating) return;
+    this.isAnimating = true;
+    this.currentImageIndex = (this.currentImageIndex - 1 + this.photos.length) % this.photos.length;
+    this.scrollThumbnailIntoView(this.currentImageIndex);
+
+    setTimeout(() => {
+      this.isAnimating = false;
+    }, 600);
+  }
+
+  scrollThumbnailIntoView(index: number): void {
+    setTimeout(() => {
+      const thumbnailContainer = document.querySelector('.hero-thumbnails');
+      const thumbnail = document.querySelectorAll('.hero-thumbnail-card')[index];
+      if (thumbnailContainer && thumbnail) {
+        thumbnail.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }, 50);
+  }
+
+  getCardPosition(index: number): any {
+    const diff = index - this.currentImageIndex;
+
+    if (diff === 0) {
+      // Active card - centered
+      return {
+        transform: 'translateX(0%)',
+        zIndex: 10,
+        opacity: 1,
+      };
+    } else if (diff === 1 || (diff < 0 && diff === -(this.photos.length - 1))) {
+      // Next card - to the right
+      return {
+        transform: 'translateX(100%)',
+        zIndex: 5,
+        opacity: 0,
+      };
+    } else if (diff === -1 || (diff > 0 && diff === this.photos.length - 1)) {
+      // Previous card - to the left
+      return {
+        transform: 'translateX(-100%)',
+        zIndex: 5,
+        opacity: 0,
+      };
+    } else {
+      // Hidden cards
+      return {
+        transform: 'translateX(100%)',
+        zIndex: 1,
+        opacity: 0,
+      };
+    }
+  }
+
   // Helper methods for template
-  buildAssetUrl(path: string): string {
+  buildAssetUrl(path: string | any): string {
     if (!path) return '';
+
+    // Handle object with URL properties
+    if (typeof path === 'object') {
+      const url = path.photoUrl || path.url || path.imageUrl || path.path || '';
+      return this.buildAssetUrl(url);
+    }
+
+    // Handle string path
+    if (typeof path !== 'string') return '';
+
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
@@ -216,12 +319,16 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   getLocation(): string {
     if (!this.profileData) return '';
-    const parts = [this.profileData.city, this.profileData.governorate, this.profileData.country].filter(Boolean);
+    const parts = [
+      this.profileData.city,
+      this.profileData.governorate,
+      this.profileData.country,
+    ].filter(Boolean);
     return parts.join(', ') || 'Location not provided';
   }
 
   get selectedServices(): Service[] {
-    return this.services.filter(s => s.selected);
+    return this.services.filter((s) => s.selected);
   }
 
   get totalEstimate(): number {
@@ -238,7 +345,14 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   startAddService(): void {
     this.editingService = null;
-    this.serviceForm = { name: '', description: '', duration: 30, minPrice: 0, maxPrice: 0, imageUrl: '' };
+    this.serviceForm = {
+      name: '',
+      description: '',
+      duration: 30,
+      minPrice: 0,
+      maxPrice: 0,
+      imageUrl: '',
+    };
   }
 
   startEditService(service: Service): void {
@@ -274,22 +388,36 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
         minPrice: min,
         maxPrice: max,
         imageUrl: String(this.serviceForm.imageUrl || ''),
-        selected: false
+        selected: false,
       };
       this.services.push(newService);
     }
     this.editingService = null;
-    this.serviceForm = { name: '', description: '', duration: 30, minPrice: 0, maxPrice: 0, imageUrl: '' };
+    this.serviceForm = {
+      name: '',
+      description: '',
+      duration: 30,
+      minPrice: 0,
+      maxPrice: 0,
+      imageUrl: '',
+    };
   }
 
   deleteService(service: Service): void {
     if (!confirm('Delete this service?')) return;
-    this.services = this.services.filter(s => s.id !== service.id);
+    this.services = this.services.filter((s) => s.id !== service.id);
   }
 
   cancelEdit(): void {
     this.editingService = null;
-    this.serviceForm = { name: '', description: '', duration: 30, minPrice: 0, maxPrice: 0, imageUrl: '' };
+    this.serviceForm = {
+      name: '',
+      description: '',
+      duration: 30,
+      minPrice: 0,
+      maxPrice: 0,
+      imageUrl: '',
+    };
   }
 
   makePhoneCall(): void {
@@ -311,13 +439,19 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     const location = this.getLocation();
     if (location && location !== 'Location not provided') {
       const encodedLocation = encodeURIComponent(location);
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodedLocation}`, '_blank', 'noopener');
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`,
+        '_blank',
+        'noopener'
+      );
     }
   }
 
   visitWebsite(): void {
     if (this.profileData?.website) {
-      const url = this.profileData.website.startsWith('http') ? this.profileData.website : `https://${this.profileData.website}`;
+      const url = this.profileData.website.startsWith('http')
+        ? this.profileData.website
+        : `https://${this.profileData.website}`;
       window.open(url, '_blank');
     }
   }
@@ -338,8 +472,8 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     this.router.navigate(['/booking'], {
       queryParams: {
         workshopId: this.workshopId,
-        services: this.selectedServices.map(s => s.id).join(',')
-      }
+        services: this.selectedServices.map((s) => s.id).join(','),
+      },
     });
   }
 

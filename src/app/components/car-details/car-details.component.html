@@ -1,24 +1,46 @@
 <div class="car-details-page">
   <div class="header-section">
     <button class="back-btn" (click)="goBack()">
-      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        class="icon"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <line x1="19" y1="12" x2="5" y2="12"></line>
         <polyline points="12 19 5 12 12 5"></polyline>
       </svg>
       Back to My Vehicles
     </button>
-    <div class="title-section">
+    <div class="title-section" *ngIf="vehicle">
       <div class="title-with-logo">
-        <img *ngIf="vehicle && getCarLogo(vehicle.make)"
-             [src]="getCarLogo(vehicle.make)"
-             [alt]="vehicle.make + ' Logo'"
-             class="brand-logo"
-             (error)="$event.target.style.display='none'">
-        <h1>{{ vehicle?.year }} {{ vehicle?.make }} {{ vehicle?.model }}</h1>
+        <img
+          *ngIf="getCarLogo(vehicle.make)"
+          [src]="getCarLogo(vehicle.make)"
+          [alt]="vehicle.make + ' Logo'"
+          class="brand-logo"
+          (error)="$event.target.style.display = 'none'"
+        />
+        <h1>{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</h1>
       </div>
     </div>
     <button class="edit-btn" (click)="editCarAndIndicators()">
-      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        class="icon"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
       </svg>
@@ -29,7 +51,17 @@
   <!-- Quick Actions Bar -->
   <div class="quick-actions-bar" *ngIf="vehicle">
     <button class="action-btn primary">
-      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        class="icon"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
         <line x1="16" y1="2" x2="16" y2="6"></line>
         <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -39,7 +71,17 @@
     </button>
     <!-- Export PDF moved to take the place of the removed Add Expense button -->
     <button class="action-btn secondary">
-      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        class="icon"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
         <polyline points="7 10 12 15 17 10"></polyline>
         <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -48,12 +90,20 @@
     </button>
   </div>
 
-  
   <!-- Summary Overview Card -->
   <div class="summary-overview" *ngIf="vehicle">
     <div class="summary-card status-good">
       <div class="summary-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
           <polyline points="22 4 12 14.01 9 11.01"></polyline>
         </svg>
@@ -65,8 +115,19 @@
     </div>
     <div class="summary-card status-attention">
       <div class="summary-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+          ></path>
           <line x1="12" y1="9" x2="12" y2="13"></line>
           <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
@@ -78,7 +139,16 @@
     </div>
     <div class="summary-card status-urgent">
       <div class="summary-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -91,7 +161,16 @@
     </div>
     <div class="summary-card mileage-card">
       <div class="summary-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <circle cx="12" cy="12" r="10"></circle>
           <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
@@ -108,12 +187,21 @@
     <div class="left-column">
       <!-- Car Image with loading state -->
       <div class="car-image-section">
-        <img [src]="vehicle?.imageUrl" [alt]="vehicle?.year + ' ' + vehicle?.make + ' ' + vehicle?.model" class="car-image" loading="eager">
+        <img
+          [src]="vehicle.imageUrl"
+          [alt]="vehicle.year + ' ' + vehicle.make + ' ' + vehicle.model"
+          class="car-image"
+          loading="eager"
+        />
       </div>
 
       <!-- Vehicle Information (vertical list) -->
       <ng-container *ngIf="vehicle as currentVehicle">
-        <app-vehicle-info [vehicleId]="currentVehicle.id" (mileageLoaded)="updateMileage($event)" (infoLoaded)="updateVehicleInfo($event)"></app-vehicle-info>
+        <app-vehicle-info
+          [vehicleId]="currentVehicle.id"
+          (mileageLoaded)="updateMileage($event)"
+          (infoLoaded)="updateVehicleInfo($event)"
+        ></app-vehicle-info>
       </ng-container>
     </div>
 
@@ -124,18 +212,33 @@
         <div id="vehicle-health-status" class="section-header-main">
           <div class="header-left">
             <div class="section-icon-modern">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
               </svg>
             </div>
             <div>
               <h2>Vehicle Health Status</h2>
-              <span class="section-subtitle">{{ getUpcomingServicesCount() }} services needed soon</span>
+              <span class="section-subtitle"
+                >{{ getUpcomingServicesCount() }} services needed soon</span
+              >
             </div>
           </div>
           <!-- Replace health score with Add Indicator CTA -->
           <div class="add-indicator-wrapper">
-            <button class="action-btn primary add-indicator-btn" (click)="editCarAndIndicators()" title="Add or edit indicators">
+            <button
+              class="action-btn primary add-indicator-btn"
+              (click)="editCarAndIndicators()"
+              title="Add or edit indicators"
+            >
               <span class="plus-icon">+</span>
               <span class="btn-text">Add Indicator</span>
             </button>
@@ -144,7 +247,7 @@
 
         <!-- Loading Skeleton for Indicators -->
         <div class="indicators-compact-grid" *ngIf="isLoadingIndicators">
-          <div class="indicator-skeleton" *ngFor="let i of [1,2,3,4,5,6]">
+          <div class="indicator-skeleton" *ngFor="let i of [1, 2, 3, 4, 5, 6]">
             <div class="skeleton-header">
               <div class="skeleton-icon"></div>
               <div class="skeleton-info">
@@ -158,40 +261,86 @@
 
         <!-- Simplified Indicators Grid - Compact View -->
         <div class="indicators-compact-grid" *ngIf="!isLoadingIndicators">
-          <div *ngFor="let indicator of getSortedIndicators(); let i = index"
-               class="indicator-compact-card"
-               [ngClass]="getStatusClass(indicator.status)"
-               (click)="toggleIndicator(i)">
+          <div
+            *ngFor="let indicator of getSortedIndicators(); let i = index"
+            class="indicator-compact-card"
+            [ngClass]="getStatusClass(indicator.status)"
+            (click)="toggleIndicator(i)"
+          >
             <div class="indicator-compact-header">
               <div class="indicator-icon-small">{{ indicator.icon }}</div>
               <div class="indicator-compact-info">
                 <h4>{{ indicator.name }}</h4>
                 <div class="indicator-meta">
                   <span class="next-service">{{ indicator.nextInspectionDate }}</span>
-                  <span class="remaining-mini" [ngClass]="getRemainingUrgencyClass(indicator.remaining, indicator.type)">
+                  <span
+                    class="remaining-mini"
+                    [ngClass]="getRemainingUrgencyClass(indicator.remaining, indicator.type)"
+                  >
                     {{ getRemainingDisplay(indicator) }}
                   </span>
                 </div>
               </div>
               <div class="indicator-status-and-expand">
                 <div class="indicator-status-icon">
-                <svg *ngIf="indicator.status === 'Normal'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <svg *ngIf="indicator.status === 'Warning'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                  <line x1="12" y1="9" x2="12" y2="13"></line>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <svg *ngIf="indicator.status === 'Critical'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
+                  <svg
+                    *ngIf="indicator.status === 'Normal'"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#10b981"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <svg
+                    *ngIf="indicator.status === 'Warning'"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#f59e0b"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                    ></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  <svg
+                    *ngIf="indicator.status === 'Critical'"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#ef4444"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
                 </div>
                 <div class="expand-indicator" [class.expanded]="expandedIndicators.has(i)">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </div>
@@ -202,11 +351,25 @@
             <div class="indicator-compact-details" *ngIf="expandedIndicators.has(i)">
               <div class="detail-row">
                 <span class="detail-label">Status:</span>
-                <span class="detail-value status-text" [ngClass]="getStatusClass(indicator.status)">{{ indicator.status }}</span>
+                <span
+                  class="detail-value status-text"
+                  [ngClass]="getStatusClass(indicator.status)"
+                  >{{ indicator.status }}</span
+                >
               </div>
               <div class="detail-row">
                 <span class="detail-label">
-                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg
+                    class="detail-icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
                     <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
                     <path d="M2 17l10 5 10-5"></path>
                     <path d="M2 12l10 5 10-5"></path>
@@ -217,29 +380,64 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">
-                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg
+                    class="detail-icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
                   Remaining Time:
                 </span>
-                <span class="detail-value">{{ formatTimeDifference(indicator.timeDifference) }}</span>
+                <span class="detail-value">{{
+                  formatTimeDifference(indicator.timeDifference)
+                }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">
-                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg
+                    class="detail-icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
                   Remaining Time (%):
                 </span>
-                <span class="detail-value" [ngClass]="getPercentageClass(indicator.timeDifferenceAsPercentage)">
-                  {{ indicator.timeDifferenceAsPercentage | number:'1.1-1' }}%
+                <span
+                  class="detail-value"
+                  [ngClass]="getPercentageClass(indicator.timeDifferenceAsPercentage)"
+                >
+                  {{ indicator.timeDifferenceAsPercentage | number : '1.1-1' }}%
                 </span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">
-                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg
+                    class="detail-icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
                     <line x1="12" y1="1" x2="12" y2="23"></line>
                     <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                   </svg>
@@ -249,7 +447,17 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">
-                  <svg class="detail-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg
+                    class="detail-icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
@@ -258,10 +466,16 @@
                 <span class="detail-value">{{ getRecommendedProvider(indicator) }}</span>
               </div>
               <div class="detail-actions">
-                <button class="compact-action-btn primary" (click)="scheduleService(indicator); $event.stopPropagation()">
+                <button
+                  class="compact-action-btn primary"
+                  (click)="scheduleService(indicator); $event.stopPropagation()"
+                >
                   Schedule
                 </button>
-                <button class="compact-action-btn secondary" (click)="shareIndicator(indicator); $event.stopPropagation()">
+                <button
+                  class="compact-action-btn secondary"
+                  (click)="shareIndicator(indicator); $event.stopPropagation()"
+                >
                   Share
                 </button>
               </div>
@@ -275,9 +489,19 @@
         <div class="expenses-header">
           <div>
             <h2 class="section-title">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline; vertical-align: middle; margin-right: 8px;">
-                <rect x="2" y="5" width="20" height="14" rx="2"/>
-                <line x1="2" y1="10" x2="22" y2="10"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="display: inline; vertical-align: middle; margin-right: 8px"
+              >
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
               </svg>
               Expenses Tracker
             </h2>
@@ -294,15 +518,32 @@
             <div class="expense-info">
               <h4>{{ expense.name }}</h4>
               <p class="expense-meta">
-                <span class="expense-date">{{ expense.date | date:'MMM dd, yyyy' }}</span>
-                <span class="expense-description" *ngIf="expense.description">{{ expense.description }}</span>
+                <span class="expense-date">{{ expense.date | date : 'MMM dd, yyyy' }}</span>
+                <span class="expense-description" *ngIf="expense.description">{{
+                  expense.description
+                }}</span>
               </p>
             </div>
             <div class="expense-actions">
-              <span class="expense-amount">EGP {{ expense.amount | number:'1.2-2' }}</span>
-              <button class="delete-expense-btn" title="Delete expense" (click)="deleteExpense(expense.id)" [disabled]="expense.id && deletingExpenseIds.has(expense.id)">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="14" height="14" aria-hidden="false" focusable="false">
-                  <path fill="currentColor" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16V64c0-17.7-14.3-32-32-32H320l-7.2-14.3C307.6 6 296.9 0 285 0H163c-11.9 0-22.6 6-27.8 17.7zM53.2 467c1.5 25.7 22.9 45 48.6 45h243.5c25.7 0 47.1-19.3 48.6-45L416 128H32l21.2 339z"/>
+              <span class="expense-amount">EGP {{ expense.amount | number : '1.2-2' }}</span>
+              <button
+                class="delete-expense-btn"
+                title="Delete expense"
+                (click)="deleteExpense(expense.id)"
+                [disabled]="expense.id && deletingExpenseIds.has(expense.id)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  width="14"
+                  height="14"
+                  aria-hidden="false"
+                  focusable="false"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16V64c0-17.7-14.3-32-32-32H320l-7.2-14.3C307.6 6 296.9 0 285 0H163c-11.9 0-22.6 6-27.8 17.7zM53.2 467c1.5 25.7 22.9 45 48.6 45h243.5c25.7 0 47.1-19.3 48.6-45L416 128H32l21.2 339z"
+                  />
                 </svg>
               </button>
             </div>
@@ -317,37 +558,84 @@
             <h3>Add New Expense</h3>
             <button class="modal-close-btn" (click)="closeAddExpenseModal()">✕</button>
           </div>
-          <div *ngIf="expenseMessage" class="alert" [ngClass]="expenseMessageType === 'success' ? 'success' : 'error'">
+          <div
+            *ngIf="expenseMessage"
+            class="alert"
+            [ngClass]="expenseMessageType === 'success' ? 'success' : 'error'"
+          >
             {{ expenseMessage }}
           </div>
           <div class="modal-body">
             <div class="form-group">
               <label for="expense-type">Expense Type</label>
-              <select id="expense-type" [(ngModel)]="newExpenseForm.expenseType" (change)="updateExpenseType(newExpenseForm.expenseType)" class="form-input" required #typeModel="ngModel">
+              <select
+                id="expense-type"
+                [(ngModel)]="newExpenseForm.expenseType"
+                (change)="updateExpenseType(newExpenseForm.expenseType)"
+                class="form-input"
+                required
+                #typeModel="ngModel"
+              >
                 <option value="" disabled>Select Expense Type</option>
                 <option *ngFor="let type of expenseTypes" [value]="type">{{ type }}</option>
               </select>
-              <div class="field-error" *ngIf="submittedExpense && typeModel.invalid">Expense type is required.</div>
+              <div class="field-error" *ngIf="submittedExpense && typeModel.invalid">
+                Expense type is required.
+              </div>
             </div>
             <div class="form-group">
               <label for="expense-date">Date</label>
-              <input id="expense-date" type="date" [(ngModel)]="newExpenseForm.expenseDate" class="form-input" />
+              <input
+                id="expense-date"
+                type="date"
+                [(ngModel)]="newExpenseForm.expenseDate"
+                class="form-input"
+              />
             </div>
             <div class="form-group">
               <label for="expense-amount">Amount (EGP)</label>
-              <input id="expense-amount" type="number" min="0.01" step="0.01" [(ngModel)]="newExpenseForm.amount" placeholder="0.00" class="form-input" required #amountModel="ngModel" />
-              <div class="field-error" *ngIf="submittedExpense && (amountModel.invalid || (newExpenseForm.amount ?? 0) <= 0)">
+              <input
+                id="expense-amount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                [(ngModel)]="newExpenseForm.amount"
+                placeholder="0.00"
+                class="form-input"
+                required
+                #amountModel="ngModel"
+              />
+              <div
+                class="field-error"
+                *ngIf="
+                  submittedExpense && (amountModel.invalid || (newExpenseForm.amount ?? 0) <= 0)
+                "
+              >
                 Amount must be greater than 0.
               </div>
             </div>
             <div class="form-group">
               <label for="expense-desc">Description</label>
-              <textarea id="expense-desc" rows="3" class="form-input" [(ngModel)]="newExpenseForm.description" placeholder="Optional description..."></textarea>
+              <textarea
+                id="expense-desc"
+                rows="3"
+                class="form-input"
+                [(ngModel)]="newExpenseForm.description"
+                placeholder="Optional description..."
+              ></textarea>
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn-cancel" (click)="closeAddExpenseModal()" [disabled]="isSavingExpense">Cancel</button>
-            <button class="btn-save" (click)="addExpense()" [disabled]="isSavingExpense">Add Expense</button>
+            <button
+              class="btn-cancel"
+              (click)="closeAddExpenseModal()"
+              [disabled]="isSavingExpense"
+            >
+              Cancel
+            </button>
+            <button class="btn-save" (click)="addExpense()" [disabled]="isSavingExpense">
+              Add Expense
+            </button>
           </div>
         </div>
       </div>
@@ -356,8 +644,19 @@
       <div class="maintenance-info-section">
         <div class="section-header">
           <div class="section-icon-modern small">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+              ></path>
             </svg>
           </div>
           <span>Maintenance Overview</span>
@@ -367,20 +666,27 @@
         <div class="progress-gauge-container">
           <div class="circular-gauge">
             <svg viewBox="0 0 200 200" class="gauge-svg">
-              <circle cx="100" cy="100" r="85" class="gauge-background"/>
-              <circle cx="100" cy="100" r="85" class="gauge-progress"
-                      [style.stroke-dasharray]="getMileageCircumference()"
-                      [style.stroke-dashoffset]="getMileageProgress()"
-                      [ngClass]="getMileageUrgencyClass()"/>
+              <circle cx="100" cy="100" r="85" class="gauge-background" />
+              <circle
+                cx="100"
+                cy="100"
+                r="85"
+                class="gauge-progress"
+                [style.stroke-dasharray]="getMileageCircumference()"
+                [style.stroke-dashoffset]="getMileageProgress()"
+                [ngClass]="getMileageUrgencyClass()"
+              />
             </svg>
             <div class="gauge-center">
               <div class="gauge-value" (click)="editMileage = !editMileage">
-                <input *ngIf="editMileage"
-                       type="number"
-                       [(ngModel)]="vehicle.currentMileage"
-                       (blur)="saveMileage()"
-                       (keyup.enter)="saveMileage()"
-                       class="mileage-input"/>
+                <input
+                  *ngIf="editMileage"
+                  type="number"
+                  [(ngModel)]="vehicle.currentMileage"
+                  (blur)="saveMileage()"
+                  (keyup.enter)="saveMileage()"
+                  class="mileage-input"
+                />
                 <span *ngIf="!editMileage">{{ vehicle.currentMileage | number }}</span>
               </div>
               <div class="gauge-label">km traveled</div>
@@ -436,7 +742,7 @@
 
         <!-- Schedule Maintenance Button -->
         <button class="schedule-maintenance-btn" (click)="scheduleMaintenanceDialog()">
-          <span style="font-size: 20px;">📅</span>
+          <span style="font-size: 20px">📅</span>
           Schedule Maintenance Now
         </button>
       </div>

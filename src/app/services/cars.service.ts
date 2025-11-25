@@ -6,6 +6,7 @@ import { shareReplay, map } from 'rxjs/operators';
 export interface MakeModels {
   make: string;
   models: string[];
+  CarOrigin: string;
 }
 
 export interface CreateCarIndicatorRequest {
@@ -57,6 +58,7 @@ export class CarsService {
     licensePlate: string;
     transmissionType: string;
     fuelType: string;
+    origin: string;
   }): Observable<any> {
     return this.http.post<any>(`${this.apiBase}/Car`, vehicleData);
   }
@@ -109,6 +111,7 @@ export class CarsService {
     licensePlate: string;
     transmissionType: string;
     fuelType: string;
+    origin: string;
   }): Observable<any> {
     return this.http.put<any>(`${this.apiBase}/Car`, payload);
   }

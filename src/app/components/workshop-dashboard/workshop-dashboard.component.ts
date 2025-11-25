@@ -5,24 +5,15 @@ import { FormsModule } from '@angular/forms';
 import { BookingService } from '../../services/booking.service';
 import { DashboardMetrics, Job } from '../../models/booking.model';
 import { ActionBadgeComponent } from '../shared/action-badge/action-badge.component';
-import { StatCardComponent } from '../shared/stat-card/stat-card.component';
 import { SectionHeaderComponent } from '../shared/section-header/section-header.component';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-workshop-dashboard',
   standalone: true,
-  imports: [
-    CommonModule,
-    NgIf,
-    NgFor,
-    RouterModule,
-    ActionBadgeComponent,
-    StatCardComponent,
-    SectionHeaderComponent
-  ],
+  imports: [CommonModule, NgIf, NgFor, RouterModule, ActionBadgeComponent, SectionHeaderComponent],
   templateUrl: './workshop-dashboard.component.html',
-  styleUrl: './workshop-dashboard.component.css'
+  styleUrl: './workshop-dashboard.component.css',
 })
 export class WorkshopDashboardComponent implements OnInit {
   // Expose Math for template
@@ -38,15 +29,15 @@ export class WorkshopDashboardComponent implements OnInit {
     newBookingRequests: 0,
     quotesAwaitingApproval: 0,
     carsReadyForPickup: 0,
-    activeJobs: 0
+    activeJobs: 0,
   };
 
   isShopOpen: boolean = true;
   shopName: string = 'My Workshop';
-  
+
   upcomingAppointments: any[] = [];
   recentActivity: any[] = [];
-  
+
   currentDate: Date = new Date();
   currentMonth: string = '';
   currentYear: number = 0;
@@ -78,7 +69,7 @@ export class WorkshopDashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading dashboard metrics:', error);
-      }
+      },
     });
   }
 
@@ -86,22 +77,22 @@ export class WorkshopDashboardComponent implements OnInit {
     const now = new Date();
     this.currentMonth = now.toLocaleDateString('en-US', { month: 'long' });
     this.currentYear = now.getFullYear();
-    
+
     // Generate calendar days for current week
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
-    
+
     this.calendarDays = [];
     for (let i = 0; i < 7; i++) {
       const day = new Date(startOfWeek);
       day.setDate(startOfWeek.getDate() + i);
-      
+
       this.calendarDays.push({
         date: day,
         dayName: day.toLocaleDateString('en-US', { weekday: 'short' }),
         dayNumber: day.getDate(),
         isToday: day.toDateString() === now.toDateString(),
-        appointments: this.getAppointmentsForDay(day)
+        appointments: this.getAppointmentsForDay(day),
       });
     }
   }
@@ -110,20 +101,20 @@ export class WorkshopDashboardComponent implements OnInit {
     // Mock appointments - replace with actual data
     const dayOfWeek = date.getDay();
     if (dayOfWeek === 0 || dayOfWeek === 6) return []; // Weekend
-    
+
     return [
       {
         time: '09:00 AM',
         customer: 'Ahmed Hassan',
         vehicle: 'Toyota Camry',
-        service: 'Engine Diagnostics'
+        service: 'Engine Diagnostics',
       },
       {
         time: '11:30 AM',
         customer: 'Sara Mohamed',
         vehicle: 'Honda Civic',
-        service: 'Brake Service'
-      }
+        service: 'Brake Service',
+      },
     ];
   }
 
@@ -136,7 +127,7 @@ export class WorkshopDashboardComponent implements OnInit {
         title: 'New booking request',
         description: 'Ahmed Hassan - Toyota Camry',
         time: '10 minutes ago',
-        color: 'blue'
+        color: 'blue',
       },
       {
         id: '2',
@@ -145,7 +136,7 @@ export class WorkshopDashboardComponent implements OnInit {
         title: 'Quote approved',
         description: 'Sara Mohamed - Brake Service',
         time: '1 hour ago',
-        color: 'green'
+        color: 'green',
       },
       {
         id: '3',
@@ -154,8 +145,8 @@ export class WorkshopDashboardComponent implements OnInit {
         title: 'Car ready for pickup',
         description: 'Mohamed Ali - Oil Change',
         time: '2 hours ago',
-        color: 'purple'
-      }
+        color: 'purple',
+      },
     ];
   }
 
@@ -186,7 +177,7 @@ export class WorkshopDashboardComponent implements OnInit {
       style: 'currency',
       currency: 'EGP',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   }
 
@@ -206,11 +197,11 @@ export class WorkshopDashboardComponent implements OnInit {
   }
 
   getCurrentDate(): string {
-    return new Date().toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   }
 
@@ -222,6 +213,6 @@ export class WorkshopDashboardComponent implements OnInit {
     const totalDays = this.calendarDays.length;
     const slotsPerDay = 8; // Assuming 8 appointment slots per day
     const bookedSlots = this.getTotalAppointments();
-    return (totalDays * slotsPerDay) - bookedSlots;
+    return totalDays * slotsPerDay - bookedSlots;
   }
 }
