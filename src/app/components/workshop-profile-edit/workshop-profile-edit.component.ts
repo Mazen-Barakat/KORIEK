@@ -10,12 +10,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { forkJoin, Observable, of, Subscription,throwError, TimeoutError } from 'rxjs';
-import { finalize, map, switchMap, tap, filter ,timeout, catchError} from 'rxjs/operators';
+import { forkJoin, Observable, of, Subscription, throwError, TimeoutError } from 'rxjs';
+import { finalize, map, switchMap, tap, filter, timeout, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
-import { GeolocationService, GeolocationPosition, GeolocationError } from '../../services/geolocation.service';
+import {
+  GeolocationService,
+  GeolocationPosition,
+  GeolocationError,
+} from '../../services/geolocation.service';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { take } from 'rxjs/operators';
+import { HttpEventType } from '@angular/common/http';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
 import { ToastComponent } from '../shared/toast/toast.component';
 import { CanComponentDeactivate } from '../../guards/unsaved-changes.guard';
@@ -86,6 +91,14 @@ export class WorkshopProfileEditComponent
   showDeleteWorkingHourModal: boolean = false;
   deleteWorkingHourIndex: number = -1;
   isDeletingWorkingHour: boolean = false;
+  // Image delete modal state
+  showDeleteImageModal: boolean = false;
+  imagePendingDelete: { id?: number; url: string } | null = null;
+  isDeletingImage: boolean = false;
+  // Upload progress state for explicit Upload button
+  uploadInProgress: boolean = false;
+  uploadProgress: number = 0;
+  uploadError: string = '';
 
   // Backend base URL used to build absolute image URLs when backend returns relative paths
   private readonly backendBaseUrl = 'https://localhost:44316';
@@ -98,8 +111,7 @@ export class WorkshopProfileEditComponent
     private authService: AuthService,
     private workshopProfileService: WorkshopProfileService,
     private router: Router,
-    private route: ActivatedRoute
-    ,
+    private route: ActivatedRoute,
     private geolocationService: GeolocationService,
     private cd: ChangeDetectorRef,
     private ngZone: NgZone
@@ -138,30 +150,34 @@ export class WorkshopProfileEditComponent
     this.workshopId = routeId || user?.id || user?.workshopId || '';
 
     // Enable dev button if query param dev=1 or dev_modal=1, or if localStorage flag is set
-    const devParam = this.route.snapshot.queryParamMap.get('dev') || this.route.snapshot.queryParamMap.get('dev_modal');
-    this.showDevButton = devParam === '1' || localStorage.getItem('dev_show_location_button') === 'true';
+    const devParam =
+      this.route.snapshot.queryParamMap.get('dev') ||
+      this.route.snapshot.queryParamMap.get('dev_modal');
+    this.showDevButton =
+      devParam === '1' || localStorage.getItem('dev_show_location_button') === 'true';
 
     if (this.workshopId) {
       this.loadWorkshopProfile();
 
       // Also reload profile when user navigates back to this route (handles route reuse)
       try {
-        this.routerEventsSub = this.router.events.pipe(
-          filter((e) => e instanceof NavigationEnd),
-          filter((e: any) => {
-            const nav = e as NavigationEnd;
-            const url = (nav && (nav.urlAfterRedirects || nav.url)) || '';
-            // Only reload when navigating to the workshop-profile-edit route
-            return url.indexOf('/workshop-profile-edit') !== -1;
-          })
-        ).subscribe(() => {
-          // Refresh profile data so images and previews are applied immediately
-          this.loadWorkshopProfile();
-        });
+        this.routerEventsSub = this.router.events
+          .pipe(
+            filter((e) => e instanceof NavigationEnd),
+            filter((e: any) => {
+              const nav = e as NavigationEnd;
+              const url = (nav && (nav.urlAfterRedirects || nav.url)) || '';
+              // Only reload when navigating to the workshop-profile-edit route
+              return url.indexOf('/workshop-profile-edit') !== -1;
+            })
+          )
+          .subscribe(() => {
+            // Refresh profile data so images and previews are applied immediately
+            this.loadWorkshopProfile();
+          });
       } catch (e) {
         // ignore
       }
-
     } else {
       this.errorMessage = 'Unable to identify workshop. Please log in again.';
     }
@@ -273,6 +289,12 @@ export class WorkshopProfileEditComponent
           // Load working hours from API
           if (data.id) {
             this.loadWorkingHours(data.id);
+            // Load gallery images (photos) using WorkShopPhoto controller
+            try {
+              this.loadGalleryImages(Number(data.id));
+            } catch (e) {
+              console.warn('Failed to load gallery images:', e);
+            }
           }
 
           // Populate cities based on governorate
@@ -318,7 +340,10 @@ export class WorkshopProfileEditComponent
 
         // Check if backend filtered out closed days
         if (apiHours && apiHours.length > 0) {
-          console.log('Days returned:', apiHours.map((h: any) => `${h.day} (isClosed: ${h.isClosed})`));
+          console.log(
+            'Days returned:',
+            apiHours.map((h: any) => `${h.day} (isClosed: ${h.isClosed})`)
+          );
         }
 
         // Use NgZone to ensure Angular picks up the change
@@ -475,59 +500,64 @@ export class WorkshopProfileEditComponent
     );
 
     // Send PUT request with FormData
-    this.workshopProfileService.updateMyWorkshopProfile(fd).pipe(
-      finalize(() => {
-        // Run reset inside Angular zone so change detection runs reliably.
-        this.ngZone.run(() => {
-          try { clearTimeout(backupTimeout); } catch {}
-          this.isLoading = false;
-          this.cd.detectChanges();
-        });
-      })
-    ).subscribe({
-      next: (response) => {
-        console.log('Profile update response received:', response);
-        // Always call completeProfileUpdate to reset the UI state
-        this.completeProfileUpdate();
-      },
-      error: (err: any) => {
-        console.error('Error updating workshop profile:', err);
-        console.error('Validation errors:', err.error?.errors);
-        console.error('Error details:', JSON.stringify(err.error, null, 2));
+    this.workshopProfileService
+      .updateMyWorkshopProfile(fd)
+      .pipe(
+        finalize(() => {
+          // Run reset inside Angular zone so change detection runs reliably.
+          this.ngZone.run(() => {
+            try {
+              clearTimeout(backupTimeout);
+            } catch {}
+            this.isLoading = false;
+            this.cd.detectChanges();
+          });
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('Profile update response received:', response);
+          // Always call completeProfileUpdate to reset the UI state
+          this.completeProfileUpdate();
+        },
+        error: (err: any) => {
+          console.error('Error updating workshop profile:', err);
+          console.error('Validation errors:', err.error?.errors);
+          console.error('Error details:', JSON.stringify(err.error, null, 2));
 
-        const errorMessages: string[] = [];
-        if (err.error && err.error.errors) {
-          const validationErrors = err.error.errors;
-          for (const key in validationErrors) {
-            if (Object.prototype.hasOwnProperty.call(validationErrors, key)) {
-              const messages = Array.isArray(validationErrors[key])
-                ? validationErrors[key]
-                : [validationErrors[key]];
-              errorMessages.push(`${key}: ${messages.join(', ')}`);
+          const errorMessages: string[] = [];
+          if (err.error && err.error.errors) {
+            const validationErrors = err.error.errors;
+            for (const key in validationErrors) {
+              if (Object.prototype.hasOwnProperty.call(validationErrors, key)) {
+                const messages = Array.isArray(validationErrors[key])
+                  ? validationErrors[key]
+                  : [validationErrors[key]];
+                errorMessages.push(`${key}: ${messages.join(', ')}`);
+              }
             }
           }
-        }
 
-        if (errorMessages.length > 0) {
-          this.errorMessage = 'Please correct the following:\n' + errorMessages.join('\n');
-        } else if (err.error?.title) {
-          this.errorMessage = err.error.title;
-        } else if (err.error?.message) {
-          this.errorMessage = err.error.message;
-        } else if (err.message) {
-          this.errorMessage = err.message;
-        } else {
-          this.errorMessage = 'Failed to update profile. Please try again.';
-        }
+          if (errorMessages.length > 0) {
+            this.errorMessage = 'Please correct the following:\n' + errorMessages.join('\n');
+          } else if (err.error?.title) {
+            this.errorMessage = err.error.title;
+          } else if (err.error?.message) {
+            this.errorMessage = err.error.message;
+          } else if (err.message) {
+            this.errorMessage = err.message;
+          } else {
+            this.errorMessage = 'Failed to update profile. Please try again.';
+          }
 
-        // Ensure UI updates occur inside Angular zone and detect changes after toast
-        this.ngZone.run(() => {
-          this.isLoading = false;
-          if (this.toast) this.toast.show(this.errorMessage, 'error');
-          this.cd.detectChanges();
-        });
-      },
-    });
+          // Ensure UI updates occur inside Angular zone and detect changes after toast
+          this.ngZone.run(() => {
+            this.isLoading = false;
+            if (this.toast) this.toast.show(this.errorMessage, 'error');
+            this.cd.detectChanges();
+          });
+        },
+      });
   }
 
   /**
@@ -580,7 +610,7 @@ export class WorkshopProfileEditComponent
           console.error('Error updating profile via API:', err);
           this.isLoading = false;
           if (this.toast) this.toast.show('Failed to update profile. See console.', 'error');
-        }
+        },
       });
     } catch (e) {
       console.error('Failed to prepare profile update:', e);
@@ -596,7 +626,7 @@ export class WorkshopProfileEditComponent
     if (this.toast) {
       this.toast.show('Workshop profile updated successfully!', 'success', 2000);
     }
-    
+
     // Ensure UI updates immediately after showing toast
     try {
       this.ngZone.run(() => this.cd.detectChanges());
@@ -621,7 +651,9 @@ export class WorkshopProfileEditComponent
       try {
         this.ngZone.run(() => {
           this.navigateToProfileIfAllowed(this.workshopId);
-          try { this.cd.detectChanges(); } catch (e) {}
+          try {
+            this.cd.detectChanges();
+          } catch (e) {}
         });
       } catch (e) {}
     }, 2000);
@@ -667,7 +699,7 @@ export class WorkshopProfileEditComponent
     dayName: 'Monday',
     openTime: '09:00',
     closeTime: '17:00',
-    isClosed: false
+    isClosed: false,
   };
   availableDays: any[] = [];
 
@@ -678,12 +710,12 @@ export class WorkshopProfileEditComponent
     { number: 3, name: 'Thursday' },
     { number: 4, name: 'Friday' },
     { number: 5, name: 'Saturday' },
-    { number: 6, name: 'Sunday' }
+    { number: 6, name: 'Sunday' },
   ];
 
   updateAvailableDays(): void {
     const usedDayNumbers = this.profileData.workingHours.map((h: any) => h.dayNumber);
-    this.availableDays = this.daysWithNumbers.filter(day => !usedDayNumbers.includes(day.number));
+    this.availableDays = this.daysWithNumbers.filter((day) => !usedDayNumbers.includes(day.number));
     if (this.availableDays.length > 0) {
       this.newWorkingHour.dayNumber = this.availableDays[0].number;
       this.newWorkingHour.dayName = this.availableDays[0].name;
@@ -708,12 +740,12 @@ export class WorkshopProfileEditComponent
       dayName: 'Monday',
       openTime: '09:00',
       closeTime: '17:00',
-      isClosed: false
+      isClosed: false,
     };
   }
 
   onDayChange(): void {
-    const selected = this.daysWithNumbers.find(d => d.number === this.newWorkingHour.dayNumber);
+    const selected = this.daysWithNumbers.find((d) => d.number === this.newWorkingHour.dayNumber);
     if (selected) {
       this.newWorkingHour.dayName = selected.name;
     }
@@ -787,71 +819,77 @@ export class WorkshopProfileEditComponent
       from: openTime,
       to: closeTime,
       isClosed: this.newWorkingHour.isClosed,
-      workShopProfileId: parseInt(this.profileData.id!)
+      workShopProfileId: parseInt(this.profileData.id!),
     };
 
     console.log('Saving working hour immediately:', workingHourData);
 
-    this.workshopProfileService.createWorkingHours(workingHourData).pipe(
-      timeout(5000),
-      catchError((error) => {
-        console.error('Error saving working hour:', error);
-        clearTimeout(emergencyTimeout);
-        return throwError(() => error);
-      })
-    ).subscribe({
-      next: (response) => {
-        console.log('====== ADD WORKING HOUR RESPONSE ======');
-        console.log('Full response:', JSON.stringify(response, null, 2));
-        console.log('Response.success:', response?.success);
-        console.log('=======================================');
+    this.workshopProfileService
+      .createWorkingHours(workingHourData)
+      .pipe(
+        timeout(5000),
+        catchError((error) => {
+          console.error('Error saving working hour:', error);
+          clearTimeout(emergencyTimeout);
+          return throwError(() => error);
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('====== ADD WORKING HOUR RESPONSE ======');
+          console.log('Full response:', JSON.stringify(response, null, 2));
+          console.log('Response.success:', response?.success);
+          console.log('=======================================');
 
-        clearTimeout(emergencyTimeout);
-        console.log('✅ Resetting isSavingWorkingHours to false');
+          clearTimeout(emergencyTimeout);
+          console.log('✅ Resetting isSavingWorkingHours to false');
 
-        // Use NgZone to ensure Angular picks up the change
-        this.ngZone.run(() => {
-          this.isSavingWorkingHours = false;
-          console.log('isSavingWorkingHours is now:', this.isSavingWorkingHours);
+          // Use NgZone to ensure Angular picks up the change
+          this.ngZone.run(() => {
+            this.isSavingWorkingHours = false;
+            console.log('isSavingWorkingHours is now:', this.isSavingWorkingHours);
 
-          if (response && response.success === true) {
-            console.log('✅ Success - closing form and reloading');
-            if (this.toast) {
-              this.toast.show(response.message || `${this.newWorkingHour.dayName} added successfully!`, 'success');
+            if (response && response.success === true) {
+              console.log('✅ Success - closing form and reloading');
+              if (this.toast) {
+                this.toast.show(
+                  response.message || `${this.newWorkingHour.dayName} added successfully!`,
+                  'success'
+                );
+              }
+
+              // Close the form
+              this.isAddingWorkingHour = false;
+
+              // Force change detection
+              this.cd.detectChanges();
+
+              // Reload working hours to get fresh data with IDs
+              this.loadWorkingHours(parseInt(this.profileData.id!));
+            } else {
+              console.error('❌ Response success is false:', response);
+              if (this.toast) {
+                this.toast.show(response?.message || 'Failed to add working hour', 'error');
+              }
             }
+          });
+        },
+        error: (error) => {
+          console.error('❌ Error adding working hour:', error);
+          clearTimeout(emergencyTimeout);
 
-            // Close the form
-            this.isAddingWorkingHour = false;
-
-            // Force change detection
+          // Use NgZone to ensure Angular picks up the change
+          this.ngZone.run(() => {
+            this.isSavingWorkingHours = false;
             this.cd.detectChanges();
-
-            // Reload working hours to get fresh data with IDs
-            this.loadWorkingHours(parseInt(this.profileData.id!));
-          } else {
-            console.error('❌ Response success is false:', response);
             if (this.toast) {
-              this.toast.show(response?.message || 'Failed to add working hour', 'error');
+              const msg =
+                error instanceof TimeoutError ? 'Request timed out' : 'Failed to add working hour';
+              this.toast.show(msg, 'error');
             }
-          }
-        });
-      },
-      error: (error) => {
-        console.error('❌ Error adding working hour:', error);
-        clearTimeout(emergencyTimeout);
-
-        // Use NgZone to ensure Angular picks up the change
-        this.ngZone.run(() => {
-          this.isSavingWorkingHours = false;
-          this.cd.detectChanges();
-          if (this.toast) {
-            const msg = error instanceof TimeoutError ? 'Request timed out' : 'Failed to add working hour';
-            this.toast.show(msg, 'error');
-          }
-        });
-      }
-    });
-
+          });
+        },
+      });
   }
 
   removeWorkingHour(index: number): void {
@@ -889,79 +927,88 @@ export class WorkshopProfileEditComponent
         });
       }, 5000);
 
-      this.workshopProfileService.deleteWorkingHour(workingHour.id).pipe(
-        timeout(4000), // 4 second timeout for the HTTP request
-        catchError((error) => {
-          console.error('Delete error caught:', error);
-          if (error instanceof TimeoutError) {
-            console.error('Request timed out');
-          }
-          return throwError(() => error);
-        })
-      ).subscribe({
-        next: (response) => {
-          console.log('====== DELETE WORKING HOUR RESPONSE ======');
-          console.log('Full response:', JSON.stringify(response, null, 2));
-          console.log('Response type:', typeof response);
-          console.log('Response.success:', response?.success);
-          console.log('Response.message:', response?.message);
-          console.log('Response.data:', response?.data);
-          console.log('==========================================');
+      this.workshopProfileService
+        .deleteWorkingHour(workingHour.id)
+        .pipe(
+          timeout(4000), // 4 second timeout for the HTTP request
+          catchError((error) => {
+            console.error('Delete error caught:', error);
+            if (error instanceof TimeoutError) {
+              console.error('Request timed out');
+            }
+            return throwError(() => error);
+          })
+        )
+        .subscribe({
+          next: (response) => {
+            console.log('====== DELETE WORKING HOUR RESPONSE ======');
+            console.log('Full response:', JSON.stringify(response, null, 2));
+            console.log('Response type:', typeof response);
+            console.log('Response.success:', response?.success);
+            console.log('Response.message:', response?.message);
+            console.log('Response.data:', response?.data);
+            console.log('==========================================');
 
-          // Clear emergency timeout
-          clearTimeout(emergencyTimeout);
+            // Clear emergency timeout
+            clearTimeout(emergencyTimeout);
 
-          // Use NgZone to ensure Angular picks up the change
-          this.ngZone.run(() => {
-            // Check if response indicates success
-            if (response && response.success === true) {
-              console.log('✅ Working hour deleted from database:', workingHour.id);
-              if (this.toast) {
-                this.toast.show(response.message || 'Working hour removed successfully', 'success');
+            // Use NgZone to ensure Angular picks up the change
+            this.ngZone.run(() => {
+              // Check if response indicates success
+              if (response && response.success === true) {
+                console.log('✅ Working hour deleted from database:', workingHour.id);
+                if (this.toast) {
+                  this.toast.show(
+                    response.message || 'Working hour removed successfully',
+                    'success'
+                  );
+                }
+                // Reset modal state
+                this.isDeletingWorkingHour = false;
+                this.showDeleteWorkingHourModal = false;
+                this.deleteWorkingHourIndex = -1;
+
+                // Force change detection
+                this.cd.detectChanges();
+
+                // Reload working hours from database to get fresh data with IDs
+                if (this.profileData.id) {
+                  console.log('Reloading working hours after delete...');
+                  this.loadWorkingHours(parseInt(this.profileData.id));
+                }
+              } else {
+                console.error('❌ Delete response indicates failure:', response);
+                this.isDeletingWorkingHour = false;
+                this.showDeleteWorkingHourModal = false;
+                this.deleteWorkingHourIndex = -1;
+                this.cd.detectChanges();
+                if (this.toast) {
+                  const errorMsg = response?.message || 'Failed to remove working hour';
+                  this.toast.show(errorMsg, 'error');
+                }
               }
-              // Reset modal state
+            });
+          },
+          error: (error) => {
+            console.error('❌ Error deleting working hour:', error);
+            clearTimeout(emergencyTimeout);
+
+            // Use NgZone to ensure Angular picks up the change
+            this.ngZone.run(() => {
               this.isDeletingWorkingHour = false;
               this.showDeleteWorkingHourModal = false;
               this.deleteWorkingHourIndex = -1;
-
-              // Force change detection
-              this.cd.detectChanges();
-
-              // Reload working hours from database to get fresh data with IDs
-              if (this.profileData.id) {
-                console.log('Reloading working hours after delete...');
-                this.loadWorkingHours(parseInt(this.profileData.id));
-              }
-            } else {
-              console.error('❌ Delete response indicates failure:', response);
-              this.isDeletingWorkingHour = false;
-              this.showDeleteWorkingHourModal = false;
-              this.deleteWorkingHourIndex = -1;
               this.cd.detectChanges();
               if (this.toast) {
-                const errorMsg = response?.message || 'Failed to remove working hour';
-                this.toast.show(errorMsg, 'error');
+                const msg =
+                  error instanceof TimeoutError
+                    ? 'Request timed out'
+                    : 'Failed to remove working hour';
+                this.toast.show(msg, 'error');
               }
-            }
-          });
-        },
-        error: (error) => {
-          console.error('❌ Error deleting working hour:', error);
-          clearTimeout(emergencyTimeout);
-
-          // Use NgZone to ensure Angular picks up the change
-          this.ngZone.run(() => {
-            this.isDeletingWorkingHour = false;
-            this.showDeleteWorkingHourModal = false;
-            this.deleteWorkingHourIndex = -1;
-            this.cd.detectChanges();
-            if (this.toast) {
-              const msg = error instanceof TimeoutError ? 'Request timed out' : 'Failed to remove working hour';
-              this.toast.show(msg, 'error');
-            }
-          });
-        }
-      });
+            });
+          },
+        });
     } else {
       // Not saved yet, just remove from local array
       console.log('Removing unsaved working hour at index:', index);
@@ -983,7 +1030,7 @@ export class WorkshopProfileEditComponent
     if (this.profileData.workingHours.length === 0) {
       return false;
     }
-    return this.profileData.workingHours.every(hour => hour.id !== undefined && hour.id !== null);
+    return this.profileData.workingHours.every((hour) => hour.id !== undefined && hour.id !== null);
   }
 
   saveWorkingHours(): void {
@@ -1025,34 +1072,40 @@ export class WorkshopProfileEditComponent
         from: from,
         to: to,
         isClosed: hour.isClosed,
-        workShopProfileId: parseInt(this.profileData.id!)
+        workShopProfileId: parseInt(this.profileData.id!),
       };
     });
 
     console.log('Saving working hours:', apiWorkingHours);
 
     // First, delete all existing working hours to avoid duplicates
-    this.workshopProfileService.deleteAllWorkingHours(parseInt(this.profileData.id!)).pipe(
-      finalize(() => {
-        console.log('Delete operation finalized, proceeding with creation');
-      })
-    ).subscribe({
-      next: (deleteResponse) => {
-        console.log('====== DELETE ALL WORKING HOURS RESPONSE ======');
-        console.log('Full response:', JSON.stringify(deleteResponse, null, 2));
-        console.log('Response type:', typeof deleteResponse);
-        console.log('Response.success:', deleteResponse?.success);
-        console.log('Response.message:', deleteResponse?.message);
-        console.log('===============================================');
-        console.log('Existing working hours deleted, now creating new ones');
-        this.createWorkingHoursSequentially(apiWorkingHours, saveEmergencyTimeout);
-      },
-      error: (error) => {
-        console.log('No existing working hours to delete (or delete failed), proceeding with creation:', error);
-        // Even if delete fails (no hours exist), proceed with creation
-        this.createWorkingHoursSequentially(apiWorkingHours, saveEmergencyTimeout);
-      }
-    });
+    this.workshopProfileService
+      .deleteAllWorkingHours(parseInt(this.profileData.id!))
+      .pipe(
+        finalize(() => {
+          console.log('Delete operation finalized, proceeding with creation');
+        })
+      )
+      .subscribe({
+        next: (deleteResponse) => {
+          console.log('====== DELETE ALL WORKING HOURS RESPONSE ======');
+          console.log('Full response:', JSON.stringify(deleteResponse, null, 2));
+          console.log('Response type:', typeof deleteResponse);
+          console.log('Response.success:', deleteResponse?.success);
+          console.log('Response.message:', deleteResponse?.message);
+          console.log('===============================================');
+          console.log('Existing working hours deleted, now creating new ones');
+          this.createWorkingHoursSequentially(apiWorkingHours, saveEmergencyTimeout);
+        },
+        error: (error) => {
+          console.log(
+            'No existing working hours to delete (or delete failed), proceeding with creation:',
+            error
+          );
+          // Even if delete fails (no hours exist), proceed with creation
+          this.createWorkingHoursSequentially(apiWorkingHours, saveEmergencyTimeout);
+        },
+      });
   }
 
   private createWorkingHoursSequentially(apiWorkingHours: any[], emergencyTimeout: any): void {
@@ -1091,7 +1144,8 @@ export class WorkshopProfileEditComponent
     apiWorkingHours.forEach((hour, index) => {
       console.log(`Sending working hour ${index + 1}/${totalRequests}:`, hour);
 
-      this.workshopProfileService.createWorkingHours(hour)
+      this.workshopProfileService
+        .createWorkingHours(hour)
         .pipe(
           // Add timeout to each individual request
           finalize(() => {
@@ -1113,7 +1167,10 @@ export class WorkshopProfileEditComponent
             if (response && response.success === true) {
               console.log(`✅ Working hour ${index + 1}/${totalRequests} created successfully`);
             } else {
-              console.error(`❌ Working hour ${index + 1}/${totalRequests} response indicates failure:`, response);
+              console.error(
+                `❌ Working hour ${index + 1}/${totalRequests} response indicates failure:`,
+                response
+              );
               hasError = true;
               const errorMsg = response?.message || `Failed to save ${hour.day}`;
               errorMessages.push(errorMsg);
@@ -1145,7 +1202,10 @@ export class WorkshopProfileEditComponent
                 this.loadWorkingHours(parseInt(this.profileData.id!));
 
                 if (this.toast) {
-                  const errorMsg = errorMessages.length > 0 ? errorMessages.join(', ') : 'Some working hours failed to save';
+                  const errorMsg =
+                    errorMessages.length > 0
+                      ? errorMessages.join(', ')
+                      : 'Some working hours failed to save';
                   this.toast.show(`Partial save: ${errorMsg}`, 'warning');
                 }
               }
@@ -1201,7 +1261,7 @@ export class WorkshopProfileEditComponent
                 this.toast.show(`Error: ${errorMsg}`, 'error');
               }
             }
-          }
+          },
         });
     });
   }
@@ -1308,13 +1368,32 @@ export class WorkshopProfileEditComponent
 
   onGalleryFilesSelected(event: any): void {
     const files: File[] = Array.from(event.target.files);
-    this.selectedGalleryFiles.push(...files);
+    // Ensure change detection and UI updates happen immediately
+    try {
+      this.ngZone.run(() => {
+        this.selectedGalleryFiles.push(...files);
+      });
+    } catch {
+      this.selectedGalleryFiles.push(...files);
+    }
 
-    // Create preview URLs
+    // Create preview URLs and push them inside NgZone so Angular updates the view right away
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        this.galleryPreviewUrls.push(e.target.result);
+        try {
+          this.ngZone.run(() => {
+            this.galleryPreviewUrls.push(e.target.result);
+            try {
+              this.cd.detectChanges();
+            } catch {}
+          });
+        } catch {
+          this.galleryPreviewUrls.push(e.target.result);
+          try {
+            this.cd.detectChanges();
+          } catch {}
+        }
       };
       reader.readAsDataURL(file);
     });
@@ -1323,23 +1402,85 @@ export class WorkshopProfileEditComponent
   removeGalleryPreview(index: number): void {
     this.selectedGalleryFiles.splice(index, 1);
     this.galleryPreviewUrls.splice(index, 1);
+    if (this.toast) this.toast.show('Removed image from queue', 'info');
   }
 
-  removeExistingGalleryImage(imageUrl: string): void {
-    if (confirm('Are you sure you want to remove this image?')) {
-      this.workshopProfileService.deleteGalleryImage(this.workshopId, imageUrl).subscribe({
+  removeExistingGalleryImage(image: { id?: number; url: string }): void {
+    // keep for backward compatibility, but prefer modal-based flow
+    this.promptDeleteGalleryImage(image);
+  }
+
+  promptDeleteGalleryImage(image: { id?: number; url: string }): void {
+    this.imagePendingDelete = image;
+    this.showDeleteImageModal = true;
+  }
+
+  cancelDeleteGalleryImage(): void {
+    this.imagePendingDelete = null;
+    this.showDeleteImageModal = false;
+  }
+
+  confirmDeleteGalleryImage(): void {
+    if (!this.imagePendingDelete) return;
+    const image = this.imagePendingDelete;
+    this.isDeletingImage = true;
+
+    const finish = () => {
+      try {
+        this.ngZone.run(() => {
+          this.isDeletingImage = false;
+          this.imagePendingDelete = null;
+          this.showDeleteImageModal = false;
+          try {
+            this.cd.detectChanges();
+          } catch {}
+        });
+      } catch (e) {
+        this.isDeletingImage = false;
+        this.imagePendingDelete = null;
+        this.showDeleteImageModal = false;
+        try {
+          this.cd.detectChanges();
+        } catch {}
+      }
+    };
+
+    // If photo has an ID, call delete-by-id
+    if (image.id && Number(image.id) > 0) {
+      this.workshopProfileService.deleteWorkShopPhotoById(Number(image.id)).subscribe({
         next: () => {
-          const index = this.profileData.galleryImages.indexOf(imageUrl);
-          if (index > -1) {
-            this.profileData.galleryImages.splice(index, 1);
-          }
+          const idx = this.profileData.galleryImages.findIndex(
+            (g) => g.url === image.url || g.id === image.id
+          );
+          if (idx > -1) this.profileData.galleryImages.splice(idx, 1);
+          if (this.toast) this.toast.show('Image removed', 'success');
+          finish();
         },
         error: (error) => {
-          console.error('Error removing image:', error);
+          console.error('Error removing image by id:', error);
           this.errorMessage = 'Failed to remove image';
+          if (this.toast) this.toast.show('Failed to remove image. See console.', 'error');
+          finish();
         },
       });
+      return;
     }
+
+    // Fallback - delete by URL
+    this.workshopProfileService.deleteGalleryImage(this.workshopId, image.url).subscribe({
+      next: () => {
+        const idx = this.profileData.galleryImages.findIndex((g) => g.url === image.url);
+        if (idx > -1) this.profileData.galleryImages.splice(idx, 1);
+        if (this.toast) this.toast.show('Image removed', 'success');
+        finish();
+      },
+      error: (error) => {
+        console.error('Error removing image (fallback):', error);
+        this.errorMessage = 'Failed to remove image';
+        if (this.toast) this.toast.show('Failed to remove image. See console.', 'error');
+        finish();
+      },
+    });
   }
 
   private buildUploadTasks(): Observable<any>[] {
@@ -1393,7 +1534,9 @@ export class WorkshopProfileEditComponent
       } catch (err) {
         // Fallback: assign and mark for change detection
         this.logoPreviewUrl = e.target.result;
-        try { this.cd.detectChanges(); } catch {}
+        try {
+          this.cd.detectChanges();
+        } catch {}
       }
     };
     reader.readAsDataURL(file);
@@ -1432,7 +1575,9 @@ export class WorkshopProfileEditComponent
           });
         } catch (err) {
           this.licensePreviewUrl = e.target.result;
-          try { this.cd.detectChanges(); } catch {}
+          try {
+            this.cd.detectChanges();
+          } catch {}
         }
       };
       reader.readAsDataURL(file);
@@ -1448,14 +1593,23 @@ export class WorkshopProfileEditComponent
     if (!path) return '';
     const trimmed = path.trim();
     if (!trimmed) return '';
+    // Absolute URL already
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       return trimmed;
     }
-    // If server returned a relative path like '/uploads/..', prepend backend base
+
+    // Leading slash -> treat as absolute path on backend host
     if (trimmed.startsWith('/')) {
       return `${this.backendBaseUrl}${trimmed}`;
     }
-    return `${this.backendBaseUrl}/${trimmed}`;
+
+    // If value contains a slash treat it as a relative path and append to backend base
+    if (trimmed.indexOf('/') !== -1) {
+      return `${this.backendBaseUrl}/${trimmed}`;
+    }
+
+    // If it's a bare filename like "be774448d5b5.jpg" assume uploads folder
+    return `${this.backendBaseUrl}/uploads/${trimmed}`;
   }
 
   private createLogoUploadTask(): Observable<any> | null {
@@ -1469,18 +1623,199 @@ export class WorkshopProfileEditComponent
     }
 
     const filesToUpload = [...this.selectedGalleryFiles];
+    const idNum = Number(this.workshopId);
+    const idForApi = Number.isFinite(idNum) && idNum > 0 ? idNum : 0;
+    if (idForApi === 0) {
+      // No valid workshop id - do not attempt upload
+      if (this.toast) this.toast.show('Cannot upload: missing workshop id', 'error');
+      console.warn('Skipping gallery upload: invalid workshop id', this.workshopId);
+      return null;
+    }
 
-    return this.workshopProfileService.uploadGalleryImages(this.workshopId, filesToUpload).pipe(
+    return this.workshopProfileService.uploadWorkShopPhotos(idForApi, filesToUpload).pipe(
       tap((response) => {
-        const uploadedUrls = response?.data?.imageUrls ?? response?.imageUrls;
-        if (Array.isArray(uploadedUrls) && uploadedUrls.length > 0) {
-          this.profileData.galleryImages.push(...uploadedUrls);
+        const payload = response?.data ?? response ?? {};
+        let uploaded: any[] = [];
+
+        if (Array.isArray(payload)) uploaded = payload as any[];
+        else if (Array.isArray(payload.imageUrls)) uploaded = payload.imageUrls;
+        else if (Array.isArray(payload.photos)) uploaded = payload.photos;
+        else if (Array.isArray(payload.data)) uploaded = payload.data;
+
+        // Normalize uploaded items into objects with {id?, url}
+        const mapped = uploaded.map((it: any) => {
+          if (typeof it === 'string') return { url: this.getFullBackendUrl(it) };
+          const url =
+            it.url ||
+            it.photoUrl ||
+            it.imageUrl ||
+            it.fileUrl ||
+            it.path ||
+            it.filePath ||
+            it.fileName ||
+            '';
+          return { id: it.id, url: this.getFullBackendUrl(url) };
+        });
+
+        if (mapped.length > 0) {
+          this.profileData.galleryImages.push(...mapped);
         }
 
         this.selectedGalleryFiles = [];
         this.galleryPreviewUrls = [];
       })
     );
+  }
+
+  /**
+   * Explicit upload action triggered by the 'Upload Selected' button.
+   * Shows progress and adds uploaded images to `profileData.galleryImages`.
+   */
+  uploadSelectedGallery(): void {
+    if (!this.selectedGalleryFiles || this.selectedGalleryFiles.length === 0) return;
+
+    // Prefer numeric id from loaded profile if available
+    const profileIdNum = Number(this.profileData?.id);
+    const routeIdNum = Number(this.workshopId);
+    const idForApi =
+      Number.isFinite(profileIdNum) && profileIdNum > 0
+        ? profileIdNum
+        : Number.isFinite(routeIdNum) && routeIdNum > 0
+        ? routeIdNum
+        : 0;
+
+    if (idForApi === 0) {
+      if (this.toast) this.toast.show('Cannot upload: missing workshop id', 'error');
+      console.warn('Skipping uploadSelectedGallery: invalid id', {
+        profileDataId: this.profileData?.id,
+        workshopId: this.workshopId,
+      });
+      return;
+    }
+
+    this.uploadInProgress = true;
+    this.uploadProgress = 0;
+    this.uploadError = '';
+
+    console.log('Uploading gallery images', {
+      workShopProfileId: idForApi,
+      filesCount: this.selectedGalleryFiles.length,
+    });
+
+    this.workshopProfileService
+      .uploadWorkShopPhotosWithProgress(idForApi, this.selectedGalleryFiles)
+      .subscribe({
+        next: (event: any) => {
+          if (event.type === HttpEventType.UploadProgress) {
+            const loaded = event.loaded || 0;
+            const total = event.total || 1;
+            this.uploadProgress = Math.round((loaded / total) * 100);
+            try {
+              this.cd.detectChanges();
+            } catch {}
+            return;
+          }
+
+          if (event.type === HttpEventType.Response) {
+            const resp = event.body ?? event;
+            const payload = resp?.data ?? resp ?? {};
+            let uploaded: any[] = [];
+            if (Array.isArray(payload)) uploaded = payload as any[];
+            else if (Array.isArray(payload.imageUrls)) uploaded = payload.imageUrls;
+            else if (Array.isArray(payload.photos)) uploaded = payload.photos;
+            else if (Array.isArray(payload.data)) uploaded = payload.data;
+
+            const mapped = uploaded.map((it: any) => {
+              if (typeof it === 'string') return { url: this.getFullBackendUrl(it) };
+              const url =
+                it.url ||
+                it.photoUrl ||
+                it.imageUrl ||
+                it.fileUrl ||
+                it.path ||
+                it.filePath ||
+                it.fileName ||
+                '';
+              return { id: it.id, url: this.getFullBackendUrl(url) };
+            });
+
+            if (mapped.length > 0) this.profileData.galleryImages.push(...mapped);
+
+            // Clear selected queue and previews
+            this.selectedGalleryFiles = [];
+            this.galleryPreviewUrls = [];
+            this.uploadInProgress = false;
+            this.uploadProgress = 100;
+            if (this.toast) this.toast.show('Uploaded images successfully', 'success');
+
+            // Refresh gallery from server so server-returned filenames/ids are used
+            try {
+              this.loadGalleryImages(idForApi);
+            } catch (e) {
+              // fallback: keep mapped items already appended
+              console.warn('Failed to refresh gallery after upload', e);
+            }
+
+            try {
+              this.cd.detectChanges();
+            } catch {}
+          }
+        },
+        error: (err) => {
+          // Better error reporting for debugging and user feedback
+          console.error('Error uploading gallery images:', err);
+          const status = err?.status;
+          const serverMessage =
+            err?.error?.message || err?.error || err?.message || 'Unknown error';
+          this.uploadInProgress = false;
+          this.uploadError = String(serverMessage);
+          const userMsg = status
+            ? `Upload failed (${status}): ${serverMessage}`
+            : `Upload failed: ${serverMessage}`;
+          if (this.toast) this.toast.show(userMsg, 'error', 4000);
+          try {
+            this.cd.detectChanges();
+          } catch {}
+        },
+      });
+  }
+
+  /**
+   * Load gallery photos from WorkShopPhotoController and normalize them
+   */
+  loadGalleryImages(workshopId: number): void {
+    this.workshopProfileService.getWorkShopPhotos(workshopId).subscribe({
+      next: (resp) => {
+        console.debug('WorkShopPhoto GET response:', resp);
+        const payload = resp?.data ?? resp ?? [];
+        console.debug('WorkShopPhoto parsed payload:', payload);
+        let items: any[] = [];
+        if (Array.isArray(payload)) items = payload;
+        else if (Array.isArray(payload.photos)) items = payload.photos;
+
+        this.profileData.galleryImages = items.map((it: any) => {
+          if (typeof it === 'string') return { url: this.getFullBackendUrl(it) };
+          const url =
+            it.url ||
+            it.photoUrl ||
+            it.imageUrl ||
+            it.fileUrl ||
+            it.path ||
+            it.filePath ||
+            it.fileName ||
+            '';
+          return { id: it.id, url: this.getFullBackendUrl(url) };
+        });
+        console.debug('WorkShopPhoto mapped galleryImages:', this.profileData.galleryImages);
+        // Ensure view updates immediately after loading images
+        try {
+          this.ngZone.run(() => this.cd.detectChanges());
+        } catch {}
+      },
+      error: (err) => {
+        console.warn('Failed to load gallery images:', err);
+      },
+    });
   }
 
   private createLicenseUploadTask(): Observable<any> | null {
@@ -1667,7 +2002,7 @@ export class WorkshopProfileEditComponent
       // Never save UI state like isLoading - only save profile data
       const dataToStore = {
         ...this.profileData,
-        timestamp: new Date().getTime()
+        timestamp: new Date().getTime(),
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(dataToStore));
       console.log('Profile data saved to localStorage');
@@ -1705,8 +2040,28 @@ export class WorkshopProfileEditComponent
     // Map the loaded data to profileData
     this.profileData = {
       ...data,
-      workingHours: data.workingHours || this.initializeWorkingHours()
+      workingHours: data.workingHours || this.initializeWorkingHours(),
     };
+
+    // Normalize gallery images (support strings or objects)
+    if (data.galleryImages && Array.isArray(data.galleryImages)) {
+      this.profileData.galleryImages = data.galleryImages.map((it: any) => {
+        if (!it) return { url: '' } as any;
+        if (typeof it === 'string') return { url: this.getFullBackendUrl(it) };
+        const url =
+          it.url ||
+          it.photoUrl ||
+          it.imageUrl ||
+          it.fileUrl ||
+          it.path ||
+          it.filePath ||
+          it.fileName ||
+          '';
+        return { id: it.id, url: this.getFullBackendUrl(url) };
+      });
+    } else {
+      this.profileData.galleryImages = [];
+    }
 
     // Load existing logo if available (ensure full absolute URL)
     if (this.profileData.LogoImageUrl) {
@@ -1746,60 +2101,70 @@ export class WorkshopProfileEditComponent
     this.isLoadingLocation = true;
     this.locationError = '';
 
-    this.geolocationService.requestLocation().pipe(take(1)).subscribe({
-      next: (position: GeolocationPosition) => {
-        this.ngZone.run(() => {
-          this.workshopLocation = position;
-          this.isLoadingLocation = false;
-          this.showLocationModal = false;
+    this.geolocationService
+      .requestLocation()
+      .pipe(take(1))
+      .subscribe({
+        next: (position: GeolocationPosition) => {
+          this.ngZone.run(() => {
+            this.workshopLocation = position;
+            this.isLoadingLocation = false;
+            this.showLocationModal = false;
 
-          // prevent any automatic redirects that may occur after saving location
-          this.preventRedirectAfterLocation = true;
+            // prevent any automatic redirects that may occur after saving location
+            this.preventRedirectAfterLocation = true;
 
-          // Mark location as set in this session
-          sessionStorage.setItem('workshop_location_set', 'true');
+            // Mark location as set in this session
+            sessionStorage.setItem('workshop_location_set', 'true');
 
-          // Update profile coordinates and map
-          this.profileData.location.latitude = position.latitude;
-          this.profileData.location.longitude = position.longitude;
-          if (this.map) {
-            this.map.setView([position.latitude, position.longitude], 13);
-            this.updateMarker(position.latitude, position.longitude);
-          }
-          this.isFormDirty = true;
+            // Update profile coordinates and map
+            this.profileData.location.latitude = position.latitude;
+            this.profileData.location.longitude = position.longitude;
+            if (this.map) {
+              this.map.setView([position.latitude, position.longitude], 13);
+              this.updateMarker(position.latitude, position.longitude);
+            }
+            this.isFormDirty = true;
 
-          // Save to backend (non-blocking helper)
-          this.geolocationService.saveWorkshopLocation(position);
+            // Save to backend (non-blocking helper)
+            this.geolocationService.saveWorkshopLocation(position);
 
-          if (this.toast) this.toast.show('Location obtained and pinned.', 'success', 2000);
-          this.cd.detectChanges();
-        });
-      },
-      error: (err) => {
-        console.error('Error getting location:', err);
-        this.ngZone.run(() => {
-          this.isLoadingLocation = false;
-          this.locationError = err?.message || 'Failed to get location';
-          if (err && err.code === 1) {
-            this.locationPermissionDenied = true;
-            if (this.toast) this.toast.show('Location permission denied. Please enable it in your browser.', 'warning');
-          }
-          this.cd.detectChanges();
-        });
-      }
-    });
+            if (this.toast) this.toast.show('Location obtained and pinned.', 'success', 2000);
+            this.cd.detectChanges();
+          });
+        },
+        error: (err) => {
+          console.error('Error getting location:', err);
+          this.ngZone.run(() => {
+            this.isLoadingLocation = false;
+            this.locationError = err?.message || 'Failed to get location';
+            if (err && err.code === 1) {
+              this.locationPermissionDenied = true;
+              if (this.toast)
+                this.toast.show(
+                  'Location permission denied. Please enable it in your browser.',
+                  'warning'
+                );
+            }
+            this.cd.detectChanges();
+          });
+        },
+      });
 
     // Subscribe to error stream once
-    this.geolocationService.getLocationErrors().pipe(take(1)).subscribe({
-      next: (error: GeolocationError) => {
-        this.ngZone.run(() => {
-          this.locationError = error.message;
-          this.isLoadingLocation = false;
-          if (error.code === 1) this.locationPermissionDenied = true;
-          this.cd.detectChanges();
-        });
-      }
-    });
+    this.geolocationService
+      .getLocationErrors()
+      .pipe(take(1))
+      .subscribe({
+        next: (error: GeolocationError) => {
+          this.ngZone.run(() => {
+            this.locationError = error.message;
+            this.isLoadingLocation = false;
+            if (error.code === 1) this.locationPermissionDenied = true;
+            this.cd.detectChanges();
+          });
+        },
+      });
   }
 
   dismissLocationRequest(): void {

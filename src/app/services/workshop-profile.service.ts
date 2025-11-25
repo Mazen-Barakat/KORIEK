@@ -1,8 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { WorkshopProfileData, WorkShopWorkingHoursAPI, WorkingHours } from '../models/workshop-profile.model';
+import {
+  WorkshopProfileData,
+  WorkShopWorkingHoursAPI,
+  WorkingHours,
+} from '../models/workshop-profile.model';
 
 @Injectable({
   providedIn: 'root',
@@ -78,25 +82,22 @@ export class WorkshopProfileService {
    * Get working hours for a workshop
    */
   getWorkshopWorkingHours(workshopId: number): Observable<WorkShopWorkingHoursAPI[]> {
-    return this.http.get<any>(
-      `https://localhost:44316/api/WorkShopWorkingHours/workshop/${workshopId}`
-    ).pipe(
-      map((response: any) => {
-        // Handle response that might be wrapped in data property
-        console.log('Raw API Response for working hours:', response);
-        return response?.data ?? response ?? [];
-      })
-    );
+    return this.http
+      .get<any>(`https://localhost:44316/api/WorkShopWorkingHours/workshop/${workshopId}`)
+      .pipe(
+        map((response: any) => {
+          // Handle response that might be wrapped in data property
+          console.log('Raw API Response for working hours:', response);
+          return response?.data ?? response ?? [];
+        })
+      );
   }
 
   /**
    * Create working hours for a workshop
    */
   createWorkingHours(workingHour: WorkShopWorkingHoursAPI): Observable<any> {
-    return this.http.post(
-      'https://localhost:44316/api/WorkShopWorkingHours',
-      workingHour
-    );
+    return this.http.post('https://localhost:44316/api/WorkShopWorkingHours', workingHour);
   }
 
   /**
@@ -112,19 +113,14 @@ export class WorkshopProfileService {
    * Delete individual working hour by ID
    */
   deleteWorkingHour(id: number): Observable<any> {
-    return this.http.delete(
-      `https://localhost:44316/api/WorkShopWorkingHours/${id}`
-    );
+    return this.http.delete(`https://localhost:44316/api/WorkShopWorkingHours/${id}`);
   }
 
   /**
    * Update working hours for a workshop
    */
   updateWorkshopWorkingHours(workingHours: WorkShopWorkingHoursAPI[]): Observable<any> {
-    return this.http.put(
-      'https://localhost:44316/api/WorkShopWorkingHours',
-      workingHours
-    );
+    return this.http.put('https://localhost:44316/api/WorkShopWorkingHours', workingHours);
   }
 
   /**
@@ -132,7 +128,7 @@ export class WorkshopProfileService {
    */
   convertAPIWorkingHours(apiHours: any[]): WorkingHours[] {
     console.log('Converting API hours to display format:', apiHours);
-    const converted = apiHours.map(hour => {
+    const converted = apiHours.map((hour) => {
       const dayNumber = this.getDayNumber(hour.day);
       return {
         id: hour.id,
@@ -141,7 +137,7 @@ export class WorkshopProfileService {
         dayName: hour.day,
         openTime: hour.from,
         closeTime: hour.to,
-        isClosed: hour.isClosed
+        isClosed: hour.isClosed,
       };
     });
     console.log('Converted hours:', converted);
@@ -173,6 +169,53 @@ export class WorkshopProfileService {
     });
 
     return this.http.post(`${this.apiUrl}/${workshopId}/gallery`, formData);
+  }
+
+  /**
+   * Upload gallery images using WorkShopPhotoController expected shape
+   * Backend expects a form with WorkShopProfileId (int) and Photos[] files
+   */
+  uploadWorkShopPhotos(workShopProfileId: number | string, images: File[]): Observable<any> {
+    const form = new FormData();
+    // Ensure numeric id is passed as string
+    form.append('WorkShopProfileId', String(workShopProfileId));
+
+    images.forEach((image) => {
+      form.append('Photos', image, image.name);
+    });
+
+    return this.http.post(`https://localhost:44316/api/WorkShopPhoto`, form);
+  }
+
+  /**
+   * Upload gallery images with progress reporting (returns HttpEvents)
+   */
+  uploadWorkShopPhotosWithProgress(
+    workShopProfileId: number | string,
+    images: File[]
+  ): Observable<HttpEvent<any>> {
+    const form = new FormData();
+    form.append('WorkShopProfileId', String(workShopProfileId));
+    images.forEach((image) => form.append('Photos', image, image.name));
+
+    return this.http.post(`https://localhost:44316/api/WorkShopPhoto`, form, {
+      reportProgress: true,
+      observe: 'events',
+    });
+  }
+
+  /**
+   * Get all photos for a workshop profile
+   */
+  getWorkShopPhotos(workShopProfileId: number | string): Observable<any> {
+    return this.http.get(`https://localhost:44316/api/WorkShopPhoto/${workShopProfileId}`);
+  }
+
+  /**
+   * Delete a workshop photo by its ID
+   */
+  deleteWorkShopPhotoById(photoId: number): Observable<any> {
+    return this.http.delete(`https://localhost:44316/api/WorkShopPhoto/${photoId}`);
   }
 
   /**
