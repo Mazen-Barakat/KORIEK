@@ -2,11 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import {
-  WorkshopProfileData,
-  WorkShopWorkingHoursAPI,
-  WorkingHours,
-} from '../models/workshop-profile.model';
+import { WorkshopProfileData, WorkShopWorkingHoursAPI, WorkingHours, WorkshopService } from '../models/workshop-profile.model';
 
 @Injectable({
   providedIn: 'root',
@@ -245,5 +241,65 @@ export class WorkshopProfileService {
     formData.append('logo', logo, logo.name);
 
     return this.http.post(`${this.apiUrl}/${workshopId}/logo`, formData);
+  }
+
+  // ============================================
+  // Workshop Services CRUD Operations
+  // ============================================
+
+  /**
+   * Get all services for a workshop
+   */
+  getWorkshopServices(workshopId: number): Observable<WorkshopService[]> {
+    return this.http.get<WorkshopService[]>(`${this.apiUrl}/${workshopId}/services`);
+  }
+
+  /**
+   * Get a specific workshop service by ID
+   */
+  getWorkshopService(workshopId: number, serviceId: number): Observable<WorkshopService> {
+    return this.http.get<WorkshopService>(`${this.apiUrl}/${workshopId}/services/${serviceId}`);
+  }
+
+  /**
+   * Add multiple services to a workshop
+   */
+  addWorkshopServices(workshopId: number, services: WorkshopService[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${workshopId}/services/batch`, services);
+  }
+
+  /**
+   * Add a single service to a workshop
+   */
+  addWorkshopService(workshopId: number, service: WorkshopService): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${workshopId}/services`, service);
+  }
+
+  /**
+   * Update a workshop service
+   */
+  updateWorkshopService(workshopId: number, serviceId: number, service: WorkshopService): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${workshopId}/services/${serviceId}`, service);
+  }
+
+  /**
+   * Delete a workshop service
+   */
+  deleteWorkshopService(workshopId: number, serviceId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${workshopId}/services/${serviceId}`);
+  }
+
+  /**
+   * Toggle service availability
+   */
+  toggleServiceAvailability(workshopId: number, serviceId: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${workshopId}/services/${serviceId}/toggle`, {});
+  }
+
+  /**
+   * Load service categories from JSON file
+   */
+  loadServiceCategories(): Observable<any> {
+    return this.http.get('/Car Services.json');
   }
 }
