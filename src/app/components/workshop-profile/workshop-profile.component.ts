@@ -6,6 +6,8 @@ import { AuthService } from '../../services/auth.service';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
 import { Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { AddServiceModalComponent } from '../add-service-modal/add-service-modal.component';
+import { WorkshopService as WorkshopServiceModel } from '../../models/workshop-profile.model';
 
 interface Service {
   id: string;
@@ -16,12 +18,14 @@ interface Service {
   maxPrice: number;
   imageUrl?: string;
   selected?: boolean;
+  carOriginSpecializations?: string[];
+  isAvailable?: boolean;
 }
 
 @Component({
   selector: 'app-workshop-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AddServiceModalComponent],
   templateUrl: './workshop-profile.component.html',
   styleUrls: ['./workshop-profile.component.css']
 })
@@ -51,6 +55,12 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   };
 
   services: Service[] = [];
+  workshopServices: WorkshopServiceModel[] = [];
+  
+  // Add Service Modal state
+  showAddServiceModal = false;
+  serviceGroupBy: 'origin' | 'category' | 'price' | 'duration' = 'origin';
+  servicesViewMode: 'grid' | 'list' = 'grid';
 
   constructor(
     private router: Router,
@@ -392,5 +402,176 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   isWorkingHoursClosed(day: string): boolean {
     const hours = this.workingHours[day];
     return !hours || hours.isClosed === true;
+  }
+
+  // ============================================
+  // Add Service Modal Methods
+  // ============================================
+
+  openAddServiceModal(): void {
+    console.log('Opening Add Service Modal...');
+    this.showAddServiceModal = true;
+    console.log('showAddServiceModal:', this.showAddServiceModal);
+    this.cdr.detectChanges();
+  }
+
+  closeAddServiceModal(): void {
+    console.log('Closing Add Service Modal...');
+    this.showAddServiceModal = false;
+    this.cdr.detectChanges();
+  }
+
+  handleServicesAdded(services: WorkshopServiceModel[]): void {
+    console.log('Services added successfully:', services);
+    
+    // Show success message
+    alert(`✅ Successfully added ${services.length} service${services.length > 1 ? 's' : ''}!`);
+    
+    // Update the services list
+    this.workshopServices = [...this.workshopServices, ...services];
+    
+    // Reload services from API if workshop ID is available
+    if (this.profileData?.id) {
+      this.loadWorkshopServices();
+    }
+    
+    // Trigger change detection
+    this.cdr.detectChanges();
+  }
+
+  loadWorkshopServices(): void {
+    if (!this.profileData?.id) return;
+    
+    this.workshopProfileService.getWorkshopServices(this.profileData.id).subscribe({
+      next: (services) => {
+        this.workshopServices = services;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading workshop services:', error);
+      }
+    });
+  }
+
+  deleteWorkshopService(serviceId: number): void {
+    if (!confirm('Are you sure you want to delete this service?')) return;
+
+    this.workshopProfileService.deleteWorkshopService(this.profileData.id, serviceId).subscribe({
+      next: () => {
+        this.workshopServices = this.workshopServices.filter(s => s.id !== serviceId);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error deleting service:', error);
+        alert('Failed to delete service. Please try again.');
+      }
+    });
+  }
+
+  toggleServiceAvailability(serviceId: number): void {
+    this.workshopProfileService.toggleServiceAvailability(this.profileData.id, serviceId).subscribe({
+      next: () => {
+        const service = this.workshopServices.find(s => s.id === serviceId);
+        if (service) {
+          service.isAvailable = !service.isAvailable;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('Error toggling service availability:', error);
+      }
+    });
+  }
+
+  getServicesByOrigin(): Map<string, WorkshopServiceModel[]> {
+    const grouped = new Map<string, WorkshopServiceModel[]>();
+    
+    this.workshopServices.forEach(service => {
+      service.carOriginSpecializations.forEach(origin => {
+        if (!grouped.has(origin)) {
+          grouped.set(origin, []);
+        }
+        grouped.get(origin)!.push(service);
+      });
+    });
+    
+    return grouped;
+  }
+
+  getServicesByCategory(): Map<string, WorkshopServiceModel[]> {
+    const grouped = new Map<string, WorkshopServiceModel[]>();
+    
+    this.workshopServices.forEach(service => {
+      const category = service.categoryName || 'Other';
+      if (!grouped.has(category)) {
+        grouped.set(category, []);
+      }
+      grouped.get(category)!.push(service);
+    });
+    
+    return grouped;
+  }
+
+  changeServiceGrouping(groupBy: 'origin' | 'category' | 'price' | 'duration'): void {
+    this.serviceGroupBy = groupBy;
+  }
+
+  toggleServicesViewMode(): void {
+    this.servicesViewMode = this.servicesViewMode === 'grid' ? 'list' : 'grid';
+  }
+
+  getOriginFlag(originCode: string): string {
+    const origins: { [key: string]: string } = {
+      'german': '🇩🇪',
+      'japanese': '🇯🇵',
+      'korean': '🇰🇷',
+      'american': '🇺🇸',
+      'french': '🇫🇷',
+      'italian': '🇮🇹',
+      'british': '🇬🇧',
+      'chinese': '🇨🇳',
+      'all': '🌍'
+    };
+    return origins[originCode] || '🌍';
+  }
+
+  getOriginName(originCode: string): string {
+    const origins: { [key: string]: string } = {
+      'german': 'German',
+      'japanese': 'Japanese',
+      'korean': 'Korean',
+      'american': 'American',
+      'french': 'French',
+      'italian': 'Italian',
+      'british': 'British',
+      'chinese': 'Chinese',
+      'all': 'All Origins'
+    };
+    return origins[originCode] || originCode;
+  }
+
+  formatServiceDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours > 0 && mins > 0) {
+      return `${hours}h ${mins}m`;
+    } else if (hours > 0) {
+      return `${hours}h`;
+    } else {
+      return `${mins}m`;
+    }
+  }
+
+  formatServicePrice(minPrice: number, maxPrice: number): string {
+    return `${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()} EGP`;
+  }
+
+  getRemainingOrigins(service: Service): string {
+    if (!service.carOriginSpecializations || service.carOriginSpecializations.length <= 3) {
+      return '';
+    }
+    const remaining = service.carOriginSpecializations.slice(3);
+    return remaining.map(code => this.getOriginName(code)).join(', ');
   }
 }

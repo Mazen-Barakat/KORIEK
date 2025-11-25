@@ -163,81 +163,199 @@
 
       <!-- Services Tab -->
       <div class="tab-content" *ngIf="selectedTab === 'services'">
-        <div class="services-header">
-          <h2 class="section-title">Select Services</h2>
-          <div style="display:flex;align-items:center;gap:1rem;">
-            <span class="available-count">{{ services.length }} available</span>
-            <button class="btn btn-primary add-service-btn" (click)="startAddService()">+ Add Service</button>
-          </div>
-        </div>
-
-        <!-- Add / Edit Service Form -->
-        <div *ngIf="editingService !== null || serviceForm.name" class="service-form info-card">
-          <h3 class="card-title">{{ editingService ? 'Edit Service' : 'Add Service' }}</h3>
-          <div class="form-row">
-            <label>Name</label>
-            <input [(ngModel)]="serviceForm.name" placeholder="Service name" />
-          </div>
-          <div class="form-row">
-            <label>Description</label>
-            <textarea [(ngModel)]="serviceForm.description" placeholder="Short description"></textarea>
-          </div>
-          <div class="form-row">
-            <label>Duration (minutes)</label>
-            <input type="number" [(ngModel)]="serviceForm.duration" />
-          </div>
-          <div class="form-row two-cols">
-            <div>
-              <label>Min Price (EGP)</label>
-              <input type="number" [(ngModel)]="serviceForm.minPrice" />
+        <!-- Premium Services Header -->
+        <div class="services-header-premium">
+          <div class="header-content-wrapper">
+            <div class="title-section">
+              <div class="title-with-badge">
+                <h2 class="section-title-premium">Service Portfolio</h2>
+                <span class="new-badge" *ngIf="services.length === 0">New</span>
+              </div>
+              <p class="section-subtitle">Showcase your expertise with a professional service catalog</p>
             </div>
-            <div>
-              <label>Max Price (EGP)</label>
-              <input type="number" [(ngModel)]="serviceForm.maxPrice" />
-            </div>
-          </div>
-          <div class="form-row">
-            <label>Image URL</label>
-            <input [(ngModel)]="serviceForm.imageUrl" placeholder="assets/images/example.jpg" />
-          </div>
-          <div style="display:flex;gap:0.75rem;margin-top:0.75rem;">
-            <button class="btn btn-primary" (click)="saveService()">Save</button>
-            <button class="btn" (click)="cancelEdit()">Cancel</button>
-          </div>
-        </div>
-
-        <div *ngIf="services.length === 0" class="info-card">
-          <p style="margin:0 0.5rem;">No services have been added yet.</p>
-          <p style="margin:0.5rem 0 0 0;color:var(--muted);font-size:0.95rem;">Workshop owners can add services to their catalog.</p>
-        </div>
-
-        <div class="services-list" *ngIf="services.length > 0">
-          <div class="service-card" *ngFor="let service of services" [class.selected]="service.selected">
-            <div class="service-info">
-              <h3 class="service-name">{{ service.name }}</h3>
-              <p class="service-description">{{ service.description }}</p>
-              <div class="service-meta">
-                <span class="duration">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 6v6l4 2"/>
+            <div class="actions-section">
+              <div class="stats-card">
+                <div class="stat-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                   </svg>
-                  {{ formatDuration(service.duration) }}
+                </div>
+                <div class="stat-content">
+                  <span class="stat-number">{{ services.length }}</span>
+                  <span class="stat-label">Active Services</span>
+                </div>
+              </div>
+              <button class="btn-add-premium" (click)="openAddServiceModal()">
+                <span class="btn-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                  </svg>
                 </span>
+                <span class="btn-text">Add Services</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Premium Empty State -->
+        <div *ngIf="services.length === 0" class="empty-state-premium">
+          <div class="empty-content">
+            <div class="empty-illustration">
+              <div class="illustration-bg"></div>
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+              </svg>
+            </div>
+            <div class="empty-text">
+              <h3 class="empty-heading">Build Your Service Catalog</h3>
+              <p class="empty-message">Create a professional portfolio of services to attract more customers and grow your business.</p>
+            </div>
+            <button class="btn-cta-primary" (click)="openAddServiceModal()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              <span>Create Your First Service</span>
+            </button>
+            <div class="features-grid">
+              <div class="feature-card">
+                <div class="feature-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 7v4a1 1 0 001 1h3m0-5v10m0-10L4 3m3 4l3-4m10 18v-4a1 1 0 00-1-1h-3m0 5v-10m0 10l3 4m-3-4l-3 4"/>
+                  </svg>
+                </div>
+                <div class="feature-text">
+                  <h4>Smart Categorization</h4>
+                  <p>200+ pre-configured services across 7 categories</p>
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div class="feature-text">
+                  <h4>Flexible Pricing</h4>
+                  <p>Set custom price ranges and service durations</p>
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div class="feature-text">
+                  <h4>Car Specialization</h4>
+                  <p>Specify expertise by vehicle origin and brand</p>
+                </div>
               </div>
             </div>
-            <div class="service-action">
-              <span class="service-price">{{ service.minPrice }} - {{ service.maxPrice }} <span class="currency">EGP</span></span>
-              <div style="display:flex;gap:0.5rem;align-items:center;">
-                <button class="btn" (click)="startEditService(service)">Edit</button>
-                <button class="btn" (click)="deleteService(service)">Delete</button>
-                <button class="select-btn" [class.selected]="service.selected" (click)="toggleServiceSelection(service)">
-                  <span *ngIf="!service.selected" class="plus-icon">+</span>
-                  <svg *ngIf="service.selected" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
-                    <path d="M5 13l4 4L19 7"/>
+          </div>
+        </div>
+
+        <!-- Premium Services Grid -->
+        <div class="services-grid-premium" *ngIf="services.length > 0">
+          <div class="service-card-premium" *ngFor="let service of services" [class.is-selected]="service.selected">
+            <!-- Card Accent Line -->
+            <div class="card-accent"></div>
+            
+            <!-- Card Header -->
+            <div class="card-header-premium">
+              <div class="service-icon-wrapper">
+                <div class="service-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 6v6l4 2"/>
+                    <circle cx="12" cy="12" r="10"/>
+                  </svg>
+                </div>
+                <div class="availability-badge" [class.active]="service.isAvailable">
+                  <span class="badge-dot"></span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="action-btn-circle" (click)="startEditService(service)" title="Edit Service">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="action-btn-circle danger" (click)="deleteService(service)" title="Delete Service">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                   </svg>
                 </button>
               </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="card-body-premium">
+              <h3 class="service-title-premium">{{ service.name }}</h3>
+              <p class="service-description-premium" *ngIf="service.description">{{ service.description }}</p>
+              
+              <!-- Service Details Grid -->
+              <div class="service-details-grid">
+                <div class="detail-item">
+                  <div class="detail-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                  </div>
+                  <div class="detail-content">
+                    <span class="detail-label">Duration</span>
+                    <span class="detail-value">{{ formatDuration(service.duration) }}</span>
+                  </div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-icon price-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                    </svg>
+                  </div>
+                  <div class="detail-content">
+                    <span class="detail-label">Price Range</span>
+                    <span class="detail-value price-value">{{ service.minPrice }} - {{ service.maxPrice }} <span class="currency">EGP</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Car Specializations -->
+              <div class="specializations-section" *ngIf="service.carOriginSpecializations && service.carOriginSpecializations.length > 0">
+                <div class="specializations-label">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>Specializations</span>
+                </div>
+                <div class="specialization-chips">
+                  <span class="chip" *ngFor="let origin of service.carOriginSpecializations.slice(0, 3)">
+                    <span class="chip-flag">{{ getOriginFlag(origin) }}</span>
+                    <span class="chip-text">{{ getOriginName(origin) }}</span>
+                  </span>
+                  <span class="chip chip-more" *ngIf="service.carOriginSpecializations.length > 3" [title]="getRemainingOrigins(service)">
+                    <span class="chip-text">+{{ service.carOriginSpecializations.length - 3 }}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="card-footer-premium">
+              <div class="status-indicator">
+                <span class="status-text" [class.active]="service.isAvailable">{{ service.isAvailable ? 'Available Now' : 'Unavailable' }}</span>
+              </div>
+              <button class="select-btn-premium" [class.is-selected]="service.selected" (click)="toggleServiceSelection(service)">
+                <span class="select-icon">
+                  <svg *ngIf="!service.selected" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                  </svg>
+                  <svg *ngIf="service.selected" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <path d="M5 13l4 4L19 7"/>
+                  </svg>
+                </span>
+                <span class="select-text">{{ service.selected ? 'Selected' : 'Select Service' }}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -289,3 +407,22 @@
   <p style="color: #ef4444; font-size: 1.125rem;">{{ errorMessage }}</p>
   <button class="btn btn-primary" (click)="loadWorkshopData()">Retry</button>
 </div>
+
+<!-- Add Service Modal -->
+<app-add-service-modal
+  *ngIf="showAddServiceModal"
+  (close)="closeAddServiceModal()"
+  (servicesAdded)="handleServicesAdded($event)"
+></app-add-service-modal>
+
+<!-- Floating Action Button for Add Service -->
+<button 
+  *ngIf="profileData && profileData.id && selectedTab === 'services'"
+  class="fab-add-service"
+  (click)="openAddServiceModal()"
+  title="Add Services"
+>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+  </svg>
+</button>

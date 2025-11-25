@@ -93,6 +93,57 @@ export const GOVERNORATES = [
   'Sohag'
 ];
 
+// Workshop Service Models
+export interface WorkshopService {
+  id?: number;
+  workshopProfileId?: number;
+  serviceId: number;
+  categoryId: number;
+  subcategoryId: number;
+  categoryName?: string;
+  subcategoryName?: string;
+  serviceName: string;
+  description?: string;
+  durationMinutes: number;
+  minPrice: number;
+  maxPrice: number;
+  carOriginSpecializations: string[];
+  imageUrl?: string;
+  isAvailable: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ServiceCategory {
+  id: number;
+  name: string;
+  icon: string;
+  subcategories: ServiceSubcategory[];
+}
+
+export interface ServiceSubcategory {
+  id: number;
+  name: string;
+  services: ServiceItem[];
+}
+
+export interface ServiceItem {
+  id: number;
+  name: string;
+}
+
+export const CAR_ORIGINS = [
+  { code: 'german', name: 'German', flag: '🇩🇪' },
+  { code: 'japanese', name: 'Japanese', flag: '🇯🇵' },
+  { code: 'korean', name: 'Korean', flag: '🇰🇷' },
+  { code: 'american', name: 'American', flag: '🇺🇸' },
+  { code: 'french', name: 'French', flag: '🇫🇷' },
+  { code: 'italian', name: 'Italian', flag: '🇮🇹' },
+  { code: 'british', name: 'British', flag: '🇬🇧' },
+  { code: 'chinese', name: 'Chinese', flag: '🇨🇳' },
+  { code: 'all', name: 'All Origins', flag: '🌍' }
+];
+
 export const EGYPTIAN_CITIES_BY_GOVERNORATE: { [key: string]: string[] } = {
   'Cairo': [
     'Nasr City', 'Heliopolis', 'Maadi', 'Zamalek', 'Downtown Cairo', 'New Cairo',
