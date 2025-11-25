@@ -283,6 +283,7 @@ h1 {
   position: relative;
   overflow: hidden;
   animation: cardFadeIn 0.5s ease-out backwards;
+  cursor: pointer;
 }
 
 @keyframes cardFadeIn {
@@ -356,71 +357,6 @@ h1 {
   min-height: 50px;
 }
 
-.role-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.role-action-btn {
-  flex: 1;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.role-action-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s ease;
-}
-
-.role-action-btn:hover::before {
-  left: 100%;
-}
-
-.login-btn {
-  background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
-  color: white;
-  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.24);
-}
-
-.login-btn:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(239, 68, 68, 0.32);
-}
-
-.signup-btn {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  color: var(--brand-primary);
-  border: 2px solid rgba(239, 68, 68, 0.15);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-.signup-btn:hover {
-  background: white;
-  border-color: var(--brand-primary);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.16);
-}
-
 @media (max-width: 768px) {
   .role-selection-card {
     padding: 30px 20px;
@@ -447,10 +383,5 @@ h1 {
   .role-icon svg {
     width: 30px;
     height: 30px;
-  }
-
-  .role-actions {
-    flex-direction: column;
-    gap: 10px;
   }
 }
