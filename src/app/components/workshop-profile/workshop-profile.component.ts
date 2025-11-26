@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -7,6 +7,7 @@ import { WorkshopProfileService } from '../../services/workshop-profile.service'
 import { Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { AddServiceModalComponent } from '../add-service-modal/add-service-modal.component';
+import { WorkshopServicesCatalogComponent } from '../workshop-services-catalog/workshop-services-catalog.component';
 import { WorkshopService as WorkshopServiceModel } from '../../models/workshop-profile.model';
 
 interface Service {
@@ -20,12 +21,13 @@ interface Service {
   selected?: boolean;
   carOriginSpecializations?: string[];
   isAvailable?: boolean;
+  originPricing?: Array<{ originCode: string; originName: string; minPrice: number; maxPrice: number; isEnabled: boolean }>;
 }
 
 @Component({
   selector: 'app-workshop-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddServiceModalComponent],
+  imports: [CommonModule, FormsModule, AddServiceModalComponent, WorkshopServicesCatalogComponent],
   templateUrl: './workshop-profile.component.html',
   styleUrls: ['./workshop-profile.component.css'],
 })
@@ -60,6 +62,9 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   services: Service[] = [];
   workshopServices: WorkshopServiceModel[] = [];
+  
+  // Catalog component reference
+  @ViewChild(WorkshopServicesCatalogComponent) catalogComponent?: WorkshopServicesCatalogComponent;
   
   // Add Service Modal state
   showAddServiceModal = false;
@@ -203,9 +208,14 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     this.photosSubscription = this.http.get(photosUrl).subscribe({
       next: (response: any) => {
         this.photos = response?.data ?? response ?? [];
+        this.currentImageIndex = 0;
+        // Trigger change detection to update the view
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading photos:', error);
+        this.photos = [];
+        this.cdr.detectChanges();
       },
     });
   }
@@ -558,9 +568,6 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   handleServicesAdded(services: WorkshopServiceModel[]): void {
     console.log('Services added successfully:', services);
     
-    // Show success message
-    alert(`✅ Successfully added ${services.length} service${services.length > 1 ? 's' : ''}!`);
-    
     // Update the services list
     this.workshopServices = [...this.workshopServices, ...services];
     
@@ -569,7 +576,37 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
       this.loadWorkshopServices();
     }
     
+    // Refresh the catalog component
+    if (this.catalogComponent) {
+      console.log('Refreshing catalog component...');
+      setTimeout(() => {
+        this.catalogComponent?.loadServices();
+      }, 500);
+    }
+    
     // Trigger change detection
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Handle service edited from catalog
+   */
+  onServiceEdited(service: any): void {
+    console.log('Service edited:', service);
+    // You can open an edit modal here or handle inline editing
+    // For now, just log it
+    alert('Edit functionality - coming soon!');
+  }
+
+  /**
+   * Handle service deleted from catalog
+   */
+  onServiceDeleted(serviceId: number): void {
+    console.log('Service deleted:', serviceId);
+    // Reload services to reflect the deletion
+    if (this.profileData?.id) {
+      this.loadWorkshopServices();
+    }
     this.cdr.detectChanges();
   }
 
@@ -707,5 +744,52 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     }
     const remaining = service.carOriginSpecializations.slice(3);
     return remaining.map(code => this.getOriginName(code)).join(', ');
+  }
+
+  // Enhanced header helper methods
+  getUniqueOriginsCount(): number {
+    if (!this.services || this.services.length === 0) {
+      return 0;
+    }
+    
+    const allOrigins = this.services
+      .flatMap(service => service.carOriginSpecializations || [])
+      .filter((origin, index, self) => self.indexOf(origin) === index);
+    
+    return allOrigins.length;
+  }
+
+  getPriceRange(): string {
+    if (!this.services || this.services.length === 0) {
+      return '0 EGP';
+    }
+
+    const allPrices: number[] = [];
+    
+    this.services.forEach(service => {
+      if (service.originPricing && service.originPricing.length > 0) {
+        service.originPricing.forEach(pricing => {
+          allPrices.push(pricing.minPrice);
+          allPrices.push(pricing.maxPrice);
+        });
+      } else {
+        // Fallback to service-level pricing if originPricing is not available
+        allPrices.push(service.minPrice);
+        allPrices.push(service.maxPrice);
+      }
+    });
+
+    if (allPrices.length === 0) {
+      return '0 EGP';
+    }
+
+    const minPrice = Math.min(...allPrices);
+    const maxPrice = Math.max(...allPrices);
+
+    if (minPrice === maxPrice) {
+      return `${minPrice.toLocaleString()} EGP`;
+    }
+
+    return `${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()} EGP`;
   }
 }
