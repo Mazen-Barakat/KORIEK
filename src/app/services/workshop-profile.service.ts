@@ -302,4 +302,41 @@ export class WorkshopProfileService {
   loadServiceCategories(): Observable<any> {
     return this.http.get('/Car Services.json');
   }
+
+  // ============================================
+  // Workshop Search API
+  // ============================================
+
+  /**
+   * Search for workshops by service ID and vehicle origin.
+   * Calls GET /api/WorkshopService/Search-Workshops-By-Service-And-Origin
+   * 
+   * @param serviceId The ID of the selected service
+   * @param origin The vehicle origin (e.g., 'Germany', 'Japan', 'General')
+   * @param pageNumber Optional page number for pagination (default 1)
+   * @param pageSize Optional page size for pagination (default 20)
+   * @returns Observable of workshop search results
+   */
+  searchWorkshopsByServiceAndOrigin(
+    serviceId: number | string,
+    origin: string,
+    pageNumber: number = 1,
+    pageSize: number = 20
+  ): Observable<any> {
+    const params = new URLSearchParams();
+    params.set('ServiceId', String(serviceId));
+    params.set('Origin', origin);
+    params.set('PageNumber', String(pageNumber));
+    params.set('PageSize', String(pageSize));
+
+    const url = `https://localhost:44316/api/WorkshopService/Search-Workshops-By-Service-And-Origin?${params.toString()}`;
+    
+    return this.http.get<any>(url).pipe(
+      map((response: any) => {
+        // Handle response that might be wrapped in data property
+        console.log('Workshop search raw response:', response);
+        return response?.data ?? response ?? [];
+      })
+    );
+  }
 }

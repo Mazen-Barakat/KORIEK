@@ -265,7 +265,17 @@ export class ProfileFormComponent implements OnInit, OnChanges {
    * Get placeholder image URL
    */
   getPlaceholderImage(): string {
-    return 'https://via.placeholder.com/180/E7F1FF/3498db?text=Profile';
+    return 'Assets/images/default-profile.svg';
+  }
+
+  /**
+   * Handle image load error by falling back to placeholder
+   */
+  onImageError(event: Event): void {
+    const imgElement = event.target as HTMLImageElement;
+    if (imgElement && imgElement.src !== this.getPlaceholderImage()) {
+      imgElement.src = this.getPlaceholderImage();
+    }
   }
 
   /**

@@ -110,7 +110,7 @@
           </div>
         </div>
 
-        <div class="vehicle-grid">
+        <div class="vehicle-grid" *ngIf="!isLoadingVehicles">
           <div class="vehicle-card" 
                *ngFor="let vehicle of userVehicles"
                [class.selected]="selectedVehicle?.id === vehicle.id"
@@ -123,18 +123,24 @@
             <div class="vehicle-info">
               <h3>{{ vehicle.make }} {{ vehicle.model }}</h3>
               <p class="vehicle-details">{{ vehicle.year }} • {{ vehicle.licensePlate }}</p>
-              <p class="vehicle-mileage">{{ vehicle.mileage.toLocaleString() }} km</p>
+              <p class="vehicle-mileage">{{ vehicle.mileage | number }} km</p>
             </div>
           </div>
         </div>
 
-        <div class="empty-state" *ngIf="userVehicles.length === 0">
+        <div class="empty-state" *ngIf="!isLoadingVehicles && userVehicles.length === 0">
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
           </svg>
           <h3>No vehicles found</h3>
           <p>Add a vehicle to your garage to continue</p>
           <button class="btn-primary" (click)="goToMyVehicles()">Go to My Vehicles</button>
+        </div>
+
+        <div class="empty-state" *ngIf="isLoadingVehicles">
+          <div class="loading-spinner"></div>
+          <h3>Loading your vehicles...</h3>
+          <p>Please wait while we fetch your saved vehicles</p>
         </div>
       </div>
 
@@ -151,27 +157,227 @@
           </div>
         </div>
 
-        <div class="service-grid">
-          <div class="service-card"
-               *ngFor="let service of serviceTypes"
-               [class.selected]="selectedServiceType?.id === service.id"
-               (click)="selectServiceType(service)">
-            <div class="service-check" *ngIf="selectedServiceType?.id === service.id">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
+        <!-- Categories View -->
+        <div *ngIf="!showingSubcategories">
+          <!-- Loading State -->
+          <div class="empty-state" *ngIf="isLoadingCategories">
+            <div class="loading-spinner"></div>
+            <h3>Loading service categories...</h3>
+            <p>Please wait while we fetch available services</p>
+          </div>
+
+          <!-- Error State -->
+          <div class="empty-state" *ngIf="!isLoadingCategories && categoriesError">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <h3>Unable to load categories</h3>
+            <p>{{ categoriesError }}</p>
+            <button class="btn-primary" (click)="loadCategories()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
               </svg>
+              Retry
+            </button>
+          </div>
+
+          <!-- Categories Grid -->
+          <div class="service-grid" #categoriesGrid *ngIf="!isLoadingCategories && !categoriesError && categories.length > 0">
+            <div class="service-card"
+                *ngFor="let category of categories"
+                (click)="selectCategory(category)"
+                [class.has-bg]="getCategoryBgUrl(category)"
+                [style.background-image]="getCategoryBgUrl(category) ? 'url(' + getCategoryBgUrl(category) + ')' : null">
+              <div class="service-card-overlay" *ngIf="getCategoryBgUrl(category)"></div>
+              <h3>{{ category.name }}</h3>
+              <p class="service-description">{{ category.description }}</p>
             </div>
-            <div class="service-icon">{{ service.icon }}</div>
-            <h3>{{ service.name }}</h3>
-            <p class="service-description">{{ service.description }}</p>
-            <div class="service-details">
-              <span class="service-duration">⏱️ {{ service.estimatedDuration }}</span>
-              <span class="service-price">From {{ service.basePrice }} EGP</span>
-            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="!isLoadingCategories && !categoriesError && categories.length === 0">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <h3>No service categories available</h3>
+            <p>Please check back later or contact support</p>
           </div>
         </div>
 
-        <div class="notes-section" *ngIf="selectedServiceType">
+        <!-- Subcategories View -->
+        <div class="subcategories-section" *ngIf="showingSubcategories && selectedCategory">
+          <!-- Back Button -->
+          <button class="btn-back" (click)="backToCategories()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back to Categories
+          </button>
+
+          
+
+          <div class="section-header subcategories-header">
+            <div class="section-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14m7-7H5"/>
+              </svg>
+            </div>
+            <div>
+              <h2>Select {{ selectedCategory.name }}</h2>
+              <p class="section-subtitle">Choose the specific service you need</p>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div class="empty-state" *ngIf="isLoadingSubcategories">
+            <div class="loading-spinner"></div>
+            <h3>Loading service options...</h3>
+            <p>Please wait while we fetch available options</p>
+          </div>
+
+          <!-- Error State -->
+          <div class="empty-state" *ngIf="!isLoadingSubcategories && subcategoriesError">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <h3>Unable to load service options</h3>
+            <p>{{ subcategoriesError }}</p>
+            <button class="btn-primary" (click)="loadSubcategories(selectedCategory!.id)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+              Retry
+            </button>
+          </div>
+
+          <!-- Subcategories Grid -->
+          <div class="subcategory-grid" *ngIf="!isLoadingSubcategories && !subcategoriesError && subcategories.length > 0">
+            <div class="subcategory-card"
+                 *ngFor="let subcategory of subcategories"
+                 [class.selected]="selectedSubcategory?.id === subcategory.id"
+                 (click)="selectSubcategory(subcategory)">
+              <div class="subcategory-check" *ngIf="selectedSubcategory?.id === subcategory.id">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div class="subcategory-image-wrapper">
+                <img 
+                  *ngIf="subcategory.imageUrl" 
+                  [src]="subcategory.imageUrl" 
+                  [alt]="subcategory.name"
+                  class="subcategory-image">
+                <div *ngIf="!subcategory.imageUrl" class="subcategory-placeholder">
+                  <span>{{ subcategory.icon || '⚙️' }}</span>
+                </div>
+              </div>
+              <h4>{{ subcategory.name }}</h4>
+              <p class="subcategory-description">{{ subcategory.description || 'Service option' }}</p>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="!isLoadingSubcategories && !subcategoriesError && subcategories.length === 0">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <h3>No service options available</h3>
+            <p>Please select a different category or try again later</p>
+          </div>
+        </div>
+
+        <!-- Services View (appears when subcategory is selected) -->
+        <div class="services-section" *ngIf="showingServices && selectedSubcategory">
+          <!-- Back Button -->
+          <button class="btn-back" (click)="backToSubcategories()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back to {{ selectedCategory?.name || 'Subcategories' }}
+          </button>
+
+          <div class="section-header services-header">
+            <div class="section-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+            </div>
+            <div>
+              <h2>Select Service</h2>
+              <p class="section-subtitle">Choose one service from {{ selectedSubcategory.name }}</p>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div class="empty-state" *ngIf="isLoadingServices">
+            <div class="loading-spinner"></div>
+            <h3>Loading services...</h3>
+            <p>Please wait while we fetch available services</p>
+          </div>
+
+          <!-- Error State -->
+          <div class="empty-state" *ngIf="!isLoadingServices && servicesError">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <h3>Unable to load services</h3>
+            <p>{{ servicesError }}</p>
+            <button class="btn-primary" (click)="loadServices(selectedSubcategory!.id)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+              Retry
+            </button>
+          </div>
+
+          <!-- Services Vertical List -->
+          <div class="service-selection-list" *ngIf="!isLoadingServices && !servicesError && services.length > 0">
+            <div class="service-selection-item"
+                 *ngFor="let service of services"
+                 [class.selected]="selectedService?.id === service.id"
+                 (click)="selectService(service)">
+              <div class="service-selection-radio">
+                <input type="radio" 
+                       [id]="'service-' + service.id"
+                       [name]="'service'"
+                       [checked]="selectedService?.id === service.id"
+                       (change)="selectService(service)">
+                <label [for]="'service-' + service.id" class="radio-label"></label>
+              </div>
+              <div class="service-info">
+                <h4>{{ service.name }}</h4>
+                <p class="service-selection-description">{{ service.description || 'Service' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="!isLoadingServices && !servicesError && services.length === 0">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <h3>No services available</h3>
+            <p>Please select a different option or try again later</p>
+          </div>
+        </div>
+
+        <!-- Notes Section (show when service is selected) -->
+        <div class="notes-section" *ngIf="selectedService">
           <label for="serviceNotes">Additional Notes (Optional)</label>
           <textarea 
             id="serviceNotes" 
@@ -282,67 +488,168 @@
           </div>
           <div>
             <h2>Choose Workshop</h2>
-            <p class="section-subtitle">Select from verified service centers near you</p>
+            <p class="section-subtitle">Select from verified service centers for {{ selectedVehicleOrigin }} vehicles</p>
           </div>
         </div>
 
-        <div class="workshop-list">
+        <!-- Loading State -->
+        <div class="empty-state" *ngIf="isLoadingWorkshops">
+          <div class="loading-spinner"></div>
+          <h3>Finding workshops...</h3>
+          <p>Searching for service centers that match your vehicle and service</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="empty-state" *ngIf="!isLoadingWorkshops && workshopsError">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <h3>{{ workshopsError }}</h3>
+          <button class="btn-primary" (click)="loadWorkshops()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Try Again
+          </button>
+        </div>
+
+        <!-- Workshop List -->
+        <div class="workshop-list" *ngIf="!isLoadingWorkshops && !workshopsError && workshops.length > 0">
+          <div class="workshop-select-hint" *ngIf="workshops.length > 1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>Click on a workshop to select it. Click again to deselect.</span>
+          </div>
+          
           <div class="workshop-card"
                *ngFor="let workshop of workshops"
-               [class.selected]="selectedWorkshop?.id === workshop.id"
-               (click)="selectWorkshop(workshop)">
-            <div class="workshop-header">
-              <div class="workshop-main">
-                <div class="workshop-check" *ngIf="selectedWorkshop?.id === workshop.id">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12"/>
+               [class.selected]="isWorkshopSelected(workshop)"
+               (click)="toggleWorkshop(workshop)">
+            
+            <!-- Selection Indicator -->
+            <div class="workshop-selection-indicator" *ngIf="isWorkshopSelected(workshop)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            
+            <div class="workshop-card-content">
+              <!-- Left: Logo -->
+              <div class="workshop-logo-section">
+                <div class="workshop-logo" *ngIf="workshop.logoUrl">
+                  <img [src]="workshop.logoUrl" [alt]="workshop.name + ' logo'" (error)="$any($event.target).style.display='none'">
+                </div>
+                <div class="workshop-logo workshop-logo-placeholder" *ngIf="!workshop.logoUrl">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"/>
                   </svg>
                 </div>
-                <div class="workshop-info">
-                  <h3>{{ workshop.name }}</h3>
-                  <div class="workshop-rating">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              </div>
+              
+              <!-- Center: Workshop Info -->
+              <div class="workshop-info-section">
+                <div class="workshop-header-row">
+                  <h3 class="workshop-name">{{ workshop.name }}</h3>
+                  <div class="workshop-rating-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
-                    <span class="rating-value">{{ workshop.rating }}</span>
-                    <span class="rating-count">({{ workshop.reviewCount }} reviews)</span>
+                    <span class="rating-value">{{ workshop.rating | number:'1.1-1' }}</span>
+                    <span class="rating-count">({{ workshop.reviewCount }})</span>
                   </div>
                 </div>
+                
+                <p class="workshop-description" *ngIf="workshop.workshopDescription">
+                  {{ workshop.workshopDescription.length > 120 ? (workshop.workshopDescription | slice:0:120) + '...' : workshop.workshopDescription }}
+                </p>
+                
+                <!-- Service Info Box -->
+                <div class="service-info-box" *ngIf="workshop.serviceName">
+                  <div class="service-info-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                    <span class="service-name">{{ workshop.serviceName }}</span>
+                  </div>
+                  <p class="service-description" *ngIf="workshop.serviceDescription">
+                    {{ workshop.serviceDescription.length > 100 ? (workshop.serviceDescription | slice:0:100) + '...' : workshop.serviceDescription }}
+                  </p>
+                </div>
+                
+                <!-- Location & Contact Row -->
+                <div class="workshop-meta-row">
+                  <button class="location-link" 
+                          *ngIf="workshop.city || workshop.address || (workshop.latitude && workshop.longitude)"
+                          (click)="openInGoogleMaps(workshop, $event)"
+                          title="Open in Google Maps">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                      <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <span>{{ workshop.city || workshop.address }}</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="external-link-icon">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                      <polyline points="15 3 21 3 21 9"/>
+                      <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                  </button>
+                  
+                  <span class="workshop-phone" *ngIf="workshop.phone">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                    {{ workshop.phone }}
+                  </span>
+                </div>
               </div>
-              <div class="workshop-badges">
-                <span class="badge-availability" [class.available-today]="workshop.availability === 'Available Today'">
-                  {{ workshop.availability }}
-                </span>
+              
+              <!-- Right: Price Section -->
+              <div class="workshop-price-section">
+                <div class="price-badge" *ngIf="workshop.price || workshop.minPrice || workshop.maxPrice">
+                  <span class="price-label">Price</span>
+                  <div class="price-values">
+                    <!-- Show price range if both min and max exist and are different -->
+                    <ng-container *ngIf="workshop.minPrice && workshop.maxPrice && workshop.minPrice !== workshop.maxPrice">
+                      <span class="price-range">
+                        {{ workshop.minPrice | number:'1.0-0' }} - {{ workshop.maxPrice | number:'1.0-0' }}
+                      </span>
+                      <span class="price-currency">EGP</span>
+                    </ng-container>
+                    <!-- Show single price if available -->
+                    <ng-container *ngIf="workshop.price && (!workshop.minPrice || !workshop.maxPrice || workshop.minPrice === workshop.maxPrice)">
+                      <span class="price-amount">{{ workshop.price | number:'1.0-0' }}</span>
+                      <span class="price-currency">EGP</span>
+                    </ng-container>
+                    <!-- Show minPrice only if no other price -->
+                    <ng-container *ngIf="!workshop.price && workshop.minPrice && (!workshop.maxPrice || workshop.minPrice === workshop.maxPrice)">
+                      <span class="price-amount">{{ workshop.minPrice | number:'1.0-0' }}</span>
+                      <span class="price-currency">EGP</span>
+                    </ng-container>
+                  </div>
+                </div>
+                <div class="no-price-badge" *ngIf="!workshop.price && !workshop.minPrice && !workshop.maxPrice">
+                  <span class="price-label">Price</span>
+                  <span class="price-tbd">On Request</span>
+                </div>
               </div>
-            </div>
-
-            <div class="workshop-details">
-              <div class="detail-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-                <span>{{ workshop.distance }} km away • {{ workshop.eta }}</span>
-              </div>
-              <div class="detail-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-                <span>{{ workshop.phone }}</span>
-              </div>
-              <div class="detail-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                <span>{{ workshop.address }}</span>
-              </div>
-            </div>
-
-            <div class="workshop-services">
-              <span class="service-tag" *ngFor="let service of workshop.services">{{ service }}</span>
             </div>
           </div>
+        </div>
+
+        <!-- Empty State (no workshops found) -->
+        <div class="empty-state" *ngIf="!isLoadingWorkshops && !workshopsError && workshops.length === 0">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <h3>No workshops available</h3>
+          <p>No service centers found for {{ selectedService?.name || 'this service' }} with {{ selectedVehicleOrigin }} vehicles. Try selecting a different service.</p>
         </div>
       </div>
 
@@ -401,8 +708,8 @@
               <span>Service</span>
             </div>
             <div class="review-value">
-              <strong>{{ selectedServiceType?.name }}</strong>
-              <span class="review-subtext">{{ selectedServiceType?.estimatedDuration }}</span>
+              <strong>{{ selectedCategory?.name }}</strong>
+              <span class="review-subtext">{{ selectedCategory?.description }}</span>
               <span class="review-notes" *ngIf="serviceNotes">Note: {{ serviceNotes }}</span>
             </div>
             <button class="review-edit" (click)="goToStep(1)">Edit</button>
@@ -433,10 +740,10 @@
               </svg>
               <span>Workshop</span>
             </div>
-            <div class="review-value">
-              <strong>{{ selectedWorkshop?.name }}</strong>
-              <span class="review-subtext">{{ selectedWorkshop?.address }}</span>
-              <span class="review-subtext">{{ selectedWorkshop?.distance }} km away</span>
+            <div class="review-value" *ngIf="selectedWorkshop">
+              <strong>{{ selectedWorkshop.name }}</strong>
+              <span class="review-subtext">{{ selectedWorkshop.city || selectedWorkshop.address }}</span>
+              <span class="review-subtext" *ngIf="selectedWorkshop.price">{{ selectedWorkshop.price | number:'1.0-0' }} EGP</span>
             </div>
             <button class="review-edit" (click)="goToStep(3)">Edit</button>
           </div>
@@ -445,19 +752,11 @@
         <div class="price-breakdown">
           <h3>Price Estimate</h3>
           <div class="price-item">
-            <span>Service Fee</span>
-            <span>{{ getSubtotal().toFixed(2) }} EGP</span>
-          </div>
-          <div class="price-item">
-            <span>Tax (14%)</span>
-            <span>{{ getTax().toFixed(2) }} EGP</span>
+            <span>Service Category</span>
+            <span>{{ selectedCategory?.name }}</span>
           </div>
           <div class="price-divider"></div>
-          <div class="price-item price-total">
-            <span>Total Estimate</span>
-            <span>{{ calculateTotalPrice().toFixed(2) }} EGP</span>
-          </div>
-          <p class="price-note">*Final price may vary based on actual service requirements</p>
+          <p class="price-note" style="margin-top: 1rem; text-align: center;">*Price will be determined after service selection and workshop inspection</p>
         </div>
       </div>
 
@@ -525,9 +824,10 @@
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
               <circle cx="12" cy="10" r="3"/>
             </svg>
-            <div>
-              <strong>{{ selectedWorkshop?.name }}</strong>
-              <span>{{ selectedWorkshop?.address }}</span>
+            <div *ngIf="selectedWorkshop">
+              <strong>{{ selectedWorkshop.name }}</strong>
+              <span>{{ selectedWorkshop.city || selectedWorkshop.address }}</span>
+              <span *ngIf="selectedWorkshop.price"> - {{ selectedWorkshop.price | number:'1.0-0' }} EGP</span>
             </div>
           </div>
         </div>

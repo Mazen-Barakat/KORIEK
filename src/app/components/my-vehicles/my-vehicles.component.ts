@@ -69,7 +69,7 @@ export class MyVehiclesComponent implements OnInit {
   selectedVehicleId: number | null = null;
   carOwnerProfile: any = null;
   profileName: string = 'Car Owner';
-  profilePicture: string = '/Assets/default-profile.png';
+  profilePicture: string = 'Assets/images/default-profile.svg';
   // Deletion modal state
   showDeleteConfirm = false;
   carToDelete: Vehicle | null = null;
@@ -186,7 +186,7 @@ export class MyVehiclesComponent implements OnInit {
               this.profilePicture = candidate;
             }
           } else {
-            this.profilePicture = '/Assets/default-profile.png';
+            this.profilePicture = 'Assets/images/default-profile.svg';
           }
           const rawCars = response.data.cars;
           if (Array.isArray(rawCars)) {

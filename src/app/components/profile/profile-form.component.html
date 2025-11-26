@@ -5,7 +5,7 @@
       <!-- Left: Image Section -->
       <div class="image-section">
         <div class="image-container">
-          <img [src]="getDisplayImage()" alt="Profile" class="profile-image" />
+          <img [src]="getDisplayImage()" alt="Profile" class="profile-image" (error)="onImageError($event)" />
           <label class="image-upload-label" [class.hidden]="!isEditMode">
             <input
               type="file"
