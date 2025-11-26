@@ -16,7 +16,17 @@ export interface WorkshopServiceCreateRequest {
 export interface WorkshopServiceAPIResponse {
   success: boolean;
   message: string;
-  data: WorkshopServiceData | WorkshopServiceData[];
+  data: WorkshopServiceData | WorkshopServiceData[] | PaginatedWorkshopServices;
+}
+
+export interface PaginatedWorkshopServices {
+  items: WorkshopServiceData[];
+  pageNumber: number;
+  pageSize: number;
+  totalRecords: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
 export interface WorkshopServiceData {
@@ -27,6 +37,8 @@ export interface WorkshopServiceData {
   minPrice: number;
   maxPrice: number;
   origin: string;
+  serviceName?: string;
+  serviceDescription?: string;
 }
 
 @Injectable({
@@ -45,7 +57,7 @@ export class WorkshopServiceService {
   createWorkshopServices(services: WorkshopServiceCreateRequest[]): Observable<any> {
     console.log('=== WORKSHOP SERVICE API CALL ===');
     console.log('Total services to create:', services.length);
-    
+
     if (services.length === 0) {
       return of({ success: true, message: 'No services to create', data: [] });
     }
@@ -54,28 +66,28 @@ export class WorkshopServiceService {
     const requests = services.map((service, index) => {
       console.log(`Request ${index + 1}:`, {
         url: this.apiUrl,
-        payload: service
+        payload: service,
       });
-      
+
       return this.http.post<WorkshopServiceAPIResponse>(this.apiUrl, service).pipe(
-        map(response => {
+        map((response) => {
           console.log(`✓ Request ${index + 1} SUCCESS:`, response);
           return { ...response, success: true };
         }),
-        catchError(error => {
+        catchError((error) => {
           console.error(`✗ Request ${index + 1} FAILED:`, {
             service,
             error: error.error,
             status: error.status,
             statusText: error.statusText,
-            message: error.message
+            message: error.message,
           });
-          return of({ 
-            success: false, 
+          return of({
+            success: false,
             message: error.error?.message || error.message || 'Unknown error',
-            data: null, 
+            data: null,
             error,
-            failedService: service
+            failedService: service,
           });
         })
       );
@@ -83,29 +95,30 @@ export class WorkshopServiceService {
 
     // Wait for all requests to complete
     return forkJoin(requests).pipe(
-      map(responses => {
+      map((responses) => {
         const successCount = responses.filter((r: any) => r.success).length;
         const failedCount = responses.length - successCount;
-        
+
         console.log('=== FINAL RESULTS ===');
         console.log(`Success: ${successCount}, Failed: ${failedCount}`);
-        
+
         if (failedCount > 0) {
           const failedServices = responses
             .filter((r: any) => !r.success)
             .map((r: any) => r.failedService);
           console.error('Failed services:', failedServices);
         }
-        
+
         return {
           success: failedCount === 0,
-          message: failedCount === 0 
-            ? `Successfully created ${successCount} service record(s)` 
-            : `Created ${successCount} service(s), ${failedCount} failed`,
+          message:
+            failedCount === 0
+              ? `Successfully created ${successCount} service record(s)`
+              : `Created ${successCount} service(s), ${failedCount} failed`,
           data: responses,
           totalRequests: responses.length,
           successCount,
-          failedCount
+          failedCount,
         };
       })
     );
@@ -113,18 +126,29 @@ export class WorkshopServiceService {
 
   /**
    * Get all workshop services for a workshop profile
+   * @param workShopProfileId - The workshop profile ID
+   * @param pageNumber - Page number (default: 1)
+   * @param pageSize - Number of items per page (default: 1000)
    */
-  getWorkshopServices(workShopProfileId: number): Observable<WorkshopServiceAPIResponse> {
+  getWorkshopServices(
+    workShopProfileId: number,
+    pageNumber: number = 1,
+    pageSize: number = 1000
+  ): Observable<WorkshopServiceAPIResponse> {
     return this.http.get<WorkshopServiceAPIResponse>(
-      `${this.apiUrl}/Get-Workshop-Services-By-Profile-ID/${workShopProfileId}`
+      `${this.apiUrl}/Get-Workshop-Services-By-Profile-ID?Id=${workShopProfileId}&PageNumber=${pageNumber}&PageSize=${pageSize}`
     );
   }
 
   /**
    * Update a workshop service
    */
-  updateWorkshopService(id: number, service: Partial<WorkshopServiceCreateRequest>): Observable<WorkshopServiceAPIResponse> {
-    return this.http.put<WorkshopServiceAPIResponse>(`${this.apiUrl}/${id}`, service);
+  updateWorkshopService(
+    id: number,
+    service: Partial<WorkshopServiceCreateRequest>
+  ): Observable<WorkshopServiceAPIResponse> {
+    // PUT to base URL with ID in body (as per Swagger test)
+    return this.http.put<WorkshopServiceAPIResponse>(`${this.apiUrl}`, service);
   }
 
   /**
@@ -137,7 +161,9 @@ export class WorkshopServiceService {
   /**
    * Group services by car origin for catalog display
    */
-  groupServicesByOrigin(services: WorkshopServiceData[]): { [origin: string]: WorkshopServiceData[] } {
+  groupServicesByOrigin(services: WorkshopServiceData[]): {
+    [origin: string]: WorkshopServiceData[];
+  } {
     return services.reduce((groups, service) => {
       const origin = service.origin || 'General';
       if (!groups[origin]) {
@@ -153,18 +179,18 @@ export class WorkshopServiceService {
    */
   getOriginInfo(origin: string): { name: string; flag: string; color: string } {
     const originMap: { [key: string]: { name: string; flag: string; color: string } } = {
-      'General': { name: 'All Origins', flag: '🌍', color: '#6b7280' },
-      'Germany': { name: 'German', flag: '🇩🇪', color: '#ef4444' },
-      'Japan': { name: 'Japanese', flag: '🇯🇵', color: '#dc2626' },
-      'SouthKorea': { name: 'Korean', flag: '🇰🇷', color: '#0891b2' },
-      'USA': { name: 'American', flag: '🇺🇸', color: '#2563eb' },
-      'China': { name: 'Chinese', flag: '🇨🇳', color: '#dc2626' },
-      'France': { name: 'French', flag: '🇫🇷', color: '#3b82f6' },
-      'Italy': { name: 'Italian', flag: '🇮🇹', color: '#22c55e' },
-      'UK': { name: 'British', flag: '🇬🇧', color: '#3b82f6' },
-      'CzechRepublic': { name: 'Czech', flag: '🇨🇿', color: '#6366f1' },
-      'Sweden': { name: 'Swedish', flag: '🇸🇪', color: '#3b82f6' },
-      'Malaysia': { name: 'Malaysian', flag: '🇲🇾', color: '#eab308' }
+      General: { name: 'All Origins', flag: '🌍', color: '#6b7280' },
+      Germany: { name: 'German', flag: '🇩🇪', color: '#ef4444' },
+      Japan: { name: 'Japanese', flag: '🇯🇵', color: '#dc2626' },
+      SouthKorea: { name: 'Korean', flag: '🇰🇷', color: '#0891b2' },
+      USA: { name: 'American', flag: '🇺🇸', color: '#2563eb' },
+      China: { name: 'Chinese', flag: '🇨🇳', color: '#dc2626' },
+      France: { name: 'French', flag: '🇫🇷', color: '#3b82f6' },
+      Italy: { name: 'Italian', flag: '🇮🇹', color: '#22c55e' },
+      UK: { name: 'British', flag: '🇬🇧', color: '#3b82f6' },
+      CzechRepublic: { name: 'Czech', flag: '🇨🇿', color: '#6366f1' },
+      Sweden: { name: 'Swedish', flag: '🇸🇪', color: '#3b82f6' },
+      Malaysia: { name: 'Malaysian', flag: '🇲🇾', color: '#eab308' },
     };
     return originMap[origin] || { name: origin, flag: '🚗', color: '#6b7280' };
   }
