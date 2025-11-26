@@ -1,12 +1,25 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  HostListener,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
-import { Subscription } from 'rxjs';
+import {
+  WorkshopServiceService,
+  WorkshopServiceData,
+} from '../../services/workshop-service.service';
+import { Subscription, forkJoin, of, timeout } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { AddServiceModalComponent } from '../add-service-modal/add-service-modal.component';
+import { WorkshopServicesCatalogComponent } from '../workshop-services-catalog/workshop-services-catalog.component';
 import { WorkshopService as WorkshopServiceModel } from '../../models/workshop-profile.model';
 
 interface Service {
@@ -20,12 +33,19 @@ interface Service {
   selected?: boolean;
   carOriginSpecializations?: string[];
   isAvailable?: boolean;
+  originPricing?: Array<{
+    originCode: string;
+    originName: string;
+    minPrice: number;
+    maxPrice: number;
+    isEnabled: boolean;
+  }>;
 }
 
 @Component({
   selector: 'app-workshop-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddServiceModalComponent],
+  imports: [CommonModule, FormsModule, AddServiceModalComponent, WorkshopServicesCatalogComponent],
   templateUrl: './workshop-profile.component.html',
   styleUrls: ['./workshop-profile.component.css'],
 })
@@ -38,6 +58,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   selectedTab: 'services' | 'reviews' = 'services';
   errorMessage: string = '';
+  isLoadingProfile = false;
 
   // Gallery slider state
   currentImageIndex: number = 0;
@@ -46,6 +67,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   private routeSubscription?: Subscription;
   private profileSubscription?: Subscription;
   private photosSubscription?: Subscription;
+  private loadingTimeoutId?: any;
 
   // Service form state for add/edit
   editingService: Service | null = null;
@@ -60,7 +82,11 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   services: Service[] = [];
   workshopServices: WorkshopServiceModel[] = [];
-  
+
+  // Catalog component reference
+  @ViewChild(WorkshopServicesCatalogComponent) catalogComponent?: WorkshopServicesCatalogComponent;
+  @ViewChild('addServiceModal') addServiceModalComponent?: any;
+
   // Add Service Modal state
   showAddServiceModal = false;
   serviceGroupBy: 'origin' | 'category' | 'price' | 'duration' = 'origin';
@@ -71,6 +97,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private authService: AuthService,
     private workshopProfileService: WorkshopProfileService,
+    private workshopServiceService: WorkshopServiceService,
     private http: HttpClient,
     private cdr: ChangeDetectorRef
   ) {}
@@ -79,14 +106,11 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   private sliderInterval?: any;
 
   ngOnInit(): void {
-    console.log('ngOnInit called');
-
     // Load data immediately on init
     this.loadWorkshopData();
 
     // Also subscribe to route changes for navigation
     this.routeSubscription = this.route.paramMap.subscribe(() => {
-      console.log('Route param changed');
       this.loadWorkshopData();
     });
   }
@@ -95,6 +119,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     if (this.routeSubscription) this.routeSubscription.unsubscribe();
     if (this.profileSubscription) this.profileSubscription.unsubscribe();
     if (this.photosSubscription) this.photosSubscription.unsubscribe();
+    if (this.loadingTimeoutId) clearTimeout(this.loadingTimeoutId);
   }
 
   loadWorkshopData(): void {
@@ -102,112 +127,150 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     if (this.profileSubscription) this.profileSubscription.unsubscribe();
     if (this.photosSubscription) this.photosSubscription.unsubscribe();
 
+    // Clear any existing timeout
+    if (this.loadingTimeoutId) {
+      clearTimeout(this.loadingTimeoutId);
+    }
+
     this.errorMessage = '';
+    this.isLoadingProfile = true;
+
+    // Safety timeout: Force stop loading after 10 seconds
+    this.loadingTimeoutId = setTimeout(() => {
+      if (this.isLoadingProfile) {
+        console.error('⚠️ Loading timeout - forcing load complete');
+        this.isLoadingProfile = false;
+        this.errorMessage = 'Loading took too long. Some data may be missing.';
+        this.cdr.detectChanges();
+      }
+    }, 10000);
 
     const workshopIdFromRoute = this.route.snapshot.paramMap.get('id');
     const currentUserId = this.authService.getUserId();
     this.workshopId = workshopIdFromRoute || currentUserId || '';
 
-    console.log('Calling API...');
+    console.log('🚀 Starting workshop data load...');
 
     // Load workshop profile from API - backend handles permissions
     this.profileSubscription = this.workshopProfileService.getMyWorkshopProfile().subscribe({
       next: (response) => {
-        console.log('Workshop Profile API Response:', response);
+        console.log('📦 Profile API response received:', response);
 
         // Extract data from response
         const data = response?.data ?? response;
-        console.log('Extracted data:', data);
+        console.log('📦 Extracted data:', data);
 
         if (!data || !data.id) {
-          console.log('No valid profile data');
+          console.error('❌ No valid profile data');
           this.errorMessage = 'No profile data found';
+          this.isLoadingProfile = false;
+
+          // Clear the safety timeout
+          if (this.loadingTimeoutId) {
+            clearTimeout(this.loadingTimeoutId);
+          }
+
           return;
         }
 
         // Assign to profileData
         this.profileData = data;
-        console.log('profileData assigned:', this.profileData);
-        console.log('Profile name:', this.profileData.name);
+        this.workshopId = data.id.toString();
 
-        // Force change detection
-        this.cdr.detectChanges();
-        console.log('Change detection triggered');
+        // Load additional data in parallel using forkJoin
+        const photosUrl = `https://localhost:44316/api/WorkShopPhoto/${data.id}`;
 
-        // Load photos if we have workshop ID
-        if (this.profileData.id) {
-          this.loadPhotos(this.profileData.id);
-          this.loadWorkingHours(this.profileData.id);
-        }
+        const photosRequest = this.http.get(photosUrl).pipe(
+          timeout(5000), // 5 second timeout
+          catchError((error) => {
+            console.error('Photos API failed, continuing with empty array:', error);
+            return of({ data: [] });
+          })
+        );
+
+        const workingHoursRequest = this.workshopProfileService
+          .getWorkshopWorkingHours(data.id)
+          .pipe(
+            timeout(5000), // 5 second timeout
+            catchError((error) => {
+              console.error('Working hours API failed, continuing with empty array:', error);
+              return of([]);
+            })
+          );
+
+        forkJoin({
+          photos: photosRequest,
+          workingHours: workingHoursRequest,
+        }).subscribe({
+          next: (results) => {
+            console.log('✅ ForkJoin completed, processing results...');
+
+            // Handle photos
+            this.photos = (results.photos as any)?.data ?? (results.photos as any) ?? [];
+            this.currentImageIndex = 0;
+            console.log('Photos loaded:', this.photos.length);
+
+            // Handle working hours
+            const apiResponse = results.workingHours as any;
+            const apiHours = apiResponse?.data || apiResponse || [];
+            const hoursMap: any = {};
+
+            if (Array.isArray(apiHours) && apiHours.length > 0) {
+              apiHours.forEach((hour) => {
+                const dayName = hour.day; // API returns 'day' field directly as day name
+                hoursMap[dayName] = {
+                  openTime: hour.from, // API uses 'from' field
+                  closeTime: hour.to, // API uses 'to' field
+                  isClosed: hour.isClosed,
+                };
+              });
+            }
+
+            this.workingHours = hoursMap;
+            console.log('Working hours loaded:', Object.keys(hoursMap).length, 'days', hoursMap);
+
+            // CRITICAL: Set loading to false
+            this.isLoadingProfile = false;
+            console.log('✅ Profile loading complete - isLoadingProfile:', this.isLoadingProfile);
+
+            // Clear the safety timeout
+            if (this.loadingTimeoutId) {
+              clearTimeout(this.loadingTimeoutId);
+            }
+
+            this.cdr.detectChanges();
+          },
+          error: (error) => {
+            console.error('❌ ForkJoin error (should not happen due to catchError):', error);
+            // Even on error, stop loading
+            this.isLoadingProfile = false;
+
+            // Clear the safety timeout
+            if (this.loadingTimeoutId) {
+              clearTimeout(this.loadingTimeoutId);
+            }
+
+            this.cdr.detectChanges();
+          },
+        });
       },
       error: (error) => {
         console.error('Error loading workshop profile:', error);
         this.errorMessage = 'Failed to load workshop profile. Please try again.';
         this.profileData = {};
+        this.isLoadingProfile = false;
+
+        // Clear the safety timeout
+        if (this.loadingTimeoutId) {
+          clearTimeout(this.loadingTimeoutId);
+        }
       },
     });
   }
 
-  loadWorkingHours(workshopId: number): void {
-    this.workshopProfileService.getWorkshopWorkingHours(workshopId).subscribe({
-      next: (apiHours) => {
-        console.log('Working Hours API Response:', apiHours);
-
-        // Convert API format to display format and organize by day
-        const hoursMap: any = {};
-        const daysOrder = [
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-          'Sunday',
-        ];
-
-        apiHours.forEach((hour) => {
-          hoursMap[hour.day] = {
-            openTime: hour.from,
-            closeTime: hour.to,
-            isClosed: hour.isClosed,
-          };
-        });
-
-        // Don't add default hours for days not in API response
-        this.workingHours = hoursMap;
-        console.log('Working Hours loaded:', this.workingHours);
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error loading working hours:', error);
-        // Set empty working hours if API fails
-        this.workingHours = {};
-      },
-    });
-  }
-
-  private setDefaultWorkingHours(): void {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    this.workingHours = {};
-    days.forEach((day) => {
-      this.workingHours[day] = {
-        openTime: '09:00',
-        closeTime: '17:00',
-        isClosed: false,
-      };
-    });
-  }
-
-  loadPhotos(workshopId: string): void {
-    const photosUrl = `https://localhost:44316/api/WorkShopPhoto/${workshopId}`;
-    this.photosSubscription = this.http.get(photosUrl).subscribe({
-      next: (response: any) => {
-        this.photos = response?.data ?? response ?? [];
-      },
-      error: (error) => {
-        console.error('Error loading photos:', error);
-      },
-    });
+  getDayName(dayOfWeek: number): string {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[dayOfWeek] || 'Unknown';
   }
 
   // Hero slider methods
@@ -408,6 +471,30 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     this.services = this.services.filter((s) => s.id !== service.id);
   }
 
+  onServicesLoaded(services: any[]): void {
+    console.log('📊 Services loaded from catalog:', services.length);
+    // Update parent services array for stats calculation
+    this.services = services.map((service) => ({
+      id: service.id,
+      name: service.serviceName,
+      description: service.serviceDescription,
+      duration: service.duration,
+      minPrice: service.minPrice,
+      maxPrice: service.maxPrice,
+      imageUrl: service.imageUrl,
+      carOriginSpecializations: service.origin ? [service.origin] : [],
+      originPricing: service.originPricing || [],
+      isAvailable: service.isAvailable,
+    }));
+    console.log(
+      '📈 Stats updated - Active Services:',
+      this.services.length,
+      'Car Origins:',
+      this.getUniqueOriginsCount()
+    );
+    this.cdr.detectChanges();
+  }
+
   cancelEdit(): void {
     this.editingService = null;
     this.serviceForm = {
@@ -538,52 +625,142 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     return !hours || hours.isClosed === true;
   }
 
+  isWorkshopOpenNow(): boolean {
+    const now = new Date();
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const today = dayNames[now.getDay()];
+
+    const todayHours = this.workingHours[today];
+
+    // If no hours set or marked as closed
+    if (!todayHours || todayHours.isClosed) {
+      return false;
+    }
+
+    // Get current time in minutes since midnight
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // Parse opening and closing times
+    const [openHour, openMin] = todayHours.openTime.split(':').map(Number);
+    const [closeHour, closeMin] = todayHours.closeTime.split(':').map(Number);
+
+    const openMinutes = openHour * 60 + openMin;
+    const closeMinutes = closeHour * 60 + closeMin;
+
+    // Check if current time is between opening and closing
+    return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+  }
+
   // ============================================
   // Add Service Modal Methods
   // ============================================
 
   openAddServiceModal(): void {
-    console.log('Opening Add Service Modal...');
     this.showAddServiceModal = true;
-    console.log('showAddServiceModal:', this.showAddServiceModal);
     this.cdr.detectChanges();
   }
 
   closeAddServiceModal(): void {
-    console.log('Closing Add Service Modal...');
     this.showAddServiceModal = false;
+    this.editingService = null;
     this.cdr.detectChanges();
   }
 
   handleServicesAdded(services: WorkshopServiceModel[]): void {
     console.log('Services added successfully:', services);
-    
-    // Show success message
-    alert(`✅ Successfully added ${services.length} service${services.length > 1 ? 's' : ''}!`);
-    
+
     // Update the services list
     this.workshopServices = [...this.workshopServices, ...services];
-    
-    // Reload services from API if workshop ID is available
-    if (this.profileData?.id) {
-      this.loadWorkshopServices();
+
+    // Don't close the modal here - let the modal close itself after showing success message
+    // Just refresh the catalog component immediately
+    if (this.catalogComponent) {
+      console.log('Refreshing catalog component...');
+      this.catalogComponent.loadServices();
     }
-    
+
     // Trigger change detection
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Handle service updated from modal
+   */
+  handleServiceUpdated(service: any): void {
+    console.log('Service updated successfully:', service);
+
+    // Refresh the catalog component to show updated service
+    if (this.catalogComponent) {
+      console.log('Refreshing catalog component after update...');
+      this.catalogComponent.loadServices();
+    }
+
+    // Trigger change detection
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Handle service edited from catalog
+   */
+  onServiceEdited(service: any): void {
+    console.log('Service edited:', service);
+    this.editingService = service;
+    this.showAddServiceModal = true;
+  }
+
+  /**
+   * Handle service deleted from catalog
+   */
+  onServiceDeleted(serviceId: number): void {
+    // Remove the deleted service from the local array to update stats immediately
+    this.services = this.services.filter((service) => Number(service.id) !== serviceId);
+    console.log(
+      '📊 Service deleted, stats updated - Active Services:',
+      this.services.length,
+      'Car Origins:',
+      this.getUniqueOriginsCount()
+    );
     this.cdr.detectChanges();
   }
 
   loadWorkshopServices(): void {
     if (!this.profileData?.id) return;
-    
-    this.workshopProfileService.getWorkshopServices(this.profileData.id).subscribe({
-      next: (services) => {
-        this.workshopServices = services;
+
+    this.workshopServiceService.getWorkshopServices(this.profileData.id).subscribe({
+      next: (response) => {
+        console.log('Services API response:', response);
+        if (response.success && response.data) {
+          // Handle paginated response structure
+          const data = response.data as any;
+          if (data.items && Array.isArray(data.items)) {
+            // Map WorkshopServiceData to WorkshopServiceModel
+            this.workshopServices = data.items.map((item: WorkshopServiceData) => ({
+              id: item.id,
+              serviceId: item.serviceId,
+              name: item.serviceName || 'Service',
+              description: item.serviceDescription || '',
+              duration: item.duration,
+              minPrice: item.minPrice,
+              maxPrice: item.maxPrice,
+              origin: item.origin,
+              workShopProfileId: item.workShopProfileId,
+            }));
+          } else if (Array.isArray(response.data)) {
+            this.workshopServices = response.data as any;
+          } else {
+            this.workshopServices = [];
+          }
+        } else {
+          this.workshopServices = [];
+        }
+        console.log('Loaded workshop services:', this.workshopServices);
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading workshop services:', error);
-      }
+        this.workshopServices = [];
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -592,57 +769,59 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
     this.workshopProfileService.deleteWorkshopService(this.profileData.id, serviceId).subscribe({
       next: () => {
-        this.workshopServices = this.workshopServices.filter(s => s.id !== serviceId);
+        this.workshopServices = this.workshopServices.filter((s) => s.id !== serviceId);
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error deleting service:', error);
         alert('Failed to delete service. Please try again.');
-      }
+      },
     });
   }
 
   toggleServiceAvailability(serviceId: number): void {
-    this.workshopProfileService.toggleServiceAvailability(this.profileData.id, serviceId).subscribe({
-      next: () => {
-        const service = this.workshopServices.find(s => s.id === serviceId);
-        if (service) {
-          service.isAvailable = !service.isAvailable;
-          this.cdr.detectChanges();
-        }
-      },
-      error: (error) => {
-        console.error('Error toggling service availability:', error);
-      }
-    });
+    this.workshopProfileService
+      .toggleServiceAvailability(this.profileData.id, serviceId)
+      .subscribe({
+        next: () => {
+          const service = this.workshopServices.find((s) => s.id === serviceId);
+          if (service) {
+            service.isAvailable = !service.isAvailable;
+            this.cdr.detectChanges();
+          }
+        },
+        error: (error) => {
+          console.error('Error toggling service availability:', error);
+        },
+      });
   }
 
   getServicesByOrigin(): Map<string, WorkshopServiceModel[]> {
     const grouped = new Map<string, WorkshopServiceModel[]>();
-    
-    this.workshopServices.forEach(service => {
-      service.carOriginSpecializations.forEach(origin => {
+
+    this.workshopServices.forEach((service) => {
+      service.carOriginSpecializations.forEach((origin) => {
         if (!grouped.has(origin)) {
           grouped.set(origin, []);
         }
         grouped.get(origin)!.push(service);
       });
     });
-    
+
     return grouped;
   }
 
   getServicesByCategory(): Map<string, WorkshopServiceModel[]> {
     const grouped = new Map<string, WorkshopServiceModel[]>();
-    
-    this.workshopServices.forEach(service => {
+
+    this.workshopServices.forEach((service) => {
       const category = service.categoryName || 'Other';
       if (!grouped.has(category)) {
         grouped.set(category, []);
       }
       grouped.get(category)!.push(service);
     });
-    
+
     return grouped;
   }
 
@@ -656,30 +835,30 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   getOriginFlag(originCode: string): string {
     const origins: { [key: string]: string } = {
-      'german': '🇩🇪',
-      'japanese': '🇯🇵',
-      'korean': '🇰🇷',
-      'american': '🇺🇸',
-      'french': '🇫🇷',
-      'italian': '🇮🇹',
-      'british': '🇬🇧',
-      'chinese': '🇨🇳',
-      'all': '🌍'
+      german: '🇩🇪',
+      japanese: '🇯🇵',
+      korean: '🇰🇷',
+      american: '🇺🇸',
+      french: '🇫🇷',
+      italian: '🇮🇹',
+      british: '🇬🇧',
+      chinese: '🇨🇳',
+      all: '🌍',
     };
     return origins[originCode] || '🌍';
   }
 
   getOriginName(originCode: string): string {
     const origins: { [key: string]: string } = {
-      'german': 'German',
-      'japanese': 'Japanese',
-      'korean': 'Korean',
-      'american': 'American',
-      'french': 'French',
-      'italian': 'Italian',
-      'british': 'British',
-      'chinese': 'Chinese',
-      'all': 'All Origins'
+      german: 'German',
+      japanese: 'Japanese',
+      korean: 'Korean',
+      american: 'American',
+      french: 'French',
+      italian: 'Italian',
+      british: 'British',
+      chinese: 'Chinese',
+      all: 'All Origins',
     };
     return origins[originCode] || originCode;
   }
@@ -687,7 +866,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   formatServiceDuration(minutes: number): string {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    
+
     if (hours > 0 && mins > 0) {
       return `${hours}h ${mins}m`;
     } else if (hours > 0) {
@@ -706,6 +885,53 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
       return '';
     }
     const remaining = service.carOriginSpecializations.slice(3);
-    return remaining.map(code => this.getOriginName(code)).join(', ');
+    return remaining.map((code) => this.getOriginName(code)).join(', ');
+  }
+
+  // Enhanced header helper methods
+  getUniqueOriginsCount(): number {
+    if (!this.services || this.services.length === 0) {
+      return 0;
+    }
+
+    const allOrigins = this.services
+      .flatMap((service) => service.carOriginSpecializations || [])
+      .filter((origin, index, self) => self.indexOf(origin) === index);
+
+    return allOrigins.length;
+  }
+
+  getPriceRange(): string {
+    if (!this.services || this.services.length === 0) {
+      return '0 EGP';
+    }
+
+    const allPrices: number[] = [];
+
+    this.services.forEach((service) => {
+      if (service.originPricing && service.originPricing.length > 0) {
+        service.originPricing.forEach((pricing) => {
+          allPrices.push(pricing.minPrice);
+          allPrices.push(pricing.maxPrice);
+        });
+      } else {
+        // Fallback to service-level pricing if originPricing is not available
+        allPrices.push(service.minPrice);
+        allPrices.push(service.maxPrice);
+      }
+    });
+
+    if (allPrices.length === 0) {
+      return '0 EGP';
+    }
+
+    const minPrice = Math.min(...allPrices);
+    const maxPrice = Math.max(...allPrices);
+
+    if (minPrice === maxPrice) {
+      return `${minPrice.toLocaleString()} EGP`;
+    }
+
+    return `${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()} EGP`;
   }
 }

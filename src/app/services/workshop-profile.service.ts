@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { WorkshopProfileData, WorkShopWorkingHoursAPI, WorkingHours, WorkshopService } from '../models/workshop-profile.model';
+import { map, shareReplay, tap, catchError } from 'rxjs/operators';
+import { WorkshopProfileData, WorkShopWorkingHoursAPI, WorkingHours, WorkshopService, CategoryAPIResponse, CategoryData, SubcategoryAPIResponse, SubcategoryData, ServiceAPIResponse, ServiceData } from '../models/workshop-profile.model';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +12,20 @@ export class WorkshopProfileService {
 
   // WorkShopProfile endpoints (separate controller)
   private profileApiBase = 'https://localhost:44316/api/WorkShopProfile';
+  
+  // Category API endpoint
+  private categoryApiUrl = 'https://localhost:44316/api/Category';
+  
+  // Subcategory API endpoint
+  private subcategoryApiUrl = 'https://localhost:44316/api/Subcategory';
+  
+  // Service API endpoint
+  private serviceApiUrl = 'https://localhost:44316/api/Service';
+  
+  // Cache for categories, subcategories, and services
+  private categoriesCache$?: Observable<CategoryAPIResponse>;
+  private subcategoriesCache = new Map<number, Observable<SubcategoryAPIResponse>>();
+  private servicesCache = new Map<number, Observable<ServiceAPIResponse>>();
 
   constructor(private http: HttpClient) {}
 
@@ -297,10 +311,113 @@ export class WorkshopProfileService {
   }
 
   /**
-   * Load service categories from JSON file
+   * Load service categories from API with caching
    */
-  loadServiceCategories(): Observable<any> {
-    return this.http.get('/Car Services.json');
+  loadServiceCategories(forceRefresh = false): Observable<CategoryAPIResponse> {
+    // Clear cache if force refresh
+    if (forceRefresh) {
+      this.categoriesCache$ = undefined;
+    }
+    
+    // Return cached observable if exists
+    if (this.categoriesCache$) {
+      return this.categoriesCache$;
+    }
+    
+    // Create new observable with caching
+    this.categoriesCache$ = this.http.get<CategoryAPIResponse>(this.categoryApiUrl).pipe(
+      tap(response => {
+        console.log('Categories loaded from API:', response);
+      }),
+      shareReplay(1) // Share result and replay to late subscribers
+    );
+    
+    return this.categoriesCache$;
+  }
+  
+  /**
+   * Clear categories cache
+   */
+  clearCategoriesCache(): void {
+    this.categoriesCache$ = undefined;
+  }
+  
+  /**
+   * Get subcategories by category ID with caching
+   */
+  getSubcategoriesByCategory(categoryId: number, forceRefresh = false): Observable<SubcategoryAPIResponse> {
+    // Clear cache if force refresh
+    if (forceRefresh) {
+      this.subcategoriesCache.delete(categoryId);
+    }
+    
+    // Return cached observable if exists
+    if (this.subcategoriesCache.has(categoryId)) {
+      return this.subcategoriesCache.get(categoryId)!;
+    }
+    
+    // Create new observable with caching
+    const subcategories$ = this.http.get<SubcategoryAPIResponse>(
+      `${this.subcategoryApiUrl}/ByCategory/${categoryId}`
+    ).pipe(
+      tap(response => {
+        console.log(`Subcategories for category ${categoryId} loaded from API:`, response);
+      }),
+      shareReplay(1)
+    );
+    
+    this.subcategoriesCache.set(categoryId, subcategories$);
+    return subcategories$;
+  }
+  
+  /**
+   * Clear subcategories cache
+   */
+  clearSubcategoriesCache(categoryId?: number): void {
+    if (categoryId) {
+      this.subcategoriesCache.delete(categoryId);
+    } else {
+      this.subcategoriesCache.clear();
+    }
+  }
+  
+  /**
+   * Get services by subcategory ID with caching
+   */
+  getServicesBySubcategory(subcategoryId: number, forceRefresh = false): Observable<ServiceAPIResponse> {
+    // Clear cache if force refresh
+    if (forceRefresh) {
+      this.servicesCache.delete(subcategoryId);
+    }
+    
+    // Return cached observable if exists
+    if (this.servicesCache.has(subcategoryId)) {
+      return this.servicesCache.get(subcategoryId)!;
+    }
+    
+    // Create new observable with caching
+    const services$ = this.http.get<ServiceAPIResponse>(
+      `${this.serviceApiUrl}/subcategory/${subcategoryId}`
+    ).pipe(
+      tap(response => {
+        console.log(`Services for subcategory ${subcategoryId} loaded from API:`, response);
+      }),
+      shareReplay(1)
+    );
+    
+    this.servicesCache.set(subcategoryId, services$);
+    return services$;
+  }
+  
+  /**
+   * Clear services cache
+   */
+  clearServicesCache(subcategoryId?: number): void {
+    if (subcategoryId) {
+      this.servicesCache.delete(subcategoryId);
+    } else {
+      this.servicesCache.clear();
+    }
   }
 
   // ============================================

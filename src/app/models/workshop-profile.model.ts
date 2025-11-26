@@ -103,10 +103,19 @@ export interface WorkshopService {
   minPrice: number;
   maxPrice: number;
   carOriginSpecializations: string[];
+  originPricing?: OriginPricing[];
   imageUrl?: string;
   isAvailable: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface OriginPricing {
+  originCode: string;
+  originName: string;
+  minPrice: number;
+  maxPrice: number;
+  isEnabled: boolean;
 }
 
 export interface ServiceCategory {
@@ -127,6 +136,45 @@ export interface ServiceItem {
   name: string;
 }
 
+// API Response Interfaces
+export interface CategoryAPIResponse {
+  success: boolean;
+  message: string;
+  data: CategoryData[];
+}
+
+export interface CategoryData {
+  id: number;
+  name: string;
+  iconURL: string;
+  displayOrder: number;
+}
+
+export interface SubcategoryAPIResponse {
+  success: boolean;
+  message: string;
+  data: SubcategoryData[];
+}
+
+export interface SubcategoryData {
+  id: number;
+  name: string;
+  categoryId: number;
+}
+
+export interface ServiceAPIResponse {
+  success: boolean;
+  message: string;
+  data: ServiceData[];
+}
+
+export interface ServiceData {
+  id: number;
+  name: string;
+  description?: string;
+  subcategoryId?: number;
+}
+
 export const CAR_ORIGINS = [
   { code: 'german', name: 'German', flag: '🇩🇪' },
   { code: 'japanese', name: 'Japanese', flag: '🇯🇵' },
@@ -136,6 +184,9 @@ export const CAR_ORIGINS = [
   { code: 'italian', name: 'Italian', flag: '🇮🇹' },
   { code: 'british', name: 'British', flag: '🇬🇧' },
   { code: 'chinese', name: 'Chinese', flag: '🇨🇳' },
+  { code: 'czech', name: 'Czech', flag: '🇨🇿' },
+  { code: 'swedish', name: 'Swedish', flag: '🇸🇪' },
+  { code: 'malaysian', name: 'Malaysian', flag: '🇲🇾' },
   { code: 'all', name: 'All Origins', flag: '🌍' }
 ];
 
