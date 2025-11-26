@@ -24,6 +24,7 @@
     opacity: 0;
     backdrop-filter: blur(0);
   }
+
   to {
     opacity: 1;
     backdrop-filter: blur(8px);
@@ -36,7 +37,7 @@
   max-height: 92vh;
   background: #ffffff;
   border-radius: 24px;
-  box-shadow: 
+  box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04),
     0 0 0 1px rgba(0, 0, 0, 0.05);
@@ -47,11 +48,19 @@
   overflow: hidden;
 }
 
+/* Edit Mode - Compact Modal */
+.modal-container-v2.modal-edit-mode {
+  width: 30%;
+  max-width: 420px;
+  min-width: 380px;
+}
+
 @keyframes modalSlideUpV2 {
   from {
     opacity: 0;
     transform: translateY(40px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -444,6 +453,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -483,10 +493,12 @@
     opacity: 0;
     transform: translateY(-30px) scale(0.9);
   }
+
   60% {
     opacity: 1;
     transform: translateY(5px) scale(1.02);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -497,6 +509,7 @@
   0% {
     left: -100%;
   }
+
   100% {
     left: 200%;
   }
@@ -525,6 +538,7 @@
     opacity: 0;
     transform: scale(0) rotate(-45deg);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) rotate(0deg);
@@ -600,6 +614,7 @@
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -657,6 +672,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -753,6 +769,7 @@
     opacity: 0;
     transform: translateY(30px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -838,7 +855,7 @@
   box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
 }
 
-.search-bar input:focus + .search-icon {
+.search-bar input:focus+.search-icon {
   color: #ef4444;
 }
 
@@ -1334,13 +1351,16 @@
 }
 
 @keyframes errorShake {
+
   0%,
   100% {
     transform: translateX(0);
   }
+
   25% {
     transform: translateX(-4px);
   }
+
   75% {
     transform: translateX(4px);
   }
@@ -1605,6 +1625,7 @@
 .btn-submit {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
   padding: 0.9375rem 1.75rem;
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
@@ -1660,7 +1681,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .btn-shine {
@@ -1686,6 +1709,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -1727,6 +1751,7 @@
     from {
       transform: translateY(100%);
     }
+
     to {
       transform: translateY(0);
     }
@@ -2019,11 +2044,11 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-.toggle-input:checked + .toggle-switch-v2 {
+.toggle-input:checked+.toggle-switch-v2 {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
-.toggle-input:checked + .toggle-switch-v2::before {
+.toggle-input:checked+.toggle-switch-v2::before {
   transform: translateX(20px);
 }
 
@@ -2115,11 +2140,11 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-label input[type="checkbox"]:checked + .toggle-slider {
+.toggle-label input[type="checkbox"]:checked+.toggle-slider {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
-.toggle-label input[type="checkbox"]:checked + .toggle-slider::before {
+.toggle-label input[type="checkbox"]:checked+.toggle-slider::before {
   transform: translateX(22px);
 }
 
@@ -2309,6 +2334,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -2443,11 +2469,11 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
-.toggle-switch input:checked + .toggle-slider::before {
+.toggle-switch input:checked+.toggle-slider::before {
   transform: translateX(22px);
 }
 
@@ -2632,12 +2658,12 @@
   justify-content: center;
 }
 
-.checkbox-wrapper input:checked + .checkbox-custom {
+.checkbox-wrapper input:checked+.checkbox-custom {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   border-color: #ef4444;
 }
 
-.checkbox-wrapper input:checked + .checkbox-custom::after {
+.checkbox-wrapper input:checked+.checkbox-custom::after {
   content: '';
   width: 5px;
   height: 10px;
@@ -2848,6 +2874,7 @@
     opacity: 0;
     transform: scale(0) rotate(-45deg);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) rotate(0deg);
@@ -3479,4 +3506,193 @@
   .auto-save-indicator.show {
     transform: translateX(-50%) translateY(0);
   }
+}
+
+/* ============================================ */
+/* Simple Edit Form Styles */
+/* ============================================ */
+/* EDIT SERVICE MODAL - CLEAN MINIMAL DESIGN   */
+/* ============================================ */
+
+.edit-form-simple {
+  padding: 2rem;
+  background: #ffffff;
+}
+
+.form-group-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 280px;
+}
+
+.input-wrapper-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.input-label-simple {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.label-text {
+  color: #64748b;
+}
+
+.label-required {
+  color: #ef4444;
+  font-size: 1rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Input with unit wrapper */
+.input-with-unit {
+  position: relative;
+}
+
+.input-unit {
+  position: absolute;
+  right: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #94a3b8;
+  pointer-events: none;
+  user-select: none;
+}
+
+.input-field-simple {
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  font-size: 0.9375rem;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.input-with-unit .input-field-simple {
+  padding-right: 3rem;
+}
+
+.input-field-simple:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+}
+
+.input-field-simple:hover:not(:focus):not(:disabled) {
+  border-color: #cbd5e1;
+}
+
+.input-field-simple::placeholder {
+  color: #cbd5e1;
+  font-weight: 400;
+}
+
+.input-field-simple:disabled {
+  background: #f8fafc;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Select field */
+.select-field {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  padding-right: 2.5rem;
+}
+
+.edit-form-actions {
+  margin-top: 0.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-submit-edit {
+  padding: 0.875rem 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.075em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.btn-submit-edit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-submit-edit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-submit-edit:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.btn-submit-edit svg {
+  flex-shrink: 0;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+padding-right: 3rem;
+cursor: pointer;
+}
+
+select.input-field-simple::-ms-expand {
+  display: none;
 }
