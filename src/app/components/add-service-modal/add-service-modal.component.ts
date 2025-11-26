@@ -1,9 +1,12 @@
-import { Component, OnInit, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
-import { WorkshopService, ServiceCategory, ServiceSubcategory, ServiceItem, CAR_ORIGINS } from '../../models/workshop-profile.model';
+import { WorkshopServiceService, WorkshopServiceCreateRequest } from '../../services/workshop-service.service';
+import { WorkshopService, ServiceCategory, ServiceSubcategory, ServiceItem, CAR_ORIGINS, CategoryAPIResponse, CategoryData, SubcategoryAPIResponse, SubcategoryData, ServiceAPIResponse, ServiceData } from '../../models/workshop-profile.model';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 interface SelectedService {
   categoryId: number;
@@ -22,15 +25,19 @@ interface SelectedService {
   templateUrl: './add-service-modal.component.html',
   styleUrls: ['./add-service-modal.component.css']
 })
-export class AddServiceModalComponent implements OnInit {
+export class AddServiceModalComponent implements OnInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
   @Output() servicesAdded = new EventEmitter<WorkshopService[]>();
+  
+  // Search subjects for debouncing (categories only)
+  private categorySearchSubject = new Subject<string>();
+  private searchSubscription?: Subscription;
 
   // Step management - simplified to 3 steps
   currentStep = 1;
   totalSteps = 3;
 
-  // Data from JSON
+  // Data from API
   categories: ServiceCategory[] = [];
   filteredCategories: ServiceCategory[] = [];
   
@@ -47,6 +54,14 @@ export class AddServiceModalComponent implements OnInit {
   };
   
   applyToAll = true; // Bulk configuration toggle
+  
+  // Per-origin pricing configuration
+  pricingMode: { [serviceIndex: number]: 'unified' | 'per-origin' } = {};
+  
+  // API state management
+  workshopProfileId: number | null = null;
+  isLoadingSubmit = false;
+  submitError: string | null = null;
   
   // Selection state - nested navigation
   selectedCategory: ServiceCategory | null = null;
@@ -78,6 +93,8 @@ export class AddServiceModalComponent implements OnInit {
   showMessage = false;
   isSuccess = false;
   resultMessage = '';
+  isRedirecting = false;
+  redirectCountdown = 3;
   
   // Draft management
   showDraftBanner = false;
@@ -85,25 +102,89 @@ export class AddServiceModalComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private workshopService: WorkshopProfileService
+    private workshopService: WorkshopProfileService,
+    private workshopServiceAPI: WorkshopServiceService
   ) {}
 
   ngOnInit(): void {
     this.loadServiceCategories();
     this.initializeConfigurationForm();
+    this.loadWorkshopProfileId();
     this.checkForSavedDraft();
+    this.setupSearchDebounce();
+  }
+  
+  /**
+   * Load the workshop profile ID from the API
+   */
+  loadWorkshopProfileId(): void {
+    this.workshopService.getMyWorkshopProfile().subscribe({
+      next: (response: any) => {
+        if (response?.data?.id) {
+          this.workshopProfileId = response.data.id;
+          console.log('Workshop Profile ID loaded:', this.workshopProfileId);
+        } else {
+          console.error('Workshop profile ID not found in response:', response);
+          this.showErrorMessage('Failed to load workshop profile ID');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading workshop profile:', error);
+        this.showErrorMessage('Failed to load workshop profile. Please try again.');
+      }
+    });
+  }
+  
+  ngOnDestroy(): void {
+    if (this.searchSubscription) {
+      this.searchSubscription.unsubscribe();
+    }
+    this.categorySearchSubject.complete();
+  }
+  
+  /**
+   * Setup debounced search (300ms delay for categories only)
+   */
+  private setupSearchDebounce(): void {
+    this.searchSubscription = this.categorySearchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(term => {
+      this.performCategoryFilter(term);
+    });
   }
 
   // ============================================
   // Data Loading
   // ============================================
 
-  loadServiceCategories(): void {
+  loadServiceCategories(forceRefresh = false): void {
     this.isLoading = true;
-    this.workshopService.loadServiceCategories().subscribe({
-      next: (data) => {
-        this.categories = data.categories || [];
-        this.filteredCategories = [...this.categories];
+    this.workshopService.loadServiceCategories(forceRefresh).subscribe({
+      next: (response: CategoryAPIResponse) => {
+        if (response.success && response.data) {
+          // Map API response to internal ServiceCategory format
+          this.categories = response.data.map((cat: CategoryData) => ({
+            id: cat.id,
+            name: cat.name,
+            icon: cat.iconURL || '🔧',
+            subcategories: []
+          }));
+          
+          // Sort by display order
+          this.categories.sort((a, b) => {
+            const orderA = response.data.find(d => d.id === a.id)?.displayOrder || 0;
+            const orderB = response.data.find(d => d.id === b.id)?.displayOrder || 0;
+            return orderA - orderB;
+          });
+          
+          this.filteredCategories = [...this.categories];
+          
+          // Eagerly load all subcategory counts
+          this.loadAllSubcategoryCounts();
+        } else {
+          this.showErrorMessage(response.message || 'Failed to load categories');
+        }
         this.isLoading = false;
       },
       error: (error) => {
@@ -174,18 +255,140 @@ export class AddServiceModalComponent implements OnInit {
   selectCategory(category: ServiceCategory): void {
     this.selectedCategory = category;
     this.selectedSubcategory = null;
-    this.showSubcategories = true;
     this.showServices = false;
+    
+    // Check if subcategories are already loaded (from preload)
+    if (category.subcategories && category.subcategories.length > 0) {
+      this.showSubcategories = true;
+      return;
+    }
+    
+    // Load subcategories from API
+    this.isLoading = true;
+    this.workshopService.getSubcategoriesByCategory(category.id).subscribe({
+      next: (response: SubcategoryAPIResponse) => {
+        if (response.success && response.data) {
+          // Map API response to internal ServiceSubcategory format
+          this.selectedCategory!.subcategories = response.data.map((sub: SubcategoryData) => ({
+            id: sub.id,
+            name: sub.name,
+            services: []
+          }));
+          
+          this.showSubcategories = true;
+        } else {
+          this.showErrorMessage(response.message || 'Failed to load subcategories');
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading subcategories:', error);
+        this.showErrorMessage('Failed to load subcategories. Please try again.');
+        this.isLoading = false;
+      }
+    });
+  }
+  
+  /**
+   * Preload subcategories on hover for instant display
+   */
+  /**
+   * Load subcategory counts for all categories eagerly
+   */
+  loadAllSubcategoryCounts(): void {
+    this.categories.forEach(category => {
+      this.workshopService.getSubcategoriesByCategory(category.id).subscribe({
+        next: (response: SubcategoryAPIResponse) => {
+          if (response.success && response.data) {
+            category.subcategories = response.data.map((sub: SubcategoryData) => ({
+              id: sub.id,
+              name: sub.name,
+              services: []
+            }));
+            
+            // Load service counts for each subcategory
+            this.loadServiceCountsForSubcategories(category.subcategories);
+          }
+        },
+        error: (error) => {
+          console.error('Load subcategories failed for category:', category.name, error);
+        }
+      });
+    });
+  }
+  
+  /**
+   * Load service counts for subcategories
+   */
+  loadServiceCountsForSubcategories(subcategories: ServiceSubcategory[]): void {
+    subcategories.forEach(subcategory => {
+      this.workshopService.getServicesBySubcategory(subcategory.id).subscribe({
+        next: (response: ServiceAPIResponse) => {
+          if (response.success && response.data) {
+            subcategory.services = response.data.map((svc: ServiceData) => ({
+              id: svc.id,
+              name: svc.name
+            }));
+          }
+        },
+        error: (error) => {
+          console.error('Load services failed for subcategory:', subcategory.name, error);
+        }
+      });
+    });
+  }
+
+  preloadSubcategories(category: ServiceCategory): void {
+    // Skip if already loaded
+    if (category.subcategories && category.subcategories.length > 0) {
+      return;
+    }
+    
+    // Silently preload in background
+    this.workshopService.getSubcategoriesByCategory(category.id).subscribe({
+      next: (response: SubcategoryAPIResponse) => {
+        if (response.success && response.data) {
+          category.subcategories = response.data.map((sub: SubcategoryData) => ({
+            id: sub.id,
+            name: sub.name,
+            services: []
+          }));
+          
+          // Also load service counts
+          this.loadServiceCountsForSubcategories(category.subcategories);
+        }
+      },
+      error: (error) => {
+        console.error('Preload subcategories failed:', error);
+      }
+    });
   }
 
   filterCategories(): void {
-    const term = this.categorySearchTerm.toLowerCase().trim();
+    // Trigger debounced search
+    this.categorySearchSubject.next(this.categorySearchTerm);
+  }
+  
+  /**
+   * Perform actual category filtering (called after debounce)
+   */
+  private performCategoryFilter(term: string): void {
+    term = term.toLowerCase().trim();
     if (!term) {
       this.filteredCategories = [...this.categories];
     } else {
       this.filteredCategories = this.categories.filter(cat =>
         cat.name.toLowerCase().includes(term)
       );
+    }
+  }
+  
+  /**
+   * Trigger API call when search bar is focused or All Categories clicked
+   */
+  onSearchOrAllCategories(): void {
+    if (this.categories.length === 0) {
+      this.loadServiceCategories(true);
     }
   }
 
@@ -195,7 +398,61 @@ export class AddServiceModalComponent implements OnInit {
 
   selectSubcategory(subcategory: ServiceSubcategory): void {
     this.selectedSubcategory = subcategory;
-    this.showServices = true;
+    
+    // Check if services are already loaded (from preload)
+    if (subcategory.services && subcategory.services.length > 0) {
+      this.showServices = true;
+      return;
+    }
+    
+    // Load services from API
+    this.isLoading = true;
+    this.workshopService.getServicesBySubcategory(subcategory.id).subscribe({
+      next: (response: ServiceAPIResponse) => {
+        if (response.success && response.data) {
+          // Map API response to internal ServiceItem format
+          this.selectedSubcategory!.services = response.data.map((svc: ServiceData) => ({
+            id: svc.id,
+            name: svc.name
+          }));
+          
+          this.showServices = true;
+        } else {
+          this.showErrorMessage(response.message || 'Failed to load services');
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading services:', error);
+        this.showErrorMessage('Failed to load services. Please try again.');
+        this.isLoading = false;
+      }
+    });
+  }
+  
+  /**
+   * Preload services on hover for instant display
+   */
+  preloadServices(subcategory: ServiceSubcategory): void {
+    // Skip if already loaded
+    if (subcategory.services && subcategory.services.length > 0) {
+      return;
+    }
+    
+    // Silently preload in background
+    this.workshopService.getServicesBySubcategory(subcategory.id).subscribe({
+      next: (response: ServiceAPIResponse) => {
+        if (response.success && response.data) {
+          subcategory.services = response.data.map((svc: ServiceData) => ({
+            id: svc.id,
+            name: svc.name
+          }));
+        }
+      },
+      error: (error) => {
+        console.error('Preload services failed:', error);
+      }
+    });
   }
 
   getFilteredSubcategories(): ServiceSubcategory[] {
@@ -209,6 +466,22 @@ export class AddServiceModalComponent implements OnInit {
     return this.selectedCategory.subcategories.filter(sub =>
       sub.name.toLowerCase().includes(term)
     );
+  }
+  
+  /**
+   * Filter subcategories immediately (no debounce)
+   */
+  filterSubcategories(): void {
+    // Filtering is handled by getFilteredSubcategories() which is called in template
+    // No debounce needed for subcategories
+  }
+  
+  /**
+   * Perform actual subcategory filtering (called after debounce)
+   */
+  private performSubcategoryFilter(term: string): void {
+    // The filtering is already handled by getFilteredSubcategories()
+    // This method is here for consistency and future API-based search
   }
 
   getServiceCount(subcategory: ServiceSubcategory): number {
@@ -266,6 +539,11 @@ export class AddServiceModalComponent implements OnInit {
   
   addServiceToConfig(service: ServiceItem): void {
     const priceRange = this.categoryPriceRanges[this.selectedCategory!.id] || { min: 100, max: 500 };
+    const serviceIndex = this.serviceConfigArray.length;
+    
+    // Initialize pricing mode as unified by default
+    this.pricingMode[serviceIndex] = 'unified';
+    
     const newGroup = this.fb.group({
       serviceId: [service.id],
       categoryId: [this.selectedCategory!.id],
@@ -277,7 +555,8 @@ export class AddServiceModalComponent implements OnInit {
       durationMinutes: [this.defaultDuration, [Validators.required, Validators.min(15), Validators.max(480)]],
       minPrice: [priceRange.min, [Validators.required, Validators.min(0)]],
       maxPrice: [priceRange.max, [Validators.required, Validators.min(0)]],
-      carOriginSpecializations: [['all'], [Validators.required, Validators.minLength(1)]],
+      carOriginSpecializations: [[], [Validators.required, Validators.minLength(1)]],
+      originPricing: [this.createOriginPricingArray(priceRange)],
       imageUrl: [''],
       isAvailable: [true]
     }, { validators: this.priceRangeValidator });
@@ -349,6 +628,47 @@ export class AddServiceModalComponent implements OnInit {
     return this.expandedServiceIndex === index;
   }
   
+  removeServiceFromConfig(index: number): void {
+    if (this.selectedServices.length <= 1) {
+      // Don't allow removing the last service
+      return;
+    }
+    
+    // Remove from selected services array
+    this.selectedServices.splice(index, 1);
+    
+    // Remove from form array
+    this.serviceConfigArray.removeAt(index);
+    
+    // Remove pricing mode if exists
+    if (this.pricingMode[index] !== undefined) {
+      delete this.pricingMode[index];
+      // Re-index the remaining pricing modes
+      const newPricingMode: { [key: number]: 'unified' | 'per-origin' } = {};
+      Object.keys(this.pricingMode).forEach(key => {
+        const keyNum = parseInt(key);
+        if (keyNum > index) {
+          newPricingMode[keyNum - 1] = this.pricingMode[keyNum];
+        } else if (keyNum < index) {
+          newPricingMode[keyNum] = this.pricingMode[keyNum];
+        }
+      });
+      this.pricingMode = newPricingMode;
+    }
+    
+    // Adjust expanded index if needed
+    if (this.expandedServiceIndex !== null) {
+      if (this.expandedServiceIndex === index) {
+        this.expandedServiceIndex = null;
+      } else if (this.expandedServiceIndex > index) {
+        this.expandedServiceIndex--;
+      }
+    }
+    
+    // Save draft
+    this.saveDraft();
+  }
+  
   proceedToConfiguration(): void {
     if (this.selectedServices.length > 0) {
       this.nextStep();
@@ -371,6 +691,145 @@ export class AddServiceModalComponent implements OnInit {
       imageUrl: [''],
       isAvailable: [true]
     }, { validators: this.priceRangeValidator });
+  }
+
+  createOriginPricingArray(priceRange: { min: number, max: number }): any[] {
+    return this.carOrigins.filter(o => o.code !== 'all').map(origin => ({
+      originCode: origin.code,
+      originName: origin.name,
+      minPrice: priceRange.min,
+      maxPrice: priceRange.max,
+      isEnabled: false
+    }));
+  }
+  
+  togglePricingMode(serviceIndex: number): void {
+    const currentMode = this.pricingMode[serviceIndex] || 'unified';
+    this.pricingMode[serviceIndex] = currentMode === 'unified' ? 'per-origin' : 'unified';
+    
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    
+    if (this.pricingMode[serviceIndex] === 'per-origin') {
+      // When switching to per-origin, copy unified pricing to all origins and enable them
+      const minPrice = serviceGroup.get('minPrice')?.value || 0;
+      const maxPrice = serviceGroup.get('maxPrice')?.value || 0;
+      const selectedOrigins = serviceGroup.get('carOriginSpecializations')?.value || ['all'];
+      const originPricing = serviceGroup.get('originPricing')?.value || [];
+      
+      // Enable origins that were selected in unified mode, or all if 'all' was selected
+      const shouldEnableAll = selectedOrigins.includes('all');
+      
+      originPricing.forEach((origin: any) => {
+        origin.minPrice = minPrice;
+        origin.maxPrice = maxPrice;
+        origin.isEnabled = shouldEnableAll || selectedOrigins.includes(origin.originCode);
+      });
+      
+      serviceGroup.get('originPricing')?.setValue(originPricing);
+      
+      // Update specializations with enabled origins
+      const enabledOrigins = originPricing
+        .filter((o: any) => o.isEnabled)
+        .map((o: any) => o.originCode);
+      serviceGroup.get('carOriginSpecializations')?.setValue(enabledOrigins);
+    } else {
+      // When switching to unified, keep current pricing from first enabled origin
+      const originPricing = serviceGroup.get('originPricing')?.value || [];
+      const firstEnabled = originPricing.find((o: any) => o.isEnabled);
+      
+      if (firstEnabled) {
+        serviceGroup.get('minPrice')?.setValue(firstEnabled.minPrice);
+        serviceGroup.get('maxPrice')?.setValue(firstEnabled.maxPrice);
+      }
+      
+      serviceGroup.get('carOriginSpecializations')?.setValue(['all']);
+    }
+  }
+  
+  getPricingMode(serviceIndex: number): 'unified' | 'per-origin' {
+    return this.pricingMode[serviceIndex] || 'unified';
+  }
+  
+  updateOriginPricing(serviceIndex: number, originCode: string, field: 'minPrice' | 'maxPrice', value: number): void {
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    const originPricing = serviceGroup.get('originPricing')?.value || [];
+    
+    const origin = originPricing.find((o: any) => o.originCode === originCode);
+    if (origin) {
+      origin[field] = value;
+      serviceGroup.get('originPricing')?.setValue(originPricing);
+    }
+  }
+  
+  toggleOriginEnabled(serviceIndex: number, originCode: string): void {
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    const originPricing = serviceGroup.get('originPricing')?.value || [];
+    
+    const origin = originPricing.find((o: any) => o.originCode === originCode);
+    if (origin) {
+      origin.isEnabled = !origin.isEnabled;
+      serviceGroup.get('originPricing')?.setValue(originPricing);
+      
+      // Update carOriginSpecializations
+      const enabledOrigins = originPricing
+        .filter((o: any) => o.isEnabled)
+        .map((o: any) => o.originCode);
+      serviceGroup.get('carOriginSpecializations')?.setValue(enabledOrigins);
+    }
+  }
+  
+  enableAllOrigins(serviceIndex: number): void {
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    const originPricing = serviceGroup.get('originPricing')?.value || [];
+    
+    originPricing.forEach((origin: any) => {
+      origin.isEnabled = true;
+    });
+    
+    serviceGroup.get('originPricing')?.setValue(originPricing);
+    serviceGroup.get('carOriginSpecializations')?.setValue(
+      originPricing.map((o: any) => o.originCode)
+    );
+  }
+  
+  disableAllOrigins(serviceIndex: number): void {
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    const originPricing = serviceGroup.get('originPricing')?.value || [];
+    
+    originPricing.forEach((origin: any) => {
+      origin.isEnabled = false;
+    });
+    
+    serviceGroup.get('originPricing')?.setValue(originPricing);
+    serviceGroup.get('carOriginSpecializations')?.setValue([]);
+  }
+  
+  copyPricingToAll(serviceIndex: number): void {
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    const originPricing = serviceGroup.get('originPricing')?.value || [];
+    
+    // Find first enabled origin as reference
+    const reference = originPricing.find((o: any) => o.isEnabled);
+    if (!reference) return;
+    
+    originPricing.forEach((origin: any) => {
+      if (origin.isEnabled) {
+        origin.minPrice = reference.minPrice;
+        origin.maxPrice = reference.maxPrice;
+      }
+    });
+    
+    serviceGroup.get('originPricing')?.setValue(originPricing);
+  }
+  
+  getEnabledOriginsCount(serviceIndex: number): number {
+    const originPricing = this.getOriginPricing(serviceIndex);
+    return originPricing.filter((o: any) => o.isEnabled).length;
+  }
+  
+  getOriginPricing(serviceIndex: number): any[] {
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    return serviceGroup.get('originPricing')?.value || [];
   }
 
   priceRangeValidator(group: FormGroup): { [key: string]: boolean } | null {
@@ -397,37 +856,109 @@ export class AddServiceModalComponent implements OnInit {
   }
 
   // Car origin selection helpers
-  toggleCarOrigin(serviceIndex: number, originCode: string): void {
+  
+  /**
+   * Get selectable origins (excluding 'all')
+   */
+  getSelectableOrigins() {
+    return this.carOrigins.filter(o => o.code !== 'all');
+  }
+  
+  /**
+   * Toggle all origins (globe button)
+   * Only activates when explicitly clicked
+   */
+  toggleAllOrigins(serviceIndex: number): void {
     const serviceGroup = this.getServiceFormGroup(serviceIndex);
     const origins = serviceGroup.get('carOriginSpecializations')?.value || [];
     
-    if (originCode === 'all') {
-      // Select all or deselect all
-      if (origins.includes('all')) {
-        serviceGroup.patchValue({ carOriginSpecializations: [] });
-      } else {
-        const allOrigins = this.carOrigins.map(o => o.code);
-        serviceGroup.patchValue({ carOriginSpecializations: allOrigins });
-      }
+    if (this.areAllOriginsSelected(serviceIndex)) {
+      // Clear all selections (remove 'all' code)
+      serviceGroup.patchValue({ carOriginSpecializations: [] });
     } else {
-      // Toggle individual origin
-      const index = origins.indexOf(originCode);
-      if (index > -1) {
-        origins.splice(index, 1);
-        // Remove 'all' if it was selected
-        const allIndex = origins.indexOf('all');
-        if (allIndex > -1) origins.splice(allIndex, 1);
-      } else {
-        origins.push(originCode);
-      }
-      serviceGroup.patchValue({ carOriginSpecializations: origins });
+      // Select all origins by setting 'all' code
+      // This indicates bulk selection via globe, not individual selections
+      serviceGroup.patchValue({ carOriginSpecializations: ['all'] });
     }
   }
-
+  
+  /**
+   * Toggle a single origin (manual selection)
+   * Automatically deselects 'all' when individual origins are selected
+   */
+  toggleSingleOrigin(serviceIndex: number, originCode: string): void {
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    const origins = serviceGroup.get('carOriginSpecializations')?.value || [];
+    
+    const index = origins.indexOf(originCode);
+    if (index > -1) {
+      // Deselect this origin
+      origins.splice(index, 1);
+    } else {
+      // Select this origin
+      origins.push(originCode);
+      
+      // Remove 'all' if it exists (manual selection excludes "all origins" mode)
+      const allIndex = origins.indexOf('all');
+      if (allIndex > -1) {
+        origins.splice(allIndex, 1);
+      }
+    }
+    
+    serviceGroup.patchValue({ carOriginSpecializations: [...origins] });
+  }
+  
+  /**
+   * Check if all origins are selected (ONLY via explicit globe click, not manual selection)
+   */
+  areAllOriginsSelected(serviceIndex: number): boolean {
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    const origins = serviceGroup.get('carOriginSpecializations')?.value || [];
+    
+    // Only show globe as selected if 'all' code is explicitly in the array
+    return origins.includes('all');
+  }
+  
+  /**
+   * Check if a specific origin is selected
+   * Also returns true if 'all' is selected (for visual feedback)
+   */
   isCarOriginSelected(serviceIndex: number, originCode: string): boolean {
     const serviceGroup = this.getServiceFormGroup(serviceIndex);
     const origins = serviceGroup.get('carOriginSpecializations')?.value || [];
+    
+    // If 'all' is selected, show all individual origins as selected too
+    if (origins.includes('all')) {
+      return true;
+    }
+    
     return origins.includes(originCode);
+  }
+  
+  /**
+   * Get count of selected origins
+   * If 'all' is selected, return count of all selectable origins
+   */
+  getSelectedOriginsCount(serviceIndex: number): number {
+    const serviceGroup = this.getServiceFormGroup(serviceIndex);
+    const origins = serviceGroup.get('carOriginSpecializations')?.value || [];
+    
+    if (origins.includes('all')) {
+      return this.carOrigins.filter(o => o.code !== 'all').length;
+    }
+    
+    return origins.length;
+  }
+  
+  /**
+   * Old method - kept for backward compatibility
+   */
+  toggleCarOrigin(serviceIndex: number, originCode: string): void {
+    if (originCode === 'all') {
+      this.toggleAllOrigins(serviceIndex);
+    } else {
+      this.toggleSingleOrigin(serviceIndex, originCode);
+    }
   }
 
   // Bulk actions
@@ -481,37 +1012,174 @@ export class AddServiceModalComponent implements OnInit {
       return;
     }
 
-    this.isSubmitting = true;
-    this.showMessage = false;
-    const services = this.getConfiguredServices();
+    if (!this.workshopProfileId) {
+      this.showErrorMessage('Workshop profile not loaded. Please refresh and try again.');
+      return;
+    }
 
-    // For mock/development: Since API might not be ready, emit immediately
-    // In production, this will call the actual API
-    console.log('Submitting services:', services);
+    this.isSubmitting = true;
+    this.isLoadingSubmit = true;
+    this.submitError = null;
+    this.showMessage = false;
     
-    // Simulate API call for now - replace with actual API when ready
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.clearDraft();
-      this.servicesAdded.emit(services);
-      this.closeModal();
-    }, 800);
+    const services = this.getConfiguredServices();
     
-    /* Uncomment when API is ready:
-    this.workshopService.addWorkshopServices(workshopId, services).subscribe({
-      next: (response) => {
-        this.isSubmitting = false;
-        this.clearDraft();
-        this.servicesAdded.emit(services);
-        this.closeModal();
+    // Check for duplicate services before submission
+    this.workshopServiceAPI.getWorkshopServices(this.workshopProfileId).subscribe({
+      next: (response: any) => {
+        const existingServices = response.data || [];
+        const duplicates = this.findDuplicateServices(services, existingServices);
+        
+        if (duplicates.length > 0) {
+          // Reset loading states immediately
+          this.isSubmitting = false;
+          this.isLoadingSubmit = false;
+          
+          // Show friendly error message for duplicates
+          const duplicateNames = duplicates.map(d => d.serviceName).join(', ');
+          const message = duplicates.length === 1 
+            ? `The service "${duplicateNames}" already exists in your portfolio. Please select a different service or update the existing one.`
+            : `The following services already exist in your portfolio: ${duplicateNames}. Please select different services or update the existing ones.`;
+          
+          this.showErrorMessage(message);
+          return;
+        }
+        
+        // No duplicates, proceed with submission
+        this.proceedWithSubmission(services);
       },
-      error: (error) => {
-        console.error('Error adding services:', error);
-        this.isSubmitting = false;
-        this.showErrorMessage('Failed to add services. Please try again.');
+      error: (error: any) => {
+        console.error('Error checking for duplicates:', error);
+        // If we can't check, proceed anyway (fail open)
+        this.proceedWithSubmission(services);
       }
     });
-    */
+  }
+
+  private findDuplicateServices(newServices: any[], existingServices: any[]): any[] {
+    const duplicates: any[] = [];
+    
+    newServices.forEach(newService => {
+      const isDuplicate = existingServices.some(existing => 
+        existing.serviceId === newService.serviceId
+      );
+      
+      if (isDuplicate) {
+        duplicates.push(newService);
+      }
+    });
+    
+    return duplicates;
+  }
+
+  private proceedWithSubmission(services: any[]): void {
+    // Transform form data to API requests
+    const apiRequests: WorkshopServiceCreateRequest[] = [];
+    
+    services.forEach((service, serviceIndex) => {
+      const pricingMode = this.pricingMode[serviceIndex] || 'unified';
+      
+      console.log(`Processing service ${serviceIndex + 1}:`, {
+        serviceName: service.serviceName,
+        serviceId: service.serviceId,
+        pricingMode,
+        carOriginSpecializations: service.carOriginSpecializations
+      });
+      
+      if (pricingMode === 'unified') {
+        // Unified mode: Create records for each selected origin
+        const origins = service.carOriginSpecializations || [];
+        
+        if (origins.includes('all')) {
+          // If 'all' is selected, create records for each specific origin
+          const allOrigins = ['german', 'japanese', 'korean', 'american', 'french', 'italian', 'british', 'chinese'];
+          console.log(`  → Creating ${allOrigins.length} records (all origins)`);
+          allOrigins.forEach(origin => {
+            apiRequests.push({
+              serviceId: service.serviceId,
+              workShopProfileId: this.workshopProfileId!,
+              duration: service.durationMinutes,
+              minPrice: service.minPrice,
+              maxPrice: service.maxPrice,
+              origin: this.mapOriginToEnum(origin)
+            });
+          });
+        } else {
+          // Create one record per selected origin with same pricing
+          console.log(`  → Creating ${origins.length} records (selected origins)`);
+          origins.forEach((origin: string) => {
+            apiRequests.push({
+              serviceId: service.serviceId,
+              workShopProfileId: this.workshopProfileId!,
+              duration: service.durationMinutes,
+              minPrice: service.minPrice,
+              maxPrice: service.maxPrice,
+              origin: this.mapOriginToEnum(origin)
+            });
+          });
+        }
+      } else {
+        // Per-origin mode: Create one record per enabled origin with individual pricing
+        const originPricing = service.originPricing || [];
+        const enabledOrigins = originPricing.filter((o: any) => o.isEnabled);
+        console.log(`  → Creating ${enabledOrigins.length} records (per-origin pricing)`);
+        
+        originPricing.forEach((originConfig: any) => {
+          if (originConfig.isEnabled) {
+            apiRequests.push({
+              serviceId: service.serviceId,
+              workShopProfileId: this.workshopProfileId!,
+              duration: service.durationMinutes,
+              minPrice: originConfig.minPrice,
+              maxPrice: originConfig.maxPrice,
+              origin: this.mapOriginToEnum(originConfig.originCode)
+            });
+          }
+        });
+      }
+    });
+
+    console.log('=== WORKSHOP SERVICE SUBMISSION ===');
+    console.log('Workshop Profile ID:', this.workshopProfileId);
+    console.log('Total API Requests:', apiRequests.length);
+    console.log('API Requests Details:', JSON.stringify(apiRequests, null, 2));
+    
+    // Call API to create workshop services
+    this.workshopServiceAPI.createWorkshopServices(apiRequests).subscribe({
+      next: (response: any) => {
+        console.log('Services created successfully:', response);
+        this.isSubmitting = false;
+        this.isLoadingSubmit = false;
+        this.submitError = null;
+        
+        // Check if there were any failures
+        if (response.failedCount > 0) {
+          this.showErrorMessage(`Created ${response.successCount} service(s), but ${response.failedCount} failed. Please check the console for details.`);
+        } else {
+          // Show success message with auto-redirect
+          this.showSuccessMessageWithRedirect(`Successfully added ${response.successCount} service${response.successCount > 1 ? 's' : ''}!`, services);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error adding services:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        this.isSubmitting = false;
+        this.isLoadingSubmit = false;
+        
+        // Extract error message from response
+        let errorMessage = 'Failed to add services. Please try again.';
+        if (error?.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error?.message) {
+          errorMessage = error.message;
+        } else if (error?.error?.errors) {
+          errorMessage = JSON.stringify(error.error.errors);
+        }
+        
+        this.submitError = errorMessage;
+        this.showErrorMessage(errorMessage);
+      }
+    });
   }
 
   // ============================================
@@ -600,20 +1268,64 @@ export class AddServiceModalComponent implements OnInit {
   // UI Helpers
   // ============================================
 
-  showSuccessMessage(message: string): void {
+  /**
+   * Map frontend origin codes to backend CarOrigin enum values
+   */
+  mapOriginToEnum(originCode: string): string {
+    const originMap: { [key: string]: string } = {
+      'all': 'General',
+      'german': 'Germany',
+      'japanese': 'Japan',
+      'korean': 'SouthKorea',
+      'american': 'USA',
+      'chinese': 'China',
+      'french': 'France',
+      'italian': 'Italy',
+      'british': 'UK',
+      'czech': 'CzechRepublic',
+      'swedish': 'Sweden',
+      'malaysian': 'Malaysia'
+    };
+    
+    return originMap[originCode.toLowerCase()] || 'General';
+  }
+
+  showSuccessMessageWithRedirect(message: string, services: any[]): void {
     this.resultMessage = message;
     this.isSuccess = true;
     this.showMessage = true;
+    this.isRedirecting = true;
+    this.redirectCountdown = 3;
+    
+    // Countdown timer
+    const countdownInterval = setInterval(() => {
+      this.redirectCountdown--;
+      if (this.redirectCountdown <= 0) {
+        clearInterval(countdownInterval);
+      }
+    }, 1000);
+    
+    // Redirect after 3 seconds
+    setTimeout(() => {
+      this.clearDraft();
+      this.servicesAdded.emit(services);
+      this.closeModal();
+    }, 3000);
   }
 
   showErrorMessage(message: string): void {
     this.resultMessage = message;
     this.isSuccess = false;
     this.showMessage = true;
+    this.isRedirecting = false;
+    // Ensure loading states are reset
+    this.isSubmitting = false;
+    this.isLoadingSubmit = false;
   }
 
   dismissMessage(): void {
     this.showMessage = false;
+    this.isRedirecting = false;
   }
 
   closeModal(): void {

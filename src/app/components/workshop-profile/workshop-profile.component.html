@@ -297,42 +297,71 @@
 
       <!-- Services Tab -->
       <div class="tab-content" *ngIf="selectedTab === 'services'">
-        <!-- Premium Services Header -->
-        <div class="services-header-premium">
-          <div class="header-content-wrapper">
-            <div class="title-section">
-              <div class="title-with-badge">
-                <h2 class="section-title-premium">Service Portfolio</h2>
-                <span class="new-badge" *ngIf="services.length === 0">New</span>
-              </div>
-              <p class="section-subtitle">Showcase your expertise with a professional service catalog</p>
+        <!-- Enhanced Service Portfolio Header -->
+        <div class="services-header-enhanced">
+          <!-- Top Bar with Title and Quick Action -->
+          <div class="header-top-bar">
+            <div class="title-group">
+              <h2 class="section-title-enhanced">
+                <i class="fas fa-wrench title-icon"></i>
+                Service Portfolio
+                <span class="badge-new" *ngIf="services.length === 0">NEW</span>
+              </h2>
+              <p class="section-subtitle-enhanced">
+                Manage and showcase your workshop capabilities
+              </p>
             </div>
-            <div class="actions-section">
-              <div class="stats-card">
-                <div class="stat-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                  </svg>
-                </div>
-                <div class="stat-content">
-                  <span class="stat-number">{{ services.length }}</span>
-                  <span class="stat-label">Active Services</span>
-                </div>
+            
+            <button class="btn-add-service" (click)="openAddServiceModal()">
+              <i class="fas fa-plus"></i>
+              <span>Add Service</span>
+            </button>
+          </div>
+
+          <!-- Stats Bar -->
+          <div class="stats-bar">
+            <div class="stat-item">
+              <div class="stat-icon-wrapper">
+                <i class="fas fa-tools"></i>
               </div>
-              <button class="btn-add-premium" (click)="openAddServiceModal()">
-                <span class="btn-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                  </svg>
-                </span>
-                <span class="btn-text">Add Services</span>
-              </button>
+              <div class="stat-details">
+                <span class="stat-value">{{ services.length }}</span>
+                <span class="stat-label">Active Services</span>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-icon-wrapper stat-icon-origins">
+                <i class="fas fa-globe"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-value">{{ getUniqueOriginsCount() }}</span>
+                <span class="stat-label">Car Origins</span>
+              </div>
+            </div>
+
+            <div class="stat-item" *ngIf="services.length > 0">
+              <div class="stat-icon-wrapper stat-icon-range">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-value">{{ getPriceRange() }}</span>
+                <span class="stat-label">Price Range</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Premium Empty State -->
-        <div *ngIf="services.length === 0" class="empty-state-premium">
+        <!-- Workshop Services Catalog Component -->
+        <app-workshop-services-catalog
+          *ngIf="profileData && profileData.id"
+          [workshopId]="profileData.id"
+          (serviceEdited)="onServiceEdited($event)"
+          (serviceDeleted)="onServiceDeleted($event)"
+        ></app-workshop-services-catalog>
+
+        <!-- Empty State (Shown by Catalog Component) -->
+        <div *ngIf="!profileData || !profileData.id" class="empty-state-premium">
           <div class="empty-content">
             <div class="empty-illustration">
               <div class="illustration-bg"></div>

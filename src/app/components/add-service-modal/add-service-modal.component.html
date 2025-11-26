@@ -1,64 +1,65 @@
-<!-- Modal Overlay -->
-<div class="modal-overlay" (click)="closeModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+<!-- Enhanced Modal Overlay -->
+<div class="modal-overlay-v2" (click)="closeModal()">
+  <div class="modal-container-v2" (click)="$event.stopPropagation()">
     
     <!-- Auto-save Indicator -->
-    <div class="auto-save-indicator" [class.show]="showingAutoSave">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-      <span>Saved</span>
+    <div class="auto-save-badge" [class.show]="showingAutoSave">
+      <i class="fas fa-check-circle"></i>
+      <span>Auto-saved</span>
     </div>
 
     <!-- Close Button -->
-    <button class="close-btn" type="button" (click)="closeModal()" [disabled]="isSubmitting">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M18 6L6 18M6 6l12 12"/>
-      </svg>
+    <button class="close-btn-v2" type="button" (click)="closeModal()" [disabled]="isSubmitting">
+      <i class="fas fa-times"></i>
     </button>
 
-    <!-- Header -->
-    <div class="modal-header">
-      <div class="header-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-        </svg>
+    <!-- Enhanced Header with Gradient -->
+    <div class="modal-header-v2">
+      <div class="header-content-v2">
+        <div class="header-icon-v2">
+          <i class="fas fa-plus-circle"></i>
+        </div>
+        <div class="header-text-v2">
+          <h2>Add Workshop Services</h2>
+          <p>Configure your service offerings in 3 easy steps</p>
+        </div>
       </div>
-      <h2>Add Workshop Services</h2>
-      <p>Select services and configure pricing in just 3 simple steps</p>
     </div>
 
-    <!-- Simplified Progress Stepper (3 steps) -->
-    <div class="progress-stepper">
-      <div class="step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
-        <div class="step-circle">
-          <svg *ngIf="currentStep > 1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span *ngIf="currentStep <= 1">1</span>
-        </div>
-        <span class="step-label">Select Services</span>
+    <!-- Modern Progress Bar with Step Indicators -->
+    <div class="progress-wrapper-v2">
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" [style.width.%]="((currentStep - 1) / (totalSteps - 1)) * 100"></div>
       </div>
       
-      <div class="step-line" [class.completed]="currentStep > 1"></div>
-      
-      <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
-        <div class="step-circle">
-          <svg *ngIf="currentStep > 2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span *ngIf="currentStep <= 2">2</span>
+      <div class="progress-steps-v2">
+        <div class="step-item-v2" 
+             [class.active]="currentStep === 1" 
+             [class.completed]="currentStep > 1">
+          <div class="step-circle-v2">
+            <i *ngIf="currentStep > 1" class="fas fa-check"></i>
+            <span *ngIf="currentStep <= 1">1</span>
+          </div>
+          <span class="step-label-v2">Select</span>
         </div>
-        <span class="step-label">Configure</span>
-      </div>
-      
-      <div class="step-line" [class.completed]="currentStep > 2"></div>
-      
-      <div class="step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3">
-        <div class="step-circle">
-          <span>3</span>
+        
+        <div class="step-item-v2" 
+             [class.active]="currentStep === 2" 
+             [class.completed]="currentStep > 2">
+          <div class="step-circle-v2">
+            <i *ngIf="currentStep > 2" class="fas fa-check"></i>
+            <span *ngIf="currentStep <= 2">2</span>
+          </div>
+          <span class="step-label-v2">Configure</span>
         </div>
-        <span class="step-label">Review & Submit</span>
+        
+        <div class="step-item-v2" 
+             [class.active]="currentStep === 3">
+          <div class="step-circle-v2">
+            <span>3</span>
+          </div>
+          <span class="step-label-v2">Review</span>
+        </div>
       </div>
     </div>
 
@@ -71,16 +72,29 @@
       </div>
     </div>
 
+    <!-- Success Message with Auto-Redirect (Full Screen Overlay) -->
+    <div *ngIf="showMessage && isSuccess" class="success-overlay">
+      <div class="success-notification">
+        <div class="success-icon-wrapper">
+          <i class="fas fa-check-circle success-checkmark"></i>
+        </div>
+        <div class="success-content">
+          <h3 class="success-title">Success!</h3>
+          <p class="success-message">{{ resultMessage }}</p>
+          <div class="redirect-info">
+            <i class="fas fa-spinner fa-spin spinner-icon"></i>
+            <span>Closing in {{ redirectCountdown }}s...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Error Message Only -->
     <div *ngIf="showMessage && !isSuccess" class="error-banner-simple">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
+      <i class="fas fa-exclamation-circle"></i>
       <p>{{ resultMessage }}</p>
       <button type="button" class="btn-dismiss" (click)="dismissMessage()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M6 18L18 6M6 6l12 12"/>
-        </svg>
+        <i class="fas fa-times"></i>
       </button>
     </div>
 
@@ -95,16 +109,12 @@
         <!-- Selected Services Counter (Always visible) -->
         <div class="selection-header" *ngIf="getSelectedCount() > 0">
           <div class="selected-count">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <i class="fas fa-check-circle"></i>
             <span><strong>{{ getSelectedCount() }}</strong> service(s) selected</span>
           </div>
           <button type="button" class="btn-proceed" (click)="proceedToConfiguration()">
             <span>Configure Selected</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
+            <i class="fas fa-arrow-right"></i>
           </button>
         </div>
 
@@ -114,6 +124,7 @@
             *ngIf="!selectedCategory" 
             class="breadcrumb-item active"
             type="button"
+            (click)="onSearchOrAllCategories()"
           >
             All Categories
           </button>
@@ -122,7 +133,7 @@
             *ngIf="selectedCategory && !showSubcategories" 
             class="breadcrumb-item"
             type="button"
-            (click)="selectedCategory = null; selectedSubcategory = null; showServices = false"
+            (click)="selectedCategory = null; selectedSubcategory = null; showServices = false; onSearchOrAllCategories()"
           >
             All Categories
           </button>
@@ -131,7 +142,7 @@
             *ngIf="selectedCategory && showSubcategories" 
             class="breadcrumb-item"
             type="button"
-            (click)="selectedCategory = null; selectedSubcategory = null; showSubcategories = false; showServices = false"
+            (click)="selectedCategory = null; selectedSubcategory = null; showSubcategories = false; showServices = false; onSearchOrAllCategories()"
           >
             All Categories
           </button>
@@ -194,6 +205,7 @@
             placeholder="Search categories... (Press / to focus)" 
             [(ngModel)]="categorySearchTerm"
             (input)="filterCategories()"
+            (focus)="onSearchOrAllCategories()"
             autofocus
           />
           <input 
@@ -201,6 +213,7 @@
             type="text" 
             placeholder="Search subcategories... (Press / to focus)" 
             [(ngModel)]="subcategorySearchTerm"
+            (input)="filterSubcategories()"
             autofocus
           />
           <input 
@@ -218,6 +231,7 @@
             *ngFor="let category of filteredCategories"
             class="category-card"
             (click)="selectCategory(category)"
+            (mouseenter)="preloadSubcategories(category)"
           >
             <div class="category-icon">📦</div>
             <h3>{{ category.name }}</h3>
@@ -236,6 +250,7 @@
             *ngFor="let subcategory of getFilteredSubcategories()"
             class="subcategory-card"
             (click)="selectSubcategory(subcategory)"
+            (mouseenter)="preloadServices(subcategory)"
           >
             <h3>{{ subcategory.name }}</h3>
             <div class="subcategory-badge">
@@ -329,24 +344,26 @@
       <!-- STEP 2: Inline Configuration (Expandable Cards) -->
       <!-- ============================================ -->
       <div *ngIf="currentStep === 2" class="step-content">
-        <div class="config-header">
-          <h3>Configure {{ selectedServices.length }} Service(s)</h3>
-          <p>Set pricing and specializations for each service</p>
-        </div>
-
-        <!-- Bulk Apply Toggle -->
-        <div class="bulk-config-toggle">
-          <label class="toggle-label">
-            <input type="checkbox" [(ngModel)]="applyToAll" />
-            <span class="toggle-slider"></span>
-            <span class="toggle-text">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
-              </svg>
-              Apply first service config to all
-            </span>
-          </label>
-          <p class="toggle-hint">When enabled, changes to the first service will automatically apply to all services</p>
+        <div class="config-header-v2">
+          <div class="header-title-section">
+            <h3>Configure {{ selectedServices.length }} Service(s)</h3>
+            <p>Set pricing and specializations for each service</p>
+          </div>
+          
+          <!-- Enhanced Bulk Apply Toggle -->
+          <div class="bulk-toggle-v2" *ngIf="selectedServices.length > 1">
+            <label class="toggle-wrapper-v2">
+              <input type="checkbox" [(ngModel)]="applyToAll" class="toggle-input" />
+              <span class="toggle-switch-v2"></span>
+              <div class="toggle-label-content">
+                <span class="toggle-title">
+                  <i class="fas fa-copy"></i>
+                  Apply First to All
+                </span>
+                <span class="toggle-subtitle">Auto-sync pricing & origins</span>
+              </div>
+            </label>
+          </div>
         </div>
 
         <form [formGroup]="configurationForm">
@@ -358,8 +375,8 @@
                  [formGroupName]="i">
               
               <!-- Card Header (Always Visible) -->
-              <div class="card-header" (click)="toggleServiceExpansion(i)">
-                <div class="card-title-section">
+              <div class="card-header">
+                <div class="card-title-section" (click)="toggleServiceExpansion(i)">
                   <span class="card-number">{{ i + 1 }}</span>
                   <div class="card-title">
                     <h4>{{ service.serviceName }}</h4>
@@ -367,26 +384,55 @@
                   </div>
                 </div>
                 
-                <div class="card-status">
-                  <svg *ngIf="getServiceFormGroup(i).valid" class="status-icon valid" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  <svg *ngIf="!getServiceFormGroup(i).valid" class="status-icon invalid" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
-                  <svg class="expand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 9l-7 7-7-7"/>
-                  </svg>
+                <div class="card-actions">
+                  <!-- Delete Button -->
+                  <button 
+                    type="button" 
+                    class="btn-delete-service"
+                    (click)="removeServiceFromConfig(i); $event.stopPropagation()"
+                    title="Remove this service"
+                    *ngIf="selectedServices.length > 1"
+                  >
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                  
+                  <!-- Status Icons -->
+                  <div class="card-status" (click)="toggleServiceExpansion(i)">
+                    <i *ngIf="getServiceFormGroup(i).valid" class="fas fa-check-circle status-icon valid"></i>
+                    <i *ngIf="!getServiceFormGroup(i).valid" class="fas fa-exclamation-circle status-icon invalid"></i>
+                    <i class="fas fa-chevron-down expand-icon"></i>
+                  </div>
                 </div>
               </div>
 
               <!-- Card Body (Expandable) -->
               <div class="card-body" *ngIf="isServiceExpanded(i)">
                 
-                <!-- Inline Configuration Fields -->
-                <div class="inline-config-grid">
+                <!-- Pricing Mode Toggle -->
+                <div class="pricing-mode-toggle">
+                  <div class="toggle-section">
+                    <label class="toggle-switch">
+                      <input 
+                        type="checkbox" 
+                        [checked]="getPricingMode(i) === 'per-origin'"
+                        (change)="togglePricingMode(i)"
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                    <div class="toggle-content">
+                      <span class="toggle-label">
+                        {{ getPricingMode(i) === 'unified' ? 'Same pricing for all origins' : 'Different pricing per origin' }}
+                      </span>
+                      <span class="toggle-hint">
+                        {{ getPricingMode(i) === 'unified' ? 'Quick setup with one price for all car types' : getEnabledOriginsCount(i) + ' origins selected' }}
+                      </span>
+                    </div>
+                  </div>
+                  <i class="fas fa-info-circle info-icon"></i>
+                </div>
+
+                <!-- Unified Pricing Mode -->
+                <div class="inline-config-grid" *ngIf="getPricingMode(i) === 'unified'">
                   
                   <!-- Duration -->
                   <div class="inline-field">
@@ -434,34 +480,187 @@
                   </div>
                 </div>
 
-                <!-- Price Range Error -->
-                <div class="inline-error" *ngIf="getServiceFormGroup(i).errors?.['priceRangeInvalid']">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
+                <!-- Price Range Error for Unified -->
+                <div class="inline-error" *ngIf="getPricingMode(i) === 'unified' && getServiceFormGroup(i).errors?.['priceRangeInvalid']">
+                  <i class="fas fa-exclamation-circle"></i>
                   <span>Min price cannot exceed max price</span>
                 </div>
 
-                <!-- Car Origins (Compact) -->
-                <div class="inline-field full-width">
-                  <label>Car Origins <span class="required">*</span></label>
-                  <div class="car-origins-compact">
-                    <div 
-                      *ngFor="let origin of carOrigins"
-                      class="origin-chip"
-                      [class.selected]="isCarOriginSelected(i, origin.code)"
-                      (click)="toggleCarOrigin(i, origin.code)"
-                      [title]="origin.name"
-                    >
-                      <span class="origin-flag">{{ origin.flag }}</span>
-                      <svg *ngIf="isCarOriginSelected(i, origin.code)" class="origin-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <!-- Per-Origin Pricing Mode -->
+                <div class="per-origin-pricing" *ngIf="getPricingMode(i) === 'per-origin'">
+                  
+                  <!-- Duration (shared) -->
+                  <div class="inline-field full-width">
+                    <label>Duration <span class="required">*</span></label>
+                    <div class="input-with-unit">
+                      <input 
+                        type="number" 
+                        formControlName="durationMinutes"
+                        placeholder="60"
+                        min="15"
+                        max="480"
+                        step="15"
+                      />
+                      <span class="input-unit">min</span>
+                    </div>
+                    <p class="field-hint">15-480 minutes (applies to all origins)</p>
+                  </div>
+
+                  <!-- Bulk Actions -->
+                  <div class="bulk-actions">
+                    <button type="button" class="bulk-btn" (click)="enableAllOrigins(i)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
+                      Enable All
+                    </button>
+                    <button type="button" class="bulk-btn" (click)="disableAllOrigins(i)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                      Disable All
+                    </button>
+                    <button type="button" class="bulk-btn primary" (click)="copyPricingToAll(i)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      Copy First to All
+                    </button>
+                  </div>
+
+                  <!-- Origin Pricing Table -->
+                  <div class="origin-pricing-table">
+                    <div class="table-header">
+                      <div class="col-origin">Car Origin</div>
+                      <div class="col-price">Min Price (EGP)</div>
+                      <div class="col-price">Max Price (EGP)</div>
+                      <div class="col-action">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div 
+                      *ngFor="let origin of getOriginPricing(i); let oi = index"
+                      class="table-row"
+                      [class.disabled]="!origin.isEnabled"
+                    >
+                      <div class="col-origin">
+                        <label class="checkbox-wrapper row-checkbox">
+                          <input 
+                            type="checkbox" 
+                            [checked]="origin.isEnabled"
+                            (change)="toggleOriginEnabled(i, origin.originCode)"
+                          />
+                          <span class="checkbox-custom"></span>
+                        </label>
+                        <span class="origin-flag">{{ carOrigins[oi].flag }}</span>
+                        <span class="origin-name">{{ origin.originName }}</span>
+                      </div>
+                      <div class="col-price">
+                        <input 
+                          type="number" 
+                          [value]="origin.minPrice"
+                          (input)="updateOriginPricing(i, origin.originCode, 'minPrice', $any($event.target).value)"
+                          [disabled]="!origin.isEnabled"
+                          min="0"
+                          placeholder="Min price"
+                        />
+                      </div>
+                      <div class="col-price">
+                        <input 
+                          type="number" 
+                          [value]="origin.maxPrice"
+                          (input)="updateOriginPricing(i, origin.originCode, 'maxPrice', $any($event.target).value)"
+                          [disabled]="!origin.isEnabled"
+                          min="0"
+                          placeholder="Max price"
+                        />
+                      </div>
+                      <div class="col-action">
+                        <span class="price-badge" *ngIf="origin.isEnabled && origin.minPrice > 0">
+                          {{ origin.minPrice }}-{{ origin.maxPrice }}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <p class="field-hint">Select at least one car origin</p>
+                  
+                  <p class="table-hint">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="16" x2="12" y2="12"/>
+                      <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    Check the box next to each origin to enable custom pricing
+                  </p>
+                </div>
+
+                <!-- Car Origins (Unified Mode Only) -->
+                <div class="inline-field full-width" *ngIf="getPricingMode(i) === 'unified'">
+                  <div class="origins-header">
+                    <label>Car Origins <span class="required">*</span></label>
+                    <span class="selection-count" *ngIf="getSelectedOriginsCount(i) > 0">
+                      {{ getSelectedOriginsCount(i) }} selected
+                    </span>
+                  </div>
+                  
+                  <div class="car-origins-redesigned">
+                    <!-- Globe Icon - Select All / Clear All -->
+                    <div 
+                      class="origin-item globe-selector"
+                      [class.all-selected]="areAllOriginsSelected(i)"
+                      (click)="toggleAllOrigins(i)"
+                      title="{{ areAllOriginsSelected(i) ? 'Clear all selections' : 'Select all origins' }}"
+                    >
+                      <div class="origin-icon-wrapper">
+                        <svg class="globe-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="2" y1="12" x2="22" y2="12"/>
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        <svg *ngIf="areAllOriginsSelected(i)" class="check-badge" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="12" cy="12" r="12" fill="#10b981"/>
+                          <polyline points="7 12 10 15 17 8" stroke="white" stroke-width="2.5" fill="none"/>
+                        </svg>
+                      </div>
+                      <div class="origin-details">
+                        <span class="origin-name">All Origins</span>
+                        <span class="origin-subtitle">{{ areAllOriginsSelected(i) ? 'Click to clear' : 'Click to select all' }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Individual Origin Items -->
+                    <div 
+                      *ngFor="let origin of getSelectableOrigins()"
+                      class="origin-item"
+                      [class.selected]="isCarOriginSelected(i, origin.code)"
+                      (click)="toggleSingleOrigin(i, origin.code)"
+                      [title]="origin.name"
+                    >
+                      <div class="origin-icon-wrapper">
+                        <span class="origin-flag">{{ origin.flag }}</span>
+                        <svg *ngIf="isCarOriginSelected(i, origin.code)" class="check-badge" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="12" cy="12" r="12" fill="#10b981"/>
+                          <polyline points="7 12 10 15 17 8" stroke="white" stroke-width="2.5" fill="none"/>
+                        </svg>
+                      </div>
+                      <div class="origin-details">
+                        <span class="origin-name">{{ origin.name }}</span>
+                        <span class="origin-code">{{ origin.code | uppercase }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p class="field-hint">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="16" x2="12" y2="12"/>
+                      <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    Select at least one car origin or click the globe to select all
+                  </p>
                 </div>
 
               </div>
@@ -472,9 +671,7 @@
         <!-- Navigation Buttons -->
         <div class="step-navigation">
           <button type="button" class="btn-back" (click)="previousStep()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 18l-6-6 6-6"/>
-            </svg>
+            <i class="fas fa-arrow-left"></i>
             <span>Back</span>
           </button>
           <button 
@@ -484,9 +681,7 @@
             [disabled]="!canProceedToNextStep()"
           >
             <span>Review & Submit</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
+            <i class="fas fa-arrow-right"></i>
           </button>
         </div>
 
@@ -571,17 +766,13 @@
             [disabled]="isSubmitting"
             (click)="onSubmit()"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <i class="fas" [class.fa-check-circle]="!isSubmitting" [class.fa-spinner]="isSubmitting" [class.fa-spin]="isSubmitting"></i>
             <span *ngIf="!isSubmitting">Submit {{ selectedServices.length }} Service(s)</span>
             <span *ngIf="isSubmitting">Submitting...</span>
           </button>
           
           <button type="button" class="btn-back-secondary" (click)="previousStep()" [disabled]="isSubmitting">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 18l-6-6 6-6"/>
-            </svg>
+            <i class="fas fa-arrow-left"></i>
             <span>Back to Configuration</span>
           </button>
         </div>
