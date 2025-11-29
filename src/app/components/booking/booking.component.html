@@ -810,8 +810,23 @@
             <span>Service Category</span>
             <span>{{ selectedCategory?.name }}</span>
           </div>
+          <div class="price-item" *ngIf="selectedWorkshop?.minPrice || selectedWorkshop?.maxPrice">
+            <span>Estimated Price</span>
+            <span class="price-range">
+              <ng-container *ngIf="selectedWorkshop?.minPrice && selectedWorkshop?.maxPrice">
+                {{ selectedWorkshop!.minPrice | number:'1.0-0' }} - {{ selectedWorkshop!.maxPrice | number:'1.0-0' }} EGP
+              </ng-container>
+              <ng-container *ngIf="selectedWorkshop?.minPrice && !selectedWorkshop?.maxPrice">
+                From {{ selectedWorkshop!.minPrice | number:'1.0-0' }} EGP
+              </ng-container>
+              <ng-container *ngIf="!selectedWorkshop?.minPrice && selectedWorkshop?.maxPrice">
+                Up to {{ selectedWorkshop!.maxPrice | number:'1.0-0' }} EGP
+              </ng-container>
+            </span>
+          </div>
           <div class="price-divider"></div>
-          <p class="price-note" style="margin-top: 1rem; text-align: center;">*Price will be determined after service selection and workshop inspection</p>
+          <p class="price-note" *ngIf="!selectedWorkshop?.minPrice && !selectedWorkshop?.maxPrice" style="margin-top: 1rem; text-align: center;">*Price will be determined after service selection and workshop inspection</p>
+          <p class="price-note" *ngIf="selectedWorkshop?.minPrice || selectedWorkshop?.maxPrice" style="margin-top: 1rem; text-align: center;">*Final price may vary based on vehicle condition and parts required</p>
         </div>
       </div>
 

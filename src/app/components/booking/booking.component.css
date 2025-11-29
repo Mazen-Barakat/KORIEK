@@ -1236,6 +1236,12 @@
   color: #6b7280;
 }
 
+.price-item .price-range {
+  font-weight: 700;
+  color: #FF3B30;
+  font-size: 1rem;
+}
+
 .price-divider {
   height: 1px;
   background: #E5E7EB;

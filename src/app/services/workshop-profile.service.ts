@@ -425,34 +425,60 @@ export class WorkshopProfileService {
   // ============================================
 
   /**
-   * Search for workshops by service ID and vehicle origin.
+   * Search for workshops by service ID, vehicle origin, and appointment date.
    * Calls GET /api/WorkshopService/Search-Workshops-By-Service-And-Origin
    * 
    * @param serviceId The ID of the selected service
-   * @param origin The vehicle origin (e.g., 'Germany', 'Japan', 'General')
+   * @param origin The vehicle origin (e.g., 'Germany', 'Japan', 'Italy', 'General')
+   * @param appointmentDate The appointment date/time in ISO format or formatted string
+   * @param city Optional city filter
+   * @param latitude Optional latitude for location-based search
+   * @param longitude Optional longitude for location-based search
    * @param pageNumber Optional page number for pagination (default 1)
-   * @param pageSize Optional page size for pagination (default 20)
+   * @param pageSize Optional page size for pagination (default 10)
    * @returns Observable of workshop search results
    */
   searchWorkshopsByServiceAndOrigin(
     serviceId: number | string,
     origin: string,
-    pageNumber: number = 1,
-    pageSize: number = 20
+    appointmentDate: string,
+    options?: {
+      city?: string;
+      latitude?: number;
+      longitude?: number;
+      pageNumber?: number;
+      pageSize?: number;
+    }
   ): Observable<any> {
     const params = new URLSearchParams();
     params.set('ServiceId', String(serviceId));
     params.set('Origin', origin);
-    params.set('PageNumber', String(pageNumber));
-    params.set('PageSize', String(pageSize));
+    params.set('AppointmentDate', appointmentDate);
+    
+    // Optional parameters
+    if (options?.city) {
+      params.set('City', options.city);
+    }
+    if (options?.latitude !== undefined) {
+      params.set('Latitude', String(options.latitude));
+    }
+    if (options?.longitude !== undefined) {
+      params.set('Longitude', String(options.longitude));
+    }
+    params.set('PageNumber', String(options?.pageNumber ?? 1));
+    params.set('PageSize', String(options?.pageSize ?? 10));
 
     const url = `https://localhost:44316/api/WorkshopService/Search-Workshops-By-Service-And-Origin?${params.toString()}`;
     
+    console.log('Workshop search URL:', url);
+    
     return this.http.get<any>(url).pipe(
-      map((response: any) => {
-        // Handle response that might be wrapped in data property
+      tap((response: any) => {
         console.log('Workshop search raw response:', response);
-        return response?.data ?? response ?? [];
+      }),
+      catchError((error) => {
+        console.error('Workshop search error:', error);
+        throw error;
       })
     );
   }

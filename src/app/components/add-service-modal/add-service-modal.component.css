@@ -3689,10 +3689,6 @@
   }
 }
 
-padding-right: 3rem;
-cursor: pointer;
-}
-
 select.input-field-simple::-ms-expand {
   display: none;
 }

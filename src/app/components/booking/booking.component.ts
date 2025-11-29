@@ -49,7 +49,9 @@ interface Workshop {
   workshopProfileId?: number;
   workshopName?: string;
   workshopDescription?: string;
+  workshopType?: string;        // e.g., 'Independent', 'Franchise'
   serviceId?: number;
+  workshopServiceID?: number;   // Workshop service ID from API (used for booking)
   serviceName?: string;
   serviceDescription?: string;
   price?: number;
@@ -57,11 +59,17 @@ interface Workshop {
   maxPrice?: number;
   logoUrl?: string;
   city?: string;
+  country?: string;
+  governorate?: string;
   averageRating?: number;
   totalReviews?: number;
   latitude?: number;
   longitude?: number;
   email?: string;
+  origin?: string;              // Vehicle origin this workshop serves
+  duration?: number;            // Service duration in minutes
+  numbersOfTechnicians?: number;
+  isClosed?: boolean;           // Whether workshop is currently closed
 }
 
 interface BookingDraft {
@@ -170,6 +178,8 @@ export class BookingComponent implements OnInit {
   // Success state
   bookingConfirmed = false;
   confirmationNumber = '';
+  isSubmittingBooking: boolean = false;
+  bookingError: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -832,7 +842,7 @@ export class BookingComponent implements OnInit {
 
   /**
    * Combine selected date and time slot into a single DateTime
-   * Returns ISO string in Africa/Cairo timezone
+   * Returns format: "2025-11-28 10:00:00.0000000" for backend
    */
   getCombinedDateTime(): string | null {
     if (!this.selectedDate || !this.selectedTimeSlot) {
@@ -842,19 +852,15 @@ export class BookingComponent implements OnInit {
     // Parse time slot (HH:mm format)
     const [hours, minutes] = this.selectedTimeSlot.split(':').map(Number);
     
-    // Create date with time in local timezone
-    const combinedDate = new Date(
-      this.selectedDate.getFullYear(),
-      this.selectedDate.getMonth(),
-      this.selectedDate.getDate(),
-      hours,
-      minutes,
-      0,
-      0
-    );
+    // Format date components
+    const year = this.selectedDate.getFullYear();
+    const month = (this.selectedDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = this.selectedDate.getDate().toString().padStart(2, '0');
+    const hoursStr = hours.toString().padStart(2, '0');
+    const minutesStr = minutes.toString().padStart(2, '0');
 
-    // Return ISO string (UTC format that backend can parse)
-    return combinedDate.toISOString();
+    // Return format: "2025-11-28 10:00:00.0000000" for backend
+    return `${year}-${month}-${day} ${hoursStr}:${minutesStr}:00.0000000`;
   }
 
   /**
@@ -956,7 +962,7 @@ export class BookingComponent implements OnInit {
   }
 
   /**
-   * Load workshops from the backend API based on selected service and vehicle origin.
+   * Load workshops from the backend API based on selected service, vehicle origin, and appointment date.
    * Called when entering step 3 (workshop selection).
    */
   loadWorkshops(): void {
@@ -966,24 +972,40 @@ export class BookingComponent implements OnInit {
       return;
     }
 
+    if (!this.selectedDate || !this.selectedTimeSlot) {
+      console.warn('Cannot load workshops: date or time not selected');
+      this.workshopsError = 'Please select a date and time first';
+      return;
+    }
+
     this.isLoadingWorkshops = true;
     this.workshopsError = null;
+    this.workshops = [];
 
     const serviceId = this.selectedService.id;
     const origin = this.selectedVehicleOrigin || 'General';
+    
+    // Format appointment date for the API: "YYYY-MM-DD HH:mm:ss.0000000"
+    const appointmentDate = this.formatAppointmentDateForApi();
 
-    console.log('Loading workshops for serviceId:', serviceId, 'origin:', origin);
+    console.log('Loading workshops for serviceId:', serviceId, 'origin:', origin, 'appointmentDate:', appointmentDate);
 
-    this.workshopProfileService.searchWorkshopsByServiceAndOrigin(serviceId, origin).subscribe({
+    this.workshopProfileService.searchWorkshopsByServiceAndOrigin(serviceId, origin, appointmentDate, {
+      pageNumber: 1,
+      pageSize: 10
+    }).subscribe({
       next: (response: any) => {
         console.log('Workshops search response:', response);
         
-        // Map API response to Workshop interface
-        if (Array.isArray(response)) {
+        // Handle the new response structure: { success, message, data: { items, pageNumber, ... } }
+        if (response?.success && response?.data?.items && Array.isArray(response.data.items)) {
+          this.workshops = response.data.items.map((w: any, index: number) => this.mapApiWorkshopToInterface(w, index));
+        } else if (response?.data && Array.isArray(response.data)) {
+          // Fallback: data is directly an array
+          this.workshops = response.data.map((w: any, index: number) => this.mapApiWorkshopToInterface(w, index));
+        } else if (Array.isArray(response)) {
+          // Fallback: response is directly an array
           this.workshops = response.map((w: any, index: number) => this.mapApiWorkshopToInterface(w, index));
-        } else if (response && Array.isArray(response.items)) {
-          // Handle paginated response
-          this.workshops = response.items.map((w: any, index: number) => this.mapApiWorkshopToInterface(w, index));
         } else {
           this.workshops = [];
         }
@@ -1007,40 +1029,71 @@ export class BookingComponent implements OnInit {
   }
 
   /**
-   * Map API workshop response to the Workshop interface used by the UI
+   * Format the selected date and time slot for the API request.
+   * Returns format: "YYYY-MM-DD HH:mm:ss.0000000"
+   */
+  private formatAppointmentDateForApi(): string {
+    if (!this.selectedDate || !this.selectedTimeSlot) {
+      return '';
+    }
+
+    const year = this.selectedDate.getFullYear();
+    const month = (this.selectedDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = this.selectedDate.getDate().toString().padStart(2, '0');
+    const [hours, minutes] = this.selectedTimeSlot.split(':');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:00.0000000`;
+  }
+
+  /**
+   * Map API workshop response to the Workshop interface used by the UI.
+   * Handles the new response structure from Search-Workshops-By-Service-And-Origin endpoint.
    */
   private mapApiWorkshopToInterface(apiWorkshop: any, index: number): Workshop {
-    // Create a unique ID combining workshopProfileId and serviceId to handle
-    // cases where the same workshop offers multiple services
-    const uniqueId = apiWorkshop.workshopProfileId && apiWorkshop.serviceId
-      ? apiWorkshop.workshopProfileId * 100000 + apiWorkshop.serviceId
-      : apiWorkshop.workshopProfileId || apiWorkshop.id || index;
+    // Use workshopId from the new response structure, fallback to workshopProfileId or index
+    const workshopId = apiWorkshop.workshopId || apiWorkshop.workshopProfileId || apiWorkshop.id || index;
+    
+    // Build address from available location fields
+    const addressParts = [
+      apiWorkshop.city,
+      apiWorkshop.governorate,
+      apiWorkshop.country
+    ].filter(Boolean);
+    const fullAddress = addressParts.join(', ') || apiWorkshop.address || '';
     
     return {
-      id: uniqueId,
+      id: workshopId,
       name: apiWorkshop.workshopName || apiWorkshop.name || 'Unknown Workshop',
-      rating: apiWorkshop.averageRating || apiWorkshop.rating || 0,
+      rating: apiWorkshop.rating || apiWorkshop.averageRating || 0,
       reviewCount: apiWorkshop.totalReviews || apiWorkshop.reviewCount || 0,
-      address: apiWorkshop.city || apiWorkshop.address || '',
-      phone: apiWorkshop.phone || apiWorkshop.phoneNumber || '',
+      address: fullAddress,
+      phone: apiWorkshop.phoneNumber || apiWorkshop.phone || '',
       services: apiWorkshop.serviceName ? [apiWorkshop.serviceName] : [],
-      // Store additional API fields
-      workshopProfileId: apiWorkshop.workshopProfileId,
+      // Store additional API fields from new response structure
+      workshopProfileId: apiWorkshop.workshopId || apiWorkshop.workshopProfileId,
       workshopName: apiWorkshop.workshopName,
       workshopDescription: apiWorkshop.workshopDescription || apiWorkshop.description || '',
+      workshopType: apiWorkshop.workshopType,
       serviceId: apiWorkshop.serviceId,
+      workshopServiceID: apiWorkshop.workshopServiceID,  // This is the ID needed for booking
       serviceName: apiWorkshop.serviceName,
       serviceDescription: apiWorkshop.serviceDescription || '',
       price: apiWorkshop.price,
-      minPrice: apiWorkshop.minPrice || apiWorkshop.priceMin,
-      maxPrice: apiWorkshop.maxPrice || apiWorkshop.priceMax,
-      logoUrl: apiWorkshop.LogoImageUrl || apiWorkshop.logoImageUrl || apiWorkshop.logoUrl || apiWorkshop.logo || apiWorkshop.imageUrl,
+      minPrice: apiWorkshop.minPrice,
+      maxPrice: apiWorkshop.maxPrice,
+      logoUrl: apiWorkshop.logoImageUrl || apiWorkshop.LogoImageUrl || apiWorkshop.logoUrl || apiWorkshop.logo,
       city: apiWorkshop.city,
-      averageRating: apiWorkshop.averageRating,
+      country: apiWorkshop.country,
+      governorate: apiWorkshop.governorate,
+      averageRating: apiWorkshop.rating || apiWorkshop.averageRating,
       totalReviews: apiWorkshop.totalReviews,
-      latitude: apiWorkshop.latitude || apiWorkshop.lat,
-      longitude: apiWorkshop.longitude || apiWorkshop.lng || apiWorkshop.lon,
-      email: apiWorkshop.email
+      latitude: apiWorkshop.latitude,
+      longitude: apiWorkshop.longitude,
+      email: apiWorkshop.email,
+      origin: apiWorkshop.origin,
+      duration: apiWorkshop.duration,
+      numbersOfTechnicians: apiWorkshop.numbersOfTechnicians,
+      isClosed: apiWorkshop.isClosed
     };
   }
 
@@ -1162,22 +1215,69 @@ export class BookingComponent implements OnInit {
 
   // Booking submission
   confirmBooking(): void {
+    // Validate required fields
+    if (!this.selectedVehicle) {
+      this.bookingError = 'Please select a vehicle';
+      return;
+    }
+    if (!this.selectedWorkshop) {
+      this.bookingError = 'Please select a workshop';
+      return;
+    }
+    if (!this.selectedService && !this.selectedWorkshop.serviceId) {
+      this.bookingError = 'Please select a service';
+      return;
+    }
+    if (!this.selectedPaymentMethod) {
+      this.bookingError = 'Please select a payment method';
+      return;
+    }
+
     // Get combined DateTime in ISO format
     const bookingDateTime = this.getCombinedDateTime();
     
     if (!bookingDateTime) {
-      console.error('Cannot create booking: date or time not selected');
+      this.bookingError = 'Please select date and time';
       return;
     }
 
-    // Prepare booking data for backend
+    // Clear any previous errors
+    this.bookingError = '';
+    this.isSubmittingBooking = true;
+
+    // Get the workshop service ID (workshopServiceID from API response is required for booking)
+    const workshopServiceId = this.selectedWorkshop.workshopServiceID || this.selectedWorkshop.serviceId || 0;
+    const workshopProfileId = this.selectedWorkshop.workshopProfileId || this.selectedWorkshop.id;
+    
+    console.log('Workshop Service ID:', workshopServiceId);
+    console.log('Workshop Profile ID:', workshopProfileId);
+
+    // Map payment method to backend enum: Cash, CreditCard
+    const paymentMethodMap: { [key: string]: string } = {
+      'cash': 'Cash',
+      'credit_card': 'CreditCard',
+      'credit-card': 'CreditCard',
+      'creditcard': 'CreditCard',
+      'card': 'CreditCard',
+      'credit': 'CreditCard'
+    };
+    const apiPaymentMethod = paymentMethodMap[this.selectedPaymentMethod.toLowerCase()];
+    
+    if (!apiPaymentMethod) {
+      this.bookingError = 'Invalid payment method selected';
+      this.isSubmittingBooking = false;
+      return;
+    }
+
+    // Prepare booking data for backend API
     const bookingData = {
-      vehicleId: this.selectedVehicle?.id,
-      serviceId: this.selectedService?.id,
-      workshopId: this.selectedWorkshop?.id || this.selectedWorkshop?.workshopProfileId,
-      appointmentDate: bookingDateTime, // ISO string in UTC - backend will store in Bookings.AppointmentDate field
-      notes: this.serviceNotes || '',
-      vehicleOrigin: this.selectedVehicleOrigin
+      AppointmentDate: bookingDateTime,
+      IssueDescription: this.serviceNotes || '',
+      PaymentMethod: apiPaymentMethod,
+      CarId: this.selectedVehicle.id,
+      WorkShopProfileId: workshopProfileId,
+      WorkshopServiceId: workshopServiceId,
+      Photos: [] as string[]
     };
 
     console.log('=== BOOKING DATA FOR BACKEND ===');
@@ -1196,23 +1296,57 @@ export class BookingComponent implements OnInit {
     // Send to backend API
     this.bookingService.createBooking(bookingData).subscribe({
       next: (response) => {
-        console.log('Booking created successfully:', response);
-        this.confirmationNumber = response.confirmationNumber || response.data?.bookingId || 'BK' + Math.random().toString(36).substring(2, 10).toUpperCase();
-        this.currentStep = 5;
-        this.bookingConfirmed = true;
-        localStorage.removeItem('bookingDraft');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        console.log('=== BOOKING API RESPONSE ===');
+        console.log('Full response:', response);
+        console.log('Success:', response.success);
+        console.log('Message:', response.message);
+        console.log('Data:', response.data);
+        
+        this.isSubmittingBooking = false;
+        
+        if (response.success) {
+          // Use booking ID from response as confirmation number
+          this.confirmationNumber = 'BK' + String(response.data.id).padStart(6, '0');
+          this.currentStep = 5;
+          this.bookingConfirmed = true;
+          localStorage.removeItem('bookingDraft');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          this.bookingError = response.message || 'Failed to create booking';
+        }
       },
       error: (error) => {
-        console.error('Booking creation failed:', error);
-        alert('Failed to create booking: ' + (error.error?.message || error.message || 'Unknown error'));
+        console.error('=== BOOKING API ERROR ===');
+        console.error('Full error object:', error);
+        console.error('Error status:', error.status);
+        console.error('Error statusText:', error.statusText);
+        console.error('Error message:', error.message);
+        console.error('Error body:', error.error);
+        if (error.error?.errors) {
+          console.error('Validation errors:', error.error.errors);
+        }
         
-        // For now, still proceed (remove this in production)
-        this.confirmationNumber = 'BK' + Math.random().toString(36).substring(2, 10).toUpperCase();
-        this.currentStep = 5;
-        this.bookingConfirmed = true;
-        localStorage.removeItem('bookingDraft');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        this.isSubmittingBooking = false;
+        
+        // Build detailed error message
+        let errorMessage = 'Failed to create booking. ';
+        if (error.status === 0) {
+          errorMessage = 'Cannot connect to server. Please ensure the backend is running.';
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.error?.title) {
+          errorMessage = error.error.title;
+          if (error.error?.errors) {
+            const validationErrors = Object.entries(error.error.errors)
+              .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(', ')}`)
+              .join('; ');
+            errorMessage += ' - ' + validationErrors;
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        this.bookingError = errorMessage;
       }
     });
   }

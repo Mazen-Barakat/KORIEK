@@ -36,22 +36,71 @@ export class BookingService {
 
   /**
    * Create a new booking with date/time in Africa/Cairo timezone
-   * @param bookingData Booking information including ISO DateTime string
+   * @param bookingData Booking information matching API request format
    */
   createBooking(bookingData: {
-    vehicleId?: number;
-    serviceId?: number;
-    workshopId?: number;
-    appointmentDate: string; // ISO string (UTC) - backend will store in Bookings.AppointmentDate field (Cairo timezone)
-    notes?: string;
-    vehicleOrigin?: string;
-  }): Observable<any> {
+    AppointmentDate: string;       // ISO string (UTC) - e.g., "2025-11-30T15:33:11.286Z"
+    IssueDescription: string;       // Description of the issue/notes
+    PaymentMethod: string;          // "Cash" or "CreditCard"
+    CarId: number;                  // Vehicle ID
+    WorkShopProfileId: number;      // Workshop profile ID
+    WorkshopServiceId: number;      // Workshop service ID
+    Photos?: string[];              // Optional array of photo URLs
+  }): Observable<{
+    success: boolean;
+    message: string;
+    data: {
+      id: number;
+      status: string;
+      appointmentDate: string;
+      issueDescription: string;
+      paymentMethod: string;
+      paidAmount: number;
+      paymentStatus: string;
+      createdAt: string;
+      carId: number;
+      workShopProfileId: number;
+      workshopServiceId: number;
+    };
+  }> {
     console.log('Creating booking with data:', bookingData);
-    console.log('AppointmentDate (ISO/UTC):', bookingData.appointmentDate);
-    console.log('AppointmentDate (Cairo):', new Date(bookingData.appointmentDate).toLocaleString('en-US', { timeZone: 'Africa/Cairo' }));
+    console.log('AppointmentDate (ISO/UTC):', bookingData.AppointmentDate);
+    console.log('AppointmentDate (Cairo):', new Date(bookingData.AppointmentDate).toLocaleString('en-US', { timeZone: 'Africa/Cairo' }));
     
-    // Send to backend API
-    return this.http.post(`${this.apiUrl}/Booking`, bookingData);
+    // Build FormData for multipart/form-data submission
+    const formData = new FormData();
+    formData.append('AppointmentDate', bookingData.AppointmentDate);
+    formData.append('IssueDescription', bookingData.IssueDescription);
+    formData.append('PaymentMethod', bookingData.PaymentMethod);
+    formData.append('CarId', bookingData.CarId.toString());
+    formData.append('WorkShopProfileId', bookingData.WorkShopProfileId.toString());
+    formData.append('WorkshopServiceId', bookingData.WorkshopServiceId.toString());
+    
+    // Add photos if provided
+    if (bookingData.Photos && bookingData.Photos.length > 0) {
+      bookingData.Photos.forEach((photo, index) => {
+        formData.append('Photos', photo);
+      });
+    }
+
+    // Send to backend API as multipart/form-data
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      data: {
+        id: number;
+        status: string;
+        appointmentDate: string;
+        issueDescription: string;
+        paymentMethod: string;
+        paidAmount: number;
+        paymentStatus: string;
+        createdAt: string;
+        carId: number;
+        workShopProfileId: number;
+        workshopServiceId: number;
+      };
+    }>(`${this.apiUrl}/Booking`, formData);
   }
 
   /**
