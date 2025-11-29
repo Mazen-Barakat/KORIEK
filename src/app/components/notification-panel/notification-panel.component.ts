@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { NotificationService } from '../../services/notification.service';
 import { AppNotification } from '../../models/wallet.model';
 
@@ -10,7 +11,18 @@ import { AppNotification } from '../../models/wallet.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './notification-panel.component.html',
-  styleUrls: ['./notification-panel.component.css']
+  styleUrls: ['./notification-panel.component.css'],
+  animations: [
+    trigger('slideDown', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-10px)' }),
+        animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('150ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
+      ])
+    ])
+  ]
 })
 export class NotificationPanelComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
