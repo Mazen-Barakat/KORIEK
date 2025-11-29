@@ -787,6 +787,21 @@
             </div>
             <button class="review-edit" (click)="goToStep(3)">Edit</button>
           </div>
+
+          <div class="review-item" *ngIf="selectedPaymentMethod">
+            <div class="review-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+              <span>Payment</span>
+            </div>
+            <div class="review-value">
+              <strong>{{ selectedPaymentMethod === 'cash' ? 'Cash' : 'Credit Card' }}</strong>
+              <span class="review-subtext">{{ selectedPaymentMethod === 'cash' ? 'Pay at workshop after service' : 'Secure card payment' }}</span>
+            </div>
+            <button class="review-edit" (click)="goToStep(3)">Edit</button>
+          </div>
         </div>
 
         <div class="price-breakdown">
@@ -893,4 +908,11 @@
       </div>
     </div>
   </div>
+  
+  <!-- Payment Method Popup -->
+  <app-payment-method-popup 
+    *ngIf="showPaymentPopup"
+    (paymentMethodSelected)="onPaymentMethodSelected($event)"
+    (closePopup)="closePaymentPopup()">
+  </app-payment-method-popup>
 </div>

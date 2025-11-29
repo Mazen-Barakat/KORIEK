@@ -9,6 +9,7 @@ import { BookingService } from '../../services/booking.service';
 import { Category } from '../../models/category.model';
 import { Subcategory } from '../../models/subcategory.model';
 import { Service } from '../../models/service.model';
+import { PaymentMethodPopupComponent } from '../payment-method-popup/payment-method-popup.component';
 
 interface Vehicle {
   id: number;
@@ -71,13 +72,14 @@ interface BookingDraft {
   selectedDate: string | null;
   selectedTimeSlot: string | null;
   workshopIds: number[];  // Changed to array for multi-selection
+  paymentMethod: string | null;
   timestamp: number;
 }
 
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaymentMethodPopupComponent],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.css']
 })
@@ -153,6 +155,10 @@ export class BookingComponent implements OnInit {
   selectedWorkshop: Workshop | null = null;  // Single workshop selection
   isLoadingWorkshops = false;
   workshopsError: string | null = null;
+  
+  // Payment method selection
+  showPaymentPopup = false;
+  selectedPaymentMethod: string | null = null;
   
   // Vehicle origin for workshop search (default 'General' if undetected)
   selectedVehicleOrigin: string = 'General';
@@ -621,6 +627,12 @@ export class BookingComponent implements OnInit {
 
   // Step navigation
   nextStep(): void {
+    // Show payment popup after workshop selection (step 3)
+    if (this.currentStep === 3 && this.isStep3Valid()) {
+      this.showPaymentPopup = true;
+      return;
+    }
+    
     if (this.currentStep < this.totalSteps) {
       this.currentStep++;
       this.saveDraft();
@@ -1075,6 +1087,7 @@ export class BookingComponent implements OnInit {
       selectedDate: this.selectedDate?.toISOString() || null,
       selectedTimeSlot: this.selectedTimeSlot,
       workshopIds: this.selectedWorkshop ? [this.selectedWorkshop.id] : [],
+      paymentMethod: this.selectedPaymentMethod,
       timestamp: Date.now()
     };
     
@@ -1133,6 +1146,9 @@ export class BookingComponent implements OnInit {
       if (draft.workshopIds && draft.workshopIds.length > 0) {
         this.selectedWorkshop = this.workshops.find(w => draft.workshopIds.includes(w.id)) || null;
       }
+      
+      // Restore payment method
+      this.selectedPaymentMethod = draft.paymentMethod || null;
       
       this.showDraftBanner = false;
     }
@@ -1219,6 +1235,8 @@ export class BookingComponent implements OnInit {
     this.workshops = [];
     this.workshopsError = null;
     this.selectedVehicleOrigin = 'General';
+    this.selectedPaymentMethod = null;
+    this.showPaymentPopup = false;
     this.bookingConfirmed = false;
     this.confirmationNumber = '';
     
@@ -1244,5 +1262,23 @@ export class BookingComponent implements OnInit {
 
   goToMyVehicles(): void {
     this.router.navigate(['/my-vehicles']);
+  }
+  
+  // Payment method popup handlers
+  onPaymentMethodSelected(method: string): void {
+    this.selectedPaymentMethod = method;
+    this.showPaymentPopup = false;
+    console.log('Payment method selected:', method);
+    
+    // Proceed to next step (review)
+    if (this.currentStep < this.totalSteps) {
+      this.currentStep++;
+      this.saveDraft();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+  
+  closePaymentPopup(): void {
+    this.showPaymentPopup = false;
   }
 }

@@ -124,6 +124,7 @@ export interface Job {
   dropoffDate?: Date;
   pickupDate?: Date;
   estimatedCompletionDate?: Date;
+  paymentMethod?: 'cash' | 'credit-card';
   
   // Service Progress
   assignedTechnicianId?: string;

@@ -1,0 +1,96 @@
+<div class="popup-overlay" (click)="close()">
+  <div class="popup-container" (click)="$event.stopPropagation()">
+    <!-- Close Button -->
+    <button class="popup-close" (click)="close()" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <!-- Header -->
+    <div class="popup-header">
+      <div class="popup-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+          <line x1="1" y1="10" x2="23" y2="10"/>
+        </svg>
+      </div>
+      <h2>Choose Payment Method</h2>
+      <p>Select how you would like to pay for your service</p>
+    </div>
+
+    <!-- Payment Options -->
+    <div class="payment-options">
+      <!-- Cash Option -->
+      <div class="payment-card" 
+           [class.selected]="selectedMethod === 'cash'"
+           (click)="selectMethod('cash')">
+        <div class="payment-radio">
+          <div class="radio-outer">
+            <div class="radio-inner" *ngIf="selectedMethod === 'cash'"></div>
+          </div>
+        </div>
+        <div class="payment-icon-wrapper cash">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="payment-content">
+          <h3>Cash</h3>
+          <p>Pay with cash at the workshop after service completion</p>
+          <div class="payment-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>No advance payment</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Credit Card Option -->
+      <div class="payment-card" 
+           [class.selected]="selectedMethod === 'credit-card'"
+           (click)="selectMethod('credit-card')">
+        <div class="payment-radio">
+          <div class="radio-outer">
+            <div class="radio-inner" *ngIf="selectedMethod === 'credit-card'"></div>
+          </div>
+        </div>
+        <div class="payment-icon-wrapper card">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+            <line x1="1" y1="10" x2="23" y2="10"/>
+          </svg>
+        </div>
+        <div class="payment-content">
+          <h3>Credit Card</h3>
+          <p>Secure payment with your credit or debit card</p>
+          <div class="payment-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span>Secure & fast</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="popup-actions">
+      <button class="btn-cancel" (click)="close()">
+        Cancel
+      </button>
+      <button class="btn-confirm" 
+              [disabled]="!selectedMethod"
+              (click)="confirmSelection()">
+        <span>Continue</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
