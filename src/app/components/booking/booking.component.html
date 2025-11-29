@@ -405,6 +405,7 @@
 
     <!-- Step 2: Date & Time Selection -->
     <div class="step-content" *ngIf="currentStep === 2">
+      <!-- Month Selection -->
       <div class="section-card">
         <div class="section-header">
           <div class="section-icon">
@@ -416,23 +417,51 @@
             </svg>
           </div>
           <div>
-            <h2>Select Date</h2>
-            <p class="section-subtitle">Choose your preferred service date</p>
+            <h2>Select Month</h2>
+            <p class="section-subtitle">Choose the month for your service appointment</p>
+          </div>
+        </div>
+
+        <div class="month-grid">
+          <div class="month-card"
+               *ngFor="let month of availableMonths"
+               [class.selected]="isMonthSelected(month.month, month.year)"
+               (click)="selectMonth(month.month, month.year)">
+            <span class="month-name">{{ month.name }}</span>
+            <span class="month-year">{{ month.year }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Day Selection (shown after month selection) -->
+      <div class="section-card" *ngIf="selectedMonth !== null && daysInMonth.length > 0">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Select Day</h2>
+            <p class="section-subtitle">{{ MONTH_NAMES[selectedMonth] }} {{ selectedYear }}</p>
           </div>
         </div>
 
         <div class="calendar-grid">
           <div class="date-card"
-               *ngFor="let date of availableDates.slice(0, 14)"
-               [class.selected]="isDateSelected(date)"
+               *ngFor="let date of daysInMonth"
+               [class.selected]="isDateSelectedInMonth(date)"
                (click)="selectDate(date)">
-            <span class="date-day">{{ formatDate(date).split(' ')[0] }}</span>
-            <span class="date-number">{{ formatDate(date).split(' ')[2] }}</span>
-            <span class="date-month">{{ formatDate(date).split(' ')[1] }}</span>
+            <span class="date-day">{{ getDayName(date) }}</span>
+            <span class="date-number">{{ getDayNumber(date) }}</span>
           </div>
         </div>
       </div>
 
+      <!-- Time Slot Selection (shown after day selection) -->
       <div class="section-card" *ngIf="selectedDate">
         <div class="section-header">
           <div class="section-icon">
@@ -443,7 +472,7 @@
           </div>
           <div>
             <h2>Select Time Slot</h2>
-            <p class="section-subtitle">{{ formatDateLong(selectedDate) }}</p>
+            <p class="section-subtitle">{{ formatDateLong(selectedDate) }} - All available time slots</p>
           </div>
         </div>
 
@@ -451,12 +480,23 @@
           <button class="timeslot-btn"
                   *ngFor="let slot of availableTimeSlots"
                   [class.selected]="selectedTimeSlot === slot"
-                  [class.unavailable]="!isTimeSlotAvailable(slot)"
-                  [disabled]="!isTimeSlotAvailable(slot)"
+                  [class.unavailable]="!isTimeSlotAvailableWithPast(slot)"
+                  [disabled]="!isTimeSlotAvailableWithPast(slot)"
                   (click)="selectTimeSlot(slot)">
             {{ slot }}
-            <span class="unavailable-label" *ngIf="!isTimeSlotAvailable(slot)">Booked</span>
+            <span class="unavailable-label" *ngIf="!isTimeSlotAvailableWithPast(slot)">
+              {{ !isTimeSlotAvailable(slot) ? 'Booked' : 'Past' }}
+            </span>
           </button>
+        </div>
+        
+        <!-- Timezone Info -->
+        <div class="timezone-info" style="margin-top: 1rem; padding: 0.75rem; background: #f3f4f6; border-radius: 8px; text-align: center; font-size: 0.875rem; color: #6b7280;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2v20M2 12h20"/>
+          </svg>
+          All times are in Africa/Cairo timezone (UTC+2)
         </div>
       </div>
 

@@ -32,6 +32,49 @@ export class BookingService {
     this.jobsSubject.next(mockJobs);
   }
 
+  // =============== Booking Creation ===============
+
+  /**
+   * Create a new booking with date/time in Africa/Cairo timezone
+   * @param bookingData Booking information including ISO DateTime string
+   */
+  createBooking(bookingData: {
+    vehicleId?: number;
+    serviceId?: number;
+    workshopId?: number;
+    appointmentDate: string; // ISO string (UTC) - backend will store in Bookings.AppointmentDate field (Cairo timezone)
+    notes?: string;
+    vehicleOrigin?: string;
+  }): Observable<any> {
+    console.log('Creating booking with data:', bookingData);
+    console.log('AppointmentDate (ISO/UTC):', bookingData.appointmentDate);
+    console.log('AppointmentDate (Cairo):', new Date(bookingData.appointmentDate).toLocaleString('en-US', { timeZone: 'Africa/Cairo' }));
+    
+    // Send to backend API
+    return this.http.post(`${this.apiUrl}/Booking`, bookingData);
+  }
+
+  /**
+   * Get booked time slots for a specific workshop and date
+   * @param workshopId Workshop profile ID
+   * @param serviceId Service ID
+   * @param date Date in YYYY-MM-DD format
+   */
+  getBookedSlots(workshopId: number, serviceId: number, date: string): Observable<string[]> {
+    return this.http.get<any>(`${this.apiUrl}/Booking/booked-slots`, {
+      params: {
+        workshopId: workshopId.toString(),
+        serviceId: serviceId.toString(),
+        date: date
+      }
+    }).pipe(
+      map(response => {
+        // Assuming response returns array of ISO datetime strings
+        return response.data || response || [];
+      })
+    );
+  }
+
   // =============== Job Management ===============
   
   getJobs(): Observable<Job[]> {

@@ -571,6 +571,59 @@
   box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
 }
 
+/* Month Grid */
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.month-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #F9FAFB;
+  border: 2px solid #E5E7EB;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.month-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: #FF3B30;
+}
+
+.month-card.selected {
+  background: linear-gradient(135deg, #FF3B30 0%, #DC2626 100%);
+  border-color: #FF3B30;
+  color: white;
+}
+
+.month-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.month-card.selected .month-name {
+  color: white;
+}
+
+.month-year {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.month-card.selected .month-year {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* Calendar Grid */
 .calendar-grid {
   display: grid;

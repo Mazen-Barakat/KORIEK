@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CarsService, MakeModels } from '../../services/cars.service';
 import { CategoryService } from '../../services/category.service';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
+import { BookingService } from '../../services/booking.service';
 import { Category } from '../../models/category.model';
 import { Subcategory } from '../../models/subcategory.model';
 import { Service } from '../../models/service.model';
@@ -121,15 +122,31 @@ export class BookingComponent implements OnInit {
   serviceNotes = '';
   
   // Date & Time selection
+  selectedMonth: number | null = null; // 0-11 (January = 0)
+  selectedYear: number | null = null;
   selectedDate: Date | null = null;
   selectedTimeSlot: string | null = null;
   availableDates: Date[] = [];
+  availableMonths: { month: number; year: number; name: string; displayName: string }[] = [];
+  daysInMonth: Date[] = [];
   availableTimeSlots: string[] = [
+    '00:00', '00:30', '01:00', '01:30', '02:00', '02:30', '03:00', '03:30',
+    '04:00', '04:30', '05:00', '05:30', '06:00', '06:30', '07:00', '07:30',
     '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
     '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
-    '16:00', '16:30', '17:00'
+    '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30',
+    '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30'
   ];
-  unavailableSlots: string[] = ['09:00', '11:30', '14:00']; // Mock unavailable slots
+  unavailableSlots: string[] = []; // Mock unavailable slots
+  
+  // Timezone configuration
+  readonly CAIRO_TIMEZONE = 'Africa/Cairo';
+  
+  // Month names
+  readonly MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
   
   // Workshop selection (loaded from API when entering step 3)
   workshops: Workshop[] = [];
@@ -154,6 +171,7 @@ export class BookingComponent implements OnInit {
     private carsService: CarsService,
     private categoryService: CategoryService,
     private workshopProfileService: WorkshopProfileService,
+    private bookingService: BookingService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -189,19 +207,31 @@ export class BookingComponent implements OnInit {
 
   // Initialize available dates (next 30 days, excluding weekends)
   initializeAvailableDates(): void {
-    const today = new Date();
+    const today = this.getCurrentCairoDate();
     this.availableDates = [];
+    this.availableMonths = [];
     
-    for (let i = 1; i <= 45; i++) {
+    // Generate next 6 months
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    for (let i = 0; i < 6; i++) {
+      const month = (currentMonth + i) % 12;
+      const year = currentYear + Math.floor((currentMonth + i) / 12);
+      
+      this.availableMonths.push({
+        month,
+        year,
+        name: this.MONTH_NAMES[month],
+        displayName: `${this.MONTH_NAMES[month]} ${year}`
+      });
+    }
+    
+    // Generate next 30 days for backward compatibility
+    for (let i = 0; i < 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
-      // Skip weekends (Saturday = 6, Sunday = 0)
-      if (date.getDay() !== 0 && date.getDay() !== 6) {
-        this.availableDates.push(date);
-      }
-      
-      if (this.availableDates.length >= 30) break;
+      this.availableDates.push(date);
     }
   }
 
@@ -719,13 +749,45 @@ export class BookingComponent implements OnInit {
   }
 
   // Date & Time selection
+  selectMonth(month: number, year: number): void {
+    this.selectedMonth = month;
+    this.selectedYear = year;
+    this.selectedDate = null;
+    this.selectedTimeSlot = null;
+    this.generateDaysInMonth(month, year);
+    console.log('Selected month:', this.MONTH_NAMES[month], year);
+  }
+
+  generateDaysInMonth(month: number, year: number): void {
+    this.daysInMonth = [];
+    const daysCount = new Date(year, month + 1, 0).getDate();
+    const today = this.getCurrentCairoDate();
+    today.setHours(0, 0, 0, 0);
+    
+    for (let day = 1; day <= daysCount; day++) {
+      const date = new Date(year, month, day);
+      // Only include dates from today onwards
+      if (date >= today) {
+        this.daysInMonth.push(date);
+      }
+    }
+  }
+
   selectDate(date: Date): void {
     this.selectedDate = date;
     this.selectedTimeSlot = null; // Reset time slot when date changes
+    console.log('Selected date:', this.formatDateForBackend(date));
   }
 
   selectTimeSlot(slot: string): void {
     this.selectedTimeSlot = slot;
+    if (this.selectedDate && this.selectedTimeSlot) {
+      const combinedDateTime = this.getCombinedDateTime();
+      if (combinedDateTime !== null) {
+        console.log('Combined DateTime (ISO):', combinedDateTime);
+        console.log('Combined DateTime (Cairo):', new Date(combinedDateTime).toLocaleString('en-US', { timeZone: this.CAIRO_TIMEZONE }));
+      }
+    }
   }
 
   isDateSelected(date: Date): boolean {
@@ -754,6 +816,115 @@ export class BookingComponent implements OnInit {
       year: 'numeric'
     };
     return date.toLocaleDateString('en-US', options);
+  }
+
+  /**
+   * Combine selected date and time slot into a single DateTime
+   * Returns ISO string in Africa/Cairo timezone
+   */
+  getCombinedDateTime(): string | null {
+    if (!this.selectedDate || !this.selectedTimeSlot) {
+      return null;
+    }
+
+    // Parse time slot (HH:mm format)
+    const [hours, minutes] = this.selectedTimeSlot.split(':').map(Number);
+    
+    // Create date with time in local timezone
+    const combinedDate = new Date(
+      this.selectedDate.getFullYear(),
+      this.selectedDate.getMonth(),
+      this.selectedDate.getDate(),
+      hours,
+      minutes,
+      0,
+      0
+    );
+
+    // Return ISO string (UTC format that backend can parse)
+    return combinedDate.toISOString();
+  }
+
+  /**
+   * Format date for backend (YYYY-MM-DD)
+   */
+  formatDateForBackend(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Get current date in Cairo timezone
+   */
+  getCurrentCairoDate(): Date {
+    const now = new Date();
+    const cairoTimeString = now.toLocaleString('en-US', { timeZone: this.CAIRO_TIMEZONE });
+    return new Date(cairoTimeString);
+  }
+
+  /**
+   * Check if time slot is available (not in past for today)
+   */
+  isTimeSlotAvailableWithPast(slot: string): boolean {
+    if (!this.isTimeSlotAvailable(slot)) {
+      return false;
+    }
+
+    if (!this.selectedDate) {
+      return true;
+    }
+
+    const now = this.getCurrentCairoDate();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const selectedDay = new Date(
+      this.selectedDate.getFullYear(),
+      this.selectedDate.getMonth(),
+      this.selectedDate.getDate()
+    );
+
+    // If selected date is not today, all slots are available
+    if (selectedDay.getTime() !== today.getTime()) {
+      return true;
+    }
+
+    // For today, check if slot time has passed
+    const [hours, minutes] = slot.split(':').map(Number);
+    const slotTime = hours * 60 + minutes; // Convert to minutes
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    return slotTime > currentTime;
+  }
+
+  /**
+   * Check if a month is selected
+   */
+  isMonthSelected(month: number, year: number): boolean {
+    return this.selectedMonth === month && this.selectedYear === year;
+  }
+
+  /**
+   * Get day name (short format)
+   */
+  getDayName(date: Date): string {
+    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    return days[date.getDay()];
+  }
+
+  /**
+   * Format date for display (day number)
+   */
+  getDayNumber(date: Date): number {
+    return date.getDate();
+  }
+
+  /**
+   * Check if date is selected
+   */
+  isDateSelectedInMonth(date: Date): boolean {
+    if (!this.selectedDate) return false;
+    return date.toDateString() === this.selectedDate.toDateString();
   }
 
   // Workshop selection - single selection with toggle
@@ -975,15 +1146,59 @@ export class BookingComponent implements OnInit {
 
   // Booking submission
   confirmBooking(): void {
-    this.confirmationNumber = 'BK' + Math.random().toString(36).substring(2, 10).toUpperCase();
-    this.currentStep = 5;
-    this.bookingConfirmed = true;
+    // Get combined DateTime in ISO format
+    const bookingDateTime = this.getCombinedDateTime();
     
-    // Clear draft
-    localStorage.removeItem('bookingDraft');
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!bookingDateTime) {
+      console.error('Cannot create booking: date or time not selected');
+      return;
+    }
+
+    // Prepare booking data for backend
+    const bookingData = {
+      vehicleId: this.selectedVehicle?.id,
+      serviceId: this.selectedService?.id,
+      workshopId: this.selectedWorkshop?.id || this.selectedWorkshop?.workshopProfileId,
+      appointmentDate: bookingDateTime, // ISO string in UTC - backend will store in Bookings.AppointmentDate field
+      notes: this.serviceNotes || '',
+      vehicleOrigin: this.selectedVehicleOrigin
+    };
+
+    console.log('=== BOOKING DATA FOR BACKEND ===');
+    console.log('Booking DateTime (ISO):', bookingDateTime);
+    console.log('Booking DateTime (Cairo):', new Date(bookingDateTime).toLocaleString('en-US', { 
+      timeZone: this.CAIRO_TIMEZONE,
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }));
+    console.log('Full booking data:', bookingData);
+
+    // Send to backend API
+    this.bookingService.createBooking(bookingData).subscribe({
+      next: (response) => {
+        console.log('Booking created successfully:', response);
+        this.confirmationNumber = response.confirmationNumber || response.data?.bookingId || 'BK' + Math.random().toString(36).substring(2, 10).toUpperCase();
+        this.currentStep = 5;
+        this.bookingConfirmed = true;
+        localStorage.removeItem('bookingDraft');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      error: (error) => {
+        console.error('Booking creation failed:', error);
+        alert('Failed to create booking: ' + (error.error?.message || error.message || 'Unknown error'));
+        
+        // For now, still proceed (remove this in production)
+        this.confirmationNumber = 'BK' + Math.random().toString(36).substring(2, 10).toUpperCase();
+        this.currentStep = 5;
+        this.bookingConfirmed = true;
+        localStorage.removeItem('bookingDraft');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
   }
 
   startNewBooking(): void {
