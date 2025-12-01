@@ -1,20 +1,32 @@
-import { Component, signal, OnInit, inject } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
+import { ToastContainerComponent } from './components/shared/toast-container/toast-container.component';
 import { AuthService } from './services/auth.service';
+import { SignalRNotificationService } from './services/signalr-notification.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent],
+  imports: [RouterOutlet, HeaderComponent, ToastContainerComponent],
   templateUrl: './app.html',
-  styleUrls: ['./app.css']
+  styleUrls: ['./app.css'],
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   protected readonly title = signal('Korik');
   private authService = inject(AuthService);
+  private signalRService = inject(SignalRNotificationService);
+  private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
     this.initializeAuth();
+    this.initializeSignalR();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.signalRService.stopConnection();
   }
 
   private initializeAuth(): void {
@@ -43,5 +55,31 @@ export class App implements OnInit {
       // Start token expiry monitor for valid sessions
       this.authService.startTokenExpiryMonitor();
     }
+  }
+
+  /**
+   * Initialize SignalR real-time notification system
+   */
+  private async initializeSignalR(): Promise<void> {
+    // Connect SignalR if user is already authenticated on app load
+    if (this.authService.isAuthenticated()) {
+      console.log('🔔 User authenticated on app load - starting SignalR connection');
+      await this.signalRService.startConnection();
+    }
+
+    // Subscribe to authentication state changes
+    this.authService.isAuthenticated$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(async (isAuthenticated) => {
+        if (isAuthenticated) {
+          // User logged in - start SignalR connection
+          console.log('🔔 User logged in - starting SignalR connection');
+          await this.signalRService.startConnection();
+        } else {
+          // User logged out - stop SignalR connection
+          console.log('🔔 User logged out - stopping SignalR connection');
+          await this.signalRService.stopConnection();
+        }
+      });
   }
 }
