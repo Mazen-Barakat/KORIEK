@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, interval } from 'rxjs';
 import { AppNotification, NotificationPreference } from '../models/wallet.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private notificationsSubject = new BehaviorSubject<AppNotification[]>([
@@ -16,7 +16,7 @@ export class NotificationService {
       read: false,
       priority: 'high',
       actionUrl: '/workshop/job-board',
-      actionLabel: 'View Request'
+      actionLabel: 'View Request',
     },
     {
       id: 'notif-002',
@@ -27,7 +27,7 @@ export class NotificationService {
       read: false,
       priority: 'medium',
       actionUrl: '/workshop/wallet',
-      actionLabel: 'View Transaction'
+      actionLabel: 'View Transaction',
     },
     {
       id: 'notif-003',
@@ -38,15 +38,15 @@ export class NotificationService {
       read: true,
       priority: 'low',
       actionUrl: '/workshop/reviews',
-      actionLabel: 'View Review'
-    }
+      actionLabel: 'View Review',
+    },
   ]);
 
   private preferencesSubject = new BehaviorSubject<NotificationPreference[]>([
     { id: 'pref-001', type: 'payment', enabled: true, email: true, push: true, sms: false },
     { id: 'pref-002', type: 'booking', enabled: true, email: true, push: true, sms: true },
     { id: 'pref-003', type: 'review', enabled: true, email: false, push: true, sms: false },
-    { id: 'pref-004', type: 'system', enabled: true, email: true, push: true, sms: false }
+    { id: 'pref-004', type: 'system', enabled: true, email: true, push: true, sms: false },
   ]);
 
   private unreadCountSubject = new BehaviorSubject<number>(2);
@@ -70,7 +70,7 @@ export class NotificationService {
 
   markAsRead(notificationId: string): void {
     const notifications = this.notificationsSubject.value;
-    const notification = notifications.find(n => n.id === notificationId);
+    const notification = notifications.find((n) => n.id === notificationId);
     if (notification) {
       notification.read = true;
       this.notificationsSubject.next([...notifications]);
@@ -79,13 +79,13 @@ export class NotificationService {
   }
 
   markAllAsRead(): void {
-    const notifications = this.notificationsSubject.value.map(n => ({ ...n, read: true }));
+    const notifications = this.notificationsSubject.value.map((n) => ({ ...n, read: true }));
     this.notificationsSubject.next(notifications);
     this.updateUnreadCount();
   }
 
   deleteNotification(notificationId: string): void {
-    const notifications = this.notificationsSubject.value.filter(n => n.id !== notificationId);
+    const notifications = this.notificationsSubject.value.filter((n) => n.id !== notificationId);
     this.notificationsSubject.next(notifications);
     this.updateUnreadCount();
   }
@@ -95,7 +95,7 @@ export class NotificationService {
       ...notification,
       id: `notif-${Date.now()}`,
       timestamp: new Date(),
-      read: false
+      read: false,
     };
     const notifications = [newNotification, ...this.notificationsSubject.value];
     this.notificationsSubject.next(notifications);
@@ -104,23 +104,23 @@ export class NotificationService {
   }
 
   updatePreference(preferenceId: string, updates: Partial<NotificationPreference>): void {
-    const preferences = this.preferencesSubject.value.map(pref =>
+    const preferences = this.preferencesSubject.value.map((pref) =>
       pref.id === preferenceId ? { ...pref, ...updates } : pref
     );
     this.preferencesSubject.next(preferences);
   }
 
   private updateUnreadCount(): void {
-    const unreadCount = this.notificationsSubject.value.filter(n => !n.read).length;
+    const unreadCount = this.notificationsSubject.value.filter((n) => !n.read).length;
     this.unreadCountSubject.next(unreadCount);
   }
 
-  private showBrowserNotification(notification: AppNotification): void {
+  public showBrowserNotification(notification: AppNotification): void {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(notification.title, {
         body: notification.message,
         icon: '/assets/icon.png',
-        badge: '/assets/badge.png'
+        badge: '/assets/badge.png',
       });
     }
   }
@@ -131,52 +131,24 @@ export class NotificationService {
     }
   }
 
+  // Mock notification simulation removed - real-time notifications now handled by SignalR
+  // This method is kept for backward compatibility but does nothing
   private startAutoNotificationSimulation(): void {
-    // Simulate receiving notifications every 2 minutes
-    interval(120000).subscribe(() => {
-      const randomNotifications = [
-        {
-          type: 'booking' as const,
-          title: 'New Booking Request',
-          message: 'A customer requested service for their vehicle',
-          priority: 'high' as const,
-          actionUrl: '/workshop/job-board',
-          actionLabel: 'View Request'
-        },
-        {
-          type: 'payment' as const,
-          title: 'Payment Received',
-          message: 'Payment completed for recent service',
-          priority: 'medium' as const,
-          actionUrl: '/workshop/wallet',
-          actionLabel: 'View Transaction'
-        },
-        {
-          type: 'system' as const,
-          title: 'Reminder',
-          message: 'You have pending quotes awaiting approval',
-          priority: 'low' as const,
-          actionUrl: '/workshop/dashboard',
-          actionLabel: 'View Dashboard'
-        }
-      ];
-
-      // Randomly add a notification (30% chance)
-      if (Math.random() < 0.3) {
-        const randomNotif = randomNotifications[Math.floor(Math.random() * randomNotifications.length)];
-        this.addNotification(randomNotif);
-      }
-    });
+    // Real-time notifications are now delivered via SignalR
+    // This auto-simulation has been disabled
+    console.log(
+      'ℹ️ Mock notification simulation disabled - using SignalR for real-time notifications'
+    );
   }
 
   // Get notifications by type
   getNotificationsByType(type: string): AppNotification[] {
-    return this.notificationsSubject.value.filter(n => n.type === type);
+    return this.notificationsSubject.value.filter((n) => n.type === type);
   }
 
   // Get notifications by priority
   getNotificationsByPriority(priority: string): AppNotification[] {
-    return this.notificationsSubject.value.filter(n => n.priority === priority);
+    return this.notificationsSubject.value.filter((n) => n.priority === priority);
   }
 
   // Clear all notifications

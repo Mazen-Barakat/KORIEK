@@ -16,13 +16,13 @@ import { AppNotification } from '../../models/wallet.model';
     trigger('slideDown', [
       transition(':enter', [
         style({ opacity: 0, transform: 'translateY(-10px)' }),
-        animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+        animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
       ]),
       transition(':leave', [
-        animate('150ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
-      ])
-    ])
-  ]
+        animate('150ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' })),
+      ]),
+    ]),
+  ],
 })
 export class NotificationPanelComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -31,21 +31,20 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   unreadCount: number = 0;
   isOpen: boolean = false;
 
-  constructor(
-    private notificationService: NotificationService,
-    private router: Router
-  ) {}
+  constructor(private notificationService: NotificationService, private router: Router) {}
 
   ngOnInit(): void {
-    this.notificationService.getNotifications()
+    this.notificationService
+      .getNotifications()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(notifications => {
+      .subscribe((notifications) => {
         this.notifications = notifications.slice(0, 10); // Show last 10
       });
 
-    this.notificationService.getUnreadCount()
+    this.notificationService
+      .getUnreadCount()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(count => this.unreadCount = count);
+      .subscribe((count) => (this.unreadCount = count));
 
     // Request browser notification permission
     this.notificationService.requestNotificationPermission();
@@ -79,16 +78,29 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   }
 
   handleNotificationClick(notification: AppNotification): void {
+    // Mark as read
     this.notificationService.markAsRead(notification.id);
+
+    // Handle navigation based on notification type
     if (notification.actionUrl) {
       this.router.navigate([notification.actionUrl]);
+      this.closePanel();
+    } else if (notification.type === 'booking' && notification.data?.bookingId) {
+      // Navigate to booking detail or job board
+      this.router.navigate(['/workshop/job-board'], {
+        queryParams: { bookingId: notification.data.bookingId },
+      });
+      this.closePanel();
+    } else if (notification.type === 'payment') {
+      this.router.navigate(['/workshop/wallet']);
       this.closePanel();
     }
   }
 
   formatTime(date: Date): string {
     const now = new Date();
-    const diff = now.getTime() - new Date(date).getTime();
+    const notificationDate = new Date(date);
+    const diff = now.getTime() - notificationDate.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
@@ -97,21 +109,31 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    
-    return new Date(date).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
+
+    // For older notifications, show Cairo local time
+    return notificationDate.toLocaleString('en-EG', {
+      timeZone: 'Africa/Cairo',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 
   getNotificationIcon(type: string): string {
     switch (type) {
-      case 'booking': return '📋';
-      case 'payment': return '💰';
-      case 'review': return '⭐';
-      case 'system': return '⚙️';
-      case 'alert': return '⚠️';
-      default: return '🔔';
+      case 'booking':
+        return '📋';
+      case 'payment':
+        return '💰';
+      case 'review':
+        return '⭐';
+      case 'system':
+        return '⚙️';
+      case 'alert':
+        return '⚠️';
+      default:
+        return '🔔';
     }
   }
 
