@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { NotificationService } from '../../services/notification.service';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { AppNotification } from '../../models/wallet.model';
 
@@ -37,7 +38,72 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
+    , private http: HttpClient
   ) {}
+
+  // API base used for direct booking status updates from notification actions
+  private readonly apiUrl = 'https://localhost:44316/api';
+
+  /**
+   * Handle a notification action button click (e.g., Confirm/Decline for booking)
+   * Attempts to perform the action on the backend and updates local state immediately.
+   */
+  onNotificationAction(notification: any, event: Event): void {
+    event.stopPropagation();
+
+    // If this is a booking action and we have a bookingId, attempt to update booking status
+    const bookingId = notification?.data?.bookingId;
+    const actionLabel = (notification?.actionLabel || '').toLowerCase();
+
+    if (notification?.type === 'booking' && bookingId) {
+      // Decide target status based on action label
+      let targetStatus = '';
+      if (actionLabel.includes('confirm') || actionLabel.includes('accept')) {
+        targetStatus = 'Confirmed';
+      } else if (actionLabel.includes('decline') || actionLabel.includes('reject')) {
+        targetStatus = 'Rejected';
+      }
+
+      if (targetStatus) {
+        this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: bookingId, status: targetStatus })
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              // Mark notification as read locally and update badge
+              this.notificationService.markAsRead(notification.id);
+
+              // Broadcast a global event so other components (job board, dashboard) can refresh
+              try {
+                window.dispatchEvent(new CustomEvent('booking:status-changed', {
+                  detail: { bookingId, status: targetStatus }
+                }));
+              } catch (e) {
+                // ignore if event cannot be dispatched
+              }
+
+              // Update UI immediately
+              this.cdr.detectChanges();
+
+              // Optionally navigate to job board and open Upcoming tab when confirming
+              if (targetStatus === 'Confirmed') {
+                this.router.navigate(['/workshop/job-board'], { queryParams: { tab: 'upcoming' } });
+                this.closePanel();
+              }
+            },
+            error: (err) => {
+              console.error('Error performing notification action on backend:', err);
+            }
+          });
+        return;
+      }
+    }
+
+    // Default behaviour: navigate if actionUrl exists
+    if (notification.actionUrl) {
+      this.router.navigate([notification.actionUrl]);
+      this.closePanel();
+    }
+  }
 
   ngOnInit(): void {
     // Subscribe to notifications - updates automatically via SignalR
