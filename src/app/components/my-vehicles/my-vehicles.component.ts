@@ -910,7 +910,7 @@ export class MyVehiclesComponent implements OnInit {
 
     this.loadingCarBookings = true;
     this.allCarBookings = [];
-    
+
     // Fetch all pages recursively (API max page size is 100)
     this.fetchAllBookingsRecursively(1);
   }
@@ -966,7 +966,7 @@ export class MyVehiclesComponent implements OnInit {
           const processedBookings = bookingsData
             .filter((booking: any) => {
               if (!booking || !booking.id) return false;
-              
+
               // Filter out past bookings (only show today and future)
               const appointmentDate = new Date(booking.appointmentDate);
               appointmentDate.setHours(0, 0, 0, 0); // Normalize to start of day
@@ -1000,15 +1000,15 @@ export class MyVehiclesComponent implements OnInit {
           } else {
             // All pages loaded, finalize
             console.log('All bookings loaded. Total:', this.allCarBookings.length);
-            
+
             // Sort by appointment date (nearest first)
             this.allCarBookings.sort((a, b) => a.appointmentDate.getTime() - b.appointmentDate.getTime());
-            
+
             this.totalBookings = this.allCarBookings.length;
-            
+
             // Update the current page view
             this.updatePageView();
-            
+
             this.loadingCarBookings = false;
             this.cdr.detectChanges();
           }
