@@ -149,7 +149,7 @@ export class BookingService {
    * Get car owner profile by booking ID
    */
   getCarOwnerProfileByBooking(bookingId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/Booking/${bookingId}/CarOwnerProfile`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/CarOwnerProfile/by-booking/${bookingId}`).pipe(
       map(response => response?.data || response),
       catchError(() => of(null))
     );
