@@ -817,42 +817,777 @@
   z-index: 1;
 }
 
-.week-overview {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
+/* ============================================
+   ENHANCED WEEK OVERVIEW
+   ============================================ */
+
+.week-overview-enhanced {
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border-radius: 12px;
-  margin-bottom: 20px;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
   border: 1px solid #fecaca;
 }
 
-.overview-stat {
-  flex: 1;
+.overview-main {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
 }
 
-.overview-label {
-  font-size: 12px;
+.overview-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  min-width: 120px;
+}
+
+.overview-stat.primary {
+  flex: 1;
+  min-width: 160px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.overview-stat.primary .stat-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.overview-stat.primary .stat-value,
+.overview-stat.primary .stat-label {
+  color: white;
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fef2f2;
   color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon.pending-icon {
+  background: #fffbeb;
+  color: #f59e0b;
+}
+
+.stat-icon.slots-icon {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
   font-weight: 600;
+  color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.overview-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #991b1b;
+/* Status Pills Row */
+.status-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(239, 68, 68, 0.15);
 }
 
-.overview-divider {
-  width: 1px;
-  height: 40px;
-  background: #fecaca;
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: white;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.status-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.status-pill .pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-color, #6b7280);
+}
+
+.status-pill .pill-label {
+  color: #4b5563;
+}
+
+.status-pill .pill-count {
+  background: var(--status-color, #6b7280);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ============================================
+   SCHEDULE CONTROLS
+   ============================================ */
+
+.schedule-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.view-mode-toggle {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.view-mode-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.view-mode-btn:hover {
+  background: white;
+  color: #1f2937;
+}
+
+.view-mode-btn.active {
+  background: white;
+  color: #ef4444;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-arrow-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.nav-arrow-btn:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: white;
+  transform: scale(1.05);
+}
+
+.today-btn {
+  padding: 6px 14px;
+  background: #ef4444;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.today-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   CALENDAR LOADING STATE
+   ============================================ */
+
+.calendar-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 16px;
+}
+
+.spinner-small {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #fecaca;
+  border-top-color: #ef4444;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.calendar-loading span {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ============================================
+   ENHANCED CALENDAR GRID
+   ============================================ */
+
+.calendar-grid-enhanced {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1200px) {
+  .calendar-grid-enhanced {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-grid-enhanced {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-grid-enhanced {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Day Card */
+.calendar-day-card {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-day-card:hover {
+  border-color: #fecaca;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.calendar-day-card.today {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.calendar-day-card.expanded {
+  grid-column: span 2;
+  z-index: 10;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 768px) {
+  .calendar-day-card.expanded {
+    grid-column: span 1;
+  }
+}
+
+/* Density Levels */
+.calendar-day-card.density-low {
+  --density-color: #10b981;
+}
+
+.calendar-day-card.density-medium {
+  --density-color: #f59e0b;
+}
+
+.calendar-day-card.density-high {
+  --density-color: #ef4444;
+}
+
+.calendar-day-card.density-critical {
+  --density-color: #dc2626;
+  animation: pulse-critical 2s infinite;
+}
+
+@keyframes pulse-critical {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0); }
+}
+
+/* Day Card Header */
+.day-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.day-card-header:hover {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.calendar-day-card.today .day-card-header {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-bottom-color: #b91c1c;
+}
+
+.day-card-header .day-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.day-card-header .day-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calendar-day-card.today .day-card-header .day-name {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.day-card-header .day-date {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.calendar-day-card.today .day-card-header .day-date {
+  color: white;
+}
+
+/* Day Meta (density, count, expand) */
+.day-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.density-indicator {
+  display: flex;
+  gap: 2px;
+}
+
+.density-bar {
+  width: 3px;
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  transition: background 0.2s ease;
+}
+
+.density-bar.active {
+  background: var(--density-color, #6b7280);
+}
+
+.count-badge {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  background: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-day-card.today .count-badge {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.expand-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.expand-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.expand-btn.rotated {
+  transform: rotate(180deg);
+}
+
+.calendar-day-card.today .expand-btn {
+  color: white;
+}
+
+/* Status Dots Preview */
+.status-dots-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.status-dot-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.status-dot-group .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-color, #6b7280);
+}
+
+.status-dot-group .status-more {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--status-color, #6b7280);
+}
+
+/* Appointments Container */
+.day-appointments-container {
+  padding: 10px;
+  max-height: 180px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.day-appointments-container.expanded {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.appointments-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Custom scrollbar */
+.day-appointments-container.expanded::-webkit-scrollbar {
+  width: 4px;
+}
+
+.day-appointments-container.expanded::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 2px;
+}
+
+.day-appointments-container.expanded::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+/* Show More Button */
+.show-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px dashed #fecaca;
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.show-more-btn:hover {
+  background: #fee2e2;
+  border-style: solid;
+}
+
+/* Day Empty State */
+.day-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 12px;
+  color: #9ca3af;
+}
+
+.day-empty span {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ============================================
+   LIST VIEW
+   ============================================ */
+
+.calendar-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list-day-group {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.list-day-group.today {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.list-day-group.empty {
+  opacity: 0.6;
+}
+
+.list-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.list-day-group.today .list-day-header {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.list-day-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.list-day-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.list-day-group.today .list-day-name {
+  color: white;
+}
+
+.list-day-date {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.list-day-group.today .list-day-date {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.list-today-badge {
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+}
+
+.list-day-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.list-day-group.today .list-day-count {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.list-appointments {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-appointment-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.list-appointment-item:last-child {
+  border-bottom: none;
+}
+
+.list-appointment-item:hover {
+  background: #f9fafb;
+}
+
+.list-apt-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 90px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.list-apt-time svg {
+  color: #6b7280;
+}
+
+.list-apt-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.list-apt-customer {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-apt-service {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-apt-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.list-appointment-item.status-pending .list-apt-status {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.list-appointment-item.status-accepted .list-apt-status,
+.list-appointment-item.status-confirmed .list-apt-status {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.list-appointment-item.status-progress .list-apt-status {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.list-appointment-item.status-rejected .list-apt-status,
+.list-appointment-item.status-cancelled .list-apt-status {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.list-apt-action {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: all 0.2s ease;
+}
+
+.list-apt-action:hover {
+  background: #f3f4f6;
+  color: #ef4444;
+}
+
+.list-empty-day {
+  padding: 24px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+/* OLD STYLES - Keep for backwards compatibility */
+.week-overview {
+  display: none; /* Hidden - replaced by enhanced version */
 }
 
 .calendar-grid {

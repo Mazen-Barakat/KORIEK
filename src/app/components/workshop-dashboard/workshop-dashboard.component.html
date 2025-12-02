@@ -132,7 +132,7 @@
         </div>
       </div>
 
-      <!-- This Week's Schedule -->
+      <!-- This Week's Schedule - REDESIGNED -->
       <div class="section-card schedule-card">
         <div class="section-header">
           <div class="section-title-group">
@@ -149,63 +149,238 @@
               <p class="section-subtitle">{{ currentMonth }} {{ currentYear }}</p>
             </div>
           </div>
-          <button class="view-calendar-btn" (click)="navigateTo('/workshop/calendar')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
+          
+          <!-- View Mode Toggle & Navigation -->
+          <div class="schedule-controls">
+            <div class="view-mode-toggle">
+              <button class="view-mode-btn" [class.active]="calendarViewMode === 'grid'" 
+                      (click)="setViewMode('grid')" title="Grid View">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                </svg>
+              </button>
+              <button class="view-mode-btn" [class.active]="calendarViewMode === 'list'" 
+                      (click)="setViewMode('list')" title="List View">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="8" y1="6" x2="21" y2="6"/>
+                  <line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12"/>
+                  <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            
+            <div class="calendar-nav-controls">
+              <button class="nav-arrow-btn" (click)="previousWeek()" title="Previous week">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+              </button>
+              <button class="today-btn" (click)="goToCurrentWeek()" *ngIf="!isCurrentWeek()" title="Go to current week">
+                Today
+              </button>
+              <button class="nav-arrow-btn" (click)="nextWeek()" title="Next week">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
         
-        <div class="week-overview">
-          <div class="overview-stat">
-            <span class="overview-label">Total Appointments</span>
-            <span class="overview-value">{{ getTotalAppointments() }}</span>
+        <!-- Enhanced Week Overview with Status Breakdown -->
+        <div class="week-overview-enhanced">
+          <div class="overview-main">
+            <div class="overview-stat primary">
+              <div class="stat-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ getTotalAppointments() }}</span>
+                <span class="stat-label">Total Bookings</span>
+              </div>
+            </div>
+            
+            <div class="overview-stat">
+              <div class="stat-icon pending-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ getPendingCount() }}</span>
+                <span class="stat-label">Pending</span>
+              </div>
+            </div>
+            
+            <div class="overview-stat">
+              <div class="stat-icon slots-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ getAvailableSlots() }}</span>
+                <span class="stat-label">Available</span>
+              </div>
+            </div>
           </div>
-          <div class="overview-divider"></div>
-          <div class="overview-stat">
-            <span class="overview-label">Available Slots</span>
-            <span class="overview-value">{{ getAvailableSlots() }}</span>
+          
+          <!-- Status Pills Summary -->
+          <div class="status-pills-row" *ngIf="getWeekStatusCounts().length > 0">
+            <div class="status-pill" *ngFor="let status of getWeekStatusCounts()" 
+                 [style.--status-color]="status.color">
+              <span class="pill-dot"></span>
+              <span class="pill-label">{{ status.label }}</span>
+              <span class="pill-count">{{ status.count }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="calendar-grid">
-          <div class="calendar-day" *ngFor="let day of calendarDays" [class.today]="day.isToday" [class.has-appointments]="day.appointments.length > 0">
-            <div class="day-header">
+        <!-- Loading state -->
+        <div class="calendar-loading" *ngIf="isLoadingBookings">
+          <div class="spinner-small"></div>
+          <span>Loading schedule...</span>
+        </div>
+
+        <!-- GRID VIEW -->
+        <div class="calendar-grid-enhanced" *ngIf="!isLoadingBookings && calendarViewMode === 'grid'">
+          <div class="calendar-day-card" *ngFor="let day of calendarDays; let i = index" 
+               [class.today]="day.isToday" 
+               [class.has-appointments]="day.appointments.length > 0"
+               [class.expanded]="day.isExpanded"
+               [ngClass]="getDensityClass(day)">
+            
+            <!-- Day Header -->
+            <div class="day-card-header" (click)="toggleDayExpansion(i)">
               <div class="day-info">
                 <span class="day-name">{{ day.dayName }}</span>
                 <span class="day-date">{{ day.dayNumber }}</span>
               </div>
-              <div class="day-badge" *ngIf="day.appointments.length > 0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="12" r="10"/>
-                </svg>
-                <span>{{ day.appointments.length }}</span>
+              
+              <div class="day-meta">
+                <!-- Density Indicator -->
+                <div class="density-indicator" *ngIf="day.appointments.length > 0" 
+                     [attr.title]="getDensityLabel(day.densityLevel)">
+                  <span class="density-bar" *ngFor="let bar of [1,2,3,4]"
+                        [class.active]="bar <= (day.densityLevel === 'critical' ? 4 : day.densityLevel === 'high' ? 3 : day.densityLevel === 'medium' ? 2 : 1)">
+                  </span>
+                </div>
+                
+                <!-- Count Badge -->
+                <div class="count-badge" *ngIf="day.appointments.length > 0">
+                  {{ day.appointments.length }}
+                </div>
+                
+                <!-- Expand Icon -->
+                <button class="expand-btn" *ngIf="day.appointments.length > maxVisibleAppointments"
+                        [class.rotated]="day.isExpanded">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
               </div>
             </div>
             
-            <div class="day-content">
-              <div class="appointment-item" *ngFor="let apt of day.appointments">
-                <div class="apt-time-badge">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Status Dots Preview (Collapsed) -->
+            <div class="status-dots-preview" *ngIf="!day.isExpanded && day.statusGroups.length > 0">
+              <div class="status-dot-group" *ngFor="let group of day.statusGroups" 
+                   [style.--status-color]="group.color" [attr.title]="group.label + ': ' + group.count">
+                <span class="status-dot" *ngFor="let _ of [].constructor(Math.min(group.count, 3))"></span>
+                <span class="status-more" *ngIf="group.count > 3">+{{ group.count - 3 }}</span>
+              </div>
+            </div>
+            
+            <!-- Appointments List -->
+            <div class="day-appointments-container" [class.expanded]="day.isExpanded">
+              <div class="appointments-scroll">
+                <app-booking-card
+                  *ngFor="let apt of getVisibleAppointments(day)"
+                  [booking]="apt"
+                  [compact]="!day.isExpanded && day.appointments.length > 2"
+                  (viewDetails)="viewBookingDetails($event)">
+                </app-booking-card>
+              </div>
+              
+              <!-- Show More Button -->
+              <button class="show-more-btn" *ngIf="getHiddenCount(day) > 0" 
+                      (click)="toggleDayExpansion(i); $event.stopPropagation()">
+                <span>+{{ getHiddenCount(day) }} more</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Empty State -->
+            <div class="day-empty" *ngIf="day.appointments.length === 0">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 15s1.5-2 4-2 4 2 4 2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                <line x1="15" y1="9" x2="15.01" y2="9"/>
+              </svg>
+              <span>Free day</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIST VIEW -->
+        <div class="calendar-list-view" *ngIf="!isLoadingBookings && calendarViewMode === 'list'">
+          <div class="list-day-group" *ngFor="let day of calendarDays" 
+               [class.today]="day.isToday"
+               [class.empty]="day.appointments.length === 0">
+            
+            <div class="list-day-header">
+              <div class="list-day-info">
+                <span class="list-day-name">{{ day.dayName }}</span>
+                <span class="list-day-date">{{ day.date | date:'MMM d' }}</span>
+                <span class="list-today-badge" *ngIf="day.isToday">Today</span>
+              </div>
+              <div class="list-day-count" *ngIf="day.appointments.length > 0">
+                {{ day.appointments.length }} appointment{{ day.appointments.length === 1 ? '' : 's' }}
+              </div>
+            </div>
+            
+            <div class="list-appointments" *ngIf="day.appointments.length > 0">
+              <div class="list-appointment-item" *ngFor="let apt of day.appointments"
+                   [ngClass]="'status-' + (apt.status || 'unknown').toLowerCase()"
+                   (click)="viewBookingDetails(apt.id)">
+                <div class="list-apt-time">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/>
                     <polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  <span>{{ apt.time }}</span>
+                  {{ apt.time }}
                 </div>
-                <div class="apt-details">
-                  <span class="apt-customer">{{ apt.customer }}</span>
-                  <span class="apt-service">{{ apt.service }}</span>
+                <div class="list-apt-details">
+                  <span class="list-apt-customer">{{ apt.customer }}</span>
+                  <span class="list-apt-service">{{ apt.service }}</span>
                 </div>
+                <div class="list-apt-status">
+                  {{ apt.status || 'Unknown' }}
+                </div>
+                <button class="list-apt-action">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
               </div>
-              
-              <div class="no-appointments" *ngIf="day.appointments.length === 0">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <span>No appointments</span>
-              </div>
+            </div>
+            
+            <div class="list-empty-day" *ngIf="day.appointments.length === 0">
+              <span>No appointments scheduled</span>
             </div>
           </div>
         </div>
@@ -325,7 +500,7 @@
             </svg>
           </button>
           
-          <button class="quick-action-item profile-action" (click)="navigateTo('/workshop-profile')">
+          <button class="quick-action-item profile-action" (click)="navigateToProfile()">
             <div class="action-icon-large">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>

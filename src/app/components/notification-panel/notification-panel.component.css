@@ -158,6 +158,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  background: white;
 }
 
 .notification-item::before {
@@ -171,27 +172,18 @@
   transition: opacity 0.2s ease;
 }
 
+/* Unread notification styling - persistent yellow/cream background */
 .notification-item.unread {
-  background: #fafafa;
-  animation: highlightNew 3s ease-in-out;
+  background: #fef3c7;
 }
 
 .notification-item.unread::before {
   opacity: 1;
 }
 
-@keyframes highlightNew {
-
-  0%,
-  100% {
-    background: #fafafa;
-  }
-
-  10%,
-  30%,
-  50% {
-    background: #fef3c7;
-  }
+/* Read notification styling - white background */
+.notification-item:not(.unread) {
+  background: white;
 }
 
 .notification-item.priority-high::before {
@@ -296,11 +288,6 @@
   background: #10b981;
   color: white;
   border-color: #10b981;
-}
-
-.btn-icon.btn-delete:hover {
-  background: #ef4444;
-  border-color: #ef4444;
 }
 
 /* Panel Footer */
