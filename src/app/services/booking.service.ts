@@ -45,11 +45,11 @@ export interface EnrichedBooking {
   providedIn: 'root'
 })
 export class BookingService {
-  private apiUrl = 'https://localhost:44316/api';
+  public apiUrl = 'https://localhost:44316/api';
   private jobsSubject = new BehaviorSubject<Job[]>([]);
   public jobs$ = this.jobsSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(public http: HttpClient) {
     this.loadInitialData();
   }
 
@@ -93,7 +93,7 @@ export class BookingService {
     console.log('Creating booking with data:', bookingData);
     console.log('AppointmentDate (ISO/UTC):', bookingData.AppointmentDate);
     console.log('AppointmentDate (Cairo):', new Date(bookingData.AppointmentDate).toLocaleString('en-US', { timeZone: 'Africa/Cairo' }));
-    
+
     // Build FormData for multipart/form-data submission
     const formData = new FormData();
     formData.append('AppointmentDate', bookingData.AppointmentDate);
@@ -102,7 +102,7 @@ export class BookingService {
     formData.append('CarId', bookingData.CarId.toString());
     formData.append('WorkShopProfileId', bookingData.WorkShopProfileId.toString());
     formData.append('WorkshopServiceId', bookingData.WorkshopServiceId.toString());
-    
+
     // Add photos if provided
     if (bookingData.Photos && bookingData.Photos.length > 0) {
       bookingData.Photos.forEach((photo, index) => {
@@ -265,8 +265,48 @@ export class BookingService {
     );
   }
 
+  /**
+   * Get bookings for a specific car
+   * @param carId Car ID
+   */
+  getBookingsByCar(carId: number): Observable<{
+    success: boolean;
+    message: string;
+    data: Array<{
+      id: number;
+      status: string;
+      appointmentDate: string;
+      issueDescription: string;
+      paymentMethod: string;
+      paidAmount: number;
+      paymentStatus: string;
+      createdAt: string;
+      carId: number;
+      workShopProfileId: number;
+      workshopServiceId: number;
+    }>;
+  }> {
+    return this.http.get<{
+      success: boolean;
+      message: string;
+      data: Array<{
+        id: number;
+        status: string;
+        appointmentDate: string;
+        issueDescription: string;
+        paymentMethod: string;
+        paidAmount: number;
+        paymentStatus: string;
+        createdAt: string;
+        carId: number;
+        workShopProfileId: number;
+        workshopServiceId: number;
+      }>;
+    }>(`${this.apiUrl}/Booking/ByCar/${carId}`);
+  }
+
   // =============== Job Management ===============
-  
+
   getJobs(): Observable<Job[]> {
     return this.jobs$;
   }
@@ -286,7 +326,7 @@ export class BookingService {
   updateJobStatus(jobId: string, status: JobStatus): Observable<Job> {
     const jobs = this.jobsSubject.value;
     const jobIndex = jobs.findIndex(j => j.id === jobId);
-    
+
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
@@ -296,14 +336,14 @@ export class BookingService {
       this.jobsSubject.next([...jobs]);
       return of(jobs[jobIndex]);
     }
-    
+
     throw new Error('Job not found');
   }
 
   updateJobStage(jobId: string, stage: Job['stage']): Observable<Job> {
     const jobs = this.jobsSubject.value;
     const jobIndex = jobs.findIndex(j => j.id === jobId);
-    
+
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
@@ -313,12 +353,12 @@ export class BookingService {
       this.jobsSubject.next([...jobs]);
       return of(jobs[jobIndex]);
     }
-    
+
     throw new Error('Job not found');
   }
 
   // =============== Quote Management ===============
-  
+
   createQuote(jobId: string, quote: Partial<Quote>): Observable<Quote> {
     // Mock implementation - replace with API call
     const newQuote: Quote = {
@@ -338,7 +378,7 @@ export class BookingService {
 
     const jobs = this.jobsSubject.value;
     const jobIndex = jobs.findIndex(j => j.id === jobId);
-    
+
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
@@ -354,7 +394,7 @@ export class BookingService {
   sendQuote(quoteId: string): Observable<Quote> {
     // Mock implementation - replace with API call
     const jobs = this.jobsSubject.value;
-    
+
     for (let job of jobs) {
       if (job.quote?.id === quoteId) {
         job.quote = {
@@ -367,14 +407,14 @@ export class BookingService {
         return of(job.quote);
       }
     }
-    
+
     throw new Error('Quote not found');
   }
 
   approveQuote(quoteId: string): Observable<Quote> {
     // Mock implementation - replace with API call
     const jobs = this.jobsSubject.value;
-    
+
     for (let job of jobs) {
       if (job.quote?.id === quoteId) {
         job.quote = {
@@ -388,12 +428,12 @@ export class BookingService {
         return of(job.quote);
       }
     }
-    
+
     throw new Error('Quote not found');
   }
 
   // =============== Additional Repairs (Upsell) ===============
-  
+
   suggestAdditionalRepair(jobId: string, repair: Partial<AdditionalRepair>): Observable<AdditionalRepair> {
     const newRepair: AdditionalRepair = {
       id: this.generateId(),
@@ -408,7 +448,7 @@ export class BookingService {
 
     const jobs = this.jobsSubject.value;
     const jobIndex = jobs.findIndex(j => j.id === jobId);
-    
+
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
@@ -424,7 +464,7 @@ export class BookingService {
   approveAdditionalRepair(jobId: string, repairId: string): Observable<AdditionalRepair> {
     const jobs = this.jobsSubject.value;
     const jobIndex = jobs.findIndex(j => j.id === jobId);
-    
+
     if (jobIndex !== -1) {
       const repairIndex = jobs[jobIndex].additionalRepairs.findIndex(r => r.id === repairId);
       if (repairIndex !== -1) {
@@ -438,12 +478,12 @@ export class BookingService {
         return of(jobs[jobIndex].additionalRepairs[repairIndex]);
       }
     }
-    
+
     throw new Error('Additional repair not found');
   }
 
   // =============== Chat Messages ===============
-  
+
   sendMessage(jobId: string, message: Partial<ChatMessage>): Observable<ChatMessage> {
     const newMessage: ChatMessage = {
       id: this.generateId(),
@@ -457,7 +497,7 @@ export class BookingService {
 
     const jobs = this.jobsSubject.value;
     const jobIndex = jobs.findIndex(j => j.id === jobId);
-    
+
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
@@ -471,7 +511,7 @@ export class BookingService {
   }
 
   // =============== Media Upload ===============
-  
+
   uploadMedia(jobId: string, media: Partial<MediaItem>): Observable<MediaItem> {
     const newMedia: MediaItem = {
       id: this.generateId(),
@@ -485,7 +525,7 @@ export class BookingService {
 
     const jobs = this.jobsSubject.value;
     const jobIndex = jobs.findIndex(j => j.id === jobId);
-    
+
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
@@ -499,10 +539,10 @@ export class BookingService {
   }
 
   // =============== Dashboard Metrics ===============
-  
+
   getDashboardMetrics(): Observable<DashboardMetrics> {
     const jobs = this.jobsSubject.value;
-    
+
     // Calculate metrics from current jobs
     const metrics: DashboardMetrics = {
       monthlyRevenue: this.calculateMonthlyRevenue(jobs),
@@ -521,7 +561,7 @@ export class BookingService {
   }
 
   // =============== Financial Management ===============
-  
+
   getTransactions(): Observable<Transaction[]> {
     // Mock transactions - replace with API call
     return of(this.generateMockTransactions());
@@ -533,7 +573,7 @@ export class BookingService {
   }
 
   // =============== Helper Methods ===============
-  
+
   private generateId(): string {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
@@ -541,7 +581,7 @@ export class BookingService {
   private calculateMonthlyRevenue(jobs: Job[]): number {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    
+
     return jobs
       .filter(job => {
         const jobDate = new Date(job.createdAt);

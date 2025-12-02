@@ -271,6 +271,16 @@
   transform: translateY(-2px);
 }
 
+.vehicle-card.selected {
+  border: 2px solid #FF3B30;
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.2), 0 0 0 4px rgba(255, 59, 48, 0.08);
+  transform: translateY(-2px);
+}
+
+.vehicle-card.selected:hover {
+  box-shadow: 0 6px 20px rgba(255, 59, 48, 0.25), 0 0 0 4px rgba(255, 59, 48, 0.12);
+}
+
 /* Vehicle Image from API */
 .vehicle-image-section {
   height: 180px;
@@ -2804,4 +2814,246 @@
     font-size: 0.8125rem;
     padding: 0.75rem 1rem;
   }
+}
+
+/* ==================== Loading & Empty States for Upcoming Maintenance ==================== */
+
+/* Loading State */
+.maintenance-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  stroke: #FF3B30;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #86868B;
+  font-weight: 500;
+}
+
+/* Empty State */
+.maintenance-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(255, 59, 48, 0.02) 0%, rgba(255, 107, 90, 0.03) 100%);
+  border-radius: 16px;
+  border: 2px dashed rgba(255, 59, 48, 0.15);
+}
+
+.maintenance-empty svg {
+  stroke: rgba(255, 59, 48, 0.4);
+  animation: float 3s ease-in-out infinite;
+}
+
+.empty-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1D1D1F;
+  letter-spacing: -0.01em;
+}
+
+.empty-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #86868B;
+  font-weight: 500;
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+.book-now-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg, #FF3B30 0%, #FF6B5A 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);
+}
+
+.book-now-btn svg {
+  stroke: white;
+  flex-shrink: 0;
+}
+
+.book-now-btn:hover {
+  background: linear-gradient(135deg, #D73329 0%, #E55345 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 59, 48, 0.35);
+}
+
+.book-now-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.2);
+}
+
+/* ==================== Select Car Prompt ==================== */
+.select-car-prompt {
+  border: 2px dashed rgba(255, 59, 48, 0.2);
+  background: linear-gradient(135deg, rgba(255, 59, 48, 0.03) 0%, rgba(255, 107, 90, 0.04) 100%);
+}
+
+.select-car-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  margin-top: 0.5rem;
+  background: rgba(255, 59, 48, 0.08);
+  border-radius: 980px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #FF3B30;
+  animation: pulseHint 2s ease-in-out infinite;
+}
+
+.select-car-hint svg {
+  stroke: currentColor;
+  animation: bounceLeft 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseHint {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+@keyframes bounceLeft {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-4px);
+  }
+}
+
+/* ==================== Back Button ==================== */
+.back-to-cars-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #F5F5F7 0%, #E8E8EA 100%);
+  color: #1D1D1F;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-to-cars-btn svg {
+  stroke: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.back-to-cars-btn:hover {
+  background: linear-gradient(135deg, #E8E8EA 0%, #D1D1D6 100%);
+  border-color: rgba(0, 0, 0, 0.12);
+  transform: translateX(-2px);
+}
+
+.back-to-cars-btn:hover svg {
+  transform: translateX(-4px);
+}
+
+.back-to-cars-btn:active {
+  transform: translateX(0) scale(0.98);
+}
+
+/* ==================== Pagination Controls ==================== */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem 0 0.5rem;
+  margin-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #F5F5F7 0%, #E8E8EA 100%);
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.pagination-btn svg {
+  stroke: #1D1D1F;
+  transition: all 0.3s ease;
+}
+
+.pagination-btn:hover:not(.disabled) {
+  background: linear-gradient(135deg, #FF3B30 0%, #FF6B5A 100%);
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);
+}
+
+.pagination-btn:hover:not(.disabled) svg {
+  stroke: white;
+}
+
+.pagination-btn:active:not(.disabled) {
+  transform: translateY(0) scale(0.95);
+}
+
+.pagination-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6B7280;
+  min-width: 100px;
+  text-align: center;
 }
