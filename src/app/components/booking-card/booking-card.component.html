@@ -1,0 +1,62 @@
+<!-- Compact Mode - Minimal Pill View -->
+<div class="booking-pill" *ngIf="compact" [ngClass]="[getStatusClass(), getPriorityClass()]" (click)="onViewDetails()" [attr.title]="booking.customer + ' - ' + booking.service + ' @ ' + booking.time">
+  <div class="pill-avatar">{{ getShortCustomerName() }}</div>
+  <div class="pill-content">
+    <span class="pill-time">{{ booking.time }}</span>
+    <span class="pill-service">{{ booking.service }}</span>
+  </div>
+  <div class="pill-status-dot"></div>
+</div>
+
+<!-- Full Mode - Detailed Card View -->
+<div class="booking-card" *ngIf="!compact" [ngClass]="[getStatusClass(), getPriorityClass()]">
+  <!-- Priority Indicator -->
+  <div class="priority-stripe" *ngIf="booking.priority === 'high'"></div>
+  
+  <div class="card-top">
+    <div class="time-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <span>{{ booking.time }}</span>
+    </div>
+    <div class="status-badge" [ngClass]="getStatusClass()">
+      {{ getStatusLabel() }}
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="customer-row">
+      <div class="customer-avatar">{{ getShortCustomerName() }}</div>
+      <div class="customer-info">
+        <div class="customer-name">{{ booking.customer || 'Unknown Customer' }}</div>
+        <div class="service-name">{{ booking.service || 'Service' }}</div>
+      </div>
+    </div>
+    <div class="vehicle-info" *ngIf="booking.vehicle">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 17h14v-5l-2-4H7l-2 4v5z"/>
+        <circle cx="7.5" cy="17.5" r="1.5"/>
+        <circle cx="16.5" cy="17.5" r="1.5"/>
+      </svg>
+      <span>{{ booking.vehicle }}</span>
+    </div>
+    <div class="duration-info" *ngIf="booking.estimatedDuration">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v10l4.5 2.5"/>
+        <circle cx="12" cy="12" r="10"/>
+      </svg>
+      <span>Est. {{ booking.estimatedDuration }}</span>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    <button class="view-btn" (click)="onViewDetails()">
+      View Details
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+  </div>
+</div>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, forkJoin } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
 import {
   Job,
   JobStatus,
@@ -13,6 +13,33 @@ import {
   Transaction,
   Payout
 } from '../models/booking.model';
+
+// Interface for booking response from API
+export interface BookingResponse {
+  id: number;
+  status: string;
+  appointmentDate: string;
+  issueDescription: string;
+  paymentMethod: string;
+  paidAmount: number;
+  paymentStatus: string;
+  createdAt: string;
+  carId: number;
+  workShopProfileId: number;
+  workshopServiceId: number;
+}
+
+// Interface for enriched booking with customer and service info
+export interface EnrichedBooking {
+  id: number;
+  status: string;
+  appointmentDate: Date;
+  issueDescription: string;
+  paymentMethod: string;
+  customerName: string;
+  serviceName: string;
+  carId: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -101,6 +128,120 @@ export class BookingService {
         workshopServiceId: number;
       };
     }>(`${this.apiUrl}/Booking`, formData);
+  }
+
+  // =============== Workshop Schedule Bookings ===============
+
+  /**
+   * Get all bookings for a workshop by workshop profile ID
+   */
+  getBookingsByWorkshop(workshopId: number): Observable<BookingResponse[]> {
+    return this.http.get<any>(`${this.apiUrl}/Booking/ByWorkshop/${workshopId}`).pipe(
+      map(response => response?.data || response || []),
+      catchError(err => {
+        console.error('Error fetching workshop bookings:', err);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Get car owner profile by booking ID
+   */
+  getCarOwnerProfileByBooking(bookingId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/Booking/${bookingId}/CarOwnerProfile`).pipe(
+      map(response => response?.data || response),
+      catchError(() => of(null))
+    );
+  }
+
+  /**
+   * Get workshop service by ID
+   */
+  getWorkshopServiceById(workshopServiceId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/WorkshopService/${workshopServiceId}`).pipe(
+      map(response => response?.data || response),
+      catchError(() => of(null))
+    );
+  }
+
+  /**
+   * Get service by ID (to get the service name)
+   */
+  getServiceById(serviceId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/Service/${serviceId}`).pipe(
+      map(response => response?.data || response),
+      catchError(() => of(null))
+    );
+  }
+
+  /**
+   * Get enriched bookings with customer names and service names
+   * Uses the correct endpoints as specified:
+   * - Customer name from: /api/Booking/{id}/CarOwnerProfile
+   * - Service name from: /api/WorkshopService/{id} -> serviceId -> /api/Service/{id}
+   */
+  getEnrichedBookingsByWorkshop(workshopId: number): Observable<EnrichedBooking[]> {
+    return this.getBookingsByWorkshop(workshopId).pipe(
+      switchMap((bookings: BookingResponse[]) => {
+        if (!bookings || bookings.length === 0) {
+          return of([]);
+        }
+
+        const enrichedRequests = bookings.map(booking => {
+          // Get car owner profile and workshop service in parallel
+          const carOwnerRequest = this.getCarOwnerProfileByBooking(booking.id);
+          const workshopServiceRequest = this.getWorkshopServiceById(booking.workshopServiceId);
+
+          return forkJoin({ carOwner: carOwnerRequest, workshopService: workshopServiceRequest }).pipe(
+            switchMap(({ carOwner, workshopService }) => {
+              // Get the service name from the serviceId in workshopService
+              const serviceId = workshopService?.serviceId;
+              if (serviceId) {
+                return this.getServiceById(serviceId).pipe(
+                  map(service => ({
+                    id: booking.id,
+                    status: booking.status,
+                    appointmentDate: new Date(booking.appointmentDate),
+                    issueDescription: booking.issueDescription,
+                    paymentMethod: booking.paymentMethod,
+                    customerName: carOwner ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() || 'Unknown' : 'Unknown',
+                    serviceName: service?.name || workshopService?.name || 'Service',
+                    carId: booking.carId
+                  }))
+                );
+              }
+              return of({
+                id: booking.id,
+                status: booking.status,
+                appointmentDate: new Date(booking.appointmentDate),
+                issueDescription: booking.issueDescription,
+                paymentMethod: booking.paymentMethod,
+                customerName: carOwner ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() || 'Unknown' : 'Unknown',
+                serviceName: workshopService?.name || 'Service',
+                carId: booking.carId
+              });
+            }),
+            catchError(() => of({
+              id: booking.id,
+              status: booking.status,
+              appointmentDate: new Date(booking.appointmentDate),
+              issueDescription: booking.issueDescription,
+              paymentMethod: booking.paymentMethod,
+              customerName: 'Unknown',
+              serviceName: 'Service',
+              carId: booking.carId
+            }))
+          );
+        });
+
+        return forkJoin(enrichedRequests);
+      }),
+      catchError(err => {
+        console.error('Error enriching bookings:', err);
+        return of([]);
+      })
+    );
   }
 
   /**
