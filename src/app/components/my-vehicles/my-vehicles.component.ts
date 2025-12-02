@@ -5,6 +5,7 @@ import { AddVehicleFormComponent } from '../add-vehicle-form/add-vehicle-form.co
 import { Router, RouterLink } from '@angular/router';
 import { CarsService } from '../../services/cars.service';
 import { CarExpenseService, CreateCarExpenseRequest, ExpenseType } from '../../services/car-expense.service';
+import { BookingService } from '../../services/booking.service';
 import { forkJoin } from 'rxjs';
 
 interface Vehicle {
@@ -45,6 +46,17 @@ interface Tip {
   timeAgo: string;
   readTime: number;
   content: string;
+}
+
+interface UpcomingBooking {
+  id: number;
+  carId: number;
+  vehicleLabel: string;
+  serviceName: string;
+  appointmentDate: Date;
+  status: string;
+  urgency: 'Urgent' | 'Scheduled';
+  daysUntil: number;
 }
 
 interface NewExpenseForm {
@@ -129,7 +141,25 @@ export class MyVehiclesComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router, private carsService: CarsService, private cdr: ChangeDetectorRef, private carExpenseService: CarExpenseService) {}
+  // Upcoming bookings for all vehicles
+  upcomingBookings: UpcomingBooking[] = [];
+  loadingBookings = false;
+
+  // Pagination and car-specific bookings
+  selectedCarForBookings: number | null = null;
+  carBookings: UpcomingBooking[] = [];
+  currentPage = 1;
+  pageSize = 5;
+  totalBookings = 0;
+  loadingCarBookings = false;
+
+  constructor(
+    private router: Router,
+    private carsService: CarsService,
+    private cdr: ChangeDetectorRef,
+    private carExpenseService: CarExpenseService,
+    private bookingService: BookingService
+  ) {}
 
   // Note: removed Escape key handler to prevent closing the Add Vehicle modal
   // via the Escape key. The modal will now only close when the user clicks
@@ -225,11 +255,14 @@ export class MyVehiclesComponent implements OnInit {
           this.loadIndicatorStatusesForAllVehicles();
           // After vehicles are loaded, fetch all expenses for each car
           this.loadAllExpensesForOwner();
+          // Load upcoming bookings for all vehicles
+          this.loadUpcomingBookings();
           this.welcomeMessage = `Hello ${this.profileName}, ready to hit the road? Here are your vehicles:`;
         } else {
           console.error('Failed to load profile:', response?.message);
           this.vehicles = [];
           this.expenses = [];
+          this.upcomingBookings = [];
         }
       },
       error: (err) => {
@@ -297,8 +330,12 @@ export class MyVehiclesComponent implements OnInit {
     // toggle selection: clicking the same card will deselect
     if (this.selectedVehicleId === vehicle.id) {
       this.selectedVehicleId = null;
+      this.selectedCarForBookings = null;
+      this.carBookings = [];
     } else {
       this.selectedVehicleId = vehicle.id;
+      // Also load bookings for this car in the sidebar
+      this.selectCarForBookings(vehicle.id);
     }
   }
 
@@ -789,5 +826,230 @@ export class MyVehiclesComponent implements OnInit {
       'Brake Pads': 'M5 11h14v10H5V11zm7-6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'
     };
     return iconMap[indicatorLabel] || 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z';
+  }
+
+  // Load upcoming bookings for all vehicles
+  private loadUpcomingBookings(): void {
+    if (!this.vehicles.length) {
+      this.upcomingBookings = [];
+      return;
+    }
+
+    this.loadingBookings = true;
+    const requests = this.vehicles.map(v => this.bookingService.getBookingsByCar(v.id));
+
+    forkJoin(requests).subscribe({
+      next: (responses: any[]) => {
+        const allBookings: UpcomingBooking[] = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        responses.forEach((response, idx) => {
+          if (response?.success && response.data) {
+            const carId = this.vehicles[idx].id;
+            const vehicle = this.vehicles[idx];
+            const vehicleLabel = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+
+            // Filter only Confirmed bookings
+            const confirmedBookings = response.data.filter(
+              (booking: any) => booking.status === 'Confirmed'
+            );
+
+            confirmedBookings.forEach((booking: any) => {
+              const appointmentDate = new Date(booking.appointmentDate);
+              const timeDiff = appointmentDate.getTime() - today.getTime();
+              const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+              // Classify as Urgent (<= 7 days) or Scheduled (> 7 days)
+              const urgency: 'Urgent' | 'Scheduled' = daysUntil <= 7 ? 'Urgent' : 'Scheduled';
+
+              allBookings.push({
+                id: booking.id,
+                carId: carId,
+                vehicleLabel: vehicleLabel,
+                serviceName: booking.issueDescription || 'Service Appointment',
+                appointmentDate: appointmentDate,
+                status: booking.status,
+                urgency: urgency,
+                daysUntil: daysUntil
+              });
+            });
+          }
+        });
+
+        // Sort by appointment date (nearest first)
+        allBookings.sort((a, b) => a.appointmentDate.getTime() - b.appointmentDate.getTime());
+
+        this.upcomingBookings = allBookings;
+        this.loadingBookings = false;
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error('Error loading upcoming bookings:', err);
+        this.loadingBookings = false;
+        this.upcomingBookings = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // Select a car and load its bookings with pagination
+  selectCarForBookings(carId: number): void {
+    this.selectedCarForBookings = carId;
+    this.currentPage = 1;
+    this.loadCarBookings();
+  }
+
+  // Load bookings for selected car with pagination (Confirmed bookings only)
+  loadCarBookings(): void {
+    if (this.selectedCarForBookings === null) return;
+
+    this.loadingCarBookings = true;
+    const url = `${this.bookingService.apiUrl}/Booking/ByCar?CarId=${this.selectedCarForBookings}&PageNumber=${this.currentPage}&PageSize=${this.pageSize}`;
+
+    console.log('Loading bookings from URL:', url);
+
+    this.bookingService.http.get<any>(url).subscribe({
+      next: (response) => {
+        console.log('Booking API response:', response);
+
+        try {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const vehicle = this.vehicles.find(v => v.id === this.selectedCarForBookings);
+          const vehicleLabel = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
+
+          // Handle different response structures
+          let bookingsData: any[] = [];
+
+          if (response?.success && response.data) {
+            // Check if it's a paginated response with items
+            if (response.data.items && Array.isArray(response.data.items)) {
+              bookingsData = response.data.items;
+              this.totalBookings = response.data.totalCount || response.data.items.length;
+            }
+            // Check if data is directly an array
+            else if (Array.isArray(response.data)) {
+              bookingsData = response.data;
+              this.totalBookings = response.data.length;
+            }
+            // Check if there's a single booking object
+            else if (response.data && typeof response.data === 'object') {
+              bookingsData = [response.data];
+              this.totalBookings = 1;
+            }
+          }
+          // Handle response without success wrapper
+          else if (response && Array.isArray(response)) {
+            bookingsData = response;
+            this.totalBookings = response.length;
+          }
+
+          console.log('Bookings data extracted:', bookingsData);
+
+          // Filter only Confirmed bookings
+          const confirmedBookings = bookingsData.filter((booking: any) =>
+            booking && booking.status === 'Confirmed'
+          );
+
+          console.log('Confirmed bookings:', confirmedBookings);
+
+          this.carBookings = confirmedBookings.map((booking: any) => {
+            const appointmentDate = new Date(booking.appointmentDate);
+            const timeDiff = appointmentDate.getTime() - today.getTime();
+            const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            const urgency: 'Urgent' | 'Scheduled' = daysUntil <= 7 ? 'Urgent' : 'Scheduled';
+
+            return {
+              id: booking.id,
+              carId: this.selectedCarForBookings!,
+              vehicleLabel: vehicleLabel,
+              serviceName: booking.issueDescription || 'Service Appointment',
+              appointmentDate: appointmentDate,
+              status: booking.status,
+              urgency: urgency,
+              daysUntil: daysUntil
+            };
+          });
+
+          console.log('Processed car bookings:', this.carBookings);
+        } catch (error) {
+          console.error('Error processing bookings response:', error);
+          this.carBookings = [];
+          this.totalBookings = 0;
+        }
+
+        this.loadingCarBookings = false;
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error('Error loading car bookings:', err);
+        console.error('Error details:', {
+          status: err?.status,
+          statusText: err?.statusText,
+          message: err?.message,
+          error: err?.error
+        });
+        this.loadingCarBookings = false;
+        this.carBookings = [];
+        this.totalBookings = 0;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // Go back to showing all cars
+  backToAllCars(): void {
+    this.selectedCarForBookings = null;
+    this.carBookings = [];
+    this.currentPage = 1;
+    this.totalBookings = 0;
+    this.selectedVehicleId = null;
+  }
+
+  // Pagination methods
+  nextPage(): void {
+    if (this.currentPage * this.pageSize < this.totalBookings) {
+      this.currentPage++;
+      this.loadCarBookings();
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadCarBookings();
+    }
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalBookings / this.pageSize);
+  }
+
+  get hasNextPage(): boolean {
+    return this.currentPage < this.totalPages;
+  }
+
+  get hasPreviousPage(): boolean {
+    return this.currentPage > 1;
+  }
+
+  // Format date for display
+  formatDate(date: Date): string {
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  }
+
+  // Get service icon based on service name
+  getServiceIcon(serviceName: string): string {
+    const lowerName = serviceName.toLowerCase();
+    if (lowerName.includes('oil')) return 'M7 13v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6M8 5l4-3 4 3M12 2v10';
+    if (lowerName.includes('tire')) return 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z';
+    if (lowerName.includes('battery')) return 'M6 7h11v10H6V7zm11 5h4m-4-2h4';
+    if (lowerName.includes('brake')) return 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 14v-2m2 0v2m-2-6v-2m2 0v2';
+    if (lowerName.includes('filter')) return 'M3 3h18v18H3V3zm0 6h18M9 9v12';
+    // Default maintenance icon
+    return 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z';
   }
 }
