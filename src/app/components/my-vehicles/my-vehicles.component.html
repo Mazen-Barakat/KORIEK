@@ -48,8 +48,8 @@
       <div class="vehicles-list">
         <!-- Show vehicle cards only when there are vehicles -->
         <ng-container *ngIf="vehicles && vehicles.length > 0; else emptyState">
-          <div *ngFor="let vehicle of vehicles" 
-               class="vehicle-card" 
+          <div *ngFor="let vehicle of vehicles"
+               class="vehicle-card"
                [class.selected]="selectedVehicleId === vehicle.id"
                (click)="selectVehicle(vehicle)">
 
