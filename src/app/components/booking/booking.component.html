@@ -3,8 +3,15 @@
   <div class="draft-banner" *ngIf="showDraftBanner">
     <div class="draft-content">
       <div class="draft-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
       <div class="draft-text">
@@ -13,15 +20,29 @@
       </div>
       <div class="draft-actions">
         <button class="btn-resume" (click)="resumeDraft()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9 18 15 12 9 6" />
           </svg>
           Resume
         </button>
         <button class="btn-dismiss" (click)="dismissDraft()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       </div>
@@ -33,60 +54,96 @@
     <div class="booking-header" *ngIf="currentStep !== 5">
       <h1>Book a Service</h1>
       <p class="subtitle">Schedule maintenance with verified workshops</p>
-      
+
       <!-- Progress Stepper -->
       <div class="progress-stepper">
-        <div class="step" 
-             [class.active]="currentStep === 1" 
-             [class.completed]="currentStep > 1"
-             (click)="goToStep(1)">
+        <div
+          class="step"
+          [class.active]="currentStep === 1"
+          [class.completed]="currentStep > 1"
+          (click)="goToStep(1)"
+        >
           <div class="step-circle">
-            <svg *ngIf="currentStep > 1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
+            <svg
+              *ngIf="currentStep > 1"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+            >
+              <polyline points="20 6 9 17 4 12" />
             </svg>
             <span *ngIf="currentStep <= 1">1</span>
           </div>
           <span class="step-label">Service</span>
         </div>
-        
+
         <div class="step-line" [class.completed]="currentStep > 1"></div>
-        
-        <div class="step" 
-             [class.active]="currentStep === 2" 
-             [class.completed]="currentStep > 2"
-             (click)="goToStep(2)">
+
+        <div
+          class="step"
+          [class.active]="currentStep === 2"
+          [class.completed]="currentStep > 2"
+          (click)="goToStep(2)"
+        >
           <div class="step-circle">
-            <svg *ngIf="currentStep > 2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
+            <svg
+              *ngIf="currentStep > 2"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+            >
+              <polyline points="20 6 9 17 4 12" />
             </svg>
             <span *ngIf="currentStep <= 2">2</span>
           </div>
           <span class="step-label">Date & Time</span>
         </div>
-        
+
         <div class="step-line" [class.completed]="currentStep > 2"></div>
-        
-        <div class="step" 
-             [class.active]="currentStep === 3" 
-             [class.completed]="currentStep > 3"
-             (click)="goToStep(3)">
+
+        <div
+          class="step"
+          [class.active]="currentStep === 3"
+          [class.completed]="currentStep > 3"
+          (click)="goToStep(3)"
+        >
           <div class="step-circle">
-            <svg *ngIf="currentStep > 3" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
+            <svg
+              *ngIf="currentStep > 3"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+            >
+              <polyline points="20 6 9 17 4 12" />
             </svg>
             <span *ngIf="currentStep <= 3">3</span>
           </div>
           <span class="step-label">Workshop</span>
         </div>
-        
+
         <div class="step-line" [class.completed]="currentStep > 3"></div>
-        
-        <div class="step" 
-             [class.active]="currentStep === 4" 
-             [class.completed]="currentStep > 4">
+
+        <div class="step" [class.active]="currentStep === 4" [class.completed]="currentStep > 4">
           <div class="step-circle">
-            <svg *ngIf="currentStep > 4" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
+            <svg
+              *ngIf="currentStep > 4"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+            >
+              <polyline points="20 6 9 17 4 12" />
             </svg>
             <span *ngIf="currentStep <= 4">4</span>
           </div>
@@ -100,8 +157,15 @@
       <div class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
             </svg>
           </div>
           <div>
@@ -111,13 +175,22 @@
         </div>
 
         <div class="vehicle-grid" *ngIf="!isLoadingVehicles">
-          <div class="vehicle-card" 
-               *ngFor="let vehicle of userVehicles"
-               [class.selected]="selectedVehicle?.id === vehicle.id"
-               (click)="selectVehicle(vehicle)">
+          <div
+            class="vehicle-card"
+            *ngFor="let vehicle of userVehicles"
+            [class.selected]="selectedVehicle?.id === vehicle.id"
+            (click)="selectVehicle(vehicle)"
+          >
             <div class="vehicle-check" *ngIf="selectedVehicle?.id === vehicle.id">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
             <div class="vehicle-info">
@@ -129,8 +202,15 @@
         </div>
 
         <div class="empty-state" *ngIf="!isLoadingVehicles && userVehicles.length === 0">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           <h3>No vehicles found</h3>
           <p>Add a vehicle to your garage to continue</p>
@@ -147,8 +227,17 @@
       <div class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+              />
             </svg>
           </div>
           <div>
@@ -168,29 +257,51 @@
 
           <!-- Error State -->
           <div class="empty-state" *ngIf="!isLoadingCategories && categoriesError">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             <h3>Unable to load categories</h3>
             <p>{{ categoriesError }}</p>
             <button class="btn-primary" (click)="loadCategories()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 4 23 10 17 10"/>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
               </svg>
               Retry
             </button>
           </div>
 
           <!-- Categories Grid -->
-          <div class="service-grid" #categoriesGrid *ngIf="!isLoadingCategories && !categoriesError && categories.length > 0">
-            <div class="service-card"
-                *ngFor="let category of categories"
-                (click)="selectCategory(category)"
-                [class.has-bg]="getCategoryBgUrl(category)"
-                [style.background-image]="getCategoryBgUrl(category) ? 'url(' + getCategoryBgUrl(category) + ')' : null">
+          <div
+            class="service-grid"
+            #categoriesGrid
+            *ngIf="!isLoadingCategories && !categoriesError && categories.length > 0"
+          >
+            <div
+              class="service-card"
+              *ngFor="let category of categories"
+              (click)="selectCategory(category)"
+              [class.has-bg]="getCategoryBgUrl(category)"
+              [style.background-image]="
+                getCategoryBgUrl(category) ? 'url(' + getCategoryBgUrl(category) + ')' : null
+              "
+            >
               <div class="service-card-overlay" *ngIf="getCategoryBgUrl(category)"></div>
               <h3>{{ category.name }}</h3>
               <p class="service-description">{{ category.description }}</p>
@@ -198,11 +309,21 @@
           </div>
 
           <!-- Empty State -->
-          <div class="empty-state" *ngIf="!isLoadingCategories && !categoriesError && categories.length === 0">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
+          <div
+            class="empty-state"
+            *ngIf="!isLoadingCategories && !categoriesError && categories.length === 0"
+          >
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
             <h3>No service categories available</h3>
             <p>Please check back later or contact support</p>
@@ -213,18 +334,30 @@
         <div class="subcategories-section" *ngIf="showingSubcategories && selectedCategory">
           <!-- Back Button -->
           <button class="btn-back" (click)="backToCategories()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="15 18 9 12 15 6" />
             </svg>
             Back to Categories
           </button>
 
-          
-
           <div class="section-header subcategories-header">
             <div class="section-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 5v14m7-7H5"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 5v14m7-7H5" />
               </svg>
             </div>
             <div>
@@ -242,54 +375,93 @@
 
           <!-- Error State -->
           <div class="empty-state" *ngIf="!isLoadingSubcategories && subcategoriesError">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             <h3>Unable to load service options</h3>
             <p>{{ subcategoriesError }}</p>
             <button class="btn-primary" (click)="loadSubcategories(selectedCategory!.id)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 4 23 10 17 10"/>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
               </svg>
               Retry
             </button>
           </div>
 
           <!-- Subcategories Grid -->
-          <div class="subcategory-grid" *ngIf="!isLoadingSubcategories && !subcategoriesError && subcategories.length > 0">
-            <div class="subcategory-card"
-                 *ngFor="let subcategory of subcategories"
-                 [class.selected]="selectedSubcategory?.id === subcategory.id"
-                 (click)="selectSubcategory(subcategory)">
+          <div
+            class="subcategory-grid"
+            *ngIf="!isLoadingSubcategories && !subcategoriesError && subcategories.length > 0"
+          >
+            <div
+              class="subcategory-card"
+              *ngFor="let subcategory of subcategories"
+              [class.selected]="selectedSubcategory?.id === subcategory.id"
+              (click)="selectSubcategory(subcategory)"
+            >
               <div class="subcategory-check" *ngIf="selectedSubcategory?.id === subcategory.id">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
               <div class="subcategory-image-wrapper">
-                <img 
-                  *ngIf="subcategory.imageUrl" 
-                  [src]="subcategory.imageUrl" 
+                <img
+                  *ngIf="subcategory.imageUrl"
+                  [src]="subcategory.imageUrl"
                   [alt]="subcategory.name"
-                  class="subcategory-image">
+                  class="subcategory-image"
+                />
                 <div *ngIf="!subcategory.imageUrl" class="subcategory-placeholder">
                   <span>{{ subcategory.icon || '⚙️' }}</span>
                 </div>
               </div>
               <h4>{{ subcategory.name }}</h4>
-              <p class="subcategory-description">{{ subcategory.description || 'Service option' }}</p>
+              <p class="subcategory-description">
+                {{ subcategory.description || 'Service option' }}
+              </p>
             </div>
           </div>
 
           <!-- Empty State -->
-          <div class="empty-state" *ngIf="!isLoadingSubcategories && !subcategoriesError && subcategories.length === 0">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
+          <div
+            class="empty-state"
+            *ngIf="!isLoadingSubcategories && !subcategoriesError && subcategories.length === 0"
+          >
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
             <h3>No service options available</h3>
             <p>Please select a different category or try again later</p>
@@ -300,16 +472,32 @@
         <div class="services-section" *ngIf="showingServices && selectedSubcategory">
           <!-- Back Button -->
           <button class="btn-back" (click)="backToSubcategories()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="15 18 9 12 15 6" />
             </svg>
             Back to {{ selectedCategory?.name || 'Subcategories' }}
           </button>
 
           <div class="section-header services-header">
             <div class="section-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+                />
               </svg>
             </div>
             <div>
@@ -327,34 +515,55 @@
 
           <!-- Error State -->
           <div class="empty-state" *ngIf="!isLoadingServices && servicesError">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             <h3>Unable to load services</h3>
             <p>{{ servicesError }}</p>
             <button class="btn-primary" (click)="loadServices(selectedSubcategory!.id)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 4 23 10 17 10"/>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
               </svg>
               Retry
             </button>
           </div>
 
           <!-- Services Vertical List -->
-          <div class="service-selection-list" *ngIf="!isLoadingServices && !servicesError && services.length > 0">
-            <div class="service-selection-item"
-                 *ngFor="let service of services"
-                 [class.selected]="selectedService?.id === service.id"
-                 (click)="selectService(service)">
+          <div
+            class="service-selection-list"
+            *ngIf="!isLoadingServices && !servicesError && services.length > 0"
+          >
+            <div
+              class="service-selection-item"
+              *ngFor="let service of services"
+              [class.selected]="selectedService?.id === service.id"
+              (click)="selectService(service)"
+            >
               <div class="service-selection-radio">
-                <input type="radio" 
-                       [id]="'service-' + service.id"
-                       [name]="'service'"
-                       [checked]="selectedService?.id === service.id"
-                       (change)="selectService(service)">
+                <input
+                  type="radio"
+                  [id]="'service-' + service.id"
+                  [name]="'service'"
+                  [checked]="selectedService?.id === service.id"
+                  (change)="selectService(service)"
+                />
                 <label [for]="'service-' + service.id" class="radio-label"></label>
               </div>
               <div class="service-info">
@@ -365,11 +574,21 @@
           </div>
 
           <!-- Empty State -->
-          <div class="empty-state" *ngIf="!isLoadingServices && !servicesError && services.length === 0">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
+          <div
+            class="empty-state"
+            *ngIf="!isLoadingServices && !servicesError && services.length === 0"
+          >
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
             <h3>No services available</h3>
             <p>Please select a different option or try again later</p>
@@ -379,27 +598,42 @@
         <!-- Notes Section (show when service is selected) -->
         <div class="notes-section" *ngIf="selectedService">
           <label for="serviceNotes">Issue Description (optional)</label>
-          <textarea 
+          <textarea
             id="serviceNotes"
             name="serviceNotes"
             [(ngModel)]="serviceNotes"
             #serviceNotesModel="ngModel"
             placeholder="Any specific issues or requests? e.g., Strange noise when braking, AC not cooling properly..."
-            rows="3"></textarea>
+            rows="3"
+          ></textarea>
         </div>
       </div>
 
       <div class="step-actions">
         <button class="btn-secondary" disabled>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="15 18 9 12 15 6" />
           </svg>
           Previous
         </button>
         <button class="btn-primary" [disabled]="!isStep1Valid()" (click)="nextStep()">
           Next
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
       </div>
@@ -411,11 +645,18 @@
       <div class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
           </div>
           <div>
@@ -425,10 +666,12 @@
         </div>
 
         <div class="month-grid">
-          <div class="month-card"
-               *ngFor="let month of availableMonths"
-               [class.selected]="isMonthSelected(month.month, month.year)"
-               (click)="selectMonth(month.month, month.year)">
+          <div
+            class="month-card"
+            *ngFor="let month of availableMonths"
+            [class.selected]="isMonthSelected(month.month, month.year)"
+            (click)="selectMonth(month.month, month.year)"
+          >
             <span class="month-name">{{ month.name }}</span>
             <span class="month-year">{{ month.year }}</span>
           </div>
@@ -439,11 +682,18 @@
       <div class="section-card" *ngIf="selectedMonth !== null && daysInMonth.length > 0">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
           </div>
           <div>
@@ -453,10 +703,12 @@
         </div>
 
         <div class="calendar-grid">
-          <div class="date-card"
-               *ngFor="let date of daysInMonth"
-               [class.selected]="isDateSelectedInMonth(date)"
-               (click)="selectDate(date)">
+          <div
+            class="date-card"
+            *ngFor="let date of daysInMonth"
+            [class.selected]="isDateSelectedInMonth(date)"
+            (click)="selectDate(date)"
+          >
             <span class="date-day">{{ getDayName(date) }}</span>
             <span class="date-number">{{ getDayNumber(date) }}</span>
           </div>
@@ -467,36 +719,66 @@
       <div class="section-card" *ngIf="selectedDate">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
           </div>
           <div>
             <h2>Select Time Slot</h2>
-            <p class="section-subtitle">{{ formatDateLong(selectedDate) }} - All available time slots</p>
+            <p class="section-subtitle">
+              {{ formatDateLong(selectedDate) }} - All available time slots
+            </p>
           </div>
         </div>
 
         <div class="timeslot-grid">
-          <button class="timeslot-btn"
-                  *ngFor="let slot of availableTimeSlots"
-                  [class.selected]="selectedTimeSlot === slot"
-                  [class.unavailable]="!isTimeSlotAvailableWithPast(slot)"
-                  [disabled]="!isTimeSlotAvailableWithPast(slot)"
-                  (click)="selectTimeSlot(slot)">
+          <button
+            class="timeslot-btn"
+            *ngFor="let slot of availableTimeSlots"
+            [class.selected]="selectedTimeSlot === slot"
+            [class.unavailable]="!isTimeSlotAvailableWithPast(slot)"
+            [disabled]="!isTimeSlotAvailableWithPast(slot)"
+            (click)="selectTimeSlot(slot)"
+          >
             {{ slot }}
             <span class="unavailable-label" *ngIf="!isTimeSlotAvailableWithPast(slot)">
               {{ !isTimeSlotAvailable(slot) ? 'Booked' : 'Past' }}
             </span>
           </button>
         </div>
-        
+
         <!-- Timezone Info -->
-        <div class="timezone-info" style="margin-top: 1rem; padding: 0.75rem; background: #f3f4f6; border-radius: 8px; text-align: center; font-size: 0.875rem; color: #6b7280;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 2v20M2 12h20"/>
+        <div
+          class="timezone-info"
+          style="
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #f3f4f6;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+          "
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            style="display: inline-block; vertical-align: middle; margin-right: 0.5rem"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2v20M2 12h20" />
           </svg>
           All times are in Africa/Cairo timezone (UTC+2)
         </div>
@@ -504,15 +786,29 @@
 
       <div class="step-actions">
         <button class="btn-secondary" (click)="previousStep()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="15 18 9 12 15 6" />
           </svg>
           Previous
         </button>
         <button class="btn-primary" [disabled]="!isStep2Valid()" (click)="nextStep()">
           Next
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
       </div>
@@ -523,14 +819,23 @@
       <div class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-              <circle cx="12" cy="10" r="3"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
             </svg>
           </div>
           <div>
             <h2>Choose Workshop</h2>
-            <p class="section-subtitle">Select from verified service centers for {{ selectedVehicleOrigin }} vehicles</p>
+            <p class="section-subtitle">
+              Select from verified service centers for {{ selectedVehicleOrigin }} vehicles
+            </p>
           </div>
         </div>
 
@@ -543,169 +848,455 @@
 
         <!-- Error State -->
         <div class="empty-state" *ngIf="!isLoadingWorkshops && workshopsError">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           <h3>{{ workshopsError }}</h3>
           <button class="btn-primary" (click)="loadWorkshops()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"/>
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
             Try Again
           </button>
         </div>
 
         <!-- Workshop List -->
-        <div class="workshop-list" *ngIf="!isLoadingWorkshops && !workshopsError && workshops.length > 0">
-          <div class="workshop-select-hint" *ngIf="workshops.length > 1">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="16" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12.01" y2="8"/>
-            </svg>
-            <span>Click on a workshop to select it. Click again to deselect.</span>
+        <div
+          class="workshop-list"
+          *ngIf="!isLoadingWorkshops && !workshopsError && workshops.length > 0"
+        >
+          <!-- Pagination Info -->
+          <div class="pagination-info" *ngIf="workshopTotalPages > 1">
+            <span class="results-count">
+              Showing {{ workshops.length }} of {{ workshopTotalRecords }} workshops
+            </span>
+            <span class="page-indicator">
+              Page {{ workshopCurrentPage }} of {{ workshopTotalPages }}
+            </span>
           </div>
-          
-          <div class="workshop-card"
-               *ngFor="let workshop of workshops"
-               [class.selected]="isWorkshopSelected(workshop)"
-               (click)="toggleWorkshop(workshop)">
-            
+
+          <div
+            class="workshop-card"
+            *ngFor="let workshop of workshops"
+            [class.selected]="isWorkshopSelected(workshop)"
+            [class.workshop-closed]="workshop.isClosed"
+            (click)="toggleWorkshop(workshop)"
+          >
+            <!-- Open/Closed Status Badge -->
+            <div
+              class="workshop-status-badge"
+              [class.status-open]="!workshop.isClosed"
+              [class.status-closed]="workshop.isClosed"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" *ngIf="!workshop.isClosed" />
+                <line x1="18" y1="6" x2="6" y2="18" *ngIf="workshop.isClosed" />
+                <line x1="6" y1="6" x2="18" y2="18" *ngIf="workshop.isClosed" />
+              </svg>
+              <span>{{ workshop.isClosed ? 'Closed Now' : 'Open Now' }}</span>
+            </div>
+
+            <!-- Workshop Page Button -->
+            <div class="workshop-page-action" [class.closed-action]="workshop.isClosed">
+              <span class="closed-hint" *ngIf="workshop.isClosed">See working hours</span>
+              <a
+                [routerLink]="['/workshop-profile', workshop.workshopProfileId || workshop.id]"
+                class="workshop-page-button"
+                (click)="$event.stopPropagation()"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                Go to Workshop Page
+              </a>
+            </div>
+
             <!-- Selection Indicator -->
             <div class="workshop-selection-indicator" *ngIf="isWorkshopSelected(workshop)">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            
+
             <div class="workshop-card-content">
               <!-- Left: Logo -->
               <div class="workshop-logo-section">
-                <div class="workshop-logo" *ngIf="workshop.logoUrl">
-                  <img [src]="workshop.logoUrl" [alt]="workshop.name + ' logo'" (error)="$any($event.target).style.display='none'">
+                <div class="workshop-logo" *ngIf="getWorkshopLogoUrl(workshop)">
+                  <img
+                    [src]="getWorkshopLogoUrl(workshop)"
+                    [alt]="workshop.name + ' logo'"
+                    (error)="$any($event.target).style.display = 'none'"
+                  />
                 </div>
-                <div class="workshop-logo workshop-logo-placeholder" *ngIf="!workshop.logoUrl">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"/>
+                <div
+                  class="workshop-logo workshop-logo-placeholder"
+                  *ngIf="!getWorkshopLogoUrl(workshop)"
+                >
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"
+                    />
                   </svg>
                 </div>
               </div>
-              
+
               <!-- Center: Workshop Info -->
               <div class="workshop-info-section">
                 <div class="workshop-header-row">
-                  <h3 class="workshop-name">{{ workshop.name }}</h3>
+                  <div class="workshop-title-group">
+                    <h3 class="workshop-name">{{ workshop.name }}</h3>
+                    <span class="workshop-type-badge" *ngIf="workshop.workshopType">
+                      {{ workshop.workshopType }}
+                    </span>
+                  </div>
                   <div class="workshop-rating-badge">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      <path
+                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                      />
                     </svg>
-                    <span class="rating-value">{{ workshop.rating | number:'1.1-1' }}</span>
+                    <span class="rating-value">{{ workshop.rating | number : '1.1-1' }}</span>
                     <span class="rating-count">({{ workshop.reviewCount }})</span>
                   </div>
                 </div>
-                
+
                 <p class="workshop-description" *ngIf="workshop.workshopDescription">
-                  {{ workshop.workshopDescription.length > 120 ? (workshop.workshopDescription | slice:0:120) + '...' : workshop.workshopDescription }}
+                  {{
+                    workshop.workshopDescription.length > 120
+                      ? (workshop.workshopDescription | slice : 0 : 120) + '...'
+                      : workshop.workshopDescription
+                  }}
                 </p>
-                
+
                 <!-- Service Info Box -->
                 <div class="service-info-box" *ngIf="workshop.serviceName">
                   <div class="service-info-header">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+                      />
                     </svg>
                     <span class="service-name">{{ workshop.serviceName }}</span>
                   </div>
                   <p class="service-description" *ngIf="workshop.serviceDescription">
-                    {{ workshop.serviceDescription.length > 100 ? (workshop.serviceDescription | slice:0:100) + '...' : workshop.serviceDescription }}
+                    {{
+                      workshop.serviceDescription.length > 100
+                        ? (workshop.serviceDescription | slice : 0 : 100) + '...'
+                        : workshop.serviceDescription
+                    }}
                   </p>
                 </div>
-                
-                <!-- Location & Contact Row -->
-                <div class="workshop-meta-row">
-                  <button class="location-link" 
-                          *ngIf="workshop.city || workshop.address || (workshop.latitude && workshop.longitude)"
-                          (click)="openInGoogleMaps(workshop, $event)"
-                          title="Open in Google Maps">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                    <span>{{ workshop.city || workshop.address }}</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="external-link-icon">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                      <polyline points="15 3 21 3 21 9"/>
-                      <line x1="10" y1="14" x2="21" y2="3"/>
-                    </svg>
-                  </button>
-                  
-                  <span class="workshop-phone" *ngIf="workshop.phone">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                    </svg>
-                    {{ workshop.phone }}
-                  </span>
-                </div>
-              </div>
-              
-              <!-- Right: Price Section -->
-              <div class="workshop-price-section">
-                <div class="price-badge" *ngIf="workshop.price || workshop.minPrice || workshop.maxPrice">
-                  <span class="price-label">Price</span>
-                  <div class="price-values">
-                    <!-- Show price range if both min and max exist and are different -->
-                    <ng-container *ngIf="workshop.minPrice && workshop.maxPrice && workshop.minPrice !== workshop.maxPrice">
-                      <span class="price-range">
-                        {{ workshop.minPrice | number:'1.0-0' }} - {{ workshop.maxPrice | number:'1.0-0' }}
-                      </span>
-                      <span class="price-currency">EGP</span>
-                    </ng-container>
-                    <!-- Show single price if available -->
-                    <ng-container *ngIf="workshop.price && (!workshop.minPrice || !workshop.maxPrice || workshop.minPrice === workshop.maxPrice)">
-                      <span class="price-amount">{{ workshop.price | number:'1.0-0' }}</span>
-                      <span class="price-currency">EGP</span>
-                    </ng-container>
-                    <!-- Show minPrice only if no other price -->
-                    <ng-container *ngIf="!workshop.price && workshop.minPrice && (!workshop.maxPrice || workshop.minPrice === workshop.maxPrice)">
-                      <span class="price-amount">{{ workshop.minPrice | number:'1.0-0' }}</span>
-                      <span class="price-currency">EGP</span>
-                    </ng-container>
+
+                <!-- Unified Workshop Details Row -->
+                <div class="workshop-details-unified">
+                  <div class="details-row-single">
+                    <button
+                      class="location-link compact"
+                      *ngIf="
+                        workshop.city ||
+                        workshop.address ||
+                        (workshop.latitude && workshop.longitude)
+                      "
+                      (click)="openInGoogleMaps(workshop, $event)"
+                      title="Open in Google Maps"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      <span>{{ workshop.city || workshop.address }}</span>
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        class="external-link-icon"
+                      >
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                    </button>
+                    <span class="workshop-phone compact" *ngIf="workshop.phone">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                        />
+                      </svg>
+                      {{ workshop.phone }}
+                    </span>
+                    <div class="detail-badge compact" *ngIf="workshop.duration">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      <span>Service: ~{{ workshop.duration }} min</span>
+                    </div>
+                    <div class="detail-badge compact" *ngIf="workshop.numbersOfTechnicians">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                      <span
+                        >{{ workshop.numbersOfTechnicians }} Technician{{
+                          workshop.numbersOfTechnicians > 1 ? 's' : ''
+                        }}</span
+                      >
+                    </div>
                   </div>
                 </div>
-                <div class="no-price-badge" *ngIf="!workshop.price && !workshop.minPrice && !workshop.maxPrice">
-                  <span class="price-label">Price</span>
-                  <span class="price-tbd">On Request</span>
+              </div>
+
+              <!-- Right: Price Section -->
+              <div class="workshop-price-section">
+                <div
+                  class="price-badge"
+                  *ngIf="workshop.price || workshop.minPrice || workshop.maxPrice"
+                >
+                  <div class="price-content">
+                    <span class="price-label">Price</span>
+                    <div class="price-values">
+                      <!-- Show price range if both min and max exist and are different -->
+                      <ng-container
+                        *ngIf="
+                          workshop.minPrice &&
+                          workshop.maxPrice &&
+                          workshop.minPrice !== workshop.maxPrice
+                        "
+                      >
+                        <span class="price-range">
+                          {{ workshop.minPrice | number : '1.0-0' }} -
+                          {{ workshop.maxPrice | number : '1.0-0' }}
+                        </span>
+                        <span class="price-currency">EGP</span>
+                      </ng-container>
+                      <!-- Show single price if available -->
+                      <ng-container
+                        *ngIf="
+                          workshop.price &&
+                          (!workshop.minPrice ||
+                            !workshop.maxPrice ||
+                            workshop.minPrice === workshop.maxPrice)
+                        "
+                      >
+                        <span class="price-amount">{{ workshop.price | number : '1.0-0' }}</span>
+                        <span class="price-currency">EGP</span>
+                      </ng-container>
+                      <!-- Show minPrice only if no other price -->
+                      <ng-container
+                        *ngIf="
+                          !workshop.price &&
+                          workshop.minPrice &&
+                          (!workshop.maxPrice || workshop.minPrice === workshop.maxPrice)
+                        "
+                      >
+                        <span class="price-amount">{{ workshop.minPrice | number : '1.0-0' }}</span>
+                        <span class="price-currency">EGP</span>
+                      </ng-container>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="no-price-badge"
+                  *ngIf="!workshop.price && !workshop.minPrice && !workshop.maxPrice"
+                >
+                  <div class="price-content">
+                    <span class="price-label">Price</span>
+                    <span class="price-tbd">On Request</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <!-- Pagination Controls -->
+          <div class="pagination-controls" *ngIf="workshopTotalPages > 1">
+            <button
+              class="pagination-btn"
+              [disabled]="!workshopHasPreviousPage"
+              (click)="previousWorkshopPage()"
+              title="Previous page"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Previous
+            </button>
+
+            <div class="pagination-numbers">
+              <button
+                class="page-number"
+                *ngFor="let page of getWorkshopPageNumbers()"
+                [class.active]="page === workshopCurrentPage"
+                (click)="goToWorkshopPage(page)"
+              >
+                {{ page }}
+              </button>
+            </div>
+
+            <button
+              class="pagination-btn"
+              [disabled]="!workshopHasNextPage"
+              (click)="nextWorkshopPage()"
+              title="Next page"
+            >
+              Next
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Empty State (no workshops found) -->
-        <div class="empty-state" *ngIf="!isLoadingWorkshops && !workshopsError && workshops.length === 0">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
+        <div
+          class="empty-state"
+          *ngIf="!isLoadingWorkshops && !workshopsError && workshops.length === 0"
+        >
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
           </svg>
           <h3>No workshops available</h3>
-          <p>No service centers found for {{ selectedService?.name || 'this service' }} with {{ selectedVehicleOrigin }} vehicles. Try selecting a different service.</p>
+          <p>
+            No service centers found for {{ selectedService?.name || 'this service' }} with
+            {{ selectedVehicleOrigin }} vehicles. Try selecting a different service.
+          </p>
         </div>
       </div>
 
       <div class="step-actions">
         <button class="btn-secondary" (click)="previousStep()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="15 18 9 12 15 6" />
           </svg>
           Previous
         </button>
         <button class="btn-primary" [disabled]="!isStep3Valid()" (click)="nextStep()">
           Next
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
       </div>
@@ -716,9 +1307,16 @@
       <div class="section-card">
         <div class="section-header">
           <div class="section-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
           </div>
           <div>
@@ -730,22 +1328,40 @@
         <div class="review-section">
           <div class="review-item">
             <div class="review-label">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
               </svg>
               <span>Vehicle</span>
             </div>
             <div class="review-value">
               <strong>{{ selectedVehicle?.make }} {{ selectedVehicle?.model }}</strong>
-              <span class="review-subtext">{{ selectedVehicle?.year }} • {{ selectedVehicle?.licensePlate }}</span>
+              <span class="review-subtext"
+                >{{ selectedVehicle?.year }} • {{ selectedVehicle?.licensePlate }}</span
+              >
             </div>
             <button class="review-edit" (click)="goToStep(1)">Edit</button>
           </div>
 
           <div class="review-item">
             <div class="review-label">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+                />
               </svg>
               <span>Service</span>
             </div>
@@ -759,11 +1375,18 @@
 
           <div class="review-item">
             <div class="review-label">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
               <span>Date & Time</span>
             </div>
@@ -776,31 +1399,53 @@
 
           <div class="review-item">
             <div class="review-label">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                <circle cx="12" cy="10" r="3"/>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
               </svg>
               <span>Workshop</span>
             </div>
             <div class="review-value" *ngIf="selectedWorkshop">
               <strong>{{ selectedWorkshop.name }}</strong>
-              <span class="review-subtext">{{ selectedWorkshop.city || selectedWorkshop.address }}</span>
-              <span class="review-subtext" *ngIf="selectedWorkshop.price">{{ selectedWorkshop.price | number:'1.0-0' }} EGP</span>
+              <span class="review-subtext">{{
+                selectedWorkshop.city || selectedWorkshop.address
+              }}</span>
+              <span class="review-subtext" *ngIf="selectedWorkshop.price"
+                >{{ selectedWorkshop.price | number : '1.0-0' }} EGP</span
+              >
             </div>
             <button class="review-edit" (click)="goToStep(3)">Edit</button>
           </div>
 
           <div class="review-item" *ngIf="selectedPaymentMethod">
             <div class="review-label">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                <line x1="1" y1="10" x2="23" y2="10"/>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
               </svg>
               <span>Payment</span>
             </div>
             <div class="review-value">
               <strong>{{ selectedPaymentMethod === 'cash' ? 'Cash' : 'Credit Card' }}</strong>
-              <span class="review-subtext">{{ selectedPaymentMethod === 'cash' ? 'Pay at workshop after service' : 'Secure card payment' }}</span>
+              <span class="review-subtext">{{
+                selectedPaymentMethod === 'cash'
+                  ? 'Pay at workshop after service'
+                  : 'Secure card payment'
+              }}</span>
             </div>
             <button class="review-edit" (click)="goToStep(3)">Edit</button>
           </div>
@@ -816,32 +1461,64 @@
             <span>Estimated Price</span>
             <span class="price-range">
               <ng-container *ngIf="selectedWorkshop?.minPrice && selectedWorkshop?.maxPrice">
-                {{ selectedWorkshop!.minPrice | number:'1.0-0' }} - {{ selectedWorkshop!.maxPrice | number:'1.0-0' }} EGP
+                {{ selectedWorkshop!.minPrice | number : '1.0-0' }} -
+                {{ selectedWorkshop!.maxPrice | number : '1.0-0' }} EGP
               </ng-container>
               <ng-container *ngIf="selectedWorkshop?.minPrice && !selectedWorkshop?.maxPrice">
-                From {{ selectedWorkshop!.minPrice | number:'1.0-0' }} EGP
+                From {{ selectedWorkshop!.minPrice | number : '1.0-0' }} EGP
               </ng-container>
               <ng-container *ngIf="!selectedWorkshop?.minPrice && selectedWorkshop?.maxPrice">
-                Up to {{ selectedWorkshop!.maxPrice | number:'1.0-0' }} EGP
+                Up to {{ selectedWorkshop!.maxPrice | number : '1.0-0' }} EGP
               </ng-container>
             </span>
           </div>
           <div class="price-divider"></div>
-          <p class="price-note" *ngIf="!selectedWorkshop?.minPrice && !selectedWorkshop?.maxPrice" style="margin-top: 1rem; text-align: center;">*Price will be determined after service selection and workshop inspection</p>
-          <p class="price-note" *ngIf="selectedWorkshop?.minPrice || selectedWorkshop?.maxPrice" style="margin-top: 1rem; text-align: center;">*Final price may vary based on vehicle condition and parts required</p>
+          <p
+            class="price-note"
+            *ngIf="!selectedWorkshop?.minPrice && !selectedWorkshop?.maxPrice"
+            style="margin-top: 1rem; text-align: center"
+          >
+            *Price will be determined after service selection and workshop inspection
+          </p>
+          <p
+            class="price-note"
+            *ngIf="selectedWorkshop?.minPrice || selectedWorkshop?.maxPrice"
+            style="margin-top: 1rem; text-align: center"
+          >
+            *Final price may vary based on vehicle condition and parts required
+          </p>
         </div>
       </div>
 
       <div class="step-actions">
         <button class="btn-secondary" (click)="previousStep()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="15 18 9 12 15 6" />
           </svg>
           Previous
         </button>
-        <button type="button" class="btn-primary btn-confirm" [disabled]="isSubmittingBooking" (click)="confirmBooking()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"/>
+        <button
+          type="button"
+          class="btn-primary btn-confirm"
+          [disabled]="isSubmittingBooking"
+          (click)="confirmBooking()"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="20 6 9 17 4 12" />
           </svg>
           <span *ngIf="!isSubmittingBooking">Confirm Booking</span>
           <span *ngIf="isSubmittingBooking">Confirming...</span>
@@ -853,8 +1530,15 @@
     <div class="success-content" *ngIf="currentStep === 5">
       <div class="success-animation">
         <div class="success-circle">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"/>
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
       </div>
@@ -870,8 +1554,15 @@
 
         <div class="confirmation-details">
           <div class="confirmation-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
             </svg>
             <div>
               <strong>{{ selectedVehicle?.make }} {{ selectedVehicle?.model }}</strong>
@@ -880,11 +1571,18 @@
           </div>
 
           <div class="confirmation-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
             <div>
               <strong>{{ formatDateLong(selectedDate!) }}</strong>
@@ -893,32 +1591,58 @@
           </div>
 
           <div class="confirmation-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-              <circle cx="12" cy="10" r="3"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
             </svg>
             <div *ngIf="selectedWorkshop">
               <strong>{{ selectedWorkshop.name }}</strong>
               <span>{{ selectedWorkshop.city || selectedWorkshop.address }}</span>
-              <span *ngIf="selectedWorkshop.price"> - {{ selectedWorkshop.price | number:'1.0-0' }} EGP</span>
+              <span *ngIf="selectedWorkshop.price">
+                - {{ selectedWorkshop.price | number : '1.0-0' }} EGP</span
+              >
             </div>
           </div>
         </div>
 
         <div class="confirmation-info">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="16" x2="12" y2="12"/>
-            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
           </svg>
-          <p>A confirmation email has been sent to your registered email address. Please arrive 10 minutes early.</p>
+          <p>
+            A confirmation email has been sent to your registered email address. Please arrive 10
+            minutes early.
+          </p>
         </div>
       </div>
 
       <div class="success-actions">
         <button class="btn-primary" (click)="goToMyVehicles()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
           </svg>
           Go to My Vehicles
         </button>
@@ -926,11 +1650,12 @@
       </div>
     </div>
   </div>
-  
+
   <!-- Payment Method Popup -->
-  <app-payment-method-popup 
+  <app-payment-method-popup
     *ngIf="showPaymentPopup"
     (paymentMethodSelected)="onPaymentMethodSelected($event)"
-    (closePopup)="closePaymentPopup()">
+    (closePopup)="closePaymentPopup()"
+  >
   </app-payment-method-popup>
 </div>
