@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { NotificationService } from '../../services/notification.service';
+import { AuthService } from '../../services/auth.service';
 import { AppNotification } from '../../models/wallet.model';
 
 @Component({
@@ -31,22 +32,36 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   unreadCount: number = 0;
   isOpen: boolean = false;
 
-  constructor(private notificationService: NotificationService, private router: Router) {}
+  constructor(
+    private notificationService: NotificationService,
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
+    // Subscribe to notifications - updates automatically via SignalR
     this.notificationService
       .getNotifications()
       .pipe(takeUntil(this.destroy$))
       .subscribe((notifications) => {
         this.notifications = notifications.slice(0, 10); // Show last 10
+        // Force change detection to update the UI immediately
+        this.cdr.detectChanges();
       });
 
+    // Subscribe to unread count - updates automatically via SignalR
     this.notificationService
       .getUnreadCount()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((count) => (this.unreadCount = count));
+      .subscribe((count) => {
+        this.unreadCount = count;
+        // Force change detection to update the badge immediately
+        this.cdr.detectChanges();
+        console.log('🔔 Notification count updated:', count);
+      });
 
-    // Request browser notification permission
+    // Request browser notification permission on component init
     this.notificationService.requestNotificationPermission();
   }
 
@@ -65,11 +80,50 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
   markAsRead(notification: AppNotification, event: Event): void {
     event.stopPropagation();
+    
+    // Get the notification ID from data (backend ID) or use the string ID
+    const backendNotificationId = notification.data?.notificationId?.toString() || notification.id;
+    
+    // Update locally first for immediate UI feedback
     this.notificationService.markAsRead(notification.id);
+    
+    // Then sync with backend
+    const token = this.authService.getToken();
+    if (token && backendNotificationId) {
+      this.notificationService.markAsReadOnBackend(backendNotificationId, token)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            console.log(`✅ Notification ${backendNotificationId} marked as read`);
+          },
+          error: (err) => {
+            console.error('❌ Failed to mark notification as read on backend:', err);
+          }
+        });
+    }
   }
 
   markAllAsRead(): void {
+    const token = this.authService.getToken();
+    
+    // Get all unread notifications before marking them as read
+    const unreadNotifications = this.notifications.filter(n => !n.read);
+    
+    // Update locally first for immediate UI feedback
     this.notificationService.markAllAsRead();
+    
+    // Then sync each with backend
+    if (token) {
+      unreadNotifications.forEach(notification => {
+        const backendNotificationId = notification.data?.notificationId?.toString() || notification.id;
+        if (backendNotificationId) {
+          this.notificationService.markAsReadOnBackend(backendNotificationId, token)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe();
+        }
+      });
+      console.log(`✅ Marked ${unreadNotifications.length} notifications as read on backend`);
+    }
   }
 
   deleteNotification(notification: AppNotification, event: Event): void {
@@ -78,8 +132,19 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   }
 
   handleNotificationClick(notification: AppNotification): void {
-    // Mark as read
+    // Get the notification ID from data (backend ID) or use the string ID
+    const backendNotificationId = notification.data?.notificationId?.toString() || notification.id;
+    
+    // Mark as read locally
     this.notificationService.markAsRead(notification.id);
+    
+    // Sync with backend
+    const token = this.authService.getToken();
+    if (token && backendNotificationId) {
+      this.notificationService.markAsReadOnBackend(backendNotificationId, token)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
+    }
 
     // Handle navigation based on notification type
     if (notification.actionUrl) {

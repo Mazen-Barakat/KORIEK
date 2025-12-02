@@ -378,10 +378,12 @@
 
         <!-- Notes Section (show when service is selected) -->
         <div class="notes-section" *ngIf="selectedService">
-          <label for="serviceNotes">Additional Notes (Optional)</label>
+          <label for="serviceNotes">Issue Description (optional)</label>
           <textarea 
-            id="serviceNotes" 
+            id="serviceNotes"
+            name="serviceNotes"
             [(ngModel)]="serviceNotes"
+            #serviceNotesModel="ngModel"
             placeholder="Any specific issues or requests? e.g., Strange noise when braking, AC not cooling properly..."
             rows="3"></textarea>
         </div>
@@ -837,11 +839,12 @@
           </svg>
           Previous
         </button>
-        <button class="btn-primary btn-confirm" (click)="confirmBooking()">
+        <button type="button" class="btn-primary btn-confirm" [disabled]="isSubmittingBooking" (click)="confirmBooking()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Confirm Booking
+          <span *ngIf="!isSubmittingBooking">Confirm Booking</span>
+          <span *ngIf="isSubmittingBooking">Confirming...</span>
         </button>
       </div>
     </div>

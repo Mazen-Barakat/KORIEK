@@ -1,46 +1,16 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, interval } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, Observable, interval, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { AppNotification, NotificationPreference } from '../models/wallet.model';
+import { NotificationDto, NotificationType } from '../models/notification.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class NotificationService {
-  private notificationsSubject = new BehaviorSubject<AppNotification[]>([
-    {
-      id: 'notif-001',
-      type: 'booking',
-      title: 'New Booking Request',
-      message: 'John Smith requested a brake inspection for Toyota Camry',
-      timestamp: new Date(2025, 10, 22, 9, 30),
-      read: false,
-      priority: 'high',
-      actionUrl: '/workshop/job-board',
-      actionLabel: 'View Request',
-    },
-    {
-      id: 'notif-002',
-      type: 'payment',
-      title: 'Payment Received',
-      message: 'You received $450.00 for completed service',
-      timestamp: new Date(2025, 10, 21, 14, 30),
-      read: false,
-      priority: 'medium',
-      actionUrl: '/workshop/wallet',
-      actionLabel: 'View Transaction',
-    },
-    {
-      id: 'notif-003',
-      type: 'review',
-      title: 'New Review',
-      message: 'Sarah Johnson left a 5-star review',
-      timestamp: new Date(2025, 10, 21, 10, 15),
-      read: true,
-      priority: 'low',
-      actionUrl: '/workshop/reviews',
-      actionLabel: 'View Review',
-    },
-  ]);
+  // Start with empty notifications - real notifications come from SignalR
+  private notificationsSubject = new BehaviorSubject<AppNotification[]>([]);
 
   private preferencesSubject = new BehaviorSubject<NotificationPreference[]>([
     { id: 'pref-001', type: 'payment', enabled: true, email: true, push: true, sms: false },
@@ -49,9 +19,10 @@ export class NotificationService {
     { id: 'pref-004', type: 'system', enabled: true, email: true, push: true, sms: false },
   ]);
 
-  private unreadCountSubject = new BehaviorSubject<number>(2);
+  private unreadCountSubject = new BehaviorSubject<number>(0);
+  private readonly API_URL = 'https://localhost:44316/api/Notifications';
 
-  constructor() {
+  constructor(private http: HttpClient) {
     this.startAutoNotificationSimulation();
     this.updateUnreadCount();
   }
@@ -98,9 +69,18 @@ export class NotificationService {
       read: false,
     };
     const notifications = [newNotification, ...this.notificationsSubject.value];
+    
+    // Emit the updated notifications array - this triggers UI updates via subscriptions
     this.notificationsSubject.next(notifications);
+    
+    // Update unread count - this triggers the badge update on the bell
     this.updateUnreadCount();
+    
+    // Show browser notification if permission granted
     this.showBrowserNotification(newNotification);
+    
+    // Log for debugging
+    console.log('🔔 New notification added:', newNotification.title, '| Total unread:', this.unreadCountSubject.value);
   }
 
   updatePreference(preferenceId: string, updates: Partial<NotificationPreference>): void {
@@ -155,5 +135,205 @@ export class NotificationService {
   clearAll(): void {
     this.notificationsSubject.next([]);
     this.updateUnreadCount();
+  }
+
+  /**
+   * Fetch notifications from backend API for the logged-in user.
+   * This is called on page load to retrieve any missed notifications.
+   */
+  fetchNotificationsFromApi(token: string): Observable<AppNotification[]> {
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.get<any>(this.API_URL, { headers }).pipe(
+      map((response: any) => {
+        // Handle both direct array response and wrapped response
+        const notificationsData = response.data || response || [];
+        
+        if (!Array.isArray(notificationsData)) {
+          console.warn('⚠️ Unexpected notifications response format:', response);
+          return [];
+        }
+
+        console.log(`📥 Fetched ${notificationsData.length} notifications from API`);
+
+        // Map backend NotificationDto to AppNotification and add to the service
+        const appNotifications: AppNotification[] = notificationsData.map((dto: NotificationDto) => 
+          this.mapDtoToAppNotification(dto)
+        );
+
+        // Merge with existing notifications (avoid duplicates)
+        this.mergeNotifications(appNotifications);
+
+        return appNotifications;
+      }),
+      catchError((error) => {
+        console.error('❌ Error fetching notifications from API:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Map backend NotificationDto to frontend AppNotification model
+   */
+  private mapDtoToAppNotification(dto: NotificationDto): AppNotification {
+    // Determine notification type
+    let type: AppNotification['type'] = 'system';
+    let priority: AppNotification['priority'] = 'medium';
+
+    switch (dto.type) {
+      case NotificationType.BookingCreated:
+      case NotificationType.BookingAccepted:
+      case NotificationType.BookingRejected:
+      case NotificationType.BookingCancelled:
+      case NotificationType.BookingCompleted:
+      case NotificationType.JobStatusChanged:
+        type = 'booking';
+        break;
+      case NotificationType.PaymentReceived:
+        type = 'payment';
+        break;
+      case NotificationType.QuoteSent:
+      case NotificationType.QuoteApproved:
+      case NotificationType.QuoteRejected:
+        type = 'alert';
+        break;
+      case NotificationType.ReviewReceived:
+        type = 'review';
+        break;
+      default:
+        type = 'system';
+    }
+
+    // Determine priority
+    if (dto.priority) {
+      priority = dto.priority;
+    } else {
+      switch (dto.type) {
+        case NotificationType.BookingCreated:
+        case NotificationType.PaymentReceived:
+          priority = 'high';
+          break;
+        case NotificationType.BookingAccepted:
+        case NotificationType.QuoteSent:
+        case NotificationType.QuoteApproved:
+          priority = 'medium';
+          break;
+        default:
+          priority = 'low';
+      }
+    }
+
+    // Generate title if not provided
+    const title = dto.title || this.generateNotificationTitle(dto.type);
+
+    // Generate action URL if bookingId is present
+    let actionUrl = dto.actionUrl;
+    let actionLabel = dto.actionLabel;
+
+    if (!actionUrl && dto.bookingId) {
+      actionUrl = `/booking/${dto.bookingId}`;
+      actionLabel = actionLabel || 'View Booking';
+    }
+
+    return {
+      id: dto.id.toString(),
+      type,
+      title,
+      message: dto.message,
+      priority,
+      timestamp: new Date(dto.createdAt),
+      read: dto.isRead,
+      actionUrl,
+      actionLabel,
+      data: {
+        notificationId: dto.id,
+        senderId: dto.senderId,
+        receiverId: dto.receiverId,
+        bookingId: dto.bookingId,
+        workshopId: dto.workshopId,
+        notificationType: dto.type,
+      },
+    };
+  }
+
+  /**
+   * Generate notification title based on type
+   */
+  private generateNotificationTitle(type: NotificationType): string {
+    switch (type) {
+      case NotificationType.BookingCreated:
+        return 'New Booking Request';
+      case NotificationType.BookingAccepted:
+        return 'Booking Accepted';
+      case NotificationType.BookingRejected:
+        return 'Booking Rejected';
+      case NotificationType.BookingCancelled:
+        return 'Booking Cancelled';
+      case NotificationType.BookingCompleted:
+        return 'Booking Completed';
+      case NotificationType.PaymentReceived:
+        return 'Payment Received';
+      case NotificationType.QuoteSent:
+        return 'Quote Sent';
+      case NotificationType.QuoteApproved:
+        return 'Quote Approved';
+      case NotificationType.QuoteRejected:
+        return 'Quote Rejected';
+      case NotificationType.JobStatusChanged:
+        return 'Job Status Updated';
+      case NotificationType.ReviewReceived:
+        return 'New Review';
+      default:
+        return 'New Notification';
+    }
+  }
+
+  /**
+   * Merge fetched notifications with existing ones, avoiding duplicates
+   */
+  private mergeNotifications(newNotifications: AppNotification[]): void {
+    const existingNotifications = this.notificationsSubject.value;
+    const existingIds = new Set(existingNotifications.map(n => n.id));
+
+    // Filter out duplicates and add new notifications
+    const uniqueNew = newNotifications.filter(n => !existingIds.has(n.id));
+
+    if (uniqueNew.length > 0) {
+      // Combine and sort by timestamp (newest first)
+      const combined = [...uniqueNew, ...existingNotifications].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+
+      this.notificationsSubject.next(combined);
+      this.updateUnreadCount();
+      console.log(`✅ Added ${uniqueNew.length} new notifications from API`);
+    } else {
+      console.log('ℹ️ No new notifications to add (all already exist)');
+    }
+  }
+
+  /**
+   * Mark notification as read on the backend
+   */
+  markAsReadOnBackend(notificationId: string, token: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.put(`${this.API_URL}/${notificationId}/mark-read`, {}, { headers }).pipe(
+      map((response) => {
+        console.log(`✅ Notification ${notificationId} marked as read on backend`);
+        return response;
+      }),
+      catchError((error) => {
+        console.error('❌ Error marking notification as read on backend:', error);
+        return of(null);
+      })
+    );
   }
 }

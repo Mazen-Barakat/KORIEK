@@ -571,6 +571,16 @@
   box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
 }
 
+/* Validation error for notes */
+.field-error {
+  margin-top: 0.5rem;
+}
+.field-error small {
+  color: #DC2626; /* red error color */
+  font-size: 0.875rem;
+  display: block;
+}
+
 /* Month Grid */
 .month-grid {
   display: grid;
