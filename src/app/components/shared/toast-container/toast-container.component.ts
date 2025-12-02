@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
@@ -26,11 +26,16 @@ export class ToastContainerComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   toasts: Toast[] = [];
 
-  constructor(private toastService: ToastService) {}
+  constructor(
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.toastService.toasts$.pipe(takeUntil(this.destroy$)).subscribe((toasts: Toast[]) => {
       this.toasts = toasts;
+      // Force change detection to show toast immediately when triggered from SignalR
+      this.cdr.detectChanges();
     });
   }
 

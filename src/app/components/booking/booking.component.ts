@@ -676,6 +676,7 @@ export class BookingComponent implements OnInit {
 
   // Step validation
   isStep1Valid(): boolean {
+    // Require selected vehicle and selected service. Issue description is optional.
     return this.selectedVehicle !== null && this.selectedService !== null;
   }
 
@@ -1215,6 +1216,8 @@ export class BookingComponent implements OnInit {
 
   // Booking submission
   confirmBooking(): void {
+    // Prevent duplicate submissions
+    if (this.isSubmittingBooking) return;
     // Validate required fields
     if (!this.selectedVehicle) {
       this.bookingError = 'Please select a vehicle';
@@ -1311,6 +1314,7 @@ export class BookingComponent implements OnInit {
           this.bookingConfirmed = true;
           localStorage.removeItem('bookingDraft');
           window.scrollTo({ top: 0, behavior: 'smooth' });
+          try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
         } else {
           this.bookingError = response.message || 'Failed to create booking';
         }

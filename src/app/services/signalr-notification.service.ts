@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 import * as signalR from '@microsoft/signalr';
 import { HubConnection, HubConnectionState } from '@microsoft/signalr';
@@ -22,7 +22,8 @@ export class SignalRNotificationService {
     private authService: AuthService,
     private notificationService: NotificationService,
     private toastService: ToastService,
-    private router: Router
+    private router: Router,
+    private ngZone: NgZone
   ) {
     console.log('🔔 SignalRNotificationService initialized');
   }
@@ -85,6 +86,9 @@ export class SignalRNotificationService {
 
       // Join user-specific group after connection
       await this.joinUserGroup();
+
+      // Fetch existing notifications from API after connection
+      this.loadNotificationsFromApi();
     } catch (err) {
       console.error('❌ SignalR connection error:', err);
       this.handleReconnect();
@@ -129,24 +133,27 @@ export class SignalRNotificationService {
 
     // Listen for incoming notifications from the hub
     this.hubConnection.on('ReceiveNotification', (notificationDto: NotificationDto) => {
-      console.log('📩 Received notification from SignalR:', notificationDto);
+      // Run inside Angular zone to trigger change detection immediately
+      this.ngZone.run(() => {
+        console.log('📩 Received notification from SignalR:', notificationDto);
 
-      // Map backend NotificationDto to frontend AppNotification
-      const appNotification = this.mapToAppNotification(notificationDto);
+        // Map backend NotificationDto to frontend AppNotification
+        const appNotification = this.mapToAppNotification(notificationDto);
 
-      // Add notification to the notification service
-      this.notificationService.addNotification(appNotification);
+        // Add notification to the notification service
+        this.notificationService.addNotification(appNotification);
 
-      // Show browser notification if permitted
-      this.notificationService.showBrowserNotification({
-        id: notificationDto.id.toString(),
-        timestamp: new Date(notificationDto.createdAt),
-        read: notificationDto.isRead,
-        ...appNotification,
+        // Show browser notification if permitted
+        this.notificationService.showBrowserNotification({
+          id: notificationDto.id.toString(),
+          timestamp: new Date(notificationDto.createdAt),
+          read: notificationDto.isRead,
+          ...appNotification,
+        });
+
+        // Show toast notification for high-priority notifications
+        this.showToastForNotification(notificationDto, appNotification);
       });
-
-      // Show toast notification for high-priority notifications
-      this.showToastForNotification(notificationDto, appNotification);
     });
 
     // Listen for broadcast messages (optional)
@@ -410,5 +417,27 @@ export class SignalRNotificationService {
     else if (appNotification.priority === 'high') {
       this.toastService.warning(title, message, 5000);
     }
+  }
+
+  /**
+   * Load notifications from API when the connection starts.
+   * This ensures any missed notifications while offline are retrieved.
+   */
+  private loadNotificationsFromApi(): void {
+    const token = this.authService.getToken();
+    if (!token) {
+      console.warn('⚠️ No auth token available - skipping notification fetch');
+      return;
+    }
+
+    console.log('📥 Fetching existing notifications from API...');
+    this.notificationService.fetchNotificationsFromApi(token).subscribe({
+      next: (notifications) => {
+        console.log(`✅ Loaded ${notifications.length} notifications from API`);
+      },
+      error: (error) => {
+        console.error('❌ Failed to load notifications from API:', error);
+      }
+    });
   }
 }
