@@ -149,9 +149,10 @@ export class MyVehiclesComponent implements OnInit {
 
   // Pagination and car-specific bookings
   selectedCarForBookings: number | null = null;
-  carBookings: UpcomingBooking[] = [];
+  allCarBookings: UpcomingBooking[] = []; // Store all bookings
+  carBookings: UpcomingBooking[] = []; // Current page bookings
   currentPage = 1;
-  pageSize = 5;
+  pageSize = 5; // Frontend pagination page size
   totalBookings = 0;
   loadingCarBookings = false;
   cancellingBookingIds: Set<number> = new Set();
@@ -344,9 +345,12 @@ export class MyVehiclesComponent implements OnInit {
     if (this.selectedVehicleId === vehicle.id) {
       this.selectedVehicleId = null;
       this.selectedCarForBookings = null;
+      this.allCarBookings = [];
       this.carBookings = [];
     } else {
       this.selectedVehicleId = vehicle.id;
+      // Reset to page 1 when selecting a different car
+      this.currentPage = 1;
       // Also load bookings for this car in the sidebar
       this.selectCarForBookings(vehicle.id);
     }
@@ -914,18 +918,25 @@ export class MyVehiclesComponent implements OnInit {
     this.loadCarBookings();
   }
 
-  // Load bookings for selected car with pagination (Confirmed bookings only)
+  // Load ALL bookings for selected car (fetch all pages, paginate on frontend)
   loadCarBookings(): void {
     if (this.selectedCarForBookings === null) return;
 
     this.loadingCarBookings = true;
-    const url = `${this.bookingService.apiUrl}/Booking/ByCar?CarId=${this.selectedCarForBookings}&PageNumber=${this.currentPage}&PageSize=${this.pageSize}`;
+    this.allCarBookings = [];
 
-    console.log('Loading bookings from URL:', url);
+    // Fetch all pages recursively (API max page size is 100)
+    this.fetchAllBookingsRecursively(1);
+  }
+
+  private fetchAllBookingsRecursively(pageNumber: number): void {
+    const url = `${this.bookingService.apiUrl}/Booking/ByCar?CarId=${this.selectedCarForBookings}&PageNumber=${pageNumber}&PageSize=100`;
+
+    console.log(`Fetching bookings page ${pageNumber} from URL:`, url);
 
     this.bookingService.http.get<any>(url).subscribe({
       next: (response) => {
-        console.log('Booking API response:', response);
+        console.log(`Page ${pageNumber} API response:`, response);
 
         try {
           const today = new Date();
@@ -936,67 +947,94 @@ export class MyVehiclesComponent implements OnInit {
 
           // Handle different response structures
           let bookingsData: any[] = [];
+          let hasMorePages = false;
 
           if (response?.success && response.data) {
             // Check if it's a paginated response with items
             if (response.data.items && Array.isArray(response.data.items)) {
               bookingsData = response.data.items;
-              this.totalBookings = response.data.totalCount || response.data.items.length;
+              // Check if there are more pages
+              const totalCount = response.data.totalCount || 0;
+              hasMorePages = pageNumber * 100 < totalCount;
             }
             // Check if data is directly an array
             else if (Array.isArray(response.data)) {
               bookingsData = response.data;
-              this.totalBookings = response.data.length;
+              hasMorePages = bookingsData.length === 100; // If we got 100 items, there might be more
             }
             // Check if there's a single booking object
             else if (response.data && typeof response.data === 'object') {
               bookingsData = [response.data];
-              this.totalBookings = 1;
+              hasMorePages = false;
             }
           }
           // Handle response without success wrapper
           else if (response && Array.isArray(response)) {
             bookingsData = response;
-            this.totalBookings = response.length;
+            hasMorePages = bookingsData.length === 100;
           }
 
-          console.log('Bookings data extracted:', bookingsData);
+          console.log(`Bookings data from page ${pageNumber}:`, bookingsData.length, 'items');
 
-          // Filter only Confirmed bookings
-          const confirmedBookings = bookingsData.filter((booking: any) =>
-            booking && booking.status === 'Confirmed'
-          );
+          // Process and append bookings from this page
+          const processedBookings = bookingsData
+            .filter((booking: any) => {
+              if (!booking || !booking.id) return false;
 
-          console.log('Confirmed bookings:', confirmedBookings);
+              // Filter out past bookings (only show today and future)
+              const appointmentDate = new Date(booking.appointmentDate);
+              appointmentDate.setHours(0, 0, 0, 0); // Normalize to start of day
+              return appointmentDate.getTime() >= today.getTime();
+            })
+            .map((booking: any) => {
+              const appointmentDate = new Date(booking.appointmentDate);
+              const timeDiff = appointmentDate.getTime() - today.getTime();
+              const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
+              const urgency: 'Urgent' | 'Scheduled' = daysUntil <= 7 ? 'Urgent' : 'Scheduled';
 
-          this.carBookings = confirmedBookings.map((booking: any) => {
-            const appointmentDate = new Date(booking.appointmentDate);
-            const timeDiff = appointmentDate.getTime() - today.getTime();
-            const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
-            const urgency: 'Urgent' | 'Scheduled' = daysUntil <= 7 ? 'Urgent' : 'Scheduled';
+              return {
+                id: booking.id,
+                carId: this.selectedCarForBookings!,
+                vehicleLabel: vehicleLabel,
+                serviceName: booking.issueDescription || 'Service Appointment',
+                appointmentDate: appointmentDate,
+                status: booking.status,
+                urgency: urgency,
+                daysUntil: daysUntil,
+                workshopId: booking.workShopProfileId
+              };
+            });
 
-            return {
-              id: booking.id,
-              carId: this.selectedCarForBookings!,
-              vehicleLabel: vehicleLabel,
-              serviceName: booking.issueDescription || 'Service Appointment',
-              appointmentDate: appointmentDate,
-              status: booking.status,
-              urgency: urgency,
-              daysUntil: daysUntil,
-              workshopId: booking.workShopProfileId
-            };
-          });
+          // Append to all bookings
+          this.allCarBookings = [...this.allCarBookings, ...processedBookings];
 
-          console.log('Processed car bookings:', this.carBookings);
+          // If there are more pages, fetch the next one
+          if (hasMorePages && bookingsData.length === 100) {
+            console.log('Fetching next page...');
+            this.fetchAllBookingsRecursively(pageNumber + 1);
+          } else {
+            // All pages loaded, finalize
+            console.log('All bookings loaded. Total:', this.allCarBookings.length);
+
+            // Sort by appointment date (nearest first)
+            this.allCarBookings.sort((a, b) => a.appointmentDate.getTime() - b.appointmentDate.getTime());
+
+            this.totalBookings = this.allCarBookings.length;
+
+            // Update the current page view
+            this.updatePageView();
+
+            this.loadingCarBookings = false;
+            this.cdr.detectChanges();
+          }
         } catch (error) {
           console.error('Error processing bookings response:', error);
+          this.allCarBookings = [];
           this.carBookings = [];
           this.totalBookings = 0;
+          this.loadingCarBookings = false;
+          this.cdr.detectChanges();
         }
-
-        this.loadingCarBookings = false;
-        this.cdr.detectChanges();
       },
       error: (err: any) => {
         console.error('Error loading car bookings:', err);
@@ -1007,6 +1045,7 @@ export class MyVehiclesComponent implements OnInit {
           error: err?.error
         });
         this.loadingCarBookings = false;
+        this.allCarBookings = [];
         this.carBookings = [];
         this.totalBookings = 0;
         this.cdr.detectChanges();
@@ -1014,27 +1053,38 @@ export class MyVehiclesComponent implements OnInit {
     });
   }
 
+  // Update the current page view (frontend pagination)
+  private updatePageView(): void {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.carBookings = this.allCarBookings.slice(startIndex, endIndex);
+    console.log(`Showing bookings ${startIndex + 1} to ${Math.min(endIndex, this.totalBookings)} of ${this.totalBookings}`);
+  }
+
   // Go back to showing all cars
   backToAllCars(): void {
     this.selectedCarForBookings = null;
+    this.allCarBookings = [];
     this.carBookings = [];
     this.currentPage = 1;
     this.totalBookings = 0;
     this.selectedVehicleId = null;
   }
 
-  // Pagination methods
+  // Frontend pagination methods (no API call needed)
   nextPage(): void {
-    if (this.currentPage * this.pageSize < this.totalBookings) {
+    if (this.hasNextPage) {
       this.currentPage++;
-      this.loadCarBookings();
+      this.updatePageView();
+      this.cdr.detectChanges();
     }
   }
 
   previousPage(): void {
-    if (this.currentPage > 1) {
+    if (this.hasPreviousPage) {
       this.currentPage--;
-      this.loadCarBookings();
+      this.updatePageView();
+      this.cdr.detectChanges();
     }
   }
 
