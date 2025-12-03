@@ -1307,6 +1307,8 @@ export class CarDetailsComponent implements OnInit {
       carId: this.vehicleId ? Number(this.vehicleId) : null,
       icon: '⛽'
     };
+    // Scroll to top to show the modal fully
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   closeAddExpenseModal(): void {

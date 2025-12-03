@@ -37,7 +37,8 @@
           <p class="notification-message">{{ notification.message }}</p>
           <button 
             class="notification-action" 
-            *ngIf="notification.actionLabel && !notification.read">
+            *ngIf="notification.actionLabel && !notification.read"
+            (click)="onNotificationAction(notification, $event)">
             {{ notification.actionLabel }} →
           </button>
         </div>

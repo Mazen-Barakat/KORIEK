@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CarsService, MakeModels } from '../../services/cars.service';
 import { CategoryService } from '../../services/category.service';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
@@ -49,9 +49,9 @@ interface Workshop {
   workshopProfileId?: number;
   workshopName?: string;
   workshopDescription?: string;
-  workshopType?: string;        // e.g., 'Independent', 'Franchise'
+  workshopType?: string; // e.g., 'Independent', 'Franchise'
   serviceId?: number;
-  workshopServiceID?: number;   // Workshop service ID from API (used for booking)
+  workshopServiceID?: number; // Workshop service ID from API (used for booking)
   serviceName?: string;
   serviceDescription?: string;
   price?: number;
@@ -66,10 +66,10 @@ interface Workshop {
   latitude?: number;
   longitude?: number;
   email?: string;
-  origin?: string;              // Vehicle origin this workshop serves
-  duration?: number;            // Service duration in minutes
+  origin?: string; // Vehicle origin this workshop serves
+  duration?: number; // Service duration in minutes
   numbersOfTechnicians?: number;
-  isClosed?: boolean;           // Whether workshop is currently closed
+  isClosed?: boolean; // Whether workshop is currently closed
 }
 
 interface BookingDraft {
@@ -79,7 +79,7 @@ interface BookingDraft {
   serviceNotes: string;
   selectedDate: string | null;
   selectedTimeSlot: string | null;
-  workshopIds: number[];  // Changed to array for multi-selection
+  workshopIds: number[]; // Changed to array for multi-selection
   paymentMethod: string | null;
   timestamp: number;
 }
@@ -87,17 +87,17 @@ interface BookingDraft {
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaymentMethodPopupComponent],
+  imports: [CommonModule, FormsModule, PaymentMethodPopupComponent, RouterLink],
   templateUrl: './booking.component.html',
-  styleUrls: ['./booking.component.css']
+  styleUrls: ['./booking.component.css'],
 })
 export class BookingComponent implements OnInit {
   @ViewChild('categoriesGrid') categoriesGrid?: ElementRef;
-  
+
   // Multi-step state
   currentStep = 1;
   totalSteps = 5;
-  
+
   // User vehicles
   userVehicles: Vehicle[] = [];
   selectedVehicle: Vehicle | null = null;
@@ -105,32 +105,32 @@ export class BookingComponent implements OnInit {
   private vehiclesLoaded = false;
   private vehiclesLoadPromise: Promise<void> | null = null;
   isLoadingVehicles = true;
-  
+
   // Category selection (from backend API)
   categories: Category[] = [];
   selectedCategory: Category | null = null;
   isLoadingCategories = true;
   categoriesError: string | null = null;
-  
+
   // Subcategory selection (from backend API)
   subcategories: Subcategory[] = [];
   selectedSubcategory: Subcategory | null = null;
   isLoadingSubcategories = false;
   subcategoriesError: string | null = null;
   showingSubcategories = false;
-  
+
   // Service selection (from backend API)
   services: Service[] = [];
   selectedService: Service | null = null;
   isLoadingServices = false;
   servicesError: string | null = null;
   showingServices = false;
-  
+
   // Service selection (kept for backward compatibility, will be replaced with subcategories later)
   serviceTypes: ServiceType[] = [];
   selectedServiceType: ServiceType | null = null;
   serviceNotes = '';
-  
+
   // Date & Time selection
   selectedMonth: number | null = null; // 0-11 (January = 0)
   selectedYear: number | null = null;
@@ -140,41 +140,104 @@ export class BookingComponent implements OnInit {
   availableMonths: { month: number; year: number; name: string; displayName: string }[] = [];
   daysInMonth: Date[] = [];
   availableTimeSlots: string[] = [
-    '00:00', '00:30', '01:00', '01:30', '02:00', '02:30', '03:00', '03:30',
-    '04:00', '04:30', '05:00', '05:30', '06:00', '06:30', '07:00', '07:30',
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
-    '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30',
-    '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30'
+    '00:00',
+    '00:30',
+    '01:00',
+    '01:30',
+    '02:00',
+    '02:30',
+    '03:00',
+    '03:30',
+    '04:00',
+    '04:30',
+    '05:00',
+    '05:30',
+    '06:00',
+    '06:30',
+    '07:00',
+    '07:30',
+    '08:00',
+    '08:30',
+    '09:00',
+    '09:30',
+    '10:00',
+    '10:30',
+    '11:00',
+    '11:30',
+    '12:00',
+    '12:30',
+    '13:00',
+    '13:30',
+    '14:00',
+    '14:30',
+    '15:00',
+    '15:30',
+    '16:00',
+    '16:30',
+    '17:00',
+    '17:30',
+    '18:00',
+    '18:30',
+    '19:00',
+    '19:30',
+    '20:00',
+    '20:30',
+    '21:00',
+    '21:30',
+    '22:00',
+    '22:30',
+    '23:00',
+    '23:30',
   ];
   unavailableSlots: string[] = []; // Mock unavailable slots
-  
+
   // Timezone configuration
   readonly CAIRO_TIMEZONE = 'Africa/Cairo';
-  
+
+  // API base URL for images
+  private readonly API_BASE_URL = 'https://localhost:44316';
+
   // Month names
   readonly MONTH_NAMES = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
-  
+
   // Workshop selection (loaded from API when entering step 3)
   workshops: Workshop[] = [];
-  selectedWorkshop: Workshop | null = null;  // Single workshop selection
+  selectedWorkshop: Workshop | null = null; // Single workshop selection
   isLoadingWorkshops = false;
   workshopsError: string | null = null;
-  
+
+  // Pagination for workshops
+  workshopCurrentPage = 1;
+  workshopPageSize = 5;
+  workshopTotalRecords = 0;
+  workshopTotalPages = 0;
+  workshopHasPreviousPage = false;
+  workshopHasNextPage = false;
+
   // Payment method selection
   showPaymentPopup = false;
   selectedPaymentMethod: string | null = null;
-  
+
   // Vehicle origin for workshop search (default 'General' if undetected)
   selectedVehicleOrigin: string = 'General';
-  
+
   // Draft management
   hasSavedDraft = false;
   showDraftBanner = false;
-  
+
   // Success state
   bookingConfirmed = false;
   confirmationNumber = '';
@@ -201,9 +264,9 @@ export class BookingComponent implements OnInit {
     this.restoreSubcategoryState();
     // Restore persisted vehicle origin (if any)
     this.restoreVehicleOrigin();
-    
+
     // Check for pre-selected vehicle from query params
-    this.route.queryParams.subscribe(async params => {
+    this.route.queryParams.subscribe(async (params) => {
       if (params['vehicleId']) {
         const vehicleId = Number(params['vehicleId']);
         // Ensure vehicles are loaded before attempting to select one
@@ -213,7 +276,7 @@ export class BookingComponent implements OnInit {
           // ignore - loadUserVehicles resolves even on error to avoid blocking
         }
 
-        const vehicle = this.userVehicles.find(v => v.id === vehicleId);
+        const vehicle = this.userVehicles.find((v) => v.id === vehicleId);
         if (vehicle) {
           this.selectedVehicle = vehicle;
         }
@@ -226,23 +289,23 @@ export class BookingComponent implements OnInit {
     const today = this.getCurrentCairoDate();
     this.availableDates = [];
     this.availableMonths = [];
-    
-    // Generate next 6 months
+
+    // Generate next 2 months
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-    
-    for (let i = 0; i < 6; i++) {
+
+    for (let i = 0; i < 2; i++) {
       const month = (currentMonth + i) % 12;
       const year = currentYear + Math.floor((currentMonth + i) / 12);
-      
+
       this.availableMonths.push({
         month,
         year,
         name: this.MONTH_NAMES[month],
-        displayName: `${this.MONTH_NAMES[month]} ${year}`
+        displayName: `${this.MONTH_NAMES[month]} ${year}`,
       });
     }
-    
+
     // Generate next 30 days for backward compatibility
     for (let i = 0; i < 30; i++) {
       const date = new Date(today);
@@ -268,13 +331,17 @@ export class BookingComponent implements OnInit {
             const persisted = localStorage.getItem('booking_selected_vehicle_id');
             if (persisted) {
               const persistedId = Number(persisted);
-              const found = this.userVehicles.find(v => v.id === persistedId);
+              const found = this.userVehicles.find((v) => v.id === persistedId);
               if (found) this.selectedVehicle = found;
             }
           } catch (e) {
             // ignore storage errors
           }
-          try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+          try {
+            this.cdr.detectChanges();
+          } catch (e) {
+            /* ignore */
+          }
           resolve();
         },
         error: (error: any) => {
@@ -282,9 +349,13 @@ export class BookingComponent implements OnInit {
           // Resolve anyway to avoid blocking callers; the UI can handle empty list
           this.vehiclesLoaded = true;
           this.isLoadingVehicles = false;
-          try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+          try {
+            this.cdr.detectChanges();
+          } catch (e) {
+            /* ignore */
+          }
           resolve();
-        }
+        },
       });
     });
 
@@ -312,7 +383,10 @@ export class BookingComponent implements OnInit {
             // Scroll to categories section after loading cached data
             setTimeout(() => {
               if (this.categoriesGrid) {
-                this.categoriesGrid.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                this.categoriesGrid.nativeElement.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                });
               }
             }, 100);
           } else {
@@ -342,7 +416,10 @@ export class BookingComponent implements OnInit {
         // Scroll to categories section after fresh load
         setTimeout(() => {
           if (this.categoriesGrid) {
-            this.categoriesGrid.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            this.categoriesGrid.nativeElement.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
           }
         }, 100);
       },
@@ -353,7 +430,7 @@ export class BookingComponent implements OnInit {
           this.categoriesError = 'Failed to load service categories. Please try again.';
         }
         this.isLoadingCategories = false;
-      }
+      },
     });
   }
 
@@ -367,7 +444,11 @@ export class BookingComponent implements OnInit {
     // persist provisional selection (will be updated when subcategories load)
     this.persistSubcategoryState();
     // Ensure view updates immediately to show loading state
-    try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+    try {
+      this.cdr.detectChanges();
+    } catch (e) {
+      /* ignore */
+    }
     this.loadSubcategories(category.id);
   }
 
@@ -379,11 +460,11 @@ export class BookingComponent implements OnInit {
     const localMap: { [key: string]: string } = {
       'Periodic Maintenance': '/Assets/images/Periodic-Maintenance-Cat.jpg',
       'Seasonal Check-ups': '/Assets/images/Seasonal-Chekc-Ups.jpg',
-        'Mechanical Repairs': '/Assets/images/Mechanical-Repairs.jpg',
-        'Electrical': '/Assets/images/Electrical.jpg',
-        'AC & Cooling': '/Assets/images/Ac-Cooling.jpg',
-        'Body & Paint': '/Assets/images/Body-Paint.jpg',
-        'Tires': '/Assets/images/Tires.jpg'
+      'Mechanical Repairs': '/Assets/images/Mechanical-Repairs.jpg',
+      Electrical: '/Assets/images/Electrical.jpg',
+      'AC & Cooling': '/Assets/images/Ac-Cooling.jpg',
+      'Body & Paint': '/Assets/images/Body-Paint.jpg',
+      Tires: '/Assets/images/Tires.jpg',
     };
     return localMap[category.name] || null;
   }
@@ -411,14 +492,22 @@ export class BookingComponent implements OnInit {
           }
         }, 100);
         // Force change detection to ensure template updates immediately
-        try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+        try {
+          this.cdr.detectChanges();
+        } catch (e) {
+          /* ignore */
+        }
       },
       error: (error: any) => {
         console.error('Error loading subcategories:', error);
         this.subcategoriesError = 'Failed to load service options. Please try again.';
         this.isLoadingSubcategories = false;
-        try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
-      }
+        try {
+          this.cdr.detectChanges();
+        } catch (e) {
+          /* ignore */
+        }
+      },
     });
   }
 
@@ -432,7 +521,11 @@ export class BookingComponent implements OnInit {
     // Persist state
     this.persistServiceState();
     // Ensure view updates immediately to show loading state
-    try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+    try {
+      this.cdr.detectChanges();
+    } catch (e) {
+      /* ignore */
+    }
     this.loadServices(subcategory.id);
   }
 
@@ -459,14 +552,22 @@ export class BookingComponent implements OnInit {
           }
         }, 100);
         // Force change detection to ensure template updates immediately
-        try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+        try {
+          this.cdr.detectChanges();
+        } catch (e) {
+          /* ignore */
+        }
       },
       error: (error: any) => {
         console.error('Error loading services:', error);
         this.servicesError = 'Failed to load services. Please try again.';
         this.isLoadingServices = false;
-        try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
-      }
+        try {
+          this.cdr.detectChanges();
+        } catch (e) {
+          /* ignore */
+        }
+      },
     });
   }
 
@@ -521,7 +622,7 @@ export class BookingComponent implements OnInit {
         selectedCategory: this.selectedCategory,
         subcategories: this.subcategories,
         selectedSubcategory: this.selectedSubcategory,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       localStorage.setItem(this.getSubcategoryStorageKey(), JSON.stringify(payload));
     } catch (e) {
@@ -587,7 +688,7 @@ export class BookingComponent implements OnInit {
         selectedSubcategory: this.selectedSubcategory,
         services: this.services,
         selectedService: this.selectedService,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       localStorage.setItem(this.getServiceStorageKey(), JSON.stringify(payload));
     } catch (e) {
@@ -642,12 +743,12 @@ export class BookingComponent implements OnInit {
       this.showPaymentPopup = true;
       return;
     }
-    
+
     if (this.currentStep < this.totalSteps) {
       this.currentStep++;
       this.saveDraft();
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      
+
       // Load workshops when entering step 3
       if (this.currentStep === 3) {
         this.loadWorkshops();
@@ -666,7 +767,7 @@ export class BookingComponent implements OnInit {
     if (step <= this.currentStep) {
       this.currentStep = step;
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      
+
       // Load workshops when navigating to step 3
       if (step === 3) {
         this.loadWorkshops();
@@ -700,7 +801,11 @@ export class BookingComponent implements OnInit {
     // Detect and persist vehicle origin
     this.detectAndPersistVehicleOrigin(vehicle);
     // Update saved draft as well
-    try { this.saveDraft(); } catch (e) { /* ignore */ }
+    try {
+      this.saveDraft();
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   /**
@@ -721,7 +826,7 @@ export class BookingComponent implements OnInit {
     this.carsService.getAllMakesAndModels().subscribe({
       next: (makesData: MakeModels[]) => {
         const makeLower = vehicle.make?.toLowerCase() || '';
-        const match = makesData.find(m => m.make.toLowerCase() === makeLower);
+        const match = makesData.find((m) => m.make.toLowerCase() === makeLower);
         if (match && match.CarOrigin) {
           this.selectedVehicleOrigin = match.CarOrigin;
           console.log('Vehicle origin detected from cars-data.json:', this.selectedVehicleOrigin);
@@ -736,7 +841,7 @@ export class BookingComponent implements OnInit {
         console.warn('Could not load cars-data.json for origin lookup, defaulting to General', err);
         this.selectedVehicleOrigin = 'General';
         this.persistVehicleOrigin(this.selectedVehicleOrigin);
-      }
+      },
     });
   }
 
@@ -786,7 +891,7 @@ export class BookingComponent implements OnInit {
     const daysCount = new Date(year, month + 1, 0).getDate();
     const today = this.getCurrentCairoDate();
     today.setHours(0, 0, 0, 0);
-    
+
     for (let day = 1; day <= daysCount; day++) {
       const date = new Date(year, month, day);
       // Only include dates from today onwards
@@ -808,7 +913,10 @@ export class BookingComponent implements OnInit {
       const combinedDateTime = this.getCombinedDateTime();
       if (combinedDateTime !== null) {
         console.log('Combined DateTime (ISO):', combinedDateTime);
-        console.log('Combined DateTime (Cairo):', new Date(combinedDateTime).toLocaleString('en-US', { timeZone: this.CAIRO_TIMEZONE }));
+        console.log(
+          'Combined DateTime (Cairo):',
+          new Date(combinedDateTime).toLocaleString('en-US', { timeZone: this.CAIRO_TIMEZONE })
+        );
       }
     }
   }
@@ -823,20 +931,20 @@ export class BookingComponent implements OnInit {
   }
 
   formatDate(date: Date): string {
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
     };
     return date.toLocaleDateString('en-US', options);
   }
 
   formatDateLong(date: Date): string {
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      month: 'long', 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      month: 'long',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     };
     return date.toLocaleDateString('en-US', options);
   }
@@ -852,7 +960,7 @@ export class BookingComponent implements OnInit {
 
     // Parse time slot (HH:mm format)
     const [hours, minutes] = this.selectedTimeSlot.split(':').map(Number);
-    
+
     // Format date components
     const year = this.selectedDate.getFullYear();
     const month = (this.selectedDate.getMonth() + 1).toString().padStart(2, '0');
@@ -948,6 +1056,12 @@ export class BookingComponent implements OnInit {
 
   // Workshop selection - single selection with toggle
   toggleWorkshop(workshop: Workshop): void {
+    // Prevent selection of closed workshops
+    if (workshop.isClosed) {
+      console.log('Cannot select closed workshop:', workshop.name);
+      return;
+    }
+
     if (this.selectedWorkshop && this.selectedWorkshop.id === workshop.id) {
       // Deselect if clicking the same workshop
       this.selectedWorkshop = null;
@@ -970,12 +1084,14 @@ export class BookingComponent implements OnInit {
     if (!this.selectedService) {
       console.warn('Cannot load workshops: no service selected');
       this.workshopsError = 'Please select a service first';
+      this.isLoadingWorkshops = false;
       return;
     }
 
     if (!this.selectedDate || !this.selectedTimeSlot) {
       console.warn('Cannot load workshops: date or time not selected');
       this.workshopsError = 'Please select a date and time first';
+      this.isLoadingWorkshops = false;
       return;
     }
 
@@ -985,48 +1101,93 @@ export class BookingComponent implements OnInit {
 
     const serviceId = this.selectedService.id;
     const origin = this.selectedVehicleOrigin || 'General';
-    
+
     // Format appointment date for the API: "YYYY-MM-DD HH:mm:ss.0000000"
     const appointmentDate = this.formatAppointmentDateForApi();
 
-    console.log('Loading workshops for serviceId:', serviceId, 'origin:', origin, 'appointmentDate:', appointmentDate);
+    console.log(
+      'Loading workshops for serviceId:',
+      serviceId,
+      'origin:',
+      origin,
+      'appointmentDate:',
+      appointmentDate
+    );
 
-    this.workshopProfileService.searchWorkshopsByServiceAndOrigin(serviceId, origin, appointmentDate, {
-      pageNumber: 1,
-      pageSize: 10
-    }).subscribe({
-      next: (response: any) => {
-        console.log('Workshops search response:', response);
-        
-        // Handle the new response structure: { success, message, data: { items, pageNumber, ... } }
-        if (response?.success && response?.data?.items && Array.isArray(response.data.items)) {
-          this.workshops = response.data.items.map((w: any, index: number) => this.mapApiWorkshopToInterface(w, index));
-        } else if (response?.data && Array.isArray(response.data)) {
-          // Fallback: data is directly an array
-          this.workshops = response.data.map((w: any, index: number) => this.mapApiWorkshopToInterface(w, index));
-        } else if (Array.isArray(response)) {
-          // Fallback: response is directly an array
-          this.workshops = response.map((w: any, index: number) => this.mapApiWorkshopToInterface(w, index));
-        } else {
-          this.workshops = [];
-        }
+    this.workshopProfileService
+      .searchWorkshopsByServiceAndOrigin(serviceId, origin, appointmentDate, {
+        pageNumber: this.workshopCurrentPage,
+        pageSize: this.workshopPageSize,
+      })
+      .subscribe({
+        next: (response: any) => {
+          console.log('Workshops search response:', response);
 
-        this.isLoadingWorkshops = false;
-        console.log('Mapped workshops:', this.workshops);
+          // Handle the new response structure: { success, message, data: { items, pageNumber, ... } }
+          if (response?.success && response?.data?.items && Array.isArray(response.data.items)) {
+            this.workshops = response.data.items.map((w: any, index: number) =>
+              this.mapApiWorkshopToInterface(w, index)
+            );
 
-        if (this.workshops.length === 0) {
-          this.workshopsError = 'No workshops found for the selected service and vehicle origin. Try a different service or check back later.';
-        }
+            // Update pagination info
+            this.workshopCurrentPage = response.data.pageNumber || 1;
+            this.workshopPageSize = response.data.pageSize || 10;
+            this.workshopTotalRecords = response.data.totalRecords || 0;
+            this.workshopTotalPages = response.data.totalPages || 0;
+            this.workshopHasPreviousPage = response.data.hasPreviousPage || false;
+            this.workshopHasNextPage = response.data.hasNextPage || false;
+          } else if (response?.data && Array.isArray(response.data)) {
+            // Fallback: data is directly an array
+            this.workshops = response.data.map((w: any, index: number) =>
+              this.mapApiWorkshopToInterface(w, index)
+            );
+            this.workshopTotalRecords = this.workshops.length;
+            this.workshopTotalPages = 1;
+          } else if (Array.isArray(response)) {
+            // Fallback: response is directly an array
+            this.workshops = response.map((w: any, index: number) =>
+              this.mapApiWorkshopToInterface(w, index)
+            );
+            this.workshopTotalRecords = this.workshops.length;
+            this.workshopTotalPages = 1;
+          } else {
+            this.workshops = [];
+            this.workshopTotalRecords = 0;
+            this.workshopTotalPages = 0;
+          }
 
-        try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
-      },
-      error: (error: any) => {
-        console.error('Error loading workshops:', error);
-        this.workshopsError = 'Failed to load workshops. Please try again.';
-        this.isLoadingWorkshops = false;
-        try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
-      }
-    });
+          this.isLoadingWorkshops = false;
+          console.log('Mapped workshops:', this.workshops);
+          console.log('Pagination info:', {
+            currentPage: this.workshopCurrentPage,
+            totalPages: this.workshopTotalPages,
+            totalRecords: this.workshopTotalRecords,
+            hasPreviousPage: this.workshopHasPreviousPage,
+            hasNextPage: this.workshopHasNextPage,
+          });
+
+          if (this.workshops.length === 0) {
+            this.workshopsError =
+              'No workshops found for the selected service and vehicle origin. Try a different service or check back later.';
+          }
+
+          try {
+            this.cdr.detectChanges();
+          } catch (e) {
+            /* ignore */
+          }
+        },
+        error: (error: any) => {
+          console.error('Error loading workshops:', error);
+          this.workshopsError = 'Failed to load workshops. Please try again.';
+          this.isLoadingWorkshops = false;
+          try {
+            this.cdr.detectChanges();
+          } catch (e) {
+            /* ignore */
+          }
+        },
+      });
   }
 
   /**
@@ -1052,16 +1213,15 @@ export class BookingComponent implements OnInit {
    */
   private mapApiWorkshopToInterface(apiWorkshop: any, index: number): Workshop {
     // Use workshopId from the new response structure, fallback to workshopProfileId or index
-    const workshopId = apiWorkshop.workshopId || apiWorkshop.workshopProfileId || apiWorkshop.id || index;
-    
+    const workshopId =
+      apiWorkshop.workshopId || apiWorkshop.workshopProfileId || apiWorkshop.id || index;
+
     // Build address from available location fields
-    const addressParts = [
-      apiWorkshop.city,
-      apiWorkshop.governorate,
-      apiWorkshop.country
-    ].filter(Boolean);
+    const addressParts = [apiWorkshop.city, apiWorkshop.governorate, apiWorkshop.country].filter(
+      Boolean
+    );
     const fullAddress = addressParts.join(', ') || apiWorkshop.address || '';
-    
+
     return {
       id: workshopId,
       name: apiWorkshop.workshopName || apiWorkshop.name || 'Unknown Workshop',
@@ -1076,13 +1236,17 @@ export class BookingComponent implements OnInit {
       workshopDescription: apiWorkshop.workshopDescription || apiWorkshop.description || '',
       workshopType: apiWorkshop.workshopType,
       serviceId: apiWorkshop.serviceId,
-      workshopServiceID: apiWorkshop.workshopServiceID,  // This is the ID needed for booking
+      workshopServiceID: apiWorkshop.workshopServiceID, // This is the ID needed for booking
       serviceName: apiWorkshop.serviceName,
       serviceDescription: apiWorkshop.serviceDescription || '',
       price: apiWorkshop.price,
       minPrice: apiWorkshop.minPrice,
       maxPrice: apiWorkshop.maxPrice,
-      logoUrl: apiWorkshop.logoImageUrl || apiWorkshop.LogoImageUrl || apiWorkshop.logoUrl || apiWorkshop.logo,
+      logoUrl:
+        apiWorkshop.logoImageUrl ||
+        apiWorkshop.LogoImageUrl ||
+        apiWorkshop.logoUrl ||
+        apiWorkshop.logo,
       city: apiWorkshop.city,
       country: apiWorkshop.country,
       governorate: apiWorkshop.governorate,
@@ -1094,8 +1258,107 @@ export class BookingComponent implements OnInit {
       origin: apiWorkshop.origin,
       duration: apiWorkshop.duration,
       numbersOfTechnicians: apiWorkshop.numbersOfTechnicians,
-      isClosed: apiWorkshop.isClosed
+      isClosed: apiWorkshop.isClosed,
     };
+  }
+
+  /**
+   * Navigate to previous page of workshops
+   */
+  previousWorkshopPage(): void {
+    if (this.workshopHasPreviousPage && this.workshopCurrentPage > 1) {
+      this.workshopCurrentPage--;
+      this.loadWorkshops();
+      // Scroll to top of workshop list
+      setTimeout(() => {
+        const element = document.querySelector('.workshop-list');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }
+
+  /**
+   * Navigate to next page of workshops
+   */
+  nextWorkshopPage(): void {
+    if (this.workshopHasNextPage && this.workshopCurrentPage < this.workshopTotalPages) {
+      this.workshopCurrentPage++;
+      this.loadWorkshops();
+      // Scroll to top of workshop list
+      setTimeout(() => {
+        const element = document.querySelector('.workshop-list');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }
+
+  /**
+   * Navigate to specific page of workshops
+   */
+  goToWorkshopPage(page: number): void {
+    if (page >= 1 && page <= this.workshopTotalPages && page !== this.workshopCurrentPage) {
+      this.workshopCurrentPage = page;
+      this.loadWorkshops();
+      // Scroll to top of workshop list
+      setTimeout(() => {
+        const element = document.querySelector('.workshop-list');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }
+
+  /**
+   * Get array of page numbers for pagination display
+   */
+  getWorkshopPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxPagesToShow = 5;
+
+    if (this.workshopTotalPages <= maxPagesToShow) {
+      // Show all pages if total is less than max
+      for (let i = 1; i <= this.workshopTotalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show current page and 2 pages before and after
+      const startPage = Math.max(1, this.workshopCurrentPage - 2);
+      const endPage = Math.min(this.workshopTotalPages, this.workshopCurrentPage + 2);
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  }
+
+  /**
+   * Get full logo URL with API host
+   */
+  getWorkshopLogoUrl(workshop: Workshop): string | null {
+    if (!workshop.logoUrl) return null;
+
+    // If logoUrl already contains http/https, return as-is
+    if (workshop.logoUrl.startsWith('http://') || workshop.logoUrl.startsWith('https://')) {
+      return workshop.logoUrl;
+    }
+
+    // Handle relative paths from API
+    const logoPath = workshop.logoUrl.startsWith('/') ? workshop.logoUrl : `/${workshop.logoUrl}`;
+
+    // Common upload paths from backend
+    if (logoPath.includes('/uploads/') || logoPath.includes('/images/')) {
+      return `${this.API_BASE_URL}${logoPath}`;
+    }
+
+    // Default to uploads directory
+    return `${this.API_BASE_URL}/uploads/${workshop.logoUrl}`;
   }
 
   /**
@@ -1103,7 +1366,7 @@ export class BookingComponent implements OnInit {
    */
   openInGoogleMaps(workshop: Workshop, event: Event): void {
     event.stopPropagation(); // Prevent card selection
-    
+
     if (workshop.latitude && workshop.longitude) {
       const url = `https://www.google.com/maps?q=${workshop.latitude},${workshop.longitude}`;
       window.open(url, '_blank');
@@ -1132,7 +1395,7 @@ export class BookingComponent implements OnInit {
   // Draft management
   saveDraft(): void {
     if (this.currentStep === 5) return; // Don't save after confirmation
-    
+
     const draft: BookingDraft = {
       step: this.currentStep,
       vehicleId: this.selectedVehicle?.id || null,
@@ -1142,21 +1405,21 @@ export class BookingComponent implements OnInit {
       selectedTimeSlot: this.selectedTimeSlot,
       workshopIds: this.selectedWorkshop ? [this.selectedWorkshop.id] : [],
       paymentMethod: this.selectedPaymentMethod,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     localStorage.setItem('bookingDraft', JSON.stringify(draft));
   }
 
   checkForSavedDraft(): void {
     const savedDraft = localStorage.getItem('bookingDraft');
-    
+
     if (savedDraft) {
       const draft: BookingDraft = JSON.parse(savedDraft);
-      
+
       // Check if draft is less than 24 hours old
       const hoursSinceSave = (Date.now() - draft.timestamp) / (1000 * 60 * 60);
-      
+
       if (hoursSinceSave < 24) {
         this.hasSavedDraft = true;
         this.showDraftBanner = true;
@@ -1168,42 +1431,43 @@ export class BookingComponent implements OnInit {
 
   resumeDraft(): void {
     const savedDraft = localStorage.getItem('bookingDraft');
-    
+
     if (savedDraft) {
       const draft: BookingDraft = JSON.parse(savedDraft);
-      
+
       // Restore state
       this.currentStep = draft.step;
       this.serviceNotes = draft.serviceNotes;
-      
+
       // Restore vehicle
       if (draft.vehicleId) {
-        const vehicle = this.userVehicles.find(v => v.id === draft.vehicleId);
+        const vehicle = this.userVehicles.find((v) => v.id === draft.vehicleId);
         if (vehicle) this.selectedVehicle = vehicle;
       }
-      
+
       // Restore category
       if (draft.categoryId) {
-        const category = this.categories.find(c => c.id === draft.categoryId);
+        const category = this.categories.find((c) => c.id === draft.categoryId);
         if (category) this.selectedCategory = category;
       }
-      
+
       // Restore date
       if (draft.selectedDate) {
         this.selectedDate = new Date(draft.selectedDate);
       }
-      
+
       // Restore time slot
       this.selectedTimeSlot = draft.selectedTimeSlot;
-      
+
       // Restore workshop
       if (draft.workshopIds && draft.workshopIds.length > 0) {
-        this.selectedWorkshop = this.workshops.find(w => draft.workshopIds.includes(w.id)) || null;
+        this.selectedWorkshop =
+          this.workshops.find((w) => draft.workshopIds.includes(w.id)) || null;
       }
-      
+
       // Restore payment method
       this.selectedPaymentMethod = draft.paymentMethod || null;
-      
+
       this.showDraftBanner = false;
     }
   }
@@ -1238,7 +1502,7 @@ export class BookingComponent implements OnInit {
 
     // Get combined DateTime in ISO format
     const bookingDateTime = this.getCombinedDateTime();
-    
+
     if (!bookingDateTime) {
       this.bookingError = 'Please select date and time';
       return;
@@ -1249,23 +1513,24 @@ export class BookingComponent implements OnInit {
     this.isSubmittingBooking = true;
 
     // Get the workshop service ID (workshopServiceID from API response is required for booking)
-    const workshopServiceId = this.selectedWorkshop.workshopServiceID || this.selectedWorkshop.serviceId || 0;
+    const workshopServiceId =
+      this.selectedWorkshop.workshopServiceID || this.selectedWorkshop.serviceId || 0;
     const workshopProfileId = this.selectedWorkshop.workshopProfileId || this.selectedWorkshop.id;
-    
+
     console.log('Workshop Service ID:', workshopServiceId);
     console.log('Workshop Profile ID:', workshopProfileId);
 
     // Map payment method to backend enum: Cash, CreditCard
     const paymentMethodMap: { [key: string]: string } = {
-      'cash': 'Cash',
-      'credit_card': 'CreditCard',
+      cash: 'Cash',
+      credit_card: 'CreditCard',
       'credit-card': 'CreditCard',
-      'creditcard': 'CreditCard',
-      'card': 'CreditCard',
-      'credit': 'CreditCard'
+      creditcard: 'CreditCard',
+      card: 'CreditCard',
+      credit: 'CreditCard',
     };
     const apiPaymentMethod = paymentMethodMap[this.selectedPaymentMethod.toLowerCase()];
-    
+
     if (!apiPaymentMethod) {
       this.bookingError = 'Invalid payment method selected';
       this.isSubmittingBooking = false;
@@ -1280,20 +1545,23 @@ export class BookingComponent implements OnInit {
       CarId: this.selectedVehicle.id,
       WorkShopProfileId: workshopProfileId,
       WorkshopServiceId: workshopServiceId,
-      Photos: [] as string[]
+      Photos: [] as string[],
     };
 
     console.log('=== BOOKING DATA FOR BACKEND ===');
     console.log('Booking DateTime (ISO):', bookingDateTime);
-    console.log('Booking DateTime (Cairo):', new Date(bookingDateTime).toLocaleString('en-US', { 
-      timeZone: this.CAIRO_TIMEZONE,
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }));
+    console.log(
+      'Booking DateTime (Cairo):',
+      new Date(bookingDateTime).toLocaleString('en-US', {
+        timeZone: this.CAIRO_TIMEZONE,
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      })
+    );
     console.log('Full booking data:', bookingData);
 
     // Send to backend API
@@ -1304,9 +1572,9 @@ export class BookingComponent implements OnInit {
         console.log('Success:', response.success);
         console.log('Message:', response.message);
         console.log('Data:', response.data);
-        
+
         this.isSubmittingBooking = false;
-        
+
         if (response.success) {
           // Use booking ID from response as confirmation number
           this.confirmationNumber = 'BK' + String(response.data.id).padStart(6, '0');
@@ -1314,7 +1582,11 @@ export class BookingComponent implements OnInit {
           this.bookingConfirmed = true;
           localStorage.removeItem('bookingDraft');
           window.scrollTo({ top: 0, behavior: 'smooth' });
-          try { this.cdr.detectChanges(); } catch (e) { /* ignore */ }
+          try {
+            this.cdr.detectChanges();
+          } catch (e) {
+            /* ignore */
+          }
         } else {
           this.bookingError = response.message || 'Failed to create booking';
         }
@@ -1329,9 +1601,9 @@ export class BookingComponent implements OnInit {
         if (error.error?.errors) {
           console.error('Validation errors:', error.error.errors);
         }
-        
+
         this.isSubmittingBooking = false;
-        
+
         // Build detailed error message
         let errorMessage = 'Failed to create booking. ';
         if (error.status === 0) {
@@ -1349,9 +1621,9 @@ export class BookingComponent implements OnInit {
         } else if (error.message) {
           errorMessage = error.message;
         }
-        
+
         this.bookingError = errorMessage;
-      }
+      },
     });
   }
 
@@ -1377,12 +1649,12 @@ export class BookingComponent implements OnInit {
     this.showPaymentPopup = false;
     this.bookingConfirmed = false;
     this.confirmationNumber = '';
-    
+
     // Clear persisted states
     this.clearSubcategoryState();
     this.clearServiceState();
     this.clearVehicleOrigin();
-    
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1401,13 +1673,13 @@ export class BookingComponent implements OnInit {
   goToMyVehicles(): void {
     this.router.navigate(['/my-vehicles']);
   }
-  
+
   // Payment method popup handlers
   onPaymentMethodSelected(method: string): void {
     this.selectedPaymentMethod = method;
     this.showPaymentPopup = false;
     console.log('Payment method selected:', method);
-    
+
     // Proceed to next step (review)
     if (this.currentStep < this.totalSteps) {
       this.currentStep++;
@@ -1415,7 +1687,7 @@ export class BookingComponent implements OnInit {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
-  
+
   closePaymentPopup(): void {
     this.showPaymentPopup = false;
   }
