@@ -65,6 +65,16 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'workshops',
+    loadComponent: () => import('./components/workshops-discovery/workshops-discovery.component').then(m => m.WorkshopsDiscoveryComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'workshop-details/:id',
+    loadComponent: () => import('./components/workshop-details/workshop-details.component').then(m => m.WorkshopDetailsComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'workshop-profile/:id',
     loadComponent: () => import('./components/workshop-profile/workshop-profile.component').then(m => m.WorkshopProfileComponent),
     canActivate: [authGuard]
