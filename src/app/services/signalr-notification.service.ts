@@ -278,6 +278,8 @@ export class SignalRNotificationService {
       case NotificationType.BookingRejected:
       case NotificationType.BookingCancelled:
       case NotificationType.BookingCompleted:
+      case NotificationType.BookingReadyForPickup:
+      case NotificationType.BookingInProgress:
       case NotificationType.JobStatusChanged:
         type = 'booking';
         break;
@@ -305,9 +307,12 @@ export class SignalRNotificationService {
         case NotificationType.BookingCreated:
         case NotificationType.PaymentReceived:
         case NotificationType.BookingCancelled:
+        case NotificationType.BookingReadyForPickup:
+        case NotificationType.BookingCompleted:
           priority = 'high';
           break;
         case NotificationType.BookingAccepted:
+        case NotificationType.BookingInProgress:
         case NotificationType.QuoteSent:
         case NotificationType.QuoteApproved:
           priority = 'medium';
@@ -361,7 +366,11 @@ export class SignalRNotificationService {
       case NotificationType.BookingCancelled:
         return 'Booking Cancelled';
       case NotificationType.BookingCompleted:
-        return 'Booking Completed';
+        return 'Service Completed ✅';
+      case NotificationType.BookingReadyForPickup:
+        return 'Vehicle Ready for Pickup 🚗';
+      case NotificationType.BookingInProgress:
+        return 'Service In Progress 🔧';
       case NotificationType.PaymentReceived:
         return 'Payment Received';
       case NotificationType.QuoteSent:
@@ -410,6 +419,21 @@ export class SignalRNotificationService {
       // Dispatch event so job-board can refresh and remove cancelled booking
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'cancelled');
     }
+    // Show toast for booking ready for pickup (notify car owner)
+    else if (dto.type === NotificationType.BookingReadyForPickup) {
+      this.toastService.success(title, message, 7000);
+      this.dispatchBookingStatusChangedEvent(dto.bookingId, 'ready');
+    }
+    // Show toast for booking in progress (notify car owner)
+    else if (dto.type === NotificationType.BookingInProgress) {
+      this.toastService.info(title, message, 6000);
+      this.dispatchBookingStatusChangedEvent(dto.bookingId, 'inprogress');
+    }
+    // Show toast for booking completed (notify car owner)
+    else if (dto.type === NotificationType.BookingCompleted) {
+      this.toastService.success(title, message, 7000);
+      this.dispatchBookingStatusChangedEvent(dto.bookingId, 'completed');
+    }
     // Show toast for payment received
     else if (dto.type === NotificationType.PaymentReceived && dto.priority === 'high') {
       this.toastService.success(title, message, 6000);
@@ -420,7 +444,7 @@ export class SignalRNotificationService {
     }
     // Show toast for booking accepted (car owners)
     else if (dto.type === NotificationType.BookingAccepted) {
-      this.toastService.info(title, message, 5000);
+      this.toastService.info(title, message, 6000);
     }
     // Show toast for high-priority notifications
     else if (appNotification.priority === 'high') {

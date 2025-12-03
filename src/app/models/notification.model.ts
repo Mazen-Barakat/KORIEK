@@ -12,6 +12,8 @@ export enum NotificationType {
   QuoteRejected = 8,
   JobStatusChanged = 9,
   ReviewReceived = 10,
+  BookingReadyForPickup = 11,
+  BookingInProgress = 12,
 }
 
 export interface NotificationDto {

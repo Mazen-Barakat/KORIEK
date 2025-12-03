@@ -146,13 +146,13 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
   markAsRead(notification: AppNotification, event: Event): void {
     event.stopPropagation();
-    
+
     // Get the notification ID from data (backend ID) or use the string ID
     const backendNotificationId = notification.data?.notificationId?.toString() || notification.id;
-    
+
     // Update locally first for immediate UI feedback
     this.notificationService.markAsRead(notification.id);
-    
+
     // Then sync with backend
     const token = this.authService.getToken();
     if (token && backendNotificationId) {
@@ -171,13 +171,13 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
   markAllAsRead(): void {
     const token = this.authService.getToken();
-    
+
     // Get all unread notifications before marking them as read
     const unreadNotifications = this.notifications.filter(n => !n.read);
-    
+
     // Update locally first for immediate UI feedback
     this.notificationService.markAllAsRead();
-    
+
     // Then sync each with backend
     if (token) {
       unreadNotifications.forEach(notification => {
@@ -200,10 +200,10 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   handleNotificationClick(notification: AppNotification): void {
     // Get the notification ID from data (backend ID) or use the string ID
     const backendNotificationId = notification.data?.notificationId?.toString() || notification.id;
-    
+
     // Mark as read locally
     this.notificationService.markAsRead(notification.id);
-    
+
     // Sync with backend
     const token = this.authService.getToken();
     if (token && backendNotificationId) {
@@ -251,8 +251,33 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     });
   }
 
-  getNotificationIcon(type: string): string {
-    switch (type) {
+  getNotificationIcon(notification: AppNotification): string {
+    // Check title for specific booking states
+    const title = notification.title?.toLowerCase() || '';
+    const message = notification.message?.toLowerCase() || '';
+
+    // More specific icons based on notification content
+    if (title.includes('ready for pickup') || message.includes('ready')) {
+      return '🚗';
+    }
+    if (title.includes('completed') || message.includes('completed')) {
+      return '✅';
+    }
+    if (title.includes('in progress') || message.includes('in progress')) {
+      return '🔧';
+    }
+    if (title.includes('accepted') || message.includes('accepted')) {
+      return '✔️';
+    }
+    if (title.includes('rejected') || title.includes('declined') || message.includes('rejected')) {
+      return '❌';
+    }
+    if (title.includes('cancelled') || message.includes('cancelled')) {
+      return '🚫';
+    }
+
+    // Fallback to type-based icons
+    switch (notification.type) {
       case 'booking':
         return '📋';
       case 'payment':

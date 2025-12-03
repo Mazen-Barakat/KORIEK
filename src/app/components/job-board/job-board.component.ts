@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,8 @@ import { CarsService } from '../../services/cars.service';
 import { Job, JobStatus } from '../../models/booking.model';
 import { HttpClient } from '@angular/common/http';
 import { ConfirmationPopupComponent } from '../shared/confirmation-popup/confirmation-popup.component';
+import { ToastService } from '../../services/toast.service';
+import { NotificationType } from '../../models/notification.model';
 
 // Interface for real booking with enriched data
 export interface RealBooking {
@@ -57,21 +59,22 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   // Retry control for defensive re-loading when initial load returns empty
   private tryLoadRetries = 0;
   private readonly maxLoadRetries = 3;
-  
+
   selectedTab: JobStatus = 'new';
   viewMode: 'kanban' | 'list' = 'kanban';
-  
+
   // Real bookings from API
   workshopProfileId: number = 0;
   realBookings: RealBooking[] = [];
   isLoadingRealBookings = false;
-  
+
   // Categorized real bookings by status
   pendingBookings: RealBooking[] = [];      // new requests (Pending)
   acceptedBookings: RealBooking[] = [];     // upcoming (Accepted)
   inProgressBookings: RealBooking[] = [];   // in progress
+  readyForPickupBookings: RealBooking[] = []; // ready for pickup
   completedBookings: RealBooking[] = [];    // completed
-  
+
   // Keep mock jobs for backward compatibility (will be phased out)
   jobs: Job[] = [];
   newJobs: Job[] = [];
@@ -79,15 +82,18 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   inProgressJobs: Job[] = [];
   readyJobs: Job[] = [];
   completedJobs: Job[] = [];
-  
+
   searchQuery: string = '';
   filterUrgency: string = 'all';
-  
+
   draggedJob: Job | null = null;
-  
+
   // Confirmation popup state
   showDeclineConfirmation: boolean = false;
   bookingToDecline: RealBooking | null = null;
+
+  // Accordion state - track which booking cards are expanded
+  expandedBookings: Set<number> = new Set();
 
   constructor(
     private bookingService: BookingService,
@@ -95,7 +101,9 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     private carsService: CarsService,
     private http: HttpClient,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -105,13 +113,10 @@ export class JobBoardComponent implements OnInit, OnDestroy {
         this.selectedTab = params['tab'] as JobStatus;
       }
     });
-    
+
     // Load workshop profile first, then load real bookings
     this.loadWorkshopProfileAndBookings();
-    // Defensive retry in case initial load misses data due to timing/auth race
-    // This will attempt to reload bookings a few times automatically.
-    this.scheduleRetryIfNeeded();
-    
+
     // Keep mock jobs for backward compatibility
     this.loadJobs();
 
@@ -142,6 +147,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   }
 
   private loadWorkshopProfileAndBookings(): void {
+    this.isLoadingRealBookings = true;
     this.workshopProfileService.getMyWorkshopProfile()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -149,20 +155,30 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           const data = resp?.data ?? resp;
           if (data && data.id) {
             this.workshopProfileId = Number(data.id);
+            console.log('Workshop Profile ID loaded:', this.workshopProfileId);
             this.loadRealBookings();
+          } else {
+            console.error('No workshop profile ID found in response:', resp);
+            this.isLoadingRealBookings = false;
           }
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error loading workshop profile:', err);
+          this.isLoadingRealBookings = false;
+          this.cdr.detectChanges();
         }
       });
   }
 
   private loadRealBookings(): void {
-    if (!this.workshopProfileId) return;
-    
+    if (!this.workshopProfileId) {
+      console.warn('Workshop profile ID not available yet');
+      return;
+    }
+
     this.isLoadingRealBookings = true;
-    
+
     this.bookingService.getBookingsByWorkshop(this.workshopProfileId)
       .pipe(
         takeUntil(this.destroy$),
@@ -170,13 +186,13 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           if (!bookings || bookings.length === 0) {
             return of([]);
           }
-          
+
           // For each booking, fetch car owner profile and car details
           const enrichedRequests = bookings.map(booking => {
             const carOwnerRequest = this.getCarOwnerByBookingId(booking.id);
             const carRequest = this.carsService.getCarById(booking.carId);
             const serviceRequest = this.getServiceName(booking.workshopServiceId);
-            
+
             return forkJoin({
               carOwner: carOwnerRequest,
               car: carRequest,
@@ -221,7 +237,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
               } as RealBooking))
             );
           });
-          
+
           return forkJoin(enrichedRequests);
         })
       )
@@ -230,66 +246,19 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           this.realBookings = enrichedBookings;
           this.categorizeRealBookings();
           this.isLoadingRealBookings = false;
-          // If we successfully loaded bookings, reset retry counter
-          if (this.pendingBookings && this.pendingBookings.length > 0) {
-            this.tryLoadRetries = 0;
-          }
+          console.log('Bookings loaded successfully:', enrichedBookings.length);
+          console.log('Categorized - Pending:', this.pendingBookings.length,
+                      'Accepted:', this.acceptedBookings.length,
+                      'InProgress:', this.inProgressBookings.length,
+                      'Completed:', this.completedBookings.length);
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error loading real bookings:', err);
           this.isLoadingRealBookings = false;
-          // Try again defensively if initial call failed
-          this.retryLoadIfEmpty();
+          this.cdr.detectChanges();
         }
       });
-  }
-
-  /**
-   * Schedule initial retry attempts. This handles race conditions where auth/profile
-   * information becomes available a short time after component init (e.g. other
-   * services initialize). Will attempt to load bookings again until success or
-   * until `maxLoadRetries` is reached.
-   */
-  private scheduleRetryIfNeeded(): void {
-    // If we already have profile id, ensure bookings are loaded and run retry logic
-    if (this.workshopProfileId) {
-      this.loadRealBookings();
-      this.retryLoadIfEmpty();
-      return;
-    }
-
-    // Otherwise, poll briefly for the profile id to appear, then load bookings
-    const checkProfile = () => {
-      if (this.workshopProfileId) {
-        this.loadRealBookings();
-        this.retryLoadIfEmpty();
-      } else if (this.tryLoadRetries < this.maxLoadRetries) {
-        this.tryLoadRetries++;
-        setTimeout(checkProfile, 1000 * this.tryLoadRetries);
-      }
-    };
-
-    checkProfile();
-  }
-
-  /**
-   * Retry loading bookings if pending bookings remain empty. Uses exponential backoff.
-   */
-  private retryLoadIfEmpty(): void {
-    if (!this.workshopProfileId) return;
-
-    const pendingCount = this.pendingBookings ? this.pendingBookings.length : 0;
-    if (pendingCount === 0 && this.tryLoadRetries < this.maxLoadRetries) {
-      const delay = 1000 * Math.pow(2, this.tryLoadRetries); // 1s, 2s, 4s...
-      this.tryLoadRetries++;
-      setTimeout(() => {
-        this.loadRealBookings();
-        // schedule another retry if still empty
-        this.retryLoadIfEmpty();
-      }, delay);
-    } else if (pendingCount > 0) {
-      this.tryLoadRetries = 0;
-    }
   }
 
   private getCarOwnerByBookingId(bookingId: number): Observable<CarOwnerProfile | null> {
@@ -322,7 +291,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   private determineUrgency(appointmentDate: Date): string {
     const now = new Date();
     const diffHours = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
+
     if (diffHours < 24) return 'urgent';
     if (diffHours < 48) return 'high';
     if (diffHours < 72) return 'normal';
@@ -330,42 +299,69 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   }
 
   private categorizeRealBookings(): void {
-    this.pendingBookings = this.realBookings.filter(b => 
-      b.status.toLowerCase() === 'pending'
-    );
-    this.acceptedBookings = this.realBookings.filter(b => 
-      b.status.toLowerCase() === 'accepted' || b.status.toLowerCase() === 'confirmed'
-    );
-    this.inProgressBookings = this.realBookings.filter(b => 
-      b.status.toLowerCase() === 'inprogress' || b.status.toLowerCase() === 'in-progress'
-    );
-    this.completedBookings = this.realBookings.filter(b => 
-      b.status.toLowerCase() === 'completed'
-    );
+    // Ensure arrays are initialized
+    this.pendingBookings = [];
+    this.acceptedBookings = [];
+    this.inProgressBookings = [];
+    this.readyForPickupBookings = [];
+    this.completedBookings = [];
+
+    // Categorize bookings by status
+    this.realBookings.forEach(booking => {
+      const status = booking.status.toLowerCase().trim();
+
+      if (status === 'pending') {
+        this.pendingBookings.push(booking);
+      } else if (status === 'accepted' || status === 'confirmed') {
+        this.acceptedBookings.push(booking);
+      } else if (status === 'inprogress' || status === 'in-progress' || status === 'in progress') {
+        this.inProgressBookings.push(booking);
+      } else if (status === 'readyforpickup' || status === 'ready-for-pickup' || status === 'ready for pickup') {
+        this.readyForPickupBookings.push(booking);
+      } else if (status === 'completed') {
+        this.completedBookings.push(booking);
+      } else {
+        console.warn('Unknown booking status:', booking.status, 'for booking:', booking.id);
+      }
+    });
+
+    console.log('Bookings categorized:', {
+      pending: this.pendingBookings.length,
+      accepted: this.acceptedBookings.length,
+      inProgress: this.inProgressBookings.length,
+      readyForPickup: this.readyForPickupBookings.length,
+      completed: this.completedBookings.length
+    });
   }
 
   // Confirm a booking (accept it)
   confirmBooking(booking: RealBooking, event: Event): void {
     event.stopPropagation();
-    
+
     // Immediately update UI: remove from pending, add to accepted
     this.pendingBookings = this.pendingBookings.filter(b => b.id !== booking.id);
     const confirmedBooking = { ...booking, status: 'Confirmed' };
     this.acceptedBookings = [confirmedBooking, ...this.acceptedBookings];
-    
+
     // Switch to upcoming tab so user sees the confirmed booking immediately
     this.selectedTab = 'upcoming';
-    
+
     this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'Confirmed' })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           console.log(`Booking ${booking.id} confirmed`);
+          // Show success toast
+          this.toastService.success(
+            'Booking Confirmed',
+            `Booking from ${booking.customerName} for ${booking.carMake} ${booking.carModel} has been accepted`
+          );
           // Reload bookings to ensure data consistency with backend
           this.loadRealBookings();
         },
         error: (err) => {
           console.error('Error confirming booking:', err);
+          this.toastService.error('Error', 'Failed to confirm booking');
           // Revert UI changes on error
           this.acceptedBookings = this.acceptedBookings.filter(b => b.id !== booking.id);
           this.pendingBookings = [booking, ...this.pendingBookings];
@@ -380,40 +376,143 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     this.bookingToDecline = booking;
     this.showDeclineConfirmation = true;
   }
-  
+
   // Handle decline confirmation from popup
   onDeclineConfirmed(): void {
     if (!this.bookingToDecline) return;
-    
+
     const booking = this.bookingToDecline;
-    
+
     // Immediately update UI: remove from pending
     this.pendingBookings = this.pendingBookings.filter(b => b.id !== booking.id);
-    
+
     this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'Rejected' })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           console.log(`Booking ${booking.id} declined`);
+          // Show success toast
+          this.toastService.success(
+            'Booking Declined',
+            `Booking request from ${booking.customerName} has been declined`
+          );
           // Reload bookings to ensure data consistency with backend
           this.loadRealBookings();
         },
         error: (err) => {
           console.error('Error declining booking:', err);
+          this.toastService.error('Error', 'Failed to decline booking');
           // Revert UI changes on error
           this.pendingBookings = [booking, ...this.pendingBookings];
         }
       });
-    
+
     // Close popup and reset state
     this.showDeclineConfirmation = false;
     this.bookingToDecline = null;
   }
-  
+
   // Handle decline cancellation from popup
   onDeclineCancelled(): void {
     this.showDeclineConfirmation = false;
     this.bookingToDecline = null;
+  }
+
+  // Mark an in-progress booking as ready for pickup
+  markAsReady(booking: RealBooking, event: Event): void {
+    event.stopPropagation();
+
+    // Immediately update UI: remove from in-progress, add to ready for pickup
+    this.inProgressBookings = this.inProgressBookings.filter(b => b.id !== booking.id);
+    const readyBooking = { ...booking, status: 'ReadyForPickup' };
+    this.readyForPickupBookings = [readyBooking, ...this.readyForPickupBookings];
+
+    // Switch to ready tab so user sees the booking immediately
+    this.selectedTab = 'ready';
+
+    this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'ReadyForPickup' })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log(`Booking ${booking.id} marked as ready for pickup`);
+          // Show success toast
+          this.toastService.success(
+            'Ready for Pickup',
+            `${booking.customerName}'s ${booking.carMake} ${booking.carModel} is ready!`
+          );
+          // Reload bookings to ensure data consistency with backend
+          this.loadRealBookings();
+        },
+        error: (err) => {
+          console.error('Error marking booking as ready:', err);
+          this.toastService.error('Error', 'Failed to mark booking as ready');
+          // Revert UI changes on error
+          this.readyForPickupBookings = this.readyForPickupBookings.filter(b => b.id !== booking.id);
+          this.inProgressBookings = [booking, ...this.inProgressBookings];
+          this.selectedTab = 'in-progress';
+        }
+      });
+  }
+
+  // Complete a booking (mark as completed after pickup)
+  completeBooking(booking: RealBooking, event: Event): void {
+    event.stopPropagation();
+
+    // Immediately update UI: remove from ready for pickup, add to completed
+    this.readyForPickupBookings = this.readyForPickupBookings.filter(b => b.id !== booking.id);
+    const completedBooking = { ...booking, status: 'Completed' };
+    this.completedBookings = [completedBooking, ...this.completedBookings];
+
+    // Switch to completed tab so user sees the booking immediately
+    this.selectedTab = 'completed';
+
+    this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'Completed' })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log(`Booking ${booking.id} completed`);
+          // Show success toast
+          this.toastService.success(
+            'Booking Completed',
+            `Service for ${booking.customerName}'s ${booking.carMake} ${booking.carModel} has been completed!`
+          );
+          // Reload bookings to ensure data consistency with backend
+          this.loadRealBookings();
+        },
+        error: (err) => {
+          console.error('Error completing booking:', err);
+          this.toastService.error('Error', 'Failed to complete booking');
+          // Revert UI changes on error
+          this.completedBookings = this.completedBookings.filter(b => b.id !== booking.id);
+          this.readyForPickupBookings = [booking, ...this.readyForPickupBookings];
+          this.selectedTab = 'ready';
+        }
+      });
+  }
+
+  // Notify customer that their vehicle is ready for pickup
+  notifyCustomer(booking: RealBooking, event: Event): void {
+    event.stopPropagation();
+
+    // Update booking with same ReadyForPickup status to trigger notification to car owner
+    this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, {
+      id: booking.id,
+      status: 'ReadyForPickup'
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log(`Customer notified for booking ${booking.id} - vehicle ready for pickup`);
+          this.toastService.success(
+            'Customer Notified ✅',
+            `${booking.customerName} has been notified that their ${booking.carMake} ${booking.carModel} is ready for pickup!`
+          );
+        },
+        error: (err) => {
+          console.error('Error notifying customer:', err);
+          this.toastService.error('Notification Failed', 'Failed to send notification to customer. Please try again.');
+        }
+      });
   }
 
   // View booking details
@@ -512,11 +611,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
 
   onDrop(event: DragEvent, newStatus: JobStatus): void {
     event.preventDefault();
-    
+
     if (this.draggedJob && this.draggedJob.status !== newStatus) {
       this.updateJobStatus(this.draggedJob.id, newStatus);
     }
-    
+
     this.draggedJob = null;
   }
 
@@ -540,8 +639,8 @@ export class JobBoardComponent implements OnInit, OnDestroy {
 
   formatDate(date: Date | string): string {
     const d = new Date(date);
-    return d.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -563,5 +662,31 @@ export class JobBoardComponent implements OnInit, OnDestroy {
       'done': 'Done'
     };
     return labels[stage] || stage;
+  }
+
+  // Accordion functionality
+  toggleBookingExpanded(bookingId: number, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (this.expandedBookings.has(bookingId)) {
+      this.expandedBookings.delete(bookingId);
+      console.log('Collapsed booking:', bookingId);
+    } else {
+      this.expandedBookings.add(bookingId);
+      console.log('Expanded booking:', bookingId);
+    }
+
+    // Force change detection
+    this.cdr.detectChanges();
+  }
+
+  isBookingExpanded(bookingId: number): boolean {
+    return this.expandedBookings.has(bookingId);
+  }
+
+  // TrackBy function for better performance with large lists
+  trackByBookingId(index: number, booking: RealBooking): number {
+    return booking.id;
   }
 }

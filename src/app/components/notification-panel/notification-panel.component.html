@@ -18,25 +18,28 @@
     </div>
 
     <div class="notifications-list">
-      <div 
-        class="notification-item" 
+      <div
+        class="notification-item"
         *ngFor="let notification of notifications"
         [class.unread]="!notification.read"
         [class]="getPriorityClass(notification.priority)"
         (click)="handleNotificationClick(notification)">
-        
+
         <div class="notification-icon">
-          {{ getNotificationIcon(notification.type) }}
+          {{ getNotificationIcon(notification) }}
         </div>
 
         <div class="notification-content">
           <div class="notification-header">
-            <span class="notification-title">{{ notification.title }}</span>
+            <div class="notification-title-wrapper">
+              <span class="notification-title">{{ notification.title }}</span>
+              <span class="notification-badge" *ngIf="notification.priority === 'high'">Important</span>
+            </div>
             <span class="notification-time">{{ formatTime(notification.timestamp) }}</span>
           </div>
           <p class="notification-message">{{ notification.message }}</p>
-          <button 
-            class="notification-action" 
+          <button
+            class="notification-action"
             *ngIf="notification.actionLabel && !notification.read"
             (click)="onNotificationAction(notification, $event)">
             {{ notification.actionLabel }} →
@@ -44,8 +47,8 @@
         </div>
 
         <div class="notification-actions">
-          <button 
-            class="btn-icon" 
+          <button
+            class="btn-icon"
             *ngIf="!notification.read"
             (click)="markAsRead(notification, $event)"
             title="Mark as read">

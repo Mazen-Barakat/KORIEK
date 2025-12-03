@@ -6,33 +6,6 @@
       <p class="page-subtitle">Manage all workshop bookings and repairs</p>
     </div>
     <div class="header-right">
-      <!-- View Mode Toggle -->
-      <button class="view-toggle-btn" (click)="toggleViewMode()">
-        <svg *ngIf="viewMode === 'kanban'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="8" y1="6" x2="21" y2="6"/>
-          <line x1="8" y1="12" x2="21" y2="12"/>
-          <line x1="8" y1="18" x2="21" y2="18"/>
-          <line x1="3" y1="6" x2="3.01" y2="6"/>
-          <line x1="3" y1="12" x2="3.01" y2="12"/>
-          <line x1="3" y1="18" x2="3.01" y2="18"/>
-        </svg>
-        <svg *ngIf="viewMode === 'list'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="7" height="7"/>
-          <rect x="14" y="3" width="7" height="7"/>
-          <rect x="14" y="14" width="7" height="7"/>
-          <rect x="3" y="14" width="7" height="7"/>
-        </svg>
-        <span>{{ viewMode === 'kanban' ? 'List View' : 'Kanban View' }}</span>
-      </button>
-      
-      <!-- Search & Filter -->
-      <div class="search-box">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" placeholder="Search jobs..." [(ngModel)]="searchQuery">
-      </div>
     </div>
   </div>
 
@@ -58,15 +31,15 @@
           <div class="loading-spinner"></div>
           <p>Loading bookings...</p>
         </div>
-        
+
         <!-- Real Bookings Cards -->
-        <div class="job-card" 
-             *ngFor="let booking of pendingBookings"
+        <div class="job-card"
+             *ngFor="let booking of pendingBookings; trackBy: trackByBookingId"
              (click)="viewBookingDetails(booking)">
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)" 
-                   [alt]="booking.customerName" 
+              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
+                   [alt]="booking.customerName"
                    class="customer-avatar">
               <div class="customer-info">
                 <span class="customer-name">{{ booking.customerName }}</span>
@@ -77,7 +50,7 @@
               {{ getUrgencyLabel(booking.urgency) }}
             </span>
           </div>
-          
+
           <div class="job-vehicle">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
@@ -86,15 +59,15 @@
             </svg>
             <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
-          
+
           <div class="job-complaint" *ngIf="booking.issueDescription">
             <p>{{ booking.issueDescription | slice:0:100 }}{{ booking.issueDescription.length > 100 ? '...' : '' }}</p>
           </div>
-          
+
           <div class="job-services">
             <span class="service-tag">{{ booking.serviceName }}</span>
           </div>
-          
+
           <div class="job-footer">
             <span class="job-time">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -104,7 +77,7 @@
               {{ formatDate(booking.appointmentDate) }}
             </span>
           </div>
-          
+
           <!-- Action Buttons -->
           <div class="booking-actions">
             <button class="btn-confirm" (click)="confirmBooking(booking, $event)" title="Accept booking">
@@ -122,7 +95,7 @@
             </button>
           </div>
         </div>
-        
+
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && pendingBookings.length === 0">
           <div class="empty-icon">📋</div>
@@ -144,14 +117,20 @@
         <span class="column-count">{{ acceptedBookings.length }}</span>
       </div>
       <div class="column-content">
+        <!-- Loading state -->
+        <div class="loading-state" *ngIf="isLoadingRealBookings">
+          <div class="loading-spinner"></div>
+          <p>Loading bookings...</p>
+        </div>
+
         <!-- Real Accepted Bookings -->
-        <div class="job-card" 
-             *ngFor="let booking of acceptedBookings"
+        <div class="job-card"
+             *ngFor="let booking of acceptedBookings; trackBy: trackByBookingId"
              (click)="viewBookingDetails(booking)">
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)" 
-                   [alt]="booking.customerName" 
+              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
+                   [alt]="booking.customerName"
                    class="customer-avatar">
               <div class="customer-info">
                 <span class="customer-name">{{ booking.customerName }}</span>
@@ -162,7 +141,7 @@
               {{ getUrgencyLabel(booking.urgency) }}
             </span>
           </div>
-          
+
           <div class="job-vehicle">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
@@ -171,15 +150,15 @@
             </svg>
             <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
-          
+
           <div class="job-complaint" *ngIf="booking.issueDescription">
             <p>{{ booking.issueDescription | slice:0:100 }}{{ booking.issueDescription.length > 100 ? '...' : '' }}</p>
           </div>
-          
+
           <div class="job-services">
             <span class="service-tag">{{ booking.serviceName }}</span>
           </div>
-          
+
           <div class="job-footer">
             <span class="job-time">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -191,9 +170,9 @@
             <span class="status-badge accepted">Confirmed</span>
           </div>
         </div>
-        
+
         <!-- Empty state -->
-        <div class="empty-state" *ngIf="acceptedBookings.length === 0">
+        <div class="empty-state" *ngIf="!isLoadingRealBookings && acceptedBookings.length === 0">
           <div class="empty-icon">📅</div>
           <p>No upcoming appointments</p>
         </div>
@@ -212,14 +191,20 @@
         <span class="column-count">{{ inProgressBookings.length }}</span>
       </div>
       <div class="column-content">
+        <!-- Loading state -->
+        <div class="loading-state" *ngIf="isLoadingRealBookings">
+          <div class="loading-spinner"></div>
+          <p>Loading bookings...</p>
+        </div>
+
         <!-- Real In Progress Bookings -->
-        <div class="job-card" 
-             *ngFor="let booking of inProgressBookings"
+        <div class="job-card"
+             *ngFor="let booking of inProgressBookings; trackBy: trackByBookingId"
              (click)="viewBookingDetails(booking)">
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)" 
-                   [alt]="booking.customerName" 
+              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
+                   [alt]="booking.customerName"
                    class="customer-avatar">
               <div class="customer-info">
                 <span class="customer-name">{{ booking.customerName }}</span>
@@ -230,7 +215,7 @@
               {{ getUrgencyLabel(booking.urgency) }}
             </span>
           </div>
-          
+
           <div class="job-vehicle">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
@@ -239,7 +224,7 @@
             </svg>
             <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
-          
+
           <!-- Progress Bar -->
           <div class="progress-section">
             <div class="progress-label">
@@ -250,11 +235,11 @@
               <div class="progress-fill" style="width: 60%"></div>
             </div>
           </div>
-          
+
           <div class="job-services">
             <span class="service-tag">{{ booking.serviceName }}</span>
           </div>
-          
+
           <div class="job-footer">
             <span class="job-time">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -264,10 +249,20 @@
               ETA: {{ formatDate(booking.appointmentDate) }}
             </span>
           </div>
+
+          <!-- Mark as Ready button -->
+          <div class="booking-actions">
+            <button class="btn-ready" (click)="markAsReady(booking, $event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Mark as Ready
+            </button>
+          </div>
         </div>
-        
+
         <!-- Empty state -->
-        <div class="empty-state" *ngIf="inProgressBookings.length === 0">
+        <div class="empty-state" *ngIf="!isLoadingRealBookings && inProgressBookings.length === 0">
           <div class="empty-icon">🔧</div>
           <p>No jobs in progress</p>
         </div>
@@ -284,54 +279,69 @@
           </svg>
           <span>Ready for Pickup</span>
         </div>
-        <span class="column-count">{{ readyJobs.length }}</span>
+        <span class="column-count">{{ readyForPickupBookings.length }}</span>
       </div>
       <div class="column-content">
-        <div class="job-card" 
-             *ngFor="let job of readyJobs" 
-             draggable="true"
-             (dragstart)="onDragStart($event, job)"
-             (dragend)="onDragEnd()"
-             (click)="viewJobDetails(job.id)">
+        <div class="job-card"
+             *ngFor="let booking of readyForPickupBookings; trackBy: trackByBookingId">
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <div class="customer-avatar-placeholder">
+                {{ booking.customerName.charAt(0) || 'C' }}
+              </div>
               <div class="customer-info">
-                <span class="customer-name">{{ job.customer.name }}</span>
-                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+                <span class="customer-name">{{ booking.customerName }}</span>
+                <span class="job-id">#{{ booking.id }}</span>
               </div>
             </div>
             <span class="status-badge ready">Ready</span>
           </div>
-          
+
           <div class="job-vehicle">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
               <circle cx="7.5" cy="17.5" r="1.5"/>
               <circle cx="16.5" cy="17.5" r="1.5"/>
             </svg>
-            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+            <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
-          
-          <div class="invoice-info" *ngIf="job.invoice">
-            <div class="invoice-amount">
-              <span class="label">Total Amount:</span>
-              <span class="amount">{{ job.invoice.quote.total | currency:'EGP':'symbol':'1.0-0' }}</span>
-            </div>
-            <div class="payment-status" [ngClass]="job.invoice.paymentStatus">
-              {{ job.invoice.paymentStatus }}
-            </div>
+
+          <div class="job-services">
+            <span class="service-tag">{{ booking.serviceName }}</span>
           </div>
-          
+
           <div class="job-footer">
-            <button class="notify-btn">
+            <span class="job-time">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Ready since: {{ formatDate(booking.appointmentDate) }}
+            </span>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="booking-actions booking-actions-dual">
+            <button class="btn-notify" (click)="notifyCustomer(booking, $event)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
               Notify Customer
             </button>
+            <button class="btn-complete" (click)="completeBooking(booking, $event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Complete
+            </button>
           </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" *ngIf="!isLoadingRealBookings && readyForPickupBookings.length === 0">
+          <div class="empty-icon">✅</div>
+          <p>No vehicles ready for pickup</p>
         </div>
       </div>
     </div>
@@ -346,46 +356,51 @@
           </svg>
           <span>Completed</span>
         </div>
-        <span class="column-count">{{ completedJobs.length }}</span>
+        <span class="column-count">{{ completedBookings.length }}</span>
       </div>
       <div class="column-content">
-        <div class="job-card completed" 
-             *ngFor="let job of completedJobs" 
-             (click)="viewJobDetails(job.id)">
+        <div class="job-card"
+             *ngFor="let booking of completedBookings; trackBy: trackByBookingId">
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <div class="customer-avatar-placeholder">
+                {{ booking.customerName.charAt(0) || 'C' }}
+              </div>
               <div class="customer-info">
-                <span class="customer-name">{{ job.customer.name }}</span>
-                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+                <span class="customer-name">{{ booking.customerName }}</span>
+                <span class="job-id">#{{ booking.id }}</span>
               </div>
             </div>
             <span class="status-badge completed">✓ Done</span>
           </div>
-          
+
           <div class="job-vehicle">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
               <circle cx="7.5" cy="17.5" r="1.5"/>
               <circle cx="16.5" cy="17.5" r="1.5"/>
             </svg>
-            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+            <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
-          
-          <div class="completion-info">
-            <span class="completion-date">
+
+          <div class="job-services">
+            <span class="service-tag">{{ booking.serviceName }}</span>
+          </div>
+
+          <div class="job-footer">
+            <span class="job-time">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
-              Completed: {{ formatDate(job.pickupDate || job.updatedAt) }}
+              Completed: {{ formatDate(booking.appointmentDate) }}
             </span>
           </div>
-          
-          <div class="job-footer">
-            <span class="revenue">
-              Revenue: {{ (job.invoice?.quote?.total || 0) | currency:'EGP':'symbol':'1.0-0' }}
-            </span>
-          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" *ngIf="!isLoadingRealBookings && completedBookings.length === 0">
+          <div class="empty-icon">✓</div>
+          <p>No completed bookings</p>
         </div>
       </div>
     </div>

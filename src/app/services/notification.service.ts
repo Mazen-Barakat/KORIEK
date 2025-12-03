@@ -69,16 +69,16 @@ export class NotificationService {
       read: false,
     };
     const notifications = [newNotification, ...this.notificationsSubject.value];
-    
+
     // Emit the updated notifications array - this triggers UI updates via subscriptions
     this.notificationsSubject.next(notifications);
-    
+
     // Update unread count - this triggers the badge update on the bell
     this.updateUnreadCount();
-    
+
     // Show browser notification if permission granted
     this.showBrowserNotification(newNotification);
-    
+
     // Log for debugging
     console.log('🔔 New notification added:', newNotification.title, '| Total unread:', this.unreadCountSubject.value);
   }
@@ -151,7 +151,7 @@ export class NotificationService {
       map((response: any) => {
         // Handle both direct array response and wrapped response
         const notificationsData = response.data || response || [];
-        
+
         if (!Array.isArray(notificationsData)) {
           console.warn('⚠️ Unexpected notifications response format:', response);
           return [];
@@ -160,7 +160,7 @@ export class NotificationService {
         console.log(`📥 Fetched ${notificationsData.length} notifications from API`);
 
         // Map backend NotificationDto to AppNotification and add to the service
-        const appNotifications: AppNotification[] = notificationsData.map((dto: NotificationDto) => 
+        const appNotifications: AppNotification[] = notificationsData.map((dto: NotificationDto) =>
           this.mapDtoToAppNotification(dto)
         );
 
@@ -190,6 +190,8 @@ export class NotificationService {
       case NotificationType.BookingRejected:
       case NotificationType.BookingCancelled:
       case NotificationType.BookingCompleted:
+      case NotificationType.BookingReadyForPickup:
+      case NotificationType.BookingInProgress:
       case NotificationType.JobStatusChanged:
         type = 'booking';
         break;
@@ -216,9 +218,12 @@ export class NotificationService {
         case NotificationType.BookingCreated:
         case NotificationType.PaymentReceived:
         case NotificationType.BookingCancelled:
+        case NotificationType.BookingReadyForPickup:
+        case NotificationType.BookingCompleted:
           priority = 'high';
           break;
         case NotificationType.BookingAccepted:
+        case NotificationType.BookingInProgress:
         case NotificationType.QuoteSent:
         case NotificationType.QuoteApproved:
           priority = 'medium';
@@ -275,7 +280,11 @@ export class NotificationService {
       case NotificationType.BookingCancelled:
         return 'Booking Cancelled';
       case NotificationType.BookingCompleted:
-        return 'Booking Completed';
+        return 'Service Completed ✅';
+      case NotificationType.BookingReadyForPickup:
+        return 'Vehicle Ready for Pickup 🚗';
+      case NotificationType.BookingInProgress:
+        return 'Service In Progress 🔧';
       case NotificationType.PaymentReceived:
         return 'Payment Received';
       case NotificationType.QuoteSent:
