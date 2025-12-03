@@ -1,0 +1,32 @@
+<div class="popup-overlay" *ngIf="isOpen" (click)="onBackdropClick($event)">
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="popup-header">
+      <h3 class="popup-title">{{ title }}</h3>
+    </div>
+
+    <!-- Body -->
+    <div class="popup-body">
+      <p class="popup-message">{{ message }}</p>
+    </div>
+
+    <!-- Footer with Actions -->
+    <div class="popup-footer">
+      <button 
+        class="popup-btn popup-btn-cancel" 
+        (click)="onCancel()"
+        type="button">
+        {{ cancelText }}
+      </button>
+      <button 
+        class="popup-btn popup-btn-confirm"
+        [class.danger]="confirmButtonClass === 'danger'"
+        [class.primary]="confirmButtonClass === 'primary'"
+        [class.success]="confirmButtonClass === 'success'"
+        (click)="onConfirm()"
+        type="button">
+        {{ confirmText }}
+      </button>
+    </div>
+  </div>
+</div>

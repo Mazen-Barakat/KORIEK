@@ -50,25 +50,31 @@
           </svg>
           <span>New Requests</span>
         </div>
-        <span class="column-count">{{ newJobs.length }}</span>
+        <span class="column-count">{{ pendingBookings.length }}</span>
       </div>
       <div class="column-content">
+        <!-- Loading state -->
+        <div class="loading-state" *ngIf="isLoadingRealBookings">
+          <div class="loading-spinner"></div>
+          <p>Loading bookings...</p>
+        </div>
+        
+        <!-- Real Bookings Cards -->
         <div class="job-card" 
-             *ngFor="let job of newJobs" 
-             draggable="true"
-             (dragstart)="onDragStart($event, job)"
-             (dragend)="onDragEnd()"
-             (click)="viewJobDetails(job.id)">
+             *ngFor="let booking of pendingBookings"
+             (click)="viewBookingDetails(booking)">
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)" 
+                   [alt]="booking.customerName" 
+                   class="customer-avatar">
               <div class="customer-info">
-                <span class="customer-name">{{ job.customer.name }}</span>
-                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+                <span class="customer-name">{{ booking.customerName }}</span>
+                <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
               </div>
             </div>
-            <span class="urgency-badge" [ngClass]="getUrgencyClass(job.urgency)">
-              {{ getUrgencyLabel(job.urgency) }}
+            <span class="urgency-badge" [ngClass]="getUrgencyClass(booking.urgency)">
+              {{ getUrgencyLabel(booking.urgency) }}
             </span>
           </div>
           
@@ -78,20 +84,15 @@
               <circle cx="7.5" cy="17.5" r="1.5"/>
               <circle cx="16.5" cy="17.5" r="1.5"/>
             </svg>
-            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+            <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
           
-          <div class="job-complaint">
-            <p>{{ job.customerComplaint }}</p>
+          <div class="job-complaint" *ngIf="booking.issueDescription">
+            <p>{{ booking.issueDescription | slice:0:100 }}{{ booking.issueDescription.length > 100 ? '...' : '' }}</p>
           </div>
           
           <div class="job-services">
-            <span class="service-tag" *ngFor="let service of job.requestedServices.slice(0, 2)">
-              {{ service }}
-            </span>
-            <span class="service-more" *ngIf="job.requestedServices.length > 2">
-              +{{ job.requestedServices.length - 2 }} more
-            </span>
+            <span class="service-tag">{{ booking.serviceName }}</span>
           </div>
           
           <div class="job-footer">
@@ -100,9 +101,32 @@
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
               </svg>
-              {{ formatDate(job.scheduledDate) }}
+              {{ formatDate(booking.appointmentDate) }}
             </span>
           </div>
+          
+          <!-- Action Buttons -->
+          <div class="booking-actions">
+            <button class="btn-confirm" (click)="confirmBooking(booking, $event)" title="Accept booking">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Confirm
+            </button>
+            <button class="btn-decline" (click)="declineBooking(booking, $event)" title="Decline booking">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              Decline
+            </button>
+          </div>
+        </div>
+        
+        <!-- Empty state -->
+        <div class="empty-state" *ngIf="!isLoadingRealBookings && pendingBookings.length === 0">
+          <div class="empty-icon">📋</div>
+          <p>No new requests</p>
         </div>
       </div>
     </div>
@@ -117,25 +141,25 @@
           </svg>
           <span>Upcoming</span>
         </div>
-        <span class="column-count">{{ upcomingJobs.length }}</span>
+        <span class="column-count">{{ acceptedBookings.length }}</span>
       </div>
       <div class="column-content">
+        <!-- Real Accepted Bookings -->
         <div class="job-card" 
-             *ngFor="let job of upcomingJobs" 
-             draggable="true"
-             (dragstart)="onDragStart($event, job)"
-             (dragend)="onDragEnd()"
-             (click)="viewJobDetails(job.id)">
+             *ngFor="let booking of acceptedBookings"
+             (click)="viewBookingDetails(booking)">
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)" 
+                   [alt]="booking.customerName" 
+                   class="customer-avatar">
               <div class="customer-info">
-                <span class="customer-name">{{ job.customer.name }}</span>
-                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+                <span class="customer-name">{{ booking.customerName }}</span>
+                <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
               </div>
             </div>
-            <span class="urgency-badge" [ngClass]="getUrgencyClass(job.urgency)">
-              {{ getUrgencyLabel(job.urgency) }}
+            <span class="urgency-badge" [ngClass]="getUrgencyClass(booking.urgency)">
+              {{ getUrgencyLabel(booking.urgency) }}
             </span>
           </div>
           
@@ -145,20 +169,15 @@
               <circle cx="7.5" cy="17.5" r="1.5"/>
               <circle cx="16.5" cy="17.5" r="1.5"/>
             </svg>
-            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+            <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
           
-          <div class="job-complaint">
-            <p>{{ job.customerComplaint }}</p>
+          <div class="job-complaint" *ngIf="booking.issueDescription">
+            <p>{{ booking.issueDescription | slice:0:100 }}{{ booking.issueDescription.length > 100 ? '...' : '' }}</p>
           </div>
           
           <div class="job-services">
-            <span class="service-tag" *ngFor="let service of job.requestedServices.slice(0, 2)">
-              {{ service }}
-            </span>
-            <span class="service-more" *ngIf="job.requestedServices.length > 2">
-              +{{ job.requestedServices.length - 2 }} more
-            </span>
+            <span class="service-tag">{{ booking.serviceName }}</span>
           </div>
           
           <div class="job-footer">
@@ -167,16 +186,16 @@
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
               </svg>
-              {{ formatDate(job.scheduledDate) }}
+              {{ formatDate(booking.appointmentDate) }}
             </span>
-            <span class="quote-status" *ngIf="job.quote">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
-              {{ job.quote.status }}
-            </span>
+            <span class="status-badge accepted">Confirmed</span>
           </div>
+        </div>
+        
+        <!-- Empty state -->
+        <div class="empty-state" *ngIf="acceptedBookings.length === 0">
+          <div class="empty-icon">📅</div>
+          <p>No upcoming appointments</p>
         </div>
       </div>
     </div>
@@ -190,25 +209,25 @@
           </svg>
           <span>In Progress</span>
         </div>
-        <span class="column-count">{{ inProgressJobs.length }}</span>
+        <span class="column-count">{{ inProgressBookings.length }}</span>
       </div>
       <div class="column-content">
+        <!-- Real In Progress Bookings -->
         <div class="job-card" 
-             *ngFor="let job of inProgressJobs" 
-             draggable="true"
-             (dragstart)="onDragStart($event, job)"
-             (dragend)="onDragEnd()"
-             (click)="viewJobDetails(job.id)">
+             *ngFor="let booking of inProgressBookings"
+             (click)="viewBookingDetails(booking)">
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="job.customer.avatar" [alt]="job.customer.name" class="customer-avatar">
+              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)" 
+                   [alt]="booking.customerName" 
+                   class="customer-avatar">
               <div class="customer-info">
-                <span class="customer-name">{{ job.customer.name }}</span>
-                <span class="job-id">#{{ job.id.slice(0, 8) }}</span>
+                <span class="customer-name">{{ booking.customerName }}</span>
+                <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
               </div>
             </div>
-            <span class="urgency-badge" [ngClass]="getUrgencyClass(job.urgency)">
-              {{ getUrgencyLabel(job.urgency) }}
+            <span class="urgency-badge" [ngClass]="getUrgencyClass(booking.urgency)">
+              {{ getUrgencyLabel(booking.urgency) }}
             </span>
           </div>
           
@@ -218,26 +237,22 @@
               <circle cx="7.5" cy="17.5" r="1.5"/>
               <circle cx="16.5" cy="17.5" r="1.5"/>
             </svg>
-            <span>{{ job.vehicle.year }} {{ job.vehicle.make }} {{ job.vehicle.model }}</span>
+            <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
           
           <!-- Progress Bar -->
           <div class="progress-section">
             <div class="progress-label">
-              <span>{{ getStageLabel(job.stage) }}</span>
-              <span>{{ getStageProgress(job.stage) }}%</span>
+              <span>Repairing</span>
+              <span>60%</span>
             </div>
             <div class="progress-bar">
-              <div class="progress-fill" [style.width.%]="getStageProgress(job.stage)"></div>
+              <div class="progress-fill" style="width: 60%"></div>
             </div>
           </div>
           
-          <div class="job-technician" *ngIf="job.assignedTechnicianName">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-            <span>{{ job.assignedTechnicianName }}</span>
+          <div class="job-services">
+            <span class="service-tag">{{ booking.serviceName }}</span>
           </div>
           
           <div class="job-footer">
@@ -246,9 +261,15 @@
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
               </svg>
-              ETA: {{ formatDate(job.estimatedCompletionDate || job.scheduledDate) }}
+              ETA: {{ formatDate(booking.appointmentDate) }}
             </span>
           </div>
+        </div>
+        
+        <!-- Empty state -->
+        <div class="empty-state" *ngIf="inProgressBookings.length === 0">
+          <div class="empty-icon">🔧</div>
+          <p>No jobs in progress</p>
         </div>
       </div>
     </div>
@@ -370,3 +391,15 @@
     </div>
   </div>
 </div>
+
+<!-- Decline Confirmation Popup -->
+<app-confirmation-popup
+  [isOpen]="showDeclineConfirmation"
+  [title]="'Decline Booking'"
+  [message]="'Are you sure you want to decline this booking request? This action cannot be undone and the customer will be notified.'"
+  [confirmText]="'Yes, Decline'"
+  [cancelText]="'Cancel'"
+  [confirmButtonClass]="'danger'"
+  (confirmed)="onDeclineConfirmed()"
+  (cancelled)="onDeclineCancelled()">
+</app-confirmation-popup>

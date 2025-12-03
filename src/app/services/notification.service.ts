@@ -215,6 +215,7 @@ export class NotificationService {
       switch (dto.type) {
         case NotificationType.BookingCreated:
         case NotificationType.PaymentReceived:
+        case NotificationType.BookingCancelled:
           priority = 'high';
           break;
         case NotificationType.BookingAccepted:

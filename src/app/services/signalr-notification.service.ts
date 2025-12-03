@@ -304,6 +304,7 @@ export class SignalRNotificationService {
       switch (dto.type) {
         case NotificationType.BookingCreated:
         case NotificationType.PaymentReceived:
+        case NotificationType.BookingCancelled:
           priority = 'high';
           break;
         case NotificationType.BookingAccepted:
@@ -400,6 +401,14 @@ export class SignalRNotificationService {
           }
         },
       });
+      // Dispatch event so job-board can refresh and show new booking immediately
+      this.dispatchBookingStatusChangedEvent(dto.bookingId, 'created');
+    }
+    // Show toast for booking cancelled (notify workshop when car owner cancels)
+    else if (dto.type === NotificationType.BookingCancelled) {
+      this.toastService.warning(title, message, 6000);
+      // Dispatch event so job-board can refresh and remove cancelled booking
+      this.dispatchBookingStatusChangedEvent(dto.bookingId, 'cancelled');
     }
     // Show toast for payment received
     else if (dto.type === NotificationType.PaymentReceived && dto.priority === 'high') {
@@ -416,6 +425,20 @@ export class SignalRNotificationService {
     // Show toast for high-priority notifications
     else if (appNotification.priority === 'high') {
       this.toastService.warning(title, message, 5000);
+    }
+  }
+
+  /**
+   * Dispatch a custom event when booking status changes via SignalR
+   * This allows components like job-board to react to real-time updates
+   */
+  private dispatchBookingStatusChangedEvent(bookingId: number | undefined, status: string): void {
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('booking:status-changed', {
+        detail: { bookingId, status }
+      });
+      window.dispatchEvent(event);
+      console.log(`📢 Dispatched booking:status-changed event for booking ${bookingId} with status ${status}`);
     }
   }
 

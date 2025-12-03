@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AddVehicleFormComponent } from '../add-vehicle-form/add-vehicle-form.component';
+import { ConfirmationPopupComponent } from '../shared/confirmation-popup/confirmation-popup.component';
 import { Router, RouterLink } from '@angular/router';
 import { CarsService } from '../../services/cars.service';
 import { CarExpenseService, CreateCarExpenseRequest, ExpenseType } from '../../services/car-expense.service';
@@ -57,6 +58,7 @@ interface UpcomingBooking {
   status: string;
   urgency: 'Urgent' | 'Scheduled';
   daysUntil: number;
+  workshopId?: number;
 }
 
 interface NewExpenseForm {
@@ -71,7 +73,7 @@ interface NewExpenseForm {
 @Component({
   selector: 'app-my-vehicles',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddVehicleFormComponent, RouterLink],
+  imports: [CommonModule, FormsModule, AddVehicleFormComponent, RouterLink, ConfirmationPopupComponent],
   templateUrl: './my-vehicles.component.html',
   styleUrls: ['./my-vehicles.component.css']
 })
@@ -153,6 +155,17 @@ export class MyVehiclesComponent implements OnInit {
   pageSize = 5; // Frontend pagination page size
   totalBookings = 0;
   loadingCarBookings = false;
+  cancellingBookingIds: Set<number> = new Set();
+
+  // Confirmation popup state
+  showCancelPopup = false;
+  bookingToCancel: UpcomingBooking | null = null;
+
+  // Getter for popup message
+  get cancelPopupMessage(): string {
+    if (!this.bookingToCancel) return '';
+    return `Are you sure you want to cancel the appointment for "${this.bookingToCancel.serviceName}" scheduled on ${this.formatDate(this.bookingToCancel.appointmentDate)}?`;
+  }
 
   constructor(
     private router: Router,
@@ -875,7 +888,8 @@ export class MyVehiclesComponent implements OnInit {
                 appointmentDate: appointmentDate,
                 status: booking.status,
                 urgency: urgency,
-                daysUntil: daysUntil
+                daysUntil: daysUntil,
+                workshopId: booking.workShopProfileId
               });
             });
           }
@@ -986,7 +1000,8 @@ export class MyVehiclesComponent implements OnInit {
                 appointmentDate: appointmentDate,
                 status: booking.status,
                 urgency: urgency,
-                daysUntil: daysUntil
+                daysUntil: daysUntil,
+                workshopId: booking.workShopProfileId
               };
             });
 
@@ -1089,6 +1104,94 @@ export class MyVehiclesComponent implements OnInit {
   formatDate(date: Date): string {
     const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
     return date.toLocaleDateString('en-US', options);
+  }
+
+  // Open cancel confirmation popup
+  openCancelPopup(booking: UpcomingBooking, event: Event): void {
+    event.stopPropagation();
+    
+    if (this.cancellingBookingIds.has(booking.id)) {
+      return; // Already cancelling
+    }
+
+    this.bookingToCancel = booking;
+    this.showCancelPopup = true;
+  }
+
+  // Handle popup cancellation (user clicks Cancel)
+  onCancelPopupClosed(): void {
+    this.showCancelPopup = false;
+    this.bookingToCancel = null;
+  }
+
+  // Handle popup confirmation (user clicks Delete)
+  onCancelPopupConfirmed(): void {
+    if (!this.bookingToCancel) return;
+
+    const booking = this.bookingToCancel;
+    this.showCancelPopup = false;
+    this.bookingToCancel = null;
+
+    this.cancellingBookingIds.add(booking.id);
+    this.cdr.detectChanges();
+
+    const apiUrl = 'https://localhost:44316/api';
+    this.bookingService.http.put(`${apiUrl}/Booking/Update-Booking-Status`, {
+      id: booking.id,
+      status: 'Cancelled'
+    }).subscribe({
+      next: (response: any) => {
+        console.log('Booking cancelled successfully:', response);
+        this.cancellingBookingIds.delete(booking.id);
+        
+        // Remove the cancelled booking from the list immediately
+        this.carBookings = this.carBookings.filter(b => b.id !== booking.id);
+        this.upcomingBookings = this.upcomingBookings.filter(b => b.id !== booking.id);
+        this.totalBookings = Math.max(0, this.totalBookings - 1);
+        
+        // Send notification to the workshop about the cancellation
+        this.sendCancellationNotificationToWorkshop(booking);
+        
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error('Error cancelling booking:', err);
+        this.cancellingBookingIds.delete(booking.id);
+        
+        // Show error message using alert (could be replaced with toast)
+        alert('Failed to cancel booking. Please try again.');
+        
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // Send notification to workshop when booking is cancelled
+  private sendCancellationNotificationToWorkshop(booking: UpcomingBooking): void {
+    if (!booking.workshopId) {
+      console.warn('No workshopId found for booking, cannot send notification');
+      return;
+    }
+
+    const apiUrl = 'https://localhost:44316/api';
+    const notificationPayload = {
+      workshopProfileId: booking.workshopId,
+      bookingId: booking.id,
+      title: 'Booking Cancelled',
+      message: `The booking for "${booking.serviceName}" scheduled on ${this.formatDate(booking.appointmentDate)} has been cancelled by the car owner.`,
+      type: 3, // NotificationType.BookingCancelled
+      priority: 'high'
+    };
+
+    this.bookingService.http.post(`${apiUrl}/Notification/send`, notificationPayload).subscribe({
+      next: () => {
+        console.log('Cancellation notification sent to workshop successfully');
+      },
+      error: (err: any) => {
+        console.error('Error sending cancellation notification to workshop:', err);
+        // Don't block the user - notification failure shouldn't affect cancellation
+      }
+    });
   }
 
   // Get service icon based on service name
