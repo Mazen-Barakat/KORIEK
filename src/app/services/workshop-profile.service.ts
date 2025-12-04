@@ -2,7 +2,18 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, shareReplay, tap, catchError } from 'rxjs/operators';
-import { WorkshopProfileData, WorkShopWorkingHoursAPI, WorkingHours, WorkshopService, CategoryAPIResponse, CategoryData, SubcategoryAPIResponse, SubcategoryData, ServiceAPIResponse, ServiceData } from '../models/workshop-profile.model';
+import {
+  WorkshopProfileData,
+  WorkShopWorkingHoursAPI,
+  WorkingHours,
+  WorkshopService,
+  CategoryAPIResponse,
+  CategoryData,
+  SubcategoryAPIResponse,
+  SubcategoryData,
+  ServiceAPIResponse,
+  ServiceData,
+} from '../models/workshop-profile.model';
 
 @Injectable({
   providedIn: 'root',
@@ -12,22 +23,67 @@ export class WorkshopProfileService {
 
   // WorkShopProfile endpoints (separate controller)
   private profileApiBase = 'https://localhost:44316/api/WorkShopProfile';
-  
+
   // Category API endpoint
   private categoryApiUrl = 'https://localhost:44316/api/Category';
-  
+
   // Subcategory API endpoint
   private subcategoryApiUrl = 'https://localhost:44316/api/Subcategory';
-  
+
   // Service API endpoint
   private serviceApiUrl = 'https://localhost:44316/api/Service';
-  
+
   // Cache for categories, subcategories, and services
   private categoriesCache$?: Observable<CategoryAPIResponse>;
   private subcategoriesCache = new Map<number, Observable<SubcategoryAPIResponse>>();
   private servicesCache = new Map<number, Observable<ServiceAPIResponse>>();
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Get all workshop profiles with filtering and pagination
+   * Calls GET /api/WorkShopProfile/Get-All-WorkShop-Profiles
+   */
+  getAllWorkshopProfiles(params?: {
+    name?: string;
+    latitude?: number;
+    longitude?: number;
+    country?: string;
+    governorate?: string;
+    city?: string;
+    descRating?: boolean;
+    workShopType?: string;
+    origin?: string;
+    pageNumber?: number;
+    pageSize?: number;
+  }): Observable<any> {
+    const queryParams = new URLSearchParams();
+
+    if (params?.name) queryParams.set('Name', params.name);
+    if (params?.latitude !== undefined) queryParams.set('Latitude', String(params.latitude));
+    if (params?.longitude !== undefined) queryParams.set('Longitude', String(params.longitude));
+    if (params?.country) queryParams.set('Country', params.country);
+    if (params?.governorate) queryParams.set('Governorate', params.governorate);
+    if (params?.city) queryParams.set('City', params.city);
+    if (params?.descRating !== undefined) queryParams.set('DESCRating', String(params.descRating));
+    if (params?.workShopType) queryParams.set('WorkShopType', params.workShopType);
+    if (params?.origin) queryParams.set('Origin', params.origin);
+    queryParams.set('PageNumber', String(params?.pageNumber ?? 1));
+    queryParams.set('PageSize', String(params?.pageSize ?? 10));
+
+    const url = `${this.profileApiBase}/Get-All-WorkShop-Profiles?${queryParams.toString()}`;
+    console.log('Get all workshop profiles URL:', url);
+
+    return this.http.get<any>(url).pipe(
+      tap((response: any) => {
+        console.log('Get all workshop profiles response:', response);
+      }),
+      catchError((error) => {
+        console.error('Get all workshop profiles error:', error);
+        throw error;
+      })
+    );
+  }
 
   /**
    * Get workshop profile by ID
@@ -292,7 +348,11 @@ export class WorkshopProfileService {
   /**
    * Update a workshop service
    */
-  updateWorkshopService(workshopId: number, serviceId: number, service: WorkshopService): Observable<any> {
+  updateWorkshopService(
+    workshopId: number,
+    serviceId: number,
+    service: WorkshopService
+  ): Observable<any> {
     return this.http.put(`${this.apiUrl}/${workshopId}/services/${serviceId}`, service);
   }
 
@@ -318,58 +378,61 @@ export class WorkshopProfileService {
     if (forceRefresh) {
       this.categoriesCache$ = undefined;
     }
-    
+
     // Return cached observable if exists
     if (this.categoriesCache$) {
       return this.categoriesCache$;
     }
-    
+
     // Create new observable with caching
     this.categoriesCache$ = this.http.get<CategoryAPIResponse>(this.categoryApiUrl).pipe(
-      tap(response => {
+      tap((response) => {
         console.log('Categories loaded from API:', response);
       }),
       shareReplay(1) // Share result and replay to late subscribers
     );
-    
+
     return this.categoriesCache$;
   }
-  
+
   /**
    * Clear categories cache
    */
   clearCategoriesCache(): void {
     this.categoriesCache$ = undefined;
   }
-  
+
   /**
    * Get subcategories by category ID with caching
    */
-  getSubcategoriesByCategory(categoryId: number, forceRefresh = false): Observable<SubcategoryAPIResponse> {
+  getSubcategoriesByCategory(
+    categoryId: number,
+    forceRefresh = false
+  ): Observable<SubcategoryAPIResponse> {
     // Clear cache if force refresh
     if (forceRefresh) {
       this.subcategoriesCache.delete(categoryId);
     }
-    
+
     // Return cached observable if exists
     if (this.subcategoriesCache.has(categoryId)) {
       return this.subcategoriesCache.get(categoryId)!;
     }
-    
+
     // Create new observable with caching
-    const subcategories$ = this.http.get<SubcategoryAPIResponse>(
-      `${this.subcategoryApiUrl}/ByCategory/${categoryId}`
-    ).pipe(
-      tap(response => {
-        console.log(`Subcategories for category ${categoryId} loaded from API:`, response);
-      }),
-      shareReplay(1)
-    );
-    
+    const subcategories$ = this.http
+      .get<SubcategoryAPIResponse>(`${this.subcategoryApiUrl}/ByCategory/${categoryId}`)
+      .pipe(
+        tap((response) => {
+          console.log(`Subcategories for category ${categoryId} loaded from API:`, response);
+        }),
+        shareReplay(1)
+      );
+
     this.subcategoriesCache.set(categoryId, subcategories$);
     return subcategories$;
   }
-  
+
   /**
    * Clear subcategories cache
    */
@@ -380,35 +443,38 @@ export class WorkshopProfileService {
       this.subcategoriesCache.clear();
     }
   }
-  
+
   /**
    * Get services by subcategory ID with caching
    */
-  getServicesBySubcategory(subcategoryId: number, forceRefresh = false): Observable<ServiceAPIResponse> {
+  getServicesBySubcategory(
+    subcategoryId: number,
+    forceRefresh = false
+  ): Observable<ServiceAPIResponse> {
     // Clear cache if force refresh
     if (forceRefresh) {
       this.servicesCache.delete(subcategoryId);
     }
-    
+
     // Return cached observable if exists
     if (this.servicesCache.has(subcategoryId)) {
       return this.servicesCache.get(subcategoryId)!;
     }
-    
+
     // Create new observable with caching
-    const services$ = this.http.get<ServiceAPIResponse>(
-      `${this.serviceApiUrl}/subcategory/${subcategoryId}`
-    ).pipe(
-      tap(response => {
-        console.log(`Services for subcategory ${subcategoryId} loaded from API:`, response);
-      }),
-      shareReplay(1)
-    );
-    
+    const services$ = this.http
+      .get<ServiceAPIResponse>(`${this.serviceApiUrl}/subcategory/${subcategoryId}`)
+      .pipe(
+        tap((response) => {
+          console.log(`Services for subcategory ${subcategoryId} loaded from API:`, response);
+        }),
+        shareReplay(1)
+      );
+
     this.servicesCache.set(subcategoryId, services$);
     return services$;
   }
-  
+
   /**
    * Clear services cache
    */
@@ -427,7 +493,7 @@ export class WorkshopProfileService {
   /**
    * Search for workshops by service ID, vehicle origin, and appointment date.
    * Calls GET /api/WorkshopService/Search-Workshops-By-Service-And-Origin
-   * 
+   *
    * @param serviceId The ID of the selected service
    * @param origin The vehicle origin (e.g., 'Germany', 'Japan', 'Italy', 'General')
    * @param appointmentDate The appointment date/time in ISO format or formatted string
@@ -454,7 +520,7 @@ export class WorkshopProfileService {
     params.set('ServiceId', String(serviceId));
     params.set('Origin', origin);
     params.set('AppointmentDate', appointmentDate);
-    
+
     // Optional parameters
     if (options?.city) {
       params.set('City', options.city);
@@ -469,9 +535,9 @@ export class WorkshopProfileService {
     params.set('PageSize', String(options?.pageSize ?? 10));
 
     const url = `https://localhost:44316/api/WorkshopService/Search-Workshops-By-Service-And-Origin?${params.toString()}`;
-    
+
     console.log('Workshop search URL:', url);
-    
+
     return this.http.get<any>(url).pipe(
       tap((response: any) => {
         console.log('Workshop search raw response:', response);

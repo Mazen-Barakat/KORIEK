@@ -1,27 +1,101 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  NgZone,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, forkJoin, of } from 'rxjs';
+import { takeUntil, catchError } from 'rxjs/operators';
 
+// API Response interfaces
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+interface WorkshopProfileApi {
+  id: number;
+  name: string;
+  description: string;
+  numbersOfTechnicians: number;
+  phoneNumber: string;
+  rating: number;
+  country: string;
+  governorate: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  licenceImageUrl: string;
+  logoImageUrl: string;
+  verificationStatus: string;
+  workShopType: string;
+}
+
+interface WorkingHoursApi {
+  id: number;
+  day: string;
+  from: string;
+  to: string;
+  isClosed: boolean;
+  workShopProfileId: number;
+}
+
+interface WorkshopServiceApi {
+  id: number;
+  serviceId: number;
+  workShopProfileId: number;
+  duration: number;
+  minPrice: number;
+  maxPrice: number;
+  origin: string;
+  serviceName: string;
+  serviceDescription: string;
+}
+
+interface WorkshopServicesResponse {
+  items: WorkshopServiceApi[];
+  pageNumber: number;
+  pageSize: number;
+  totalRecords: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+interface WorkshopPhotoApi {
+  id: number;
+  photoUrl: string;
+  workShopProfileId: number;
+}
+
+interface ReviewApi {
+  rating: number;
+  comment: string;
+  paidAmount: number;
+  createdAt: string;
+}
+
+// Component interfaces
 interface WorkshopDetails {
   id: number;
-  workshopProfileId: number;
   name: string;
   description: string;
   rating: number;
   reviewCount: number;
-  address: string;
   city: string;
+  governorate: string;
+  country: string;
   phone: string;
-  email: string;
-  website?: string;
   logoImageUrl: string;
   coverImageUrl: string;
   isOpen: boolean;
   workShopType: string;
-  services: string[];
-  priceRange: string;
   latitude: number;
   longitude: number;
   verificationStatus: string;
@@ -29,6 +103,8 @@ interface WorkshopDetails {
   gallery: string[];
   reviews: Review[];
   amenities: string[];
+  numbersOfTechnicians: number;
+  distance?: number;
 }
 
 interface WorkingHours {
@@ -36,6 +112,17 @@ interface WorkingHours {
   openTime: string;
   closeTime: string;
   isClosed: boolean;
+}
+
+interface WorkshopService {
+  id: number;
+  serviceId: number;
+  serviceName: string;
+  serviceDescription: string;
+  duration: number;
+  minPrice: number;
+  maxPrice: number;
+  origin: string;
 }
 
 interface Review {
@@ -46,6 +133,13 @@ interface Review {
   comment: string;
   date: string;
   carModel?: string;
+  paidAmount?: number;
+}
+
+interface RatingBar {
+  stars: number;
+  percentage: number;
+  count: number;
 }
 
 @Component({
@@ -53,26 +147,35 @@ interface Review {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './workshop-details.component.html',
-  styleUrl: './workshop-details.component.css'
+  styleUrls: ['./workshop-details.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkshopDetailsComponent implements OnInit, OnDestroy {
+  private readonly API_BASE_URL = 'https://localhost:44316/api';
+
   workshop: WorkshopDetails | null = null;
+  workshopServices: WorkshopService[] = [];
   isLoading = true;
   errorMessage = '';
   activeTab: 'overview' | 'services' | 'reviews' | 'gallery' = 'overview';
   selectedImage: string | null = null;
-  
+  isFavorited = false;
+  ratingBars: RatingBar[] = [];
+  currentHeroImage: string | null = null;
+
   private destroy$ = new Subject<void>();
   private workshopId: number = 0;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
+    this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.workshopId = +params['id'];
       this.loadWorkshopDetails();
     });
@@ -85,213 +188,225 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
 
   loadWorkshopDetails(): void {
     this.isLoading = true;
-    // For demo, load mock data directly
-    this.loadMockWorkshopDetails();
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    // Fetch all data in parallel
+    forkJoin({
+      profile: this.http
+        .get<ApiResponse<WorkshopProfileApi>>(
+          `${this.API_BASE_URL}/WorkShopProfile/Get-WorkShop-ById-Profile?id=${this.workshopId}`
+        )
+        .pipe(
+          catchError((err) => {
+            console.error('Error loading workshop profile:', err);
+            return of(null);
+          })
+        ),
+      workingHours: this.http
+        .get<ApiResponse<WorkingHoursApi[]>>(
+          `${this.API_BASE_URL}/WorkShopWorkingHours/workshop/${this.workshopId}`
+        )
+        .pipe(
+          catchError((err) => {
+            console.error('Error loading working hours:', err);
+            return of(null);
+          })
+        ),
+      services: this.http
+        .get<ApiResponse<WorkshopServicesResponse>>(
+          `${this.API_BASE_URL}/WorkshopService/Get-Workshop-Services-By-Profile-ID?Id=${this.workshopId}&PageNumber=1&PageSize=50`
+        )
+        .pipe(
+          catchError((err) => {
+            console.error('Error loading services:', err);
+            return of(null);
+          })
+        ),
+      photos: this.http
+        .get<ApiResponse<WorkshopPhotoApi[]>>(
+          `${this.API_BASE_URL}/WorkShopPhoto/${this.workshopId}`
+        )
+        .pipe(
+          catchError((err) => {
+            console.error('Error loading photos:', err);
+            return of(null);
+          })
+        ),
+      reviews: this.http
+        .get<ApiResponse<ReviewApi[]>>(`${this.API_BASE_URL}/Review/all-ratings/${this.workshopId}`)
+        .pipe(
+          catchError((err) => {
+            console.error('Error loading reviews:', err);
+            return of(null);
+          })
+        ),
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (results) => {
+          if (results.profile?.success && results.profile.data) {
+            const profile = results.profile.data;
+
+            // Map working hours
+            const workingHours: WorkingHours[] =
+              results.workingHours?.success && results.workingHours.data
+                ? results.workingHours.data.map((wh) => ({
+                    day: wh.day,
+                    openTime: this.formatTime(wh.from),
+                    closeTime: this.formatTime(wh.to),
+                    isClosed: wh.isClosed,
+                  }))
+                : this.getDefaultWorkingHours();
+
+            // Map gallery photos
+            const gallery: string[] =
+              results.photos?.success && results.photos.data && results.photos.data.length > 0
+                ? results.photos.data.map((photo) => this.getFullImageUrl(photo.photoUrl))
+                : [];
+
+            // Map services
+            this.workshopServices =
+              results.services?.success && results.services.data?.items
+                ? results.services.data.items.map((service) => ({
+                    id: service.id,
+                    serviceId: service.serviceId,
+                    serviceName: service.serviceName,
+                    serviceDescription: service.serviceDescription,
+                    duration: service.duration,
+                    minPrice: service.minPrice,
+                    maxPrice: service.maxPrice,
+                    origin: service.origin,
+                  }))
+                : [];
+
+            // Map reviews from API
+            const reviews: Review[] =
+              results.reviews?.success && results.reviews.data
+                ? results.reviews.data.map((review, index) => ({
+                    id: index + 1,
+                    userName: 'Customer', // API doesn't provide username
+                    rating: review.rating,
+                    comment: review.comment,
+                    date: review.createdAt,
+                    paidAmount: review.paidAmount,
+                  }))
+                : [];
+
+            // Calculate average rating from reviews if profile rating is 0
+            const avgRating =
+              reviews.length > 0
+                ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+                : profile.rating || 0;
+
+            // Create workshop details object
+            this.workshop = {
+              id: profile.id,
+              name: profile.name,
+              description:
+                profile.description ||
+                'Professional automotive services with experienced technicians.',
+              rating: profile.rating || avgRating,
+              reviewCount: reviews.length,
+              city: profile.city,
+              governorate: profile.governorate,
+              country: profile.country,
+              phone: profile.phoneNumber,
+              logoImageUrl: this.getFullImageUrl(profile.logoImageUrl),
+              coverImageUrl: gallery.length > 0 ? gallery[0] : this.getDefaultCoverImage(),
+              isOpen: this.checkIfOpen(workingHours),
+              workShopType: profile.workShopType,
+              latitude: profile.latitude,
+              longitude: profile.longitude,
+              verificationStatus: profile.verificationStatus,
+              workingHours: workingHours,
+              gallery: gallery,
+              reviews: reviews,
+              amenities: this.getDefaultAmenities(),
+              numbersOfTechnicians: profile.numbersOfTechnicians,
+            };
+
+            this.calculateRatingBars();
+            this.isLoading = false;
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+          } else {
+            this.errorMessage = 'Workshop not found. Please try again.';
+            this.isLoading = false;
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+          }
+        },
+        error: (error) => {
+          console.error('Error loading workshop details:', error);
+          this.errorMessage = 'Failed to load workshop details. Please try again.';
+          this.isLoading = false;
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        },
+      });
   }
 
-  private loadMockWorkshopDetails(): void {
-    // Instant loading - no delay needed for demo
-    const mockWorkshops: { [key: number]: WorkshopDetails } = {
-      1: {
-        id: 1,
-        workshopProfileId: 1,
-        name: 'KOREK AutoCare Center',
-        description: 'Official KOREK certified workshop offering premium maintenance services. State-of-the-art equipment and factory-trained technicians ensure your vehicle receives the best care possible. We specialize in all types of vehicles from economy cars to luxury brands. Our commitment to quality and customer satisfaction has made us the most trusted name in automotive care in Baghdad.',
-        rating: 4.9,
-          reviewCount: 342,
-          address: 'Al-Mansour, Street 14, Building 25',
-          city: 'Baghdad',
-          phone: '+964 770 123 4567',
-          email: 'service@korek-autocare.iq',
-          website: 'www.korek-autocare.iq',
-          logoImageUrl: '',
-          coverImageUrl: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1200&h=600&fit=crop',
-          isOpen: true,
-          workShopType: 'Full Service',
-          services: ['Periodic Maintenance', 'Oil Change', 'Brake Service', 'Engine Diagnostics', 'AC Service', 'Tire Service', 'Battery Service', 'Transmission Service'],
-          priceRange: 'premium',
-          latitude: 33.3152,
-          longitude: 44.3661,
-          verificationStatus: 'Verified',
-          workingHours: [
-            { day: 'Saturday', openTime: '08:00', closeTime: '20:00', isClosed: false },
-            { day: 'Sunday', openTime: '08:00', closeTime: '20:00', isClosed: false },
-            { day: 'Monday', openTime: '08:00', closeTime: '20:00', isClosed: false },
-            { day: 'Tuesday', openTime: '08:00', closeTime: '20:00', isClosed: false },
-            { day: 'Wednesday', openTime: '08:00', closeTime: '20:00', isClosed: false },
-            { day: 'Thursday', openTime: '08:00', closeTime: '18:00', isClosed: false },
-            { day: 'Friday', openTime: '00:00', closeTime: '00:00', isClosed: true }
-          ],
-          gallery: [
-            'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&h=600&fit=crop'
-          ],
-          reviews: [
-            { id: 1, userName: 'Ahmed M.', rating: 5, comment: 'Excellent service! Very professional team and great attention to detail. My car runs like new after their maintenance.', date: '2025-11-28', carModel: 'Toyota Camry 2022' },
-            { id: 2, userName: 'Sara K.', rating: 5, comment: 'Best workshop in Baghdad. Fair prices and honest technicians. Highly recommended!', date: '2025-11-25', carModel: 'Honda Accord 2021' },
-            { id: 3, userName: 'Omar H.', rating: 4, comment: 'Good service overall. Wait time was a bit long but the quality of work was excellent.', date: '2025-11-20', carModel: 'BMW 320i 2023' },
-            { id: 4, userName: 'Fatima A.', rating: 5, comment: 'They diagnosed a problem that other workshops couldn\'t find. Very knowledgeable team!', date: '2025-11-15', carModel: 'Mercedes C200 2022' }
-          ],
-          amenities: ['Free WiFi', 'Waiting Lounge', 'Coffee & Refreshments', 'TV', 'Prayer Room', 'Parking', 'Card Payment', 'Pickup/Delivery']
-        },
-        2: {
-          id: 2,
-          workshopProfileId: 2,
-          name: 'Quick Fix Express',
-          description: 'Fast and affordable repairs without compromising quality. Specializing in quick turnaround services for busy professionals. Walk-ins welcome! We understand your time is valuable, so we focus on getting you back on the road as quickly as possible.',
-          rating: 4.6,
-          reviewCount: 189,
-          address: 'Karrada, Commercial District, Shop 42',
-          city: 'Baghdad',
-          phone: '+964 770 234 5678',
-          email: 'hello@quickfixexpress.iq',
-          logoImageUrl: '',
-          coverImageUrl: 'https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=1200&h=600&fit=crop',
-          isOpen: true,
-          workShopType: 'Mechanical Repairs',
-          services: ['Engine Repair', 'Transmission', 'Suspension', 'Steering', 'Exhaust System', 'Quick Oil Change'],
-          priceRange: 'budget',
-          latitude: 33.2981,
-          longitude: 44.4011,
-          verificationStatus: 'Verified',
-          workingHours: [
-            { day: 'Saturday', openTime: '07:00', closeTime: '22:00', isClosed: false },
-            { day: 'Sunday', openTime: '07:00', closeTime: '22:00', isClosed: false },
-            { day: 'Monday', openTime: '07:00', closeTime: '22:00', isClosed: false },
-            { day: 'Tuesday', openTime: '07:00', closeTime: '22:00', isClosed: false },
-            { day: 'Wednesday', openTime: '07:00', closeTime: '22:00', isClosed: false },
-            { day: 'Thursday', openTime: '07:00', closeTime: '22:00', isClosed: false },
-            { day: 'Friday', openTime: '14:00', closeTime: '22:00', isClosed: false }
-          ],
-          gallery: [
-            'https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1562141992-5e09e13b6834?w=800&h=600&fit=crop'
-          ],
-          reviews: [
-            { id: 1, userName: 'Khalid S.', rating: 5, comment: 'Super fast service! I was in and out in 30 minutes for an oil change.', date: '2025-11-27', carModel: 'Kia Sportage 2020' },
-            { id: 2, userName: 'Noor M.', rating: 4, comment: 'Great value for money. The team is friendly and efficient.', date: '2025-11-22' }
-          ],
-          amenities: ['Walk-ins Welcome', 'Quick Service', 'Affordable Prices', 'Card Payment']
-        },
-        3: {
-          id: 3,
-          workshopProfileId: 3,
-          name: 'Elite Auto Spa & Body Works',
-          description: 'Luxury body shop specializing in high-end vehicles. Expert paint correction, ceramic coating, and collision repair. Insurance claims handled. We treat every vehicle as if it were our own, ensuring perfection in every detail.',
-          rating: 4.8,
-          reviewCount: 127,
-          address: 'Jadriya, University Street, Complex B',
-          city: 'Baghdad',
-          phone: '+964 770 345 6789',
-          email: 'elite@autospa.iq',
-          logoImageUrl: '',
-          coverImageUrl: 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=1200&h=600&fit=crop',
-          isOpen: true,
-          workShopType: 'Body & Paint',
-          services: ['Collision Repair', 'Paint Services', 'Dent Removal', 'Ceramic Coating', 'Detailing', 'Window Tinting', 'PPF Installation'],
-          priceRange: 'premium',
-          latitude: 33.2754,
-          longitude: 44.3891,
-          verificationStatus: 'Verified',
-          workingHours: [
-            { day: 'Saturday', openTime: '09:00', closeTime: '18:00', isClosed: false },
-            { day: 'Sunday', openTime: '09:00', closeTime: '18:00', isClosed: false },
-            { day: 'Monday', openTime: '09:00', closeTime: '18:00', isClosed: false },
-            { day: 'Tuesday', openTime: '09:00', closeTime: '18:00', isClosed: false },
-            { day: 'Wednesday', openTime: '09:00', closeTime: '18:00', isClosed: false },
-            { day: 'Thursday', openTime: '09:00', closeTime: '16:00', isClosed: false },
-            { day: 'Friday', openTime: '00:00', closeTime: '00:00', isClosed: true }
-          ],
-          gallery: [
-            'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1507136566006-cfc505b114fc?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&h=600&fit=crop'
-          ],
-          reviews: [
-            { id: 1, userName: 'Mohammed R.', rating: 5, comment: 'Incredible work on my Mercedes! The paint looks better than factory new.', date: '2025-11-26', carModel: 'Mercedes S-Class 2023' },
-            { id: 2, userName: 'Layla H.', rating: 5, comment: 'They fixed a major dent perfectly. You can\'t even tell it was there!', date: '2025-11-18', carModel: 'BMW X5 2022' }
-          ],
-          amenities: ['Premium Lounge', 'Free WiFi', 'Coffee Bar', 'Insurance Claims', 'Luxury Car Specialist']
-        }
-      };
-
-      // Generate similar details for other workshop IDs
-      for (let i = 4; i <= 12; i++) {
-        if (!mockWorkshops[i]) {
-          mockWorkshops[i] = this.generateMockWorkshop(i);
-        }
-      }
-
-      this.workshop = mockWorkshops[this.workshopId] || mockWorkshops[1];
-      this.isLoading = false;
+  private formatTime(time: string): string {
+    if (!time) return '00:00';
+    // Handle format like "09:00:00" -> "09:00"
+    const parts = time.split(':');
+    if (parts.length >= 2) {
+      return `${parts[0]}:${parts[1]}`;
+    }
+    return time;
   }
 
-  private generateMockWorkshop(id: number): WorkshopDetails {
-    const names: { [key: number]: string } = {
-      4: 'Cool Zone AC Services',
-      5: 'Spark Masters Electrical',
-      6: 'TirePro Center',
-      7: 'German Auto Specialists',
-      8: 'Budget Auto Care',
-      9: 'Pro Detailing Studio',
-      10: '24/7 Emergency Auto',
-      11: 'Classic Car Restoration',
-      12: 'Hybrid & EV Center'
-    };
+  private getFullImageUrl(url: string | null): string {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `https://localhost:44316${url}`;
+  }
 
-    const covers: { [key: number]: string } = {
-      4: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=600&fit=crop',
-      5: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=1200&h=600&fit=crop',
-      6: 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=1200&h=600&fit=crop',
-      7: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1200&h=600&fit=crop',
-      8: 'https://images.unsplash.com/photo-1562141992-5e09e13b6834?w=1200&h=600&fit=crop',
-      9: 'https://images.unsplash.com/photo-1507136566006-cfc505b114fc?w=1200&h=600&fit=crop',
-      10: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=1200&h=600&fit=crop',
-      11: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=1200&h=600&fit=crop',
-      12: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=1200&h=600&fit=crop'
-    };
+  private checkIfOpen(workingHours: WorkingHours[]): boolean {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const today = days[new Date().getDay()];
+    const todayHours = workingHours.find((h) => h.day === today);
 
-    return {
-      id: id,
-      workshopProfileId: id,
-      name: names[id] || `Workshop ${id}`,
-      description: 'Professional automotive services with experienced technicians and quality parts.',
-      rating: 4.5 + Math.random() * 0.5,
-      reviewCount: 50 + Math.floor(Math.random() * 200),
-      address: 'Baghdad, Iraq',
-      city: 'Baghdad',
-      phone: '+964 770 XXX XXXX',
-      email: 'info@workshop.iq',
-      logoImageUrl: '',
-      coverImageUrl: covers[id] || '',
-      isOpen: Math.random() > 0.3,
-      workShopType: 'Full Service',
-      services: ['Maintenance', 'Repairs', 'Diagnostics'],
-      priceRange: 'moderate',
-      latitude: 33.3,
-      longitude: 44.4,
-      verificationStatus: 'Verified',
-      workingHours: [
-        { day: 'Saturday', openTime: '08:00', closeTime: '18:00', isClosed: false },
-        { day: 'Sunday', openTime: '08:00', closeTime: '18:00', isClosed: false },
-        { day: 'Monday', openTime: '08:00', closeTime: '18:00', isClosed: false },
-        { day: 'Tuesday', openTime: '08:00', closeTime: '18:00', isClosed: false },
-        { day: 'Wednesday', openTime: '08:00', closeTime: '18:00', isClosed: false },
-        { day: 'Thursday', openTime: '08:00', closeTime: '16:00', isClosed: false },
-        { day: 'Friday', openTime: '00:00', closeTime: '00:00', isClosed: true }
-      ],
-      gallery: [covers[id] || ''],
-      reviews: [
-        { id: 1, userName: 'Customer', rating: 5, comment: 'Great service!', date: '2025-11-20' }
-      ],
-      amenities: ['Parking', 'Card Payment', 'WiFi']
-    };
+    if (!todayHours || todayHours.isClosed) return false;
+
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes()
+    ).padStart(2, '0')}`;
+
+    return currentTime >= todayHours.openTime && currentTime <= todayHours.closeTime;
+  }
+
+  private getDefaultWorkingHours(): WorkingHours[] {
+    return [
+      { day: 'Sunday', openTime: '09:00', closeTime: '17:00', isClosed: false },
+      { day: 'Monday', openTime: '09:00', closeTime: '17:00', isClosed: false },
+      { day: 'Tuesday', openTime: '09:00', closeTime: '17:00', isClosed: false },
+      { day: 'Wednesday', openTime: '09:00', closeTime: '17:00', isClosed: false },
+      { day: 'Thursday', openTime: '09:00', closeTime: '17:00', isClosed: false },
+      { day: 'Friday', openTime: '09:00', closeTime: '17:00', isClosed: true },
+      { day: 'Saturday', openTime: '09:00', closeTime: '17:00', isClosed: false },
+    ];
+  }
+
+  private getDefaultCoverImage(): string {
+    return 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1200&h=600&fit=crop';
+  }
+
+  private getDefaultAmenities(): string[] {
+    return ['Parking', 'Card Payment', 'WiFi'];
   }
 
   setActiveTab(tab: 'overview' | 'services' | 'reviews' | 'gallery'): void {
     this.activeTab = tab;
+  }
+
+  setAsHeroImage(imageUrl: string): void {
+    this.currentHeroImage = imageUrl;
+    this.cdr.markForCheck();
+    // Scroll to top to show the new cover
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   openImageModal(imageUrl: string): void {
@@ -302,14 +417,36 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
     this.selectedImage = null;
   }
 
+  previousImage(): void {
+    if (this.workshop?.gallery && this.selectedImage) {
+      const currentIndex = this.workshop.gallery.indexOf(this.selectedImage);
+      if (currentIndex > 0) {
+        this.selectedImage = this.workshop.gallery[currentIndex - 1];
+      } else {
+        this.selectedImage = this.workshop.gallery[this.workshop.gallery.length - 1];
+      }
+    }
+  }
+
+  nextImage(): void {
+    if (this.workshop?.gallery && this.selectedImage) {
+      const currentIndex = this.workshop.gallery.indexOf(this.selectedImage);
+      if (currentIndex < this.workshop.gallery.length - 1) {
+        this.selectedImage = this.workshop.gallery[currentIndex + 1];
+      } else {
+        this.selectedImage = this.workshop.gallery[0];
+      }
+    }
+  }
+
   goBack(): void {
     this.router.navigate(['/workshops']);
   }
 
   bookService(): void {
     if (this.workshop) {
-      this.router.navigate(['/booking'], { 
-        queryParams: { workshopId: this.workshop.workshopProfileId }
+      this.router.navigate(['/booking'], {
+        queryParams: { workshopId: this.workshop.id },
       });
     }
   }
@@ -321,9 +458,7 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
   }
 
   emailWorkshop(): void {
-    if (this.workshop?.email) {
-      window.location.href = `mailto:${this.workshop.email}`;
-    }
+    // Email not available in API, could add contact form
   }
 
   openMaps(): void {
@@ -334,35 +469,136 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
   }
 
   getInitials(name: string): string {
+    if (!name) return 'WS';
     return name
       .split(' ')
-      .map(word => word[0])
+      .map((word) => word[0])
       .join('')
       .substring(0, 2)
       .toUpperCase();
   }
 
   getStarArray(rating: number): number[] {
-    return Array(5).fill(0).map((_, i) => i < Math.round(rating) ? 1 : 0);
-  }
-
-  getPriceLabel(priceRange: string): string {
-    const labels: { [key: string]: string } = {
-      'budget': '$ Budget Friendly',
-      'moderate': '$$ Moderate',
-      'premium': '$$$ Premium'
-    };
-    return labels[priceRange] || priceRange;
+    const stars: number[] = [];
+    for (let i = 1; i <= 5; i++) {
+      if (rating >= i) {
+        stars.push(1); // full star
+      } else if (rating >= i - 0.5) {
+        stars.push(0.5); // half star
+      } else {
+        stars.push(0); // empty star
+      }
+    }
+    return stars;
   }
 
   getTodayHours(): string {
     if (!this.workshop?.workingHours) return 'Hours not available';
-    
+
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const today = days[new Date().getDay()];
-    const todayHours = this.workshop.workingHours.find(h => h.day === today);
-    
+    const todayHours = this.workshop.workingHours.find((h) => h.day === today);
+
     if (!todayHours || todayHours.isClosed) return 'Closed today';
     return `${todayHours.openTime} - ${todayHours.closeTime}`;
+  }
+
+  shareWorkshop(): void {
+    if (this.workshop) {
+      const shareData = {
+        title: this.workshop.name,
+        text: `Check out ${this.workshop.name} - ${this.workshop.description?.substring(
+          0,
+          100
+        )}...`,
+        url: window.location.href,
+      };
+
+      if (navigator.share) {
+        navigator.share(shareData).catch(console.error);
+      } else {
+        navigator.clipboard
+          .writeText(window.location.href)
+          .then(() => {
+            alert('Link copied to clipboard!');
+          })
+          .catch(console.error);
+      }
+    }
+  }
+
+  toggleFavorite(): void {
+    this.isFavorited = !this.isFavorited;
+  }
+
+  formatWorkshopType(type: string): string {
+    if (!type) return 'General';
+    return type
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/_/g, ' ')
+      .trim()
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  formatDistance(distance: number | undefined): string {
+    if (distance === undefined || distance === null) return 'Distance N/A';
+    if (distance < 1) {
+      return `${Math.round(distance * 1000)} m`;
+    }
+    return `${distance.toFixed(1)} km`;
+  }
+
+  isToday(day: string): boolean {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const today = days[new Date().getDay()];
+    return day === today;
+  }
+
+  formatServicePrice(service: WorkshopService): string {
+    if (service.minPrice === service.maxPrice) {
+      return `${service.minPrice} EGP`;
+    }
+    return `${service.minPrice} - ${service.maxPrice} EGP`;
+  }
+
+  formatServiceDuration(minutes: number): string {
+    if (minutes < 60) {
+      return `${minutes} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (mins === 0) {
+      return `${hours} hr`;
+    }
+    return `${hours} hr ${mins} min`;
+  }
+
+  private calculateRatingBars(): void {
+    if (!this.workshop?.reviews || this.workshop.reviews.length === 0) {
+      this.ratingBars = [5, 4, 3, 2, 1].map((stars) => ({
+        stars,
+        percentage: 0,
+        count: 0,
+      }));
+      return;
+    }
+
+    const totalReviews = this.workshop.reviews.length;
+    const ratingCounts: { [key: number]: number } = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+    this.workshop.reviews.forEach((review) => {
+      const roundedRating = Math.round(review.rating);
+      if (roundedRating >= 1 && roundedRating <= 5) {
+        ratingCounts[roundedRating]++;
+      }
+    });
+
+    this.ratingBars = [5, 4, 3, 2, 1].map((stars) => ({
+      stars,
+      percentage: totalReviews > 0 ? (ratingCounts[stars] / totalReviews) * 100 : 0,
+      count: ratingCounts[stars],
+    }));
   }
 }

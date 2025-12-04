@@ -14,10 +14,9 @@ export interface GeolocationError {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class GeolocationService {
-  private locationSubject = new Subject<GeolocationPosition>();
   private errorSubject = new Subject<GeolocationError>();
 
   constructor() {}
@@ -27,41 +26,43 @@ export class GeolocationService {
    * This will trigger the browser's location permission prompt
    */
   requestLocation(): Observable<GeolocationPosition> {
-    if (!this.isGeolocationSupported()) {
-      this.errorSubject.next({
-        code: -1,
-        message: 'Geolocation is not supported by your browser'
-      });
-      return this.locationSubject.asObservable();
-    }
+    return new Observable<GeolocationPosition>((observer) => {
+      if (!this.isGeolocationSupported()) {
+        observer.error({
+          code: -1,
+          message: 'Geolocation is not supported by your browser',
+        });
+        return;
+      }
 
-    const options: PositionOptions = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    };
+      const options: PositionOptions = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      };
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const geoPosition: GeolocationPosition = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          timestamp: position.timestamp
-        };
-        this.locationSubject.next(geoPosition);
-      },
-      (error) => {
-        const geoError: GeolocationError = {
-          code: error.code,
-          message: this.getErrorMessage(error.code)
-        };
-        this.errorSubject.next(geoError);
-      },
-      options
-    );
-
-    return this.locationSubject.asObservable();
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const geoPosition: GeolocationPosition = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp,
+          };
+          observer.next(geoPosition);
+          observer.complete();
+        },
+        (error) => {
+          const geoError: GeolocationError = {
+            code: error.code,
+            message: this.getErrorMessage(error.code),
+          };
+          this.errorSubject.next(geoError);
+          observer.error(geoError);
+        },
+        options
+      );
+    });
   }
 
   /**
