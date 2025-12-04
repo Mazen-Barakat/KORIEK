@@ -6,7 +6,9 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { NotificationService } from '../../services/notification.service';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { ReviewModalService } from '../../services/review-modal.service';
 import { AppNotification } from '../../models/wallet.model';
+import { RoleHelper } from '../../models/user-roles';
 
 @Component({
   selector: 'app-notification-panel',
@@ -36,9 +38,10 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   constructor(
     private notificationService: NotificationService,
     private authService: AuthService,
+    private reviewModalService: ReviewModalService,
     private router: Router,
-    private cdr: ChangeDetectorRef
-    , private http: HttpClient
+    private cdr: ChangeDetectorRef,
+    private http: HttpClient
   ) {}
 
   // API base used for direct booking status updates from notification actions
@@ -212,18 +215,38 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
         .subscribe();
     }
 
+    // Check if this is a "completed" notification for a car owner
+    // Backend sends wrong notification type (PaymentReceived instead of BookingCompleted)
+    // So we detect by message content: "has been completed" or "booking has been completed"
+    const messageLC = (notification.message || '').toLowerCase();
+    const isCompletedNotification = messageLC.includes('has been completed') || 
+                                     messageLC.includes('booking has been completed') ||
+                                     messageLC.includes('service completed');
+    const bookingId = notification.data?.bookingId;
+    const userRole = this.authService.getUserRole();
+    const isCarOwner = RoleHelper.isCarOwner(userRole);
+
+    if (isCompletedNotification && bookingId && isCarOwner) {
+      // Open review modal for car owner when clicking on completed notification
+      console.log('📝 Opening review modal from notification click for booking:', bookingId);
+      this.reviewModalService.openReviewModal(bookingId);
+      this.closePanel();
+      return;
+    }
+
     // Handle navigation based on notification type
     if (notification.actionUrl) {
       this.router.navigate([notification.actionUrl]);
       this.closePanel();
-    } else if (notification.type === 'booking' && notification.data?.bookingId) {
+    } else if (notification.type === 'booking' && bookingId) {
       // Navigate to booking detail or job board
       this.router.navigate(['/workshop/job-board'], {
-        queryParams: { bookingId: notification.data.bookingId },
+        queryParams: { bookingId: bookingId },
       });
       this.closePanel();
     } else if (notification.type === 'payment') {
-      this.router.navigate(['/workshop/wallet']);
+      // For payment notifications that are NOT completed bookings, go to wallet
+      this.router.navigate(['/wallet']);
       this.closePanel();
     }
   }

@@ -123,7 +123,15 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
           const data = resp?.data ?? resp;
           if (data && data.id) {
             this.workshopProfileId = Number(data.id);
-            this.shopName = data.name || data.shopName || 'My Workshop';
+            this.shopName = data.name || data.shopName || data.workshopName || 'My Workshop';
+
+            // Update shop rating from profile if available
+            if (data.rating !== undefined && data.rating !== null) {
+              this.metrics.shopRating = data.rating;
+            } else if (data.Rating !== undefined && data.Rating !== null) {
+              this.metrics.shopRating = data.Rating;
+            }
+
             this.loadWorkshopBookings();
           } else {
             this.setupCalendarWithoutBookings();
@@ -159,6 +167,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (bookings) => {
           this.allBookings = bookings;
+          this.calculateMetricsFromBookings(bookings);
           this.setupCalendar();
           this.isLoadingBookings = false;
         },
@@ -169,6 +178,123 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
           this.isLoadingBookings = false;
         },
       });
+  }
+
+  /**
+   * Calculate dashboard metrics from booking data
+   */
+  private calculateMetricsFromBookings(bookings: EnrichedBooking[]): void {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+    // Calculate Monthly Revenue (current month completed bookings)
+    const currentMonthRevenue = bookings
+      .filter(b => {
+        const bookingDate = new Date(b.appointmentDate);
+        return (
+          bookingDate.getMonth() === currentMonth &&
+          bookingDate.getFullYear() === currentYear &&
+          (b.status.toLowerCase() === 'completed' || b.status.toLowerCase() === 'paid')
+        );
+      })
+      .reduce((sum, b) => sum + (this.estimateBookingRevenue(b)), 0);
+
+    // Calculate last month revenue for comparison
+    const lastMonthRevenue = bookings
+      .filter(b => {
+        const bookingDate = new Date(b.appointmentDate);
+        return (
+          bookingDate.getMonth() === lastMonth &&
+          bookingDate.getFullYear() === lastMonthYear &&
+          (b.status.toLowerCase() === 'completed' || b.status.toLowerCase() === 'paid')
+        );
+      })
+      .reduce((sum, b) => sum + (this.estimateBookingRevenue(b)), 0);
+
+    const revenueChange = lastMonthRevenue > 0
+      ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+      : 0;
+
+    // Calculate Active Jobs (in progress or accepted)
+    const activeJobs = bookings.filter(b => {
+      const status = b.status.toLowerCase();
+      return status === 'progress' || status === 'in-progress' || status === 'accepted' || status === 'approved';
+    }).length;
+
+    // Calculate New Requests (pending status)
+    const newRequests = bookings.filter(b => {
+      const status = b.status.toLowerCase();
+      return status === 'pending' || status === 'new';
+    }).length;
+
+    // Calculate total reviews from completed bookings
+    const completedBookings = bookings.filter(b =>
+      b.status.toLowerCase() === 'completed' || b.status.toLowerCase() === 'paid'
+    );
+
+    // Calculate Ready for Pickup
+    const readyForPickup = bookings.filter(b => {
+      const status = b.status.toLowerCase();
+      return status === 'ready' || status === 'ready for pickup';
+    }).length;
+
+    // Calculate Quotes Awaiting Approval (if you have this status)
+    const quotesAwaiting = bookings.filter(b => {
+      const status = b.status.toLowerCase();
+      return status === 'quote sent' || status === 'awaiting approval' || status === 'pending approval';
+    }).length;
+
+    // Calculate Pending Payouts (85% of completed but unpaid bookings)
+    const pendingPayouts = bookings
+      .filter(b => {
+        const status = b.status.toLowerCase();
+        return status === 'completed' && b.paymentMethod;
+      })
+      .reduce((sum, b) => sum + (this.estimateBookingRevenue(b) * 0.85), 0);
+
+    // Update metrics (keep existing shopRating from profile)
+    this.metrics = {
+      ...this.metrics, // Preserve existing values like shopRating from profile
+      monthlyRevenue: currentMonthRevenue,
+      revenueChange: Math.round(revenueChange * 10) / 10,
+      pendingPayouts: pendingPayouts,
+      payoutsChange: this.metrics.payoutsChange,
+      totalReviews: completedBookings.length,
+      newBookingRequests: newRequests,
+      quotesAwaitingApproval: quotesAwaiting,
+      carsReadyForPickup: readyForPickup,
+      activeJobs: activeJobs,
+    };
+  }
+
+  /**
+   * Estimate revenue for a booking
+   * Uses actual payment amount if available, otherwise estimates based on service type
+   */
+  private estimateBookingRevenue(booking: any): number {
+    // If booking has paidAmount, use it
+    if (booking.paidAmount && booking.paidAmount > 0) {
+      return booking.paidAmount;
+    }
+
+    // Otherwise, estimate based on service name or type
+    // You can customize these estimates based on your service catalog
+    const serviceName = (booking.serviceName || '').toLowerCase();
+
+    if (serviceName.includes('oil change')) return 300;
+    if (serviceName.includes('brake')) return 800;
+    if (serviceName.includes('engine')) return 1500;
+    if (serviceName.includes('transmission')) return 2000;
+    if (serviceName.includes('tire')) return 600;
+    if (serviceName.includes('diagnostic')) return 400;
+    if (serviceName.includes('battery')) return 500;
+    if (serviceName.includes('ac') || serviceName.includes('air conditioning')) return 700;
+
+    // Default estimate
+    return 500;
   }
 
   private setupCalendarWithoutBookings(): void {
@@ -189,12 +315,12 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
 
   private setupCalendar(): void {
     const now = new Date();
-    
+
     // Initialize week start to current week if not already set
     if (!this.weekStartDate || this.weekStartDate.getTime() === 0) {
       this.weekStartDate = this.getWeekStart(now);
     }
-    
+
     this.updateCalendarDisplay();
   }
 
@@ -256,13 +382,13 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
 
   private groupByStatus(appointments: BookingCardData[]): StatusGroup[] {
     const groups: StatusGroup[] = [];
-    
+
     for (const config of this.statusConfig) {
       const matching = appointments.filter(apt => {
         const s = (apt.status || '').toLowerCase();
         return s.includes(config.status);
       });
-      
+
       if (matching.length > 0) {
         groups.push({
           status: config.status,
@@ -273,7 +399,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
         });
       }
     }
-    
+
     // Add any unmatched to "Other"
     const matchedIds = new Set(groups.flatMap(g => g.appointments.map(a => a.id)));
     const unmatched = appointments.filter(apt => !matchedIds.has(apt.id));
@@ -286,7 +412,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
         appointments: unmatched,
       });
     }
-    
+
     return groups;
   }
 
@@ -336,10 +462,10 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
   getWeekRangeLabel(): string {
     const weekEnd = new Date(this.weekStartDate);
     weekEnd.setDate(weekEnd.getDate() + 6);
-    
+
     const startStr = this.weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const endStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    
+
     return `${startStr} - ${endStr}`;
   }
 
@@ -523,14 +649,14 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
   // Get counts by status for the week overview
   getWeekStatusCounts(): { status: string; label: string; count: number; color: string }[] {
     const counts: { [key: string]: number } = {};
-    
+
     for (const day of this.calendarDays) {
       for (const apt of day.appointments) {
         const status = (apt.status || 'other').toLowerCase();
         counts[status] = (counts[status] || 0) + 1;
       }
     }
-    
+
     return this.statusConfig
       .map(config => ({
         status: config.status,
@@ -543,14 +669,14 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
 
   getBusiestDay(): CalendarDay | null {
     if (this.calendarDays.length === 0) return null;
-    return this.calendarDays.reduce((busiest, day) => 
+    return this.calendarDays.reduce((busiest, day) =>
       day.appointments.length > busiest.appointments.length ? day : busiest
     );
   }
 
   getPendingCount(): number {
     return this.calendarDays.reduce((total, day) => {
-      return total + day.appointments.filter(apt => 
+      return total + day.appointments.filter(apt =>
         (apt.status || '').toLowerCase().includes('pending')
       ).length;
     }, 0);
@@ -559,13 +685,13 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
   // Get all appointments for list view, sorted by date/time
   getAllAppointmentsSorted(): { day: CalendarDay; appointment: BookingCardData }[] {
     const all: { day: CalendarDay; appointment: BookingCardData }[] = [];
-    
+
     for (const day of this.calendarDays) {
       for (const apt of day.appointments) {
         all.push({ day, appointment: apt });
       }
     }
-    
+
     return all;
   }
 }

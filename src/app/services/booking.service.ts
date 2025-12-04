@@ -36,6 +36,8 @@ export interface EnrichedBooking {
   appointmentDate: Date;
   issueDescription: string;
   paymentMethod: string;
+  paidAmount: number;
+  paymentStatus: string;
   customerName: string;
   serviceName: string;
   carId: number;
@@ -205,6 +207,8 @@ export class BookingService {
                     appointmentDate: new Date(booking.appointmentDate),
                     issueDescription: booking.issueDescription,
                     paymentMethod: booking.paymentMethod,
+                    paidAmount: booking.paidAmount || 0,
+                    paymentStatus: booking.paymentStatus || 'pending',
                     customerName: carOwner ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() || 'Unknown' : 'Unknown',
                     serviceName: service?.name || workshopService?.name || 'Service',
                     carId: booking.carId
@@ -217,6 +221,8 @@ export class BookingService {
                 appointmentDate: new Date(booking.appointmentDate),
                 issueDescription: booking.issueDescription,
                 paymentMethod: booking.paymentMethod,
+                paidAmount: booking.paidAmount || 0,
+                paymentStatus: booking.paymentStatus || 'pending',
                 customerName: carOwner ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() || 'Unknown' : 'Unknown',
                 serviceName: workshopService?.name || 'Service',
                 carId: booking.carId
@@ -228,6 +234,8 @@ export class BookingService {
               appointmentDate: new Date(booking.appointmentDate),
               issueDescription: booking.issueDescription,
               paymentMethod: booking.paymentMethod,
+              paidAmount: booking.paidAmount || 0,
+              paymentStatus: booking.paymentStatus || 'pending',
               customerName: 'Unknown',
               serviceName: 'Service',
               carId: booking.carId
