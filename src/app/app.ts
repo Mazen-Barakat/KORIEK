@@ -1,14 +1,17 @@
-import { Component, signal, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './components/header/header.component';
 import { ToastContainerComponent } from './components/shared/toast-container/toast-container.component';
+import { ReviewModalComponent } from './components/review-modal/review-modal.component';
 import { AuthService } from './services/auth.service';
 import { SignalRNotificationService } from './services/signalr-notification.service';
+import { ReviewModalService } from './services/review-modal.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, ToastContainerComponent],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, ToastContainerComponent, ReviewModalComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
@@ -16,11 +19,23 @@ export class App implements OnInit, OnDestroy {
   protected readonly title = signal('Korik');
   private authService = inject(AuthService);
   private signalRService = inject(SignalRNotificationService);
+  private reviewModalService = inject(ReviewModalService);
+  private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
+
+  // Review modal state
+  showReviewModal = false;
+  reviewBookingId = 0;
 
   ngOnInit(): void {
     this.initializeAuth();
     this.initializeSignalR();
+    this.initializeReviewModal();
+
+    // Make this component available for debugging
+    if (typeof window !== 'undefined') {
+      (window as any)['app'] = this;
+    }
   }
 
   ngOnDestroy(): void {
@@ -82,4 +97,49 @@ export class App implements OnInit, OnDestroy {
         }
       });
   }
+
+  /**
+   * Initialize review modal subscription
+   */
+  private initializeReviewModal(): void {
+    console.log('📝 Initializing review modal subscription in App component');
+    this.reviewModalService.reviewModal$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        console.log('📝 App component received review modal state change:', data);
+        this.showReviewModal = data.show;
+        this.reviewBookingId = data.bookingId;
+        console.log('📝 App component state updated:', { showReviewModal: this.showReviewModal, reviewBookingId: this.reviewBookingId });
+        // Force change detection
+        this.cdr.detectChanges();
+      });
+  }
+
+  /**
+   * Handle review modal close
+   */
+  onReviewModalClose(): void {
+    this.reviewModalService.closeReviewModal();
+  }
+
+  /**
+   * Handle review submission
+   */
+  onReviewSubmitted(): void {
+    console.log('✅ Review submitted successfully');
+  }
+
+  /**
+   * Test method to manually open review modal (for debugging)
+   * Can be called from browser console: window['app'].testOpenReviewModal(30)
+   */
+  testOpenReviewModal(bookingId: number): void {
+    console.log('🧪 Test: Manually opening review modal for booking:', bookingId);
+    this.reviewModalService.openReviewModal(bookingId);
+  }
+}
+
+// Make app instance available for debugging
+if (typeof window !== 'undefined') {
+  (window as any)['app'] = null;
 }

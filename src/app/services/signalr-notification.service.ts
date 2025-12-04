@@ -5,8 +5,10 @@ import { HubConnection, HubConnectionState } from '@microsoft/signalr';
 import { AuthService } from './auth.service';
 import { NotificationService } from './notification.service';
 import { ToastService } from './toast.service';
+import { ReviewModalService } from './review-modal.service';
 import { NotificationDto, NotificationType } from '../models/notification.model';
 import { AppNotification } from '../models/wallet.model';
+import { RoleHelper } from '../models/user-roles';
 
 @Injectable({
   providedIn: 'root',
@@ -22,6 +24,7 @@ export class SignalRNotificationService {
     private authService: AuthService,
     private notificationService: NotificationService,
     private toastService: ToastService,
+    private reviewModalService: ReviewModalService,
     private router: Router,
     private ngZone: NgZone
   ) {
@@ -397,6 +400,58 @@ export class SignalRNotificationService {
   ): void {
     const title = appNotification.title;
     const message = appNotification.message;
+    const messageLC = (dto.message || '').toLowerCase();
+
+    // Debug log to see what notification type we're receiving
+    console.log('🔔 Processing notification:', {
+      type: dto.type,
+      typeName: NotificationType[dto.type],
+      title: dto.title,
+      message: dto.message,
+      bookingId: dto.bookingId
+    });
+
+    // =====================================================================
+    // WORKAROUND FOR BACKEND BUG:
+    // Backend sends WRONG notification types:
+    // - "Mark as Ready" sends type=4 (BookingCompleted) instead of type=11 (BookingReadyForPickup)
+    // - "Complete" sends type=5 (PaymentReceived) instead of type=4 (BookingCompleted)
+    //
+    // So we detect the ACTUAL intent by checking the MESSAGE CONTENT:
+    // - "ready for pickup" in message = ReadyForPickup action (NO review modal)
+    // - "has been completed" in message = Completed action (SHOW review modal)
+    // =====================================================================
+
+    const isReadyForPickupMessage = messageLC.includes('ready for pickup') ||
+                                     messageLC.includes('ready to be picked up');
+    const isCompletedMessage = messageLC.includes('has been completed') ||
+                                messageLC.includes('booking has been completed') ||
+                                messageLC.includes('service completed');
+
+    console.log('🔍 Message analysis:', {
+      message: dto.message,
+      isReadyForPickupMessage,
+      isCompletedMessage
+    });
+
+    // PRIORITY 1: Detect "Ready for Pickup" by message content (overrides wrong type)
+    if (isReadyForPickupMessage && !isCompletedMessage) {
+      console.log('🚗 Detected ReadyForPickup by message - NOT opening review modal');
+      this.toastService.success(title, message, 7000);
+      this.dispatchBookingStatusChangedEvent(dto.bookingId, 'ready');
+      // Explicitly NOT opening review modal - vehicle is just ready, not completed
+      return;
+    }
+
+    // PRIORITY 2: Detect "Completed" by message content (overrides wrong type)
+    if (isCompletedMessage) {
+      console.log('✅ Detected BookingCompleted by message - will open review modal');
+      this.toastService.success(title, message, 7000);
+      this.dispatchBookingStatusChangedEvent(dto.bookingId, 'completed');
+      // Trigger review modal for car owners
+      this.tryOpenReviewModal(dto.bookingId, 'CompletedMessage');
+      return;
+    }
 
     // Show toast for booking-related notifications (workshop owners)
     if (dto.type === NotificationType.BookingCreated) {
@@ -421,6 +476,7 @@ export class SignalRNotificationService {
     }
     // Show toast for booking ready for pickup (notify car owner)
     else if (dto.type === NotificationType.BookingReadyForPickup) {
+      console.log('🚗 ReadyForPickup notification (by type) - NOT opening review modal');
       this.toastService.success(title, message, 7000);
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'ready');
     }
@@ -431,11 +487,13 @@ export class SignalRNotificationService {
     }
     // Show toast for booking completed (notify car owner)
     else if (dto.type === NotificationType.BookingCompleted) {
+      console.log('✅ BookingCompleted notification (by type) - will open review modal');
       this.toastService.success(title, message, 7000);
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'completed');
+      this.tryOpenReviewModal(dto.bookingId, 'BookingCompleted');
     }
     // Show toast for payment received
-    else if (dto.type === NotificationType.PaymentReceived && dto.priority === 'high') {
+    else if (dto.type === NotificationType.PaymentReceived) {
       this.toastService.success(title, message, 6000);
     }
     // Show toast for quote approved
@@ -446,9 +504,42 @@ export class SignalRNotificationService {
     else if (dto.type === NotificationType.BookingAccepted) {
       this.toastService.info(title, message, 6000);
     }
+    // Handle JobStatusChanged
+    else if (dto.type === NotificationType.JobStatusChanged) {
+      this.toastService.info(title, message, 6000);
+    }
     // Show toast for high-priority notifications
     else if (appNotification.priority === 'high') {
       this.toastService.warning(title, message, 5000);
+    }
+  }
+
+  /**
+   * Try to open review modal for car owner
+   * Centralized method to ensure consistent role checking
+   */
+  private tryOpenReviewModal(bookingId: number | undefined, source: string): void {
+    if (!bookingId) {
+      console.log(`📝 Cannot open review modal from ${source}: no bookingId`);
+      return;
+    }
+
+    const userRole = this.authService.getUserRole();
+    const isCarOwner = RoleHelper.isCarOwner(userRole);
+
+    console.log(`📝 tryOpenReviewModal called from ${source}:`, {
+      userRole,
+      isCarOwner,
+      bookingId
+    });
+
+    if (isCarOwner) {
+      console.log(`📝 Opening review modal for booking ${bookingId} (source: ${source})`);
+      this.ngZone.run(() => {
+        this.reviewModalService.openReviewModal(bookingId);
+      });
+    } else {
+      console.log(`📝 Not opening review modal: user is not a car owner (role: ${userRole})`);
     }
   }
 

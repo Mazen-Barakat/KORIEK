@@ -1,0 +1,194 @@
+<div class="modal-backdrop" @backdropAnimation (click)="onBackdropClick($event)">
+  <div class="modal-container" @modalAnimation>
+    <!-- Main Content - Show immediately -->
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="header-content">
+          <h2>Rate Your Service Experience</h2>
+          <p class="subtitle">Help us improve by sharing your feedback</p>
+        </div>
+        <button
+          class="close-button"
+          (click)="closeModal()"
+          [disabled]="isSubmitting"
+          aria-label="Close"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Booking Summary -->
+      <div class="booking-summary" *ngIf="booking">
+        <h3>Booking Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="label">Booking ID:</span>
+            <span class="value">#{{ booking.id }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Status:</span>
+            <span [class]="'badge ' + getStatusClass(booking.status)">{{
+              booking.status
+            }}</span>
+          </div>
+          <div class="summary-item" *ngIf="booking.appointmentDate">
+            <span class="label">Appointment Date:</span>
+            <span class="value">{{ formatDate(booking.appointmentDate) }}</span>
+          </div>
+          <div class="summary-item" *ngIf="booking.paymentStatus">
+            <span class="label">Payment Status:</span>
+            <span [class]="'badge ' + getPaymentStatusClass(booking.paymentStatus)">{{
+              booking.paymentStatus
+            }}</span>
+          </div>
+          <div class="summary-item full-width" *ngIf="booking.issueDescription">
+            <span class="label">Issue Description:</span>
+            <span class="value">{{ booking.issueDescription }}</span>
+          </div>
+        </div>
+
+        <!-- Workshop Info -->
+        <div class="workshop-info" *ngIf="workshop">
+          <div class="workshop-header">
+            <div class="workshop-logo" *ngIf="workshop.logoUrl">
+              <img [src]="workshop.logoUrl" [alt]="workshop.workshopName" />
+            </div>
+            <div class="workshop-details">
+              <h4>{{ workshop.workshopName }}</h4>
+              <p *ngIf="workshop.address">{{ workshop.address }}</p>
+              <p *ngIf="workshop.phoneNumber">📞 {{ workshop.phoneNumber }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review Form -->
+      <div class="review-form">
+        <!-- Rating Section -->
+        <div class="form-group">
+          <label for="rating" class="required">How would you rate this service?</label>
+          <div class="rating-container">
+            <app-star-rating
+              [(rating)]="rating"
+              [maxStars]="5"
+              [readonly]="isSubmitting || hasSubmitted"
+              [size]="'large'"
+              (ratingChange)="onRatingChange($event)"
+            ></app-star-rating>
+            <span class="rating-text" *ngIf="rating > 0">{{ rating }} out of 5</span>
+          </div>
+          <div class="error-message" *ngIf="showValidationErrors && rating === 0">
+            Please select a rating
+          </div>
+        </div>
+
+        <!-- Comment Section -->
+        <div class="form-group">
+          <label for="comment" class="required">Your Feedback</label>
+          <textarea
+            id="comment"
+            [(ngModel)]="comment"
+            (input)="onCommentInput()"
+            [disabled]="isSubmitting || hasSubmitted"
+            [maxlength]="maxCommentLength"
+            placeholder="Share your experience with this workshop. What did you like? What could be improved?"
+            rows="5"
+            class="form-control"
+            [class.error]="showValidationErrors && (!comment || comment.trim().length === 0)"
+          ></textarea>
+          <div class="input-footer">
+            <div
+              class="error-message"
+              *ngIf="showValidationErrors && (!comment || comment.trim().length === 0)"
+            >
+              Please enter your feedback
+            </div>
+            <div class="character-count" [class.warning]="getRemainingCharacters() < 50">
+              {{ comment.length }} / {{ maxCommentLength }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Paid Amount Section -->
+        <div class="form-group">
+          <label for="paidAmount">Amount Paid (EGP)</label>
+          <div class="input-with-icon">
+            <span class="icon">💰</span>
+            <input
+              type="number"
+              id="paidAmount"
+              [(ngModel)]="paidAmount"
+              [disabled]="isSubmitting || hasSubmitted"
+              min="0"
+              step="0.01"
+              placeholder="Enter the amount you paid"
+              class="form-control"
+              [class.error]="showValidationErrors && paidAmount < 0"
+            />
+          </div>
+          <div class="error-message" *ngIf="showValidationErrors && paidAmount < 0">
+            Amount cannot be negative
+          </div>
+        </div>
+
+        <!-- Validation Summary -->
+        <div class="validation-summary" *ngIf="showValidationErrors && getValidationErrors().length > 0">
+          <div class="alert alert-error">
+            <strong>Please fix the following errors:</strong>
+            <ul>
+              <li *ngFor="let error of getValidationErrors()">{{ error }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Submit Error -->
+        <div class="alert alert-error" *ngIf="submitError">
+          {{ submitError }}
+        </div>
+
+        <!-- Success Message -->
+        <div class="alert alert-success" *ngIf="hasSubmitted">
+          <strong>✅ Review submitted successfully!</strong>
+          <p>Thank you for your feedback!</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button
+          class="btn-secondary"
+          (click)="closeModal()"
+          [disabled]="isSubmitting"
+          type="button"
+        >
+          {{ hasSubmitted ? 'Close' : 'Cancel' }}
+        </button>
+        <button
+          class="btn-primary"
+          (click)="submitReview()"
+          [disabled]="isSubmitting || hasSubmitted"
+          type="button"
+        >
+          <span *ngIf="!isSubmitting && !hasSubmitted">Submit Review</span>
+          <span *ngIf="isSubmitting">
+            <span class="spinner-small"></span>
+            Submitting...
+          </span>
+          <span *ngIf="hasSubmitted">✅ Submitted</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
