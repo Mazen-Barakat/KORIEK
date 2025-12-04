@@ -925,7 +925,7 @@
             <div class="workshop-page-action" [class.closed-action]="workshop.isClosed">
               <span class="closed-hint" *ngIf="workshop.isClosed">See working hours</span>
               <a
-                [routerLink]="['/workshop-profile', workshop.workshopProfileId || workshop.id]"
+                [routerLink]="['/workshop-details', workshop.workshopProfileId || workshop.id]"
                 class="workshop-page-button"
                 (click)="$event.stopPropagation()"
               >
