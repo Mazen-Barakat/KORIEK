@@ -219,7 +219,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     // Backend sends wrong notification type (PaymentReceived instead of BookingCompleted)
     // So we detect by message content: "has been completed" or "booking has been completed"
     const messageLC = (notification.message || '').toLowerCase();
-    const isCompletedNotification = messageLC.includes('has been completed') || 
+    const isCompletedNotification = messageLC.includes('has been completed') ||
                                      messageLC.includes('booking has been completed') ||
                                      messageLC.includes('service completed');
     const bookingId = notification.data?.bookingId;
