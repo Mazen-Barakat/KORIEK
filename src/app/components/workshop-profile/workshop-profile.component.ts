@@ -42,6 +42,22 @@ interface Service {
   }>;
 }
 
+interface Review {
+  id: number;
+  userName: string;
+  userAvatar?: string;
+  rating: number;
+  comment: string;
+  date: string;
+  paidAmount?: number;
+}
+
+interface RatingBar {
+  stars: number;
+  percentage: number;
+  count: number;
+}
+
 @Component({
   selector: 'app-workshop-profile',
   standalone: true,
@@ -59,6 +75,12 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   selectedTab: 'services' | 'reviews' = 'services';
   errorMessage: string = '';
   isLoadingProfile = false;
+  isLoadingReviews = false;
+
+  // Reviews data
+  reviews: Review[] = [];
+  ratingBars: RatingBar[] = [];
+  averageRating: number = 0;
 
   // Gallery slider state
   currentImageIndex: number = 0;
@@ -253,6 +275,9 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
             this.cdr.detectChanges();
           },
         });
+
+        // Load reviews
+        this.loadReviews(data.id);
       },
       error: (error) => {
         console.error('Error loading workshop profile:', error);
@@ -266,6 +291,93 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
         }
       },
     });
+  }
+
+  loadReviews(workshopId: number): void {
+    this.isLoadingReviews = true;
+    const reviewsUrl = `https://localhost:44316/api/Review/all-Review/${workshopId}`;
+
+    this.http
+      .get<any>(reviewsUrl)
+      .pipe(
+        timeout(5000),
+        catchError((error) => {
+          console.error('Reviews API failed:', error);
+          return of({ success: false, data: [] });
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (response?.success && response?.data) {
+            this.reviews = response.data.map((review: any, index: number) => ({
+              id: index + 1,
+              userName: `${review.firstName || ''} ${review.lastName || ''}`.trim() || 'Customer',
+              userAvatar: review.profileImageUrl
+                ? this.getFullImageUrl(review.profileImageUrl)
+                : undefined,
+              rating: review.rating,
+              comment: review.comment,
+              date: review.createdAt,
+              paidAmount: review.paidAmount,
+            }));
+
+            // Calculate average rating
+            if (this.reviews.length > 0) {
+              this.averageRating =
+                this.reviews.reduce((sum, r) => sum + r.rating, 0) / this.reviews.length;
+            }
+
+            // Calculate rating bars
+            this.calculateRatingBars();
+          }
+          this.isLoadingReviews = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.isLoadingReviews = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  calculateRatingBars(): void {
+    const counts = [0, 0, 0, 0, 0]; // 5, 4, 3, 2, 1 stars
+    this.reviews.forEach((review) => {
+      const rating = Math.round(review.rating);
+      if (rating >= 1 && rating <= 5) {
+        counts[5 - rating]++;
+      }
+    });
+
+    const maxCount = Math.max(...counts, 1);
+    this.ratingBars = [5, 4, 3, 2, 1].map((stars, index) => ({
+      stars,
+      count: counts[index],
+      percentage: (counts[index] / maxCount) * 100,
+    }));
+  }
+
+  getFullImageUrl(url: string): string {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `https://localhost:44316${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
+  getStarArray(rating: number): number[] {
+    const stars: number[] = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(1);
+    }
+    if (hasHalfStar && stars.length < 5) {
+      stars.push(0.5);
+    }
+    while (stars.length < 5) {
+      stars.push(0);
+    }
+    return stars;
   }
 
   getDayName(dayOfWeek: number): string {

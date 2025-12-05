@@ -806,27 +806,276 @@
   line-height: 1;
 }
 
-/* Reviews Placeholder */
-.reviews-placeholder {
+/* Reviews Loading */
+.reviews-loading {
   text-align: center;
   padding: 4rem 2rem;
 }
 
-.reviews-placeholder svg {
+.reviews-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f1f5f9;
+  border-top-color: #e63946;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.reviews-loading p {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+/* Reviews Summary - App Store Style */
+.reviews-summary {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.summary-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 120px;
+}
+
+.big-rating-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.rating-stars-row {
+  display: flex;
+  gap: 2px;
+  margin: 0.5rem 0;
+}
+
+.rating-meta {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.ratings-count {
+  font-weight: 500;
+}
+
+.summary-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rating-bars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 240px;
+}
+
+.rating-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bar-track-bg {
+  flex: 1;
+  height: 8px;
+  background: #e8eaed;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill-orange {
+  height: 100%;
+  background: #f59e0b;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.bar-star-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  min-width: 24px;
+  text-align: right;
+}
+
+.bar-star-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+/* Reviews List */
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.review-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.review-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.reviewer-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.reviewer-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e63946 0%, #dc2626 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.reviewer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reviewer-avatar span {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.reviewer-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewer-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+.review-date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.review-rating {
+  display: flex;
+  gap: 2px;
+}
+
+.review-comment {
+  color: #475569;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.review-footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.review-service-cost {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #16a34a;
+}
+
+/* Reviews Empty State */
+.reviews-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.reviews-empty svg {
   margin: 0 auto 1.5rem;
 }
 
-.reviews-placeholder h3 {
+.reviews-empty h3 {
   font-size: 1.25rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 0.5rem;
 }
 
-.reviews-placeholder p {
+.reviews-empty p {
   font-size: 0.9375rem;
   color: #6b7280;
   margin: 0;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .reviews-summary {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .summary-left {
+    width: 100%;
+    align-items: center;
+    text-align: center;
+  }
+
+  .summary-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .rating-bars-list {
+    max-width: 100%;
+  }
 }
 
 /* Booking Footer */

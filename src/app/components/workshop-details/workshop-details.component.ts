@@ -79,6 +79,9 @@ interface ReviewApi {
   comment: string;
   paidAmount: number;
   createdAt: string;
+  firstName: string;
+  lastName: string;
+  profileImageUrl: string;
 }
 
 // Component interfaces
@@ -234,7 +237,7 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
           })
         ),
       reviews: this.http
-        .get<ApiResponse<ReviewApi[]>>(`${this.API_BASE_URL}/Review/all-ratings/${this.workshopId}`)
+        .get<ApiResponse<ReviewApi[]>>(`${this.API_BASE_URL}/Review/all-Review/${this.workshopId}`)
         .pipe(
           catchError((err) => {
             console.error('Error loading reviews:', err);
@@ -285,7 +288,10 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
               results.reviews?.success && results.reviews.data
                 ? results.reviews.data.map((review, index) => ({
                     id: index + 1,
-                    userName: 'Customer', // API doesn't provide username
+                    userName: `${review.firstName} ${review.lastName}`.trim() || 'Customer',
+                    userAvatar: review.profileImageUrl
+                      ? this.getFullImageUrl(review.profileImageUrl)
+                      : undefined,
                     rating: review.rating,
                     comment: review.comment,
                     date: review.createdAt,
@@ -501,6 +507,13 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
 
     if (!todayHours || todayHours.isClosed) return 'Closed today';
     return `${todayHours.openTime} - ${todayHours.closeTime}`;
+  }
+
+  scrollToReviews(): void {
+    const reviewsList = document.querySelector('.reviews-list');
+    if (reviewsList) {
+      reviewsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   shareWorkshop(): void {
