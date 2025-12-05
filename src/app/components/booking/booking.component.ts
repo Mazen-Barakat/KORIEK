@@ -1578,6 +1578,18 @@ export class BookingComponent implements OnInit {
         if (response.success) {
           // Use booking ID from response as confirmation number
           this.confirmationNumber = 'BK' + String(response.data.id).padStart(6, '0');
+          
+          // Track booking creation time locally for cancel button eligibility
+          try {
+            const stored = localStorage.getItem('recentBookingCreationTimes');
+            const data = stored ? JSON.parse(stored) : {};
+            data[response.data.id] = new Date().toISOString();
+            localStorage.setItem('recentBookingCreationTimes', JSON.stringify(data));
+            console.log('✅ Stored local creation time for booking:', response.data.id);
+          } catch (error) {
+            console.error('Error storing booking creation time:', error);
+          }
+          
           this.currentStep = 5;
           this.bookingConfirmed = true;
           localStorage.removeItem('bookingDraft');

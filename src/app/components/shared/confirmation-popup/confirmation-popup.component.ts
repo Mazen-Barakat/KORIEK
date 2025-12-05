@@ -15,6 +15,7 @@ export class ConfirmationPopupComponent {
   @Input() confirmText = 'Confirm';
   @Input() cancelText = 'Cancel';
   @Input() confirmButtonClass = 'danger'; // 'danger' | 'primary' | 'success'
+  @Input() showWarningIcon = false; // Show warning icon for destructive actions
   
   @Output() confirmed = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();

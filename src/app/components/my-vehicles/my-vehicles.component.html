@@ -51,6 +51,7 @@
           <div *ngFor="let vehicle of vehicles"
                class="vehicle-card"
                [class.selected]="selectedVehicleId === vehicle.id"
+               [class.default-vehicle]="vehicle.isDefault"
                (click)="selectVehicle(vehicle)">
 
             <!-- Car Image from API -->
@@ -70,6 +71,13 @@
                        class="car-logo"
                        (error)="handleLogoError($event)" />
                   <h2 class="vehicle-title">{{ vehicle.make }} {{ vehicle.model }}</h2>
+                  <!-- Default Vehicle Badge -->
+                  <span *ngIf="vehicle.isDefault" class="default-badge" title="Default Vehicle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Default
+                  </span>
                 </div>
                 <div class="vehicle-meta">
                   <span class="vehicle-year">
@@ -92,6 +100,27 @@
                 </div>
               </div>
               <div class="vehicle-actions">
+                <!-- Set/Unset Default Button -->
+                <button 
+                  *ngIf="!vehicle.isDefault"
+                  class="action-btn default-btn" 
+                  aria-label="Set as default vehicle" 
+                  (click)="setDefaultVehicle(vehicle, $event)" 
+                  title="Set as Default Vehicle">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </button>
+                <button 
+                  *ngIf="vehicle.isDefault"
+                  class="action-btn default-btn active" 
+                  aria-label="Unset default vehicle" 
+                  (click)="unsetDefaultVehicle(vehicle, $event)" 
+                  title="Unset Default Vehicle">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </button>
                 <button class="action-btn edit-btn" aria-label="View details" (click)="navigateToCarDetails(vehicle, $event)" title="View Details">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -351,11 +380,11 @@
                     <span class="status-pulse"></span>
                     <span class="status-text">{{ booking.urgency }}</span>
                   </div>
-                  <button class="cancel-booking-btn"
+                  <button *ngIf="canCancelBooking(booking)" class="cancel-booking-btn"
                           (click)="openCancelPopup(booking, $event)"
                           [disabled]="cancellingBookingIds.has(booking.id)"
                           [class.cancelling]="cancellingBookingIds.has(booking.id)"
-                          title="Cancel this booking">
+                          title="Cancel this booking (available for 12 hours after booking)">
                     <svg *ngIf="!cancellingBookingIds.has(booking.id)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18"/>
                       <line x1="6" y1="6" x2="18" y2="18"/>
@@ -589,11 +618,12 @@
 <!-- Cancel Booking Confirmation Popup -->
 <app-confirmation-popup
   [isOpen]="showCancelPopup"
-  title="Cancel Appointment"
+  title="Cancel Booking?"
   [message]="cancelPopupMessage"
-  confirmText="Delete"
-  cancelText="Cancel"
+  confirmText="Yes, Cancel Booking"
+  cancelText="Keep Booking"
   confirmButtonClass="danger"
+  [showWarningIcon]="true"
   (confirmed)="onCancelPopupConfirmed()"
   (cancelled)="onCancelPopupClosed()">
 </app-confirmation-popup>
