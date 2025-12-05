@@ -1,11 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Output,
-  EventEmitter,
-  Input,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -13,11 +6,7 @@ import { StarRatingComponent } from '../star-rating/star-rating.component';
 import { ReviewService } from '../../services/review.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
-import {
-  ReviewSubmitDto,
-  BookingDetails,
-  WorkshopDetails,
-} from '../../models/review.model';
+import { ReviewSubmitDto, BookingDetails, WorkshopDetails } from '../../models/review.model';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
@@ -108,7 +97,7 @@ export class ReviewModalComponent implements OnInit, OnDestroy {
       issueDescription: '',
       workShopProfileId: 0,
       carOwnerProfileId: 0,
-      paidAmount: 0
+      paidAmount: 0,
     } as BookingDetails;
 
     // Load actual booking details in background
@@ -299,20 +288,35 @@ export class ReviewModalComponent implements OnInit, OnDestroy {
           this.isSubmitting = false;
           if (response.success) {
             this.hasSubmitted = true;
-            this.toastService.success(
-              'Review Submitted',
-              'Thank you for your feedback!',
-              5000
-            );
+            this.toastService.success('Review Submitted', 'Thank you for your feedback!', 5000);
             this.submitted.emit();
 
             // Close modal after brief delay to show success message
             setTimeout(() => {
-              this.closeModal();
+              this.forceCloseModal();
             }, 500);
           } else {
-            this.submitError = response.message || 'Failed to submit review';
-            this.toastService.error('Submission Failed', this.submitError);
+            // Handle success: false responses from backend
+            const responseMessage = response.message || '';
+            const isAlreadyExists =
+              responseMessage.toLowerCase().includes('already') ||
+              responseMessage.toLowerCase().includes('review');
+
+            if (isAlreadyExists) {
+              // Show error message that review was already submitted
+              this.toastService.error(
+                'Review Already Exists',
+                'You have already submitted a review for this booking.',
+                5000
+              );
+              // Close the modal since review already exists
+              setTimeout(() => {
+                this.forceCloseModal();
+              }, 500);
+            } else {
+              this.submitError = responseMessage || 'Failed to submit review';
+              this.toastService.error('Submission Failed', this.submitError);
+            }
           }
         },
         error: (error) => {
@@ -320,21 +324,22 @@ export class ReviewModalComponent implements OnInit, OnDestroy {
           this.isSubmitting = false;
 
           // Check if review already exists for this booking
-          const errorMessage = error.error?.message || '';
-          const isAlreadyExists = errorMessage.toLowerCase().includes('already exist') ||
-                                   errorMessage.toLowerCase().includes('already submitted') ||
-                                   errorMessage.toLowerCase().includes('duplicate');
+          const errorMessage = error.error?.message || error.message || '';
+          const isAlreadyExists =
+            errorMessage.toLowerCase().includes('already') ||
+            errorMessage.toLowerCase().includes('review') ||
+            errorMessage.toLowerCase().includes('duplicate');
 
           if (isAlreadyExists) {
-            // Show friendly message that review was already submitted
-            this.toastService.info(
-              'Review Already Submitted',
-              'You have already submitted a review for this booking. Thank you for your feedback!',
-              6000
+            // Show error message that review was already submitted
+            this.toastService.error(
+              'Review Already Exists',
+              'You have already submitted a review for this booking.',
+              5000
             );
             // Close the modal since review already exists
             setTimeout(() => {
-              this.closeModal();
+              this.forceCloseModal();
             }, 500);
           } else {
             this.submitError = errorMessage || 'Failed to submit review. Please try again.';
@@ -351,6 +356,14 @@ export class ReviewModalComponent implements OnInit, OnDestroy {
     if (!this.isSubmitting) {
       this.close.emit();
     }
+  }
+
+  /**
+   * Force close modal (used after API responses)
+   */
+  forceCloseModal(): void {
+    this.isSubmitting = false;
+    this.close.emit();
   }
 
   /**

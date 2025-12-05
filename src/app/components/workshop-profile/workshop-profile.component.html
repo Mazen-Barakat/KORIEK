@@ -291,7 +291,7 @@
           [class.active]="selectedTab === 'reviews'"
           (click)="switchTab('reviews')"
         >
-          Reviews (0)
+          Reviews ({{ reviews.length }})
         </button>
       </div>
 
@@ -523,21 +523,157 @@
 
       <!-- Reviews Tab -->
       <div class="tab-content" *ngIf="selectedTab === 'reviews'">
-        <div class="reviews-placeholder">
-          <svg
-            width="64"
-            height="64"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#9ca3af"
-            stroke-width="1.5"
-          >
-            <path
-              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-            />
-          </svg>
-          <h3>Reviews Coming Soon</h3>
-          <p>Customer reviews and ratings will be displayed here.</p>
+        <!-- Loading State -->
+        <div class="reviews-loading" *ngIf="isLoadingReviews">
+          <div class="loading-spinner"></div>
+          <p>Loading reviews...</p>
+        </div>
+
+        <!-- Reviews Content -->
+        <div class="reviews-content" *ngIf="!isLoadingReviews">
+          <!-- Reviews Summary -->
+          <div class="reviews-summary" *ngIf="reviews.length > 0">
+            <div class="summary-left">
+              <div class="big-rating-number">{{ averageRating.toFixed(1) }}</div>
+              <div class="rating-stars-row">
+                <ng-container *ngFor="let star of getStarArray(averageRating)">
+                  <svg *ngIf="star === 1" width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b">
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    />
+                  </svg>
+                  <svg *ngIf="star === 0.5" width="18" height="18" viewBox="0 0 24 24">
+                    <defs>
+                      <linearGradient id="halfStarProfile">
+                        <stop offset="50%" stop-color="#f59e0b" />
+                        <stop offset="50%" stop-color="#e2e8f0" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      fill="url(#halfStarProfile)"
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    />
+                  </svg>
+                  <svg *ngIf="star === 0" width="18" height="18" viewBox="0 0 24 24" fill="#e2e8f0">
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    />
+                  </svg>
+                </ng-container>
+              </div>
+              <div class="rating-meta">
+                <span class="ratings-count">{{ reviews.length }} Reviews</span>
+              </div>
+            </div>
+
+            <div class="summary-right">
+              <div class="rating-bars-list">
+                <div class="rating-bar-row" *ngFor="let bar of ratingBars">
+                  <div class="bar-track-bg">
+                    <div class="bar-fill-orange" [style.width.%]="bar.percentage"></div>
+                  </div>
+                  <span class="bar-star-label">{{ bar.stars }}.0</span>
+                  <svg
+                    class="bar-star-icon"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="#f59e0b"
+                  >
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reviews List -->
+          <div class="reviews-list" *ngIf="reviews.length > 0">
+            <div class="review-card" *ngFor="let review of reviews">
+              <div class="review-header">
+                <div class="reviewer-info">
+                  <div class="reviewer-avatar">
+                    <img
+                      *ngIf="review.userAvatar"
+                      [src]="review.userAvatar"
+                      [alt]="review.userName"
+                    />
+                    <span *ngIf="!review.userAvatar">{{ review.userName.charAt(0) }}</span>
+                  </div>
+                  <div class="reviewer-details">
+                    <span class="reviewer-name">{{ review.userName }}</span>
+                    <span class="review-date">{{ review.date | date : 'mediumDate' }}</span>
+                  </div>
+                </div>
+                <div class="review-rating">
+                  <ng-container *ngFor="let star of getStarArray(review.rating)">
+                    <svg
+                      *ngIf="star === 1"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="#f59e0b"
+                    >
+                      <path
+                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                      />
+                    </svg>
+                    <svg
+                      *ngIf="star === 0"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="#e2e8f0"
+                    >
+                      <path
+                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                      />
+                    </svg>
+                  </ng-container>
+                </div>
+              </div>
+              <p class="review-comment">{{ review.comment }}</p>
+              <div class="review-footer" *ngIf="review.paidAmount">
+                <span class="review-service-cost">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                  </svg>
+                  Service: {{ review.paidAmount }} EGP
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div class="reviews-empty" *ngIf="reviews.length === 0">
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#9ca3af"
+              stroke-width="1.5"
+            >
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
+            </svg>
+            <h3>No Reviews Yet</h3>
+            <p>
+              You haven't received any customer reviews yet. They will appear here once customers
+              rate your services.
+            </p>
+          </div>
         </div>
       </div>
     </main>
