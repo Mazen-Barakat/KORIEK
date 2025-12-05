@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AddVehicleFormComponent } from '../add-vehicle-form/add-vehicle-form.component';
@@ -19,6 +19,7 @@ interface Vehicle {
   engineCapacity?: number;
   maintenanceItems?: MaintenanceItem[];
   dashboardIndicators?: Array<{ label: string; icon: string; status?: string }>;
+  isDefault?: boolean;
 }
 
 interface MaintenanceItem {
@@ -59,6 +60,8 @@ interface UpcomingBooking {
   urgency: 'Urgent' | 'Scheduled';
   daysUntil: number;
   workshopId?: number;
+  workshopServiceId?: number;
+  createdAt?: Date;
 }
 
 interface NewExpenseForm {
@@ -77,7 +80,7 @@ interface NewExpenseForm {
   templateUrl: './my-vehicles.component.html',
   styleUrls: ['./my-vehicles.component.css']
 })
-export class MyVehiclesComponent implements OnInit {
+export class MyVehiclesComponent implements OnInit, OnDestroy {
   vehicles: Vehicle[] = [];
   isAddVehicleModalOpen = false;
   selectedVehicleId: number | null = null;
@@ -161,6 +164,12 @@ export class MyVehiclesComponent implements OnInit {
   showCancelPopup = false;
   bookingToCancel: UpcomingBooking | null = null;
 
+  // Timer for auto-updating cancel button visibility
+  private cancelButtonUpdateInterval: any = null;
+
+  // Track locally created bookings with their submission time
+  private localBookingCreationTimes: Map<number, Date> = new Map();
+
   // Getter for popup message
   get cancelPopupMessage(): string {
     if (!this.bookingToCancel) return '';
@@ -193,7 +202,68 @@ export class MyVehiclesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadLocalBookingCreationTimes();
     this.loadVehiclesFromBackend();
+  }
+
+  ngOnDestroy(): void {
+    this.stopCancelButtonUpdateInterval();
+  }
+
+  /**
+   * Load locally tracked booking creation times from localStorage
+   */
+  private loadLocalBookingCreationTimes(): void {
+    try {
+      const stored = localStorage.getItem('recentBookingCreationTimes');
+      if (stored) {
+        const data = JSON.parse(stored);
+        const now = new Date();
+        
+        // Only load bookings created within the last 13 hours (12 hours + 1 hour buffer)
+        Object.entries(data).forEach(([bookingId, timestamp]) => {
+          const creationTime = new Date(timestamp as string);
+          const ageHours = (now.getTime() - creationTime.getTime()) / (1000 * 60 * 60);
+          
+          if (ageHours <= 13) {
+            this.localBookingCreationTimes.set(Number(bookingId), creationTime);
+            console.log(`✅ Loaded local creation time for booking ${bookingId}:`, creationTime.toISOString());
+          }
+        });
+        
+        // Clean up old entries from localStorage
+        this.cleanupOldBookingTimes();
+      }
+    } catch (error) {
+      console.error('Error loading local booking creation times:', error);
+    }
+  }
+
+  /**
+   * Remove booking creation times older than 13 hours from localStorage
+   */
+  private cleanupOldBookingTimes(): void {
+    try {
+      const stored = localStorage.getItem('recentBookingCreationTimes');
+      if (stored) {
+        const data = JSON.parse(stored);
+        const now = new Date();
+        const cleaned: any = {};
+        
+        Object.entries(data).forEach(([bookingId, timestamp]) => {
+          const creationTime = new Date(timestamp as string);
+          const ageHours = (now.getTime() - creationTime.getTime()) / (1000 * 60 * 60);
+          
+          if (ageHours <= 13) {
+            cleaned[bookingId] = timestamp;
+          }
+        });
+        
+        localStorage.setItem('recentBookingCreationTimes', JSON.stringify(cleaned));
+      }
+    } catch (error) {
+      console.error('Error cleaning up old booking times:', error);
+    }
   }
 
   loadVehiclesFromBackend(): void {
@@ -263,6 +333,10 @@ export class MyVehiclesComponent implements OnInit {
             this.vehicles = [];
           }
           console.log('Loaded cars:', this.vehicles);
+          
+          // Load default vehicle preference and mark it
+          this.loadDefaultVehicle();
+          
           // Force change detection in case data arrives after initial render
           this.cdr.detectChanges();
           // Fetch indicator statuses from backend for all vehicles
@@ -395,10 +469,24 @@ export class MyVehiclesComponent implements OnInit {
   // Perform deletion after user confirms
   deleteCarConfirmed(): void {
     if (!this.carToDelete) return;
+    
+    const deletedVehicleId = this.carToDelete.id;
+    const wasDefault = this.carToDelete.isDefault;
+    
     this.isDeleting = true;
     this.carsService.deleteCar(this.carToDelete.id).subscribe({
       next: (res) => {
         console.log('Deleted car', this.carToDelete?.id, res);
+        
+        // If the deleted vehicle was the default, clear the preference
+        if (wasDefault) {
+          const userId = this.getUserId();
+          if (userId) {
+            localStorage.removeItem(`defaultVehicle_user_${userId}`);
+            console.log('✅ Cleared default vehicle preference after deletion');
+          }
+        }
+        
         this.isDeleting = false;
         this.showDeleteConfirm = false;
         this.carToDelete = null;
@@ -880,7 +968,14 @@ export class MyVehiclesComponent implements OnInit {
               // Classify as Urgent (<= 7 days) or Scheduled (> 7 days)
               const urgency: 'Urgent' | 'Scheduled' = daysUntil <= 7 ? 'Urgent' : 'Scheduled';
 
-              allBookings.push({
+              console.log('📅 Loading booking:', {
+                id: booking.id,
+                workshopServiceId: booking.workshopServiceId,
+                createdAtRaw: booking.createdAt,
+                createdAtParsed: booking.createdAt ? new Date(booking.createdAt).toISOString() : 'undefined'
+              });
+
+              const bookingObj: UpcomingBooking = {
                 id: booking.id,
                 carId: carId,
                 vehicleLabel: vehicleLabel,
@@ -889,8 +984,17 @@ export class MyVehiclesComponent implements OnInit {
                 status: booking.status,
                 urgency: urgency,
                 daysUntil: daysUntil,
-                workshopId: booking.workShopProfileId
-              });
+                workshopId: booking.workShopProfileId,
+                workshopServiceId: booking.workshopServiceId,
+                createdAt: booking.createdAt ? new Date(booking.createdAt) : undefined
+              };
+
+              allBookings.push(bookingObj);
+
+              // Fetch service name if workshopServiceId exists
+              if (booking.workshopServiceId) {
+                this.fetchServiceName(bookingObj);
+              }
             });
           }
         });
@@ -900,6 +1004,7 @@ export class MyVehiclesComponent implements OnInit {
 
         this.upcomingBookings = allBookings;
         this.loadingBookings = false;
+        this.startCancelButtonUpdateInterval();
         this.cdr.detectChanges();
       },
       error: (err: any) => {
@@ -992,7 +1097,14 @@ export class MyVehiclesComponent implements OnInit {
               const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
               const urgency: 'Urgent' | 'Scheduled' = daysUntil <= 7 ? 'Urgent' : 'Scheduled';
 
-              return {
+              console.log('📅 Loading booking (detailed view):', {
+                id: booking.id,
+                workshopServiceId: booking.workshopServiceId,
+                createdAtRaw: booking.createdAt,
+                createdAtParsed: booking.createdAt ? new Date(booking.createdAt).toISOString() : 'undefined'
+              });
+
+              const bookingObj: UpcomingBooking = {
                 id: booking.id,
                 carId: this.selectedCarForBookings!,
                 vehicleLabel: vehicleLabel,
@@ -1001,8 +1113,17 @@ export class MyVehiclesComponent implements OnInit {
                 status: booking.status,
                 urgency: urgency,
                 daysUntil: daysUntil,
-                workshopId: booking.workShopProfileId
+                workshopId: booking.workShopProfileId,
+                workshopServiceId: booking.workshopServiceId,
+                createdAt: booking.createdAt ? new Date(booking.createdAt) : undefined
               };
+
+              // Fetch service name if workshopServiceId exists
+              if (booking.workshopServiceId) {
+                this.fetchServiceName(bookingObj);
+              }
+
+              return bookingObj;
             });
 
           // Append to all bookings
@@ -1025,6 +1146,7 @@ export class MyVehiclesComponent implements OnInit {
             this.updatePageView();
 
             this.loadingCarBookings = false;
+            this.startCancelButtonUpdateInterval();
             this.cdr.detectChanges();
           }
         } catch (error) {
@@ -1114,6 +1236,12 @@ export class MyVehiclesComponent implements OnInit {
       return; // Already cancelling
     }
 
+    // Validate time constraint before showing popup
+    if (!this.canCancelBooking(booking)) {
+      alert('Cancellation period has expired. Bookings can only be cancelled within 12 hours of creation.');
+      return;
+    }
+
     this.bookingToCancel = booking;
     this.showCancelPopup = true;
   }
@@ -1129,6 +1257,15 @@ export class MyVehiclesComponent implements OnInit {
     if (!this.bookingToCancel) return;
 
     const booking = this.bookingToCancel;
+    
+    // Final validation before API call (security measure)
+    if (!this.canCancelBooking(booking)) {
+      this.showCancelPopup = false;
+      this.bookingToCancel = null;
+      alert('Cancellation period has expired. Bookings can only be cancelled within 12 hours of creation.');
+      return;
+    }
+
     this.showCancelPopup = false;
     this.bookingToCancel = null;
 
@@ -1158,8 +1295,13 @@ export class MyVehiclesComponent implements OnInit {
         console.error('Error cancelling booking:', err);
         this.cancellingBookingIds.delete(booking.id);
         
-        // Show error message using alert (could be replaced with toast)
-        alert('Failed to cancel booking. Please try again.');
+        // Check if error is related to time constraint
+        const errorMsg = err?.error?.message || err?.message || '';
+        if (errorMsg.toLowerCase().includes('time') || errorMsg.toLowerCase().includes('expired') || errorMsg.toLowerCase().includes('cancellation')) {
+          alert('Cancellation period has expired. Bookings can only be cancelled within 12 hours of creation.');
+        } else {
+          alert('Failed to cancel booking. Please try again.');
+        }
         
         this.cdr.detectChanges();
       }
@@ -1204,5 +1346,264 @@ export class MyVehiclesComponent implements OnInit {
     if (lowerName.includes('filter')) return 'M3 3h18v18H3V3zm0 6h18M9 9v12';
     // Default maintenance icon
     return 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z';
+  }
+
+  /**
+   * Check if a booking can be cancelled (within 12 hours of creation)
+   * @param booking The booking to check
+   * @returns true if booking can be cancelled, false otherwise
+   */
+  canCancelBooking(booking: UpcomingBooking): boolean {
+    // Check if we have a local creation time (for newly created bookings)
+    const localCreationTime = this.localBookingCreationTimes.get(booking.id);
+    
+    if (localCreationTime) {
+      const now = new Date();
+      const timeDiffMs = now.getTime() - localCreationTime.getTime();
+      const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
+
+      console.log('🕐 Cancel eligibility check (LOCAL TIME):', {
+        bookingId: booking.id,
+        localCreatedAt: localCreationTime.toISOString(),
+        now: now.toISOString(),
+        timeDiffHours: timeDiffHours.toFixed(2),
+        canCancel: timeDiffHours <= 12
+      });
+
+      return timeDiffHours <= 12;
+    }
+
+    // Fallback to server createdAt if no local time is available
+    if (!booking.createdAt) {
+      console.log('❌ No createdAt timestamp for booking:', booking.id);
+      return false;
+    }
+
+    const now = new Date();
+    const createdAt = new Date(booking.createdAt);
+    const timeDiffMs = now.getTime() - createdAt.getTime();
+    const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
+
+    console.log('🕐 Cancel eligibility check (SERVER TIME):', {
+      bookingId: booking.id,
+      createdAt: createdAt.toISOString(),
+      now: now.toISOString(),
+      timeDiffHours: timeDiffHours.toFixed(2),
+      canCancel: timeDiffHours <= 12
+    });
+
+    return timeDiffHours <= 12;
+  }
+
+  /**
+   * Start interval to update cancel button visibility every 5 minutes
+   */
+  private startCancelButtonUpdateInterval(): void {
+    this.stopCancelButtonUpdateInterval(); // Clear any existing interval
+    
+    // Update every 5 minutes to reflect time-based changes (12-hour window)
+    this.cancelButtonUpdateInterval = setInterval(() => {
+      this.cdr.detectChanges();
+    }, 5 * 60 * 1000); // 5 minutes in milliseconds
+  }
+
+  /**
+   * Stop the cancel button update interval
+   */
+  private stopCancelButtonUpdateInterval(): void {
+    if (this.cancelButtonUpdateInterval) {
+      clearInterval(this.cancelButtonUpdateInterval);
+      this.cancelButtonUpdateInterval = null;
+    }
+  }
+
+  /**
+   * Fetch service name from WorkshopService and Service APIs
+   */
+  private fetchServiceName(booking: UpcomingBooking): void {
+    if (!booking.workshopServiceId) return;
+
+    const apiUrl = 'https://localhost:44316/api';
+    
+    // First, get the workshopService to extract serviceId
+    this.bookingService.http.get<any>(`${apiUrl}/WorkshopService/${booking.workshopServiceId}`).subscribe({
+      next: (workshopServiceResponse) => {
+        console.log('Workshop Service Response:', workshopServiceResponse);
+        
+        const serviceId = workshopServiceResponse?.data?.serviceId || workshopServiceResponse?.serviceId;
+        
+        if (serviceId) {
+          // Now fetch the service name using serviceId
+          this.bookingService.http.get<any>(`${apiUrl}/Service/${serviceId}`).subscribe({
+            next: (serviceResponse) => {
+              console.log('Service Response:', serviceResponse);
+              
+              const serviceName = serviceResponse?.data?.name || serviceResponse?.name;
+              
+              if (serviceName) {
+                // Update the booking's service name
+                booking.serviceName = serviceName;
+                console.log(`✅ Updated booking ${booking.id} with service name: ${serviceName}`);
+                this.cdr.detectChanges();
+              }
+            },
+            error: (err) => {
+              console.error(`Error fetching service name for serviceId ${serviceId}:`, err);
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error(`Error fetching workshop service ${booking.workshopServiceId}:`, err);
+      }
+    });
+  }
+
+  /**
+   * Load default vehicle preference from localStorage
+   */
+  private loadDefaultVehicle(): void {
+    try {
+      const userId = this.getUserId();
+      if (!userId) return;
+
+      const defaultVehicleId = localStorage.getItem(`defaultVehicle_user_${userId}`);
+      
+      if (defaultVehicleId) {
+        const vehicleId = Number(defaultVehicleId);
+        const vehicle = this.vehicles.find(v => v.id === vehicleId);
+        
+        if (vehicle) {
+          vehicle.isDefault = true;
+          console.log(`✅ Loaded default vehicle: ${vehicle.make} ${vehicle.model} (ID: ${vehicleId})`);
+          
+          // Sort vehicles so default appears first
+          this.sortVehiclesByDefault();
+          
+          // Auto-select default vehicle to show its maintenance
+          this.selectedVehicleId = vehicle.id;
+        } else {
+          // Vehicle no longer exists, clear the preference
+          localStorage.removeItem(`defaultVehicle_user_${userId}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading default vehicle:', error);
+    }
+  }
+
+  /**
+   * Sort vehicles array to show default vehicle first
+   */
+  private sortVehiclesByDefault(): void {
+    this.vehicles.sort((a, b) => {
+      // Default vehicle comes first
+      if (a.isDefault && !b.isDefault) return -1;
+      if (!a.isDefault && b.isDefault) return 1;
+      // Otherwise maintain original order (by ID)
+      return a.id - b.id;
+    });
+  }
+
+  /**
+   * Set a vehicle as the default
+   */
+  setDefaultVehicle(vehicle: Vehicle, event: Event): void {
+    event.stopPropagation(); // Prevent card selection
+    
+    try {
+      const userId = this.getUserId();
+      if (!userId) {
+        console.error('User ID not found');
+        return;
+      }
+
+      // Unset all other vehicles as default
+      this.vehicles.forEach(v => v.isDefault = false);
+      
+      // Set this vehicle as default
+      vehicle.isDefault = true;
+      
+      // Save to localStorage
+      localStorage.setItem(`defaultVehicle_user_${userId}`, vehicle.id.toString());
+      
+      console.log(`✅ Set default vehicle: ${vehicle.make} ${vehicle.model} (ID: ${vehicle.id})`);
+      
+      // Sort vehicles so default appears first
+      this.sortVehiclesByDefault();
+      
+      // Auto-select the default vehicle to show its maintenance
+      this.selectedVehicleId = vehicle.id;
+      
+      // Show feedback (you can replace with a toast notification)
+      this.showDefaultVehicleFeedback(vehicle);
+      
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error setting default vehicle:', error);
+    }
+  }
+
+  /**
+   * Unset the default vehicle
+   */
+  unsetDefaultVehicle(vehicle: Vehicle, event: Event): void {
+    event.stopPropagation(); // Prevent card selection
+    
+    try {
+      const userId = this.getUserId();
+      if (!userId) return;
+
+      vehicle.isDefault = false;
+      localStorage.removeItem(`defaultVehicle_user_${userId}`);
+      
+      console.log(`✅ Unset default vehicle: ${vehicle.make} ${vehicle.model}`);
+      
+      // Re-sort vehicles by ID since no default now
+      this.sortVehiclesByDefault();
+      
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error unsetting default vehicle:', error);
+    }
+  }
+
+  /**
+   * Get user ID from localStorage or auth service
+   */
+  private getUserId(): string | null {
+    try {
+      // Try to get user ID from localStorage (adjust key based on your auth implementation)
+      const userDataStr = localStorage.getItem('userData') || localStorage.getItem('user') || localStorage.getItem('currentUser');
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        return userData.id || userData.userId || userData.sub || null;
+      }
+      
+      // Alternative: Get from token
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      if (token) {
+        // Decode JWT token (simple decode without validation)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.sub || payload.userId || payload.id || null;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting user ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Show feedback when default vehicle is changed
+   */
+  private showDefaultVehicleFeedback(vehicle: Vehicle): void {
+    // Simple alert - you can replace with a toast notification service
+    const message = `${vehicle.make} ${vehicle.model} set as default vehicle`;
+    console.log(`📌 ${message}`);
+    
+    // Optional: Show a temporary visual feedback
+    // You can implement a toast notification here if you have a toast service
   }
 }

@@ -14,6 +14,7 @@ export enum NotificationType {
   ReviewReceived = 10,
   BookingReadyForPickup = 11,
   BookingInProgress = 12,
+  AppointmentConfirmationRequest = 13,
 }
 
 export interface NotificationDto {
@@ -30,4 +31,5 @@ export interface NotificationDto {
   actionUrl?: string; // Optional - URL for navigation
   actionLabel?: string; // Optional - action button text
   priority?: 'high' | 'medium' | 'low'; // Optional - priority level
+  confirmationDeadline?: string; // Optional - ISO 8601 date string for confirmation deadline
 }

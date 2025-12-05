@@ -2,13 +2,14 @@ import { Component, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { ToastContainerComponent } from './components/shared/toast-container/toast-container.component';
+import { AppointmentConfirmationDialogComponent } from './components/appointment-confirmation-dialog/appointment-confirmation-dialog.component';
 import { AuthService } from './services/auth.service';
 import { SignalRNotificationService } from './services/signalr-notification.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, ToastContainerComponent],
+  imports: [RouterOutlet, HeaderComponent, ToastContainerComponent, AppointmentConfirmationDialogComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })

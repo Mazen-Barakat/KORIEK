@@ -305,6 +305,33 @@ export class BookingService {
     }>(`${this.apiUrl}/Booking/ByCar/${carId}`);
   }
 
+  // =============== Appointment Confirmation ===============
+
+  /**
+   * Confirm or decline an appointment
+   * Called when both car owner and workshop owner need to confirm arrival
+   * @param bookingId The booking ID to confirm
+   * @param isConfirmed True to confirm, false to decline
+   */
+  confirmAppointment(bookingId: number, isConfirmed: boolean): Observable<{
+    success: boolean;
+    message: string;
+    data?: any;
+  }> {
+    const request = {
+      bookingId: bookingId,
+      isConfirmed: isConfirmed
+    };
+    
+    console.log('📤 Sending appointment confirmation:', request);
+    
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      data?: any;
+    }>(`${this.apiUrl}/Booking/confirm-appointment`, request);
+  }
+
   // =============== Job Management ===============
 
   getJobs(): Observable<Job[]> {
