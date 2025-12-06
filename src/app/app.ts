@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './components/header/header.component';
 import { ToastContainerComponent } from './components/shared/toast-container/toast-container.component';
 import { ReviewModalComponent } from './components/review-modal/review-modal.component';
+import { AppointmentConfirmationDialogComponent } from './components/appointment-confirmation-dialog/appointment-confirmation-dialog.component';
 import { AuthService } from './services/auth.service';
 import { SignalRNotificationService } from './services/signalr-notification.service';
 import { ReviewModalService } from './services/review-modal.service';
@@ -17,6 +18,7 @@ import { Subject, takeUntil } from 'rxjs';
     HeaderComponent,
     ToastContainerComponent,
     ReviewModalComponent,
+    AppointmentConfirmationDialogComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
