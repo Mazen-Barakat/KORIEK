@@ -8,7 +8,7 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
+, "src/app/components/appointment-confirmation-dialog/appointment-confirmation-dialog.componentztx"  ],
   "exclude": [
     "src/**/*.spec.ts"
   ]

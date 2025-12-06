@@ -358,6 +358,8 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           );
           // Reload bookings to ensure data consistency with backend
           this.loadRealBookings();
+          // Trigger change detection to refresh UI
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error confirming booking:', err);
@@ -366,6 +368,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           this.acceptedBookings = this.acceptedBookings.filter(b => b.id !== booking.id);
           this.pendingBookings = [booking, ...this.pendingBookings];
           this.selectedTab = 'new';
+          this.cdr.detectChanges();
         }
       });
   }
@@ -398,12 +401,15 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           );
           // Reload bookings to ensure data consistency with backend
           this.loadRealBookings();
+          // Trigger change detection to refresh UI
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error declining booking:', err);
           this.toastService.error('Error', 'Failed to decline booking');
           // Revert UI changes on error
           this.pendingBookings = [booking, ...this.pendingBookings];
+          this.cdr.detectChanges();
         }
       });
 
@@ -442,6 +448,8 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           );
           // Reload bookings to ensure data consistency with backend
           this.loadRealBookings();
+          // Trigger change detection to refresh UI
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error marking booking as ready:', err);
@@ -450,6 +458,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           this.readyForPickupBookings = this.readyForPickupBookings.filter(b => b.id !== booking.id);
           this.inProgressBookings = [booking, ...this.inProgressBookings];
           this.selectedTab = 'in-progress';
+          this.cdr.detectChanges();
         }
       });
   }
@@ -478,6 +487,8 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           );
           // Reload bookings to ensure data consistency with backend
           this.loadRealBookings();
+          // Trigger change detection to refresh UI
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error completing booking:', err);
@@ -486,6 +497,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           this.completedBookings = this.completedBookings.filter(b => b.id !== booking.id);
           this.readyForPickupBookings = [booking, ...this.readyForPickupBookings];
           this.selectedTab = 'ready';
+          this.cdr.detectChanges();
         }
       });
   }

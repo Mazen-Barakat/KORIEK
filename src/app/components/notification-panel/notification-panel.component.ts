@@ -7,6 +7,7 @@ import { NotificationService } from '../../services/notification.service';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { ReviewModalService } from '../../services/review-modal.service';
+import { ToastService } from '../../services/toast.service';
 import { AppNotification } from '../../models/wallet.model';
 import { RoleHelper } from '../../models/user-roles';
 
@@ -39,6 +40,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private authService: AuthService,
     private reviewModalService: ReviewModalService,
+    private toastService: ToastService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     private http: HttpClient
@@ -53,6 +55,12 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
    */
   onNotificationAction(notification: any, event: Event): void {
     event.stopPropagation();
+
+    // Check if this is an appointment confirmation notification
+    if (notification?.type === 'appointment-confirmation') {
+      this.handleAppointmentConfirmationClick(notification);
+      return;
+    }
 
     // If this is a booking action and we have a bookingId, attempt to update booking status
     const bookingId = notification?.data?.bookingId;
@@ -181,17 +189,18 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     // Update locally first for immediate UI feedback
     this.notificationService.markAllAsRead();
 
-    // Then sync each with backend
-    if (token) {
-      unreadNotifications.forEach(notification => {
-        const backendNotificationId = notification.data?.notificationId?.toString() || notification.id;
-        if (backendNotificationId) {
-          this.notificationService.markAsReadOnBackend(backendNotificationId, token)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe();
-        }
-      });
-      console.log(`✅ Marked ${unreadNotifications.length} notifications as read on backend`);
+    // Then sync with backend using bulk endpoint
+    if (token && unreadNotifications.length > 0) {
+      this.notificationService.markAllAsReadOnBackend(token)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            console.log(`✅ Marked all ${unreadNotifications.length} notifications as read on backend`);
+          },
+          error: (err) => {
+            console.error('❌ Failed to mark all as read on backend:', err);
+          }
+        });
     }
   }
 
@@ -213,6 +222,14 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
       this.notificationService.markAsReadOnBackend(backendNotificationId, token)
         .pipe(takeUntil(this.destroy$))
         .subscribe();
+    }
+
+    // Check if this is an appointment confirmation request (NotificationType = 13)
+    const notificationType = notification.data?.notificationType;
+    if (notificationType === 13 || notificationType === 'AppointmentConfirmationRequest') {
+      console.log('🔔 Appointment confirmation notification clicked');
+      this.handleAppointmentConfirmationClick(notification);
+      return;
     }
 
     // Check if this is a "completed" notification for a car owner
@@ -318,5 +335,41 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
   getPriorityClass(priority: string): string {
     return `priority-${priority}`;
+  }
+
+  /**
+   * Handle appointment confirmation notification click
+   * Reopens the confirmation modal with the remaining timer
+   * Fetches fresh data from backend API to ensure accuracy
+   */
+  private handleAppointmentConfirmationClick(notification: AppNotification): void {
+    const bookingId = notification.data?.bookingId;
+    const backendNotificationId = notification.data?.notificationId;
+
+    if (!bookingId || !backendNotificationId) {
+      console.warn('⚠️ Missing booking ID or notification ID for appointment confirmation');
+      return;
+    }
+
+    console.log(`📬 Reopening appointment confirmation modal for booking ${bookingId}, notification ${backendNotificationId}`);
+
+    // Call reopenAppointmentDialog with notification ID - it will fetch fresh data from API
+    if ((window as any).reopenAppointmentDialog) {
+      // New signature: reopenAppointmentDialog(notificationId, bookingId?)
+      (window as any).reopenAppointmentDialog(backendNotificationId, bookingId);
+      
+      // Mark notification as read
+      this.notificationService.markAsRead(notification.id);
+      
+      // Close the notification panel
+      this.closePanel();
+    } else {
+      console.error('❌ Appointment dialog function not available');
+      this.toastService.error(
+        'Error',
+        'Could not open confirmation dialog. Please refresh the page.',
+        4000
+      );
+    }
   }
 }

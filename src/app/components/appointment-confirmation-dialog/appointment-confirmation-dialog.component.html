@@ -23,9 +23,64 @@
       <div class="timer-value">{{ remainingTime }}</div>
     </div>
 
+    <!-- Booking Details (if available) -->
+    <div class="booking-details" *ngIf="currentNotification?.bookingDetails">
+      <div class="detail-row" *ngIf="currentNotification && currentNotification.bookingDetails && currentNotification.bookingDetails.customerName">
+        <span class="detail-label">Customer:</span>
+        <span class="detail-value">{{ currentNotification.bookingDetails.customerName }}</span>
+      </div>
+      <div class="detail-row" *ngIf="currentNotification && currentNotification.bookingDetails && currentNotification.bookingDetails.workshopName">
+        <span class="detail-label">Workshop:</span>
+        <span class="detail-value">{{ currentNotification.bookingDetails.workshopName }}</span>
+      </div>
+      <div class="detail-row" *ngIf="currentNotification && currentNotification.bookingDetails && currentNotification.bookingDetails.serviceName">
+        <span class="detail-label">Service:</span>
+        <span class="detail-value">{{ currentNotification.bookingDetails.serviceName }}</span>
+      </div>
+      <div class="detail-row" *ngIf="currentNotification && currentNotification.bookingDetails && currentNotification.bookingDetails.appointmentDate">
+        <span class="detail-label">Time:</span>
+        <span class="detail-value">{{ currentNotification.bookingDetails.appointmentDate | date:'MMM d, y, h:mm a' }}</span>
+      </div>
+    </div>
+
     <!-- Message -->
     <div class="dialog-message">
       <p>{{ currentNotification?.message }}</p>
+    </div>
+
+    <!-- Confirmation Status Display -->
+    <div class="confirmation-status" *ngIf="!isExpired">
+      <div class="status-header">Confirmation Status</div>
+      <div class="status-grid">
+        <div class="status-item" [class.confirmed]="carOwnerConfirmed">
+          <div class="status-icon">
+            <svg *ngIf="carOwnerConfirmed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <svg *ngIf="!carOwnerConfirmed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          </div>
+          <span class="status-label">Car Owner</span>
+          <span class="status-badge" [class.confirmed]="carOwnerConfirmed">
+            {{ carOwnerConfirmed ? 'Confirmed' : 'Pending' }}
+          </span>
+        </div>
+        <div class="status-item" [class.confirmed]="workshopConfirmed">
+          <div class="status-icon">
+            <svg *ngIf="workshopConfirmed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <svg *ngIf="!workshopConfirmed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          </div>
+          <span class="status-label">Workshop</span>
+          <span class="status-badge" [class.confirmed]="workshopConfirmed">
+            {{ workshopConfirmed ? 'Confirmed' : 'Pending' }}
+          </span>
+        </div>
+      </div>
     </div>
 
     <!-- Warning Info Box -->
@@ -36,7 +91,15 @@
         <line x1="12" y1="8" x2="12.01" y2="8"/>
       </svg>
       <span class="info-text">
-        Both you and the other party must confirm for the appointment to proceed.
+        <span *ngIf="!hasCurrentUserConfirmed && !isExpired">
+          Both you and the other party must confirm for the appointment to proceed.
+        </span>
+        <span *ngIf="hasCurrentUserConfirmed && !carOwnerConfirmed && (userRole === 'WORKSHOP' || userRole === 'Workshop') && !isExpired">
+          <strong>You've confirmed!</strong> Waiting for the car owner to confirm.
+        </span>
+        <span *ngIf="hasCurrentUserConfirmed && !workshopConfirmed && userRole !== 'WORKSHOP' && userRole !== 'Workshop' && !isExpired">
+          <strong>You've confirmed!</strong> Waiting for the workshop to confirm.
+        </span>
         <span *ngIf="isExpired" class="expired-warning">
           <br><strong>The confirmation deadline has passed.</strong>
         </span>
@@ -47,14 +110,21 @@
     <div class="dialog-actions">
       <button
         class="btn btn-confirm"
-        [disabled]="isExpired || isConfirming || isDeclining"
+        [disabled]="isExpired || isConfirming || hasCurrentUserConfirmed"
         [class.loading]="isConfirming"
+        [class.confirmed]="hasCurrentUserConfirmed"
         (click)="confirmAppointment()">
-        <span *ngIf="!isConfirming" class="btn-content">
+        <span *ngIf="!isConfirming && !hasCurrentUserConfirmed" class="btn-content">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           Confirm Arrival
+        </span>
+        <span *ngIf="hasCurrentUserConfirmed" class="btn-content">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Confirmed
         </span>
         <span *ngIf="isConfirming" class="btn-content">
           <div class="spinner"></div>
@@ -64,19 +134,14 @@
 
       <button
         class="btn btn-decline"
-        [disabled]="isExpired || isConfirming || isDeclining"
-        [class.loading]="isDeclining"
-        (click)="declineAppointment()">
-        <span *ngIf="!isDeclining" class="btn-content">
+        [disabled]="isExpired || isConfirming"
+        (click)="closeDialog()">
+        <span class="btn-content">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
-          Decline
-        </span>
-        <span *ngIf="isDeclining" class="btn-content">
-          <div class="spinner"></div>
-          Declining...
+          Close
         </span>
       </button>
     </div>

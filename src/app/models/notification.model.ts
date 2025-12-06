@@ -33,3 +33,20 @@ export interface NotificationDto {
   priority?: 'high' | 'medium' | 'low'; // Optional - priority level
   confirmationDeadline?: string; // Optional - ISO 8601 date string for confirmation deadline
 }
+
+// Appointment confirmation notification structure
+export interface AppointmentConfirmationNotification {
+  notificationId: number;
+  bookingId: number;
+  message: string;
+  title: string;
+  confirmationDeadline: Date;
+  createdAt: Date;
+  bookingDetails?: {
+    customerName?: string;
+    workshopName?: string;
+    serviceName?: string;
+    appointmentDate?: Date;
+    issueDescription?: string;
+  };
+}

@@ -33,6 +33,12 @@ export class SignalRNotificationService {
 
   // Subject for appointment confirmation requests
   public appointmentConfirmationReceived = new Subject<AppointmentConfirmationNotification>();
+  
+  // Subject for confirmation status updates
+  public confirmationStatusUpdate = new Subject<any>();
+  
+  // Track bookings that have already received confirmation in dialog
+  private bookingsWithConfirmationReceived = new Set<number>();
 
   constructor(
     private authService: AuthService,
@@ -158,7 +164,18 @@ export class SignalRNotificationService {
         // Check if this is an AppointmentConfirmationRequest
         if (this.isNotificationType(notificationDto.type, NotificationType.AppointmentConfirmationRequest)) {
           console.log('🔔 Appointment confirmation request received:', notificationDto);
-          this.handleAppointmentConfirmationRequest(notificationDto);
+          
+          // Check if booking status has changed (don't emit if already InProgress, completed, etc.)
+          const notificationData = notificationDto as any;
+          const status = notificationData.status || notificationData.bookingStatus;
+          const jobStatus = notificationData.jobStatus;
+          
+          if (status === 'InProgress' || jobStatus === 'in-progress' || 
+              jobStatus === 'completed' || jobStatus === 'ready' || jobStatus === 'cancelled') {
+            console.log('⚠️ Skipping appointment confirmation - booking status already changed:', status || jobStatus);
+          } else {
+            this.handleAppointmentConfirmationRequest(notificationDto);
+          }
         }
 
         // Map backend NotificationDto to frontend AppNotification
@@ -177,6 +194,14 @@ export class SignalRNotificationService {
 
         // Show toast notification for high-priority notifications
         this.showToastForNotification(notificationDto, appNotification);
+      });
+    });
+
+    // Listen for confirmation status updates
+    this.hubConnection.on('ConfirmationStatusUpdate', (update: any) => {
+      this.ngZone.run(() => {
+        console.log('🔄 Received confirmation status update from SignalR:', update);
+        this.confirmationStatusUpdate.next(update);
       });
     });
 
@@ -385,6 +410,7 @@ export class SignalRNotificationService {
       priority,
       actionUrl,
       actionLabel,
+      confirmationDeadline: dto.confirmationDeadline ? new Date(dto.confirmationDeadline) : undefined,
       data: {
         notificationId: dto.id,
         senderId: dto.senderId,
@@ -392,6 +418,7 @@ export class SignalRNotificationService {
         bookingId: dto.bookingId,
         workshopId: dto.workshopId,
         notificationType: dto.type,
+        confirmationDeadline: dto.confirmationDeadline,
       },
     };
   }
@@ -445,13 +472,19 @@ export class SignalRNotificationService {
     const message = appNotification.message;
     const messageLC = (dto.message || '').toLowerCase();
 
+    // Get user role to determine if toast should be shown
+    const userRole = this.authService.getUserRole();
+    const isWorkshop = userRole === 'WORKSHOP' || userRole === 'Workshop';
+
     // Debug log to see what notification type we're receiving
     console.log('🔔 Processing notification:', {
       type: dto.type,
       typeName: NotificationType[dto.type],
       title: dto.title,
       message: dto.message,
-      bookingId: dto.bookingId
+      bookingId: dto.bookingId,
+      userRole: userRole,
+      isWorkshop: isWorkshop
     });
 
     // =====================================================================
@@ -480,8 +513,8 @@ export class SignalRNotificationService {
     // PRIORITY 1: Detect "Ready for Pickup" by message content (overrides wrong type)
     if (isReadyForPickupMessage && !isCompletedMessage) {
       console.log('🚗 Detected ReadyForPickup by message - NOT opening review modal');
-      this.toastService.success(title, message, 7000);
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'ready');
+      this.toastService.success(title, message, 7000);
       // Explicitly NOT opening review modal - vehicle is just ready, not completed
       return;
     }
@@ -489,27 +522,40 @@ export class SignalRNotificationService {
     // PRIORITY 2: Detect "Completed" by message content (overrides wrong type)
     if (isCompletedMessage) {
       console.log('✅ Detected BookingCompleted by message - will open review modal');
-      this.toastService.success(title, message, 7000);
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'completed');
+      this.toastService.success(title, message, 7000);
       // Trigger review modal for car owners
       this.tryOpenReviewModal(dto.bookingId, 'CompletedMessage');
       return;
     }
 
-    // Show toast for booking-related notifications (workshop owners)
+    // Show toast for booking-related notifications (both car owners and workshops)
     if (this.isNotificationType(dto.type, NotificationType.BookingCreated)) {
-      this.toastService.booking(title, message, {
-        label: 'View Booking',
-        callback: () => {
-          if (dto.bookingId) {
-            this.router.navigate(['/workshop/job-board'], {
-              queryParams: { bookingId: dto.bookingId },
-            });
-          }
-        },
-      });
       // Dispatch event so job-board can refresh and show new booking immediately
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'created');
+      
+      // Show toast for both workshops and car owners
+      if (isWorkshop) {
+        this.toastService.booking(title, message, {
+          label: 'View Job Board',
+          callback: () => {
+            if (dto.bookingId) {
+              this.router.navigate(['/workshop/job-board'], {
+                queryParams: { bookingId: dto.bookingId },
+              });
+            }
+          },
+        });
+      } else {
+        this.toastService.booking(title, message, {
+          label: 'View Booking',
+          callback: () => {
+            if (dto.bookingId) {
+              this.router.navigate(['/booking', dto.bookingId]);
+            }
+          },
+        });
+      }
     }
     // Show toast for appointment confirmation request (both car owner and workshop owner)
     else if (this.isNotificationType(dto.type, NotificationType.AppointmentConfirmationRequest)) {
@@ -517,33 +563,34 @@ export class SignalRNotificationService {
       console.log('🔔 Appointment confirmation request - dialog will handle display');
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'confirmation-required');
     }
-    // Show toast for booking cancelled (notify workshop when car owner cancels)
+    // Show toast for booking cancelled (notify both workshop and car owner)
     else if (this.isNotificationType(dto.type, NotificationType.BookingCancelled)) {
-      this.toastService.warning(title, message, 6000);
       // Dispatch event so job-board can refresh and remove cancelled booking
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'cancelled');
+      
+      // Show toast for both workshops and car owners
+      this.toastService.warning(title, message, 6000);
     }
     // Show toast for booking ready for pickup (notify car owner)
     else if (dto.type === NotificationType.BookingReadyForPickup) {
       console.log('🚗 ReadyForPickup notification (by type) - NOT opening review modal');
-      this.toastService.success(title, message, 7000);
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'ready');
+      this.toastService.success(title, message, 7000);
     }
     // Show toast for booking in progress (notify car owner)
     else if (this.isNotificationType(dto.type, NotificationType.BookingInProgress)) {
-      this.toastService.info(title, message, 6000);
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'inprogress');
+      this.toastService.info(title, message, 6000);
     }
     // Show toast for booking completed (notify car owner)
     else if (dto.type === NotificationType.BookingCompleted) {
       console.log('✅ BookingCompleted notification (by type) - will open review modal');
-      this.toastService.success(title, message, 7000);
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'completed');
+      this.toastService.success(title, message, 7000);
       this.tryOpenReviewModal(dto.bookingId, 'BookingCompleted');
     }
     // Show toast for payment received
-      else if (dto.type === NotificationType.PaymentReceived) {
-    // Show toast for quote approved
+    else if (dto.type === NotificationType.PaymentReceived) {
       this.toastService.success(title, message, 5000);
     }
     // Show toast for booking accepted (car owners)
@@ -620,6 +667,9 @@ export class SignalRNotificationService {
       next: (notifications) => {
         console.log(`✅ Loaded ${notifications.length} notifications from API`);
         
+        // Fetch unread count from backend to sync with actual state
+        this.notificationService.fetchUnreadCountFromBackend(token);
+        
         // Check for pending appointment confirmation requests in fetched notifications
         this.checkForPendingAppointmentConfirmations();
       },
@@ -650,6 +700,16 @@ export class SignalRNotificationService {
           
           if (isAppointmentConfirmation && notificationData.bookingId) {
             console.log('🔔 Found pending appointment confirmation in API notifications:', notificationData);
+            
+            // Check if booking status has changed
+            const status = notificationData.status || notificationData.bookingStatus;
+            const jobStatus = notificationData.jobStatus;
+            
+            if (status === 'InProgress' || jobStatus === 'in-progress' || 
+                jobStatus === 'completed' || jobStatus === 'ready' || jobStatus === 'cancelled') {
+              console.log('⚠️ Skipping pending appointment confirmation - booking status already changed:', status || jobStatus);
+              continue;
+            }
             
             // Create a NotificationDto-like object to process
             const dto: NotificationDto = {
@@ -693,6 +753,12 @@ export class SignalRNotificationService {
       confirmationDeadline = new Date(Date.now() + 15 * 60 * 1000);
     }
 
+    // Check if this booking has already received confirmation in dialog
+    if (this.bookingsWithConfirmationReceived.has(dto.bookingId)) {
+      console.log(`⏭️ Skipping appointment confirmation for booking ${dto.bookingId} - Already received confirmation in dialog`);
+      return;
+    }
+
     const confirmationNotification: AppointmentConfirmationNotification = {
       notificationId: dto.id,
       bookingId: dto.bookingId,
@@ -704,5 +770,8 @@ export class SignalRNotificationService {
 
     console.log('🔔 Emitting appointment confirmation notification:', confirmationNotification);
     this.appointmentConfirmationReceived.next(confirmationNotification);
+    
+    // Mark this booking as having received confirmation
+    this.bookingsWithConfirmationReceived.add(dto.bookingId);
   }
 }

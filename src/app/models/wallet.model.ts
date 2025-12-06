@@ -39,7 +39,7 @@ export interface NotificationPreference {
 
 export interface AppNotification {
   id: string;
-  type: 'payment' | 'booking' | 'review' | 'system' | 'alert';
+  type: 'payment' | 'booking' | 'review' | 'system' | 'alert' | 'appointment-confirmation';
   title: string;
   message: string;
   timestamp: Date;
@@ -48,4 +48,5 @@ export interface AppNotification {
   actionUrl?: string;
   actionLabel?: string;
   data?: any;
+  confirmationDeadline?: Date; // For appointment confirmation notifications
 }

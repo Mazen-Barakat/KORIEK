@@ -1,3 +1,43 @@
+/* ==================== Booking Details ==================== */
+.booking-details {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.detail-row:first-child {
+  padding-top: 0;
+}
+
+.detail-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.detail-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+  text-align: right;
+}
+
 /* ==================== Dialog Overlay ==================== */
 .dialog-overlay {
   position: fixed;
@@ -165,6 +205,102 @@
   color: #b91c1c;
 }
 
+/* ==================== Confirmation Status ==================== */
+.confirmation-status {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #0ea5e9;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.status-header {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0369a1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.status-item {
+  background: white;
+  border: 2px solid #e0f2fe;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.status-item.confirmed {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  transform: scale(1.02);
+}
+
+.status-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  transition: all 0.3s ease;
+}
+
+.status-item.confirmed .status-icon {
+  background: #10b981;
+  color: white;
+  animation: checkPulse 0.6s ease-out;
+}
+
+@keyframes checkPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.status-label {
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-badge.confirmed {
+  background: #10b981;
+  color: white;
+}
+
 /* ==================== Action Buttons ==================== */
 .dialog-actions {
   display: flex;
@@ -198,9 +334,20 @@
   box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
 }
 
+.btn-confirm.confirmed {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  box-shadow: 0 4px 14px rgba(107, 114, 128, 0.4);
+  cursor: default;
+}
+
 .btn-confirm:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.btn-confirm.confirmed:hover {
+  transform: none;
+  box-shadow: 0 4px 14px rgba(107, 114, 128, 0.4);
 }
 
 .btn-confirm:active:not(:disabled) {
