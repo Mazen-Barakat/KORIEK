@@ -35,6 +35,64 @@ export class NotificationService {
     return this.unreadCountSubject.asObservable();
   }
 
+  /**
+   * Get notification details from API including canStillConfirm and remainingSeconds
+   * Used when reopening confirmation dialog from notification panel
+   */
+  getNotificationDetails(notificationId: number): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/${notificationId}/details`).pipe(
+      map((response) => {
+        // Backend returns: { success, data: { ...notification details } }
+        return response.data || response;
+      }),
+      catchError((error) => {
+        console.error('❌ Error fetching notification details:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Get all pending appointment confirmation notifications
+   * Called on page load to restore any active confirmation dialogs
+   * Returns notifications with canStillConfirm, remainingSeconds, etc.
+   */
+  getPendingConfirmations(): Observable<any[]> {
+    return this.http.get<any>(`${this.API_URL}/pending-confirmations`).pipe(
+      map((response) => {
+        // Backend returns: { success, data: [...pending confirmations] }
+        const data = response.data || response || [];
+        console.log(`📥 Fetched ${data.length} pending confirmations from API`);
+        return data;
+      }),
+      catchError((error) => {
+        console.error('❌ Error fetching pending confirmations:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Fetch unread count from backend
+   */
+  fetchUnreadCountFromBackend(token: string): void {
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    this.http.get<any>(`${this.API_URL}/unread-count`, { headers }).pipe(
+      catchError((error) => {
+        console.error('❌ Error fetching unread count from backend:', error);
+        return of({ count: 0 });
+      })
+    ).subscribe((response) => {
+      const count = response?.count ?? response?.data?.count ?? 0;
+      this.unreadCountSubject.next(count);
+      console.log(`📊 Unread count from backend: ${count}`);
+    });
+  }
+
   getPreferences(): Observable<NotificationPreference[]> {
     return this.preferencesSubject.asObservable();
   }
@@ -345,5 +403,82 @@ export class NotificationService {
         return of(null);
       })
     );
+  }
+
+  /**
+   * Mark all notifications as read on the backend
+   */
+  markAllAsReadOnBackend(token: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.put(`${this.API_URL}/mark-all-read`, {}, { headers }).pipe(
+      map((response) => {
+        console.log('✅ All notifications marked as read on backend');
+        return response;
+      }),
+      catchError((error) => {
+        console.error('❌ Error marking all notifications as read on backend:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Add an appointment confirmation notification that can reopen the modal
+   */
+  addAppointmentConfirmationNotification(
+    bookingId: number,
+    confirmationDeadline: Date,
+    bookingDetails?: any
+  ): void {
+    const notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'> = {
+      type: 'appointment-confirmation',
+      title: 'Appointment Confirmation Required',
+      message: 'Tap to confirm or decline your appointment arrival',
+      priority: 'high',
+      confirmationDeadline: confirmationDeadline,
+      actionLabel: 'Respond Now',
+      data: {
+        bookingId,
+        bookingDetails,
+        confirmationDeadline: confirmationDeadline.toISOString(),
+      },
+    };
+
+    this.addNotification(notification);
+    console.log('📋 Added appointment confirmation notification for booking:', bookingId);
+  }
+
+  /**
+   * Remove notifications that have expired deadlines
+   * Called periodically to clean up expired appointment confirmation notifications
+   */
+  removeExpiredConfirmationNotifications(): void {
+    const now = new Date();
+    const notifications = this.notificationsSubject.value;
+    const filtered = notifications.filter(n => {
+      if (n.type === 'appointment-confirmation' && n.confirmationDeadline) {
+        return new Date(n.confirmationDeadline) > now;
+      }
+      return true;
+    });
+
+    if (filtered.length < notifications.length) {
+      this.notificationsSubject.next(filtered);
+      this.updateUnreadCount();
+      console.log(`🗑️ Removed ${notifications.length - filtered.length} expired confirmation notifications`);
+    }
+  }
+
+  /**
+   * Start periodic cleanup of expired notifications (every 30 seconds)
+   */
+  startPeriodicCleanup(): void {
+    interval(30000).subscribe(() => {
+      this.removeExpiredConfirmationNotifications();
+    });
   }
 }

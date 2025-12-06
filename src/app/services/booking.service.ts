@@ -320,16 +320,33 @@ export class BookingService {
    * Called when both car owner and workshop owner need to confirm arrival
    * @param bookingId The booking ID to confirm
    * @param isConfirmed True to confirm, false to decline
+   * @param confirmationDeadline Optional confirmation deadline
+   * @param confirmationSentAt Optional confirmation sent timestamp
    */
-  confirmAppointment(bookingId: number, isConfirmed: boolean): Observable<{
+  confirmAppointment(
+    bookingId: number, 
+    isConfirmed: boolean,
+    confirmationDeadline?: Date,
+    confirmationSentAt?: Date
+  ): Observable<{
     success: boolean;
     message: string;
     data?: any;
   }> {
-    const request = {
+    const request: any = {
       bookingId: bookingId,
       isConfirmed: isConfirmed
     };
+    
+    // Add confirmationDeadline if provided
+    if (confirmationDeadline) {
+      request.confirmationDeadline = confirmationDeadline.toISOString();
+    }
+    
+    // Add confirmationSentAt if provided
+    if (confirmationSentAt) {
+      request.confirmationSentAt = confirmationSentAt.toISOString();
+    }
     
     console.log('📤 Sending appointment confirmation:', request);
     
@@ -338,6 +355,67 @@ export class BookingService {
       message: string;
       data?: any;
     }>(`${this.apiUrl}/Booking/confirm-appointment`, request);
+  }
+
+  /**
+   * Get booking confirmation status to check if both parties have confirmed
+   * @param bookingId The booking ID to check
+   */
+  getBookingConfirmationStatus(bookingId: number): Observable<{
+    success: boolean;
+    data?: {
+      carOwnerConfirmed: boolean;
+      workshopConfirmed: boolean;
+      bothConfirmed: boolean;
+      status: string;
+      confirmationSentAt?: string;
+      confirmationDeadline?: string;
+      remainingSeconds?: number;
+    };
+  }> {
+    return this.http.get<{
+      success: boolean;
+      data?: {
+        carOwnerConfirmed: boolean;
+        workshopConfirmed: boolean;
+        bothConfirmed: boolean;
+        status: string;
+        confirmationSentAt?: string;
+        confirmationDeadline?: string;
+        remainingSeconds?: number;
+      };
+    }>(`${this.apiUrl}/Booking/${bookingId}/confirmation-status`).pipe(
+      catchError(err => {
+        console.error('Error fetching confirmation status:', err);
+        return of({ success: false, data: undefined });
+      })
+    );
+  }
+
+  /**
+   * Get detailed booking time status including exact timing information
+   * @param bookingId The booking ID to check
+   */
+  getBookingTimeStatus(bookingId: number): Observable<{
+    success: boolean;
+    data?: {
+      bookingId: number;
+      bookingReference: string;
+      exactAppointmentTime: string;
+      currentTime: string;
+      hasArrived: boolean;
+      secondsUntilArrival: number;
+      canStillChangeResponse: boolean;
+      responseStatus: number;
+      status: string;
+    };
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/Booking/${bookingId}/time-status`).pipe(
+      catchError(err => {
+        console.error('Error fetching booking time status:', err);
+        return of({ success: false, data: undefined });
+      })
+    );
   }
 
   // =============== Job Management ===============
