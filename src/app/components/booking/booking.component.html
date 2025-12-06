@@ -1,54 +1,4 @@
 <div class="booking-page">
-  <!-- Draft Resume Banner -->
-  <div class="draft-banner" *ngIf="showDraftBanner">
-    <div class="draft-content">
-      <div class="draft-icon">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
-      <div class="draft-text">
-        <h4>You have an unfinished booking</h4>
-        <p>Resume where you left off or start fresh</p>
-      </div>
-      <div class="draft-actions">
-        <button class="btn-resume" (click)="resumeDraft()">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-          Resume
-        </button>
-        <button class="btn-dismiss" (click)="dismissDraft()">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-
   <div class="booking-container">
     <!-- Header (hidden on success step) -->
     <div class="booking-header" *ngIf="currentStep !== 5">
@@ -926,6 +876,7 @@
               <span class="closed-hint" *ngIf="workshop.isClosed">See working hours</span>
               <a
                 [routerLink]="['/workshop-details', workshop.workshopProfileId || workshop.id]"
+                target="_blank"
                 class="workshop-page-button"
                 (click)="$event.stopPropagation()"
               >

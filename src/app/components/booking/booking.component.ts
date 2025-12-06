@@ -234,10 +234,6 @@ export class BookingComponent implements OnInit {
   // Vehicle origin for workshop search (default 'General' if undetected)
   selectedVehicleOrigin: string = 'General';
 
-  // Draft management
-  hasSavedDraft = false;
-  showDraftBanner = false;
-
   // Success state
   bookingConfirmed = false;
   confirmationNumber = '';
@@ -259,7 +255,6 @@ export class BookingComponent implements OnInit {
     // Start loading vehicles (cached promise will prevent duplicate requests)
     this.loadUserVehicles();
     this.loadCategories();
-    this.checkForSavedDraft();
     // Attempt to restore persisted subcategory selection (if any)
     this.restoreSubcategoryState();
     // Restore persisted vehicle origin (if any)
@@ -746,7 +741,6 @@ export class BookingComponent implements OnInit {
 
     if (this.currentStep < this.totalSteps) {
       this.currentStep++;
-      this.saveDraft();
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Load workshops when entering step 3
@@ -800,12 +794,6 @@ export class BookingComponent implements OnInit {
     }
     // Detect and persist vehicle origin
     this.detectAndPersistVehicleOrigin(vehicle);
-    // Update saved draft as well
-    try {
-      this.saveDraft();
-    } catch (e) {
-      /* ignore */
-    }
   }
 
   /**
@@ -1392,92 +1380,6 @@ export class BookingComponent implements OnInit {
     return this.getSubtotal() * 0.14;
   }
 
-  // Draft management
-  saveDraft(): void {
-    if (this.currentStep === 5) return; // Don't save after confirmation
-
-    const draft: BookingDraft = {
-      step: this.currentStep,
-      vehicleId: this.selectedVehicle?.id || null,
-      categoryId: this.selectedCategory?.id || null,
-      serviceNotes: this.serviceNotes,
-      selectedDate: this.selectedDate?.toISOString() || null,
-      selectedTimeSlot: this.selectedTimeSlot,
-      workshopIds: this.selectedWorkshop ? [this.selectedWorkshop.id] : [],
-      paymentMethod: this.selectedPaymentMethod,
-      timestamp: Date.now(),
-    };
-
-    localStorage.setItem('bookingDraft', JSON.stringify(draft));
-  }
-
-  checkForSavedDraft(): void {
-    const savedDraft = localStorage.getItem('bookingDraft');
-
-    if (savedDraft) {
-      const draft: BookingDraft = JSON.parse(savedDraft);
-
-      // Check if draft is less than 24 hours old
-      const hoursSinceSave = (Date.now() - draft.timestamp) / (1000 * 60 * 60);
-
-      if (hoursSinceSave < 24) {
-        this.hasSavedDraft = true;
-        this.showDraftBanner = true;
-      } else {
-        localStorage.removeItem('bookingDraft');
-      }
-    }
-  }
-
-  resumeDraft(): void {
-    const savedDraft = localStorage.getItem('bookingDraft');
-
-    if (savedDraft) {
-      const draft: BookingDraft = JSON.parse(savedDraft);
-
-      // Restore state
-      this.currentStep = draft.step;
-      this.serviceNotes = draft.serviceNotes;
-
-      // Restore vehicle
-      if (draft.vehicleId) {
-        const vehicle = this.userVehicles.find((v) => v.id === draft.vehicleId);
-        if (vehicle) this.selectedVehicle = vehicle;
-      }
-
-      // Restore category
-      if (draft.categoryId) {
-        const category = this.categories.find((c) => c.id === draft.categoryId);
-        if (category) this.selectedCategory = category;
-      }
-
-      // Restore date
-      if (draft.selectedDate) {
-        this.selectedDate = new Date(draft.selectedDate);
-      }
-
-      // Restore time slot
-      this.selectedTimeSlot = draft.selectedTimeSlot;
-
-      // Restore workshop
-      if (draft.workshopIds && draft.workshopIds.length > 0) {
-        this.selectedWorkshop =
-          this.workshops.find((w) => draft.workshopIds.includes(w.id)) || null;
-      }
-
-      // Restore payment method
-      this.selectedPaymentMethod = draft.paymentMethod || null;
-
-      this.showDraftBanner = false;
-    }
-  }
-
-  dismissDraft(): void {
-    localStorage.removeItem('bookingDraft');
-    this.hasSavedDraft = false;
-    this.showDraftBanner = false;
-  }
-
   // Booking submission
   confirmBooking(): void {
     // Prevent duplicate submissions
@@ -1580,7 +1482,6 @@ export class BookingComponent implements OnInit {
           this.confirmationNumber = 'BK' + String(response.data.id).padStart(6, '0');
           this.currentStep = 5;
           this.bookingConfirmed = true;
-          localStorage.removeItem('bookingDraft');
           window.scrollTo({ top: 0, behavior: 'smooth' });
           try {
             this.cdr.detectChanges();
@@ -1683,7 +1584,6 @@ export class BookingComponent implements OnInit {
     // Proceed to next step (review)
     if (this.currentStep < this.totalSteps) {
       this.currentStep++;
-      this.saveDraft();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
