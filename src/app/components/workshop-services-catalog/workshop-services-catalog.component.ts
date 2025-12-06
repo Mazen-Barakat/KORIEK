@@ -47,13 +47,18 @@ export class WorkshopServicesCatalogComponent implements OnInit, OnChanges {
   groupedServices: GroupedServices = {};
   filteredGroupedServices: GroupedServices = {};
 
-  // Pagination
+  // Pagination - Load all services at once since they're grouped by origin
   currentPage = 1;
-  pageSize = 50;
+  pageSize = 500; // Large value to load all services
   totalRecords = 0;
   totalPages = 0;
   hasPreviousPage = false;
   hasNextPage = false;
+
+  // Services display limit per origin
+  servicesPerOriginInitial = 6; // Show 6 services initially per origin
+  servicesPerOriginIncrement = 4; // Load 4 more on each click
+  originVisibleCounts: Map<string, number> = new Map(); // Track visible count per origin
 
   // UI State
   loading = false;
@@ -330,9 +335,12 @@ export class WorkshopServicesCatalogComponent implements OnInit, OnChanges {
     if (this.filters.searchTerm) {
       const term = this.filters.searchTerm.toLowerCase();
       filtered = filtered.filter((service) => {
-        const serviceName = service.serviceId.toString().toLowerCase();
-        const origin = service.origin.toLowerCase();
-        return serviceName.includes(term) || origin.includes(term);
+        const serviceName = (service.serviceName || '').toLowerCase();
+        const serviceDescription = (service.serviceDescription || '').toLowerCase();
+        const origin = (service.origin || '').toLowerCase();
+        return (
+          serviceName.includes(term) || serviceDescription.includes(term) || origin.includes(term)
+        );
       });
     }
 
@@ -570,6 +578,66 @@ export class WorkshopServicesCatalogComponent implements OnInit, OnChanges {
   }
 
   /**
+   * Get origins count
+   */
+  getOriginsCount(): number {
+    return Object.keys(this.filteredGroupedServices).length;
+  }
+
+  /**
+   * Get visible services for an origin (limited based on current count)
+   */
+  getVisibleServicesForOrigin(origin: string): WorkshopServiceData[] {
+    const services = this.filteredGroupedServices[origin] || [];
+    const visibleCount = this.originVisibleCounts.get(origin) || this.servicesPerOriginInitial;
+    return services.slice(0, visibleCount);
+  }
+
+  /**
+   * Check if origin has more services than currently displayed
+   */
+  hasMoreServices(origin: string): boolean {
+    const services = this.filteredGroupedServices[origin] || [];
+    const visibleCount = this.originVisibleCounts.get(origin) || this.servicesPerOriginInitial;
+    return services.length > visibleCount;
+  }
+
+  /**
+   * Check if showing all services for an origin
+   */
+  isShowingAllServices(origin: string): boolean {
+    const services = this.filteredGroupedServices[origin] || [];
+    const visibleCount = this.originVisibleCounts.get(origin) || this.servicesPerOriginInitial;
+    return visibleCount >= services.length;
+  }
+
+  /**
+   * Load more services for an origin (add 4 more)
+   */
+  loadMoreServices(origin: string): void {
+    const currentCount = this.originVisibleCounts.get(origin) || this.servicesPerOriginInitial;
+    const services = this.filteredGroupedServices[origin] || [];
+    const newCount = Math.min(currentCount + this.servicesPerOriginIncrement, services.length);
+    this.originVisibleCounts.set(origin, newCount);
+  }
+
+  /**
+   * Show less services for an origin (reset to initial)
+   */
+  showLessServices(origin: string): void {
+    this.originVisibleCounts.set(origin, this.servicesPerOriginInitial);
+  }
+
+  /**
+   * Get count of remaining hidden services
+   */
+  getRemainingServicesCount(origin: string): number {
+    const services = this.filteredGroupedServices[origin] || [];
+    const visibleCount = this.originVisibleCounts.get(origin) || this.servicesPerOriginInitial;
+    return Math.max(0, services.length - visibleCount);
+  }
+
+  /**
    * Get total services count
    */
   getTotalServicesCount(): number {
@@ -644,5 +712,40 @@ export class WorkshopServicesCatalogComponent implements OnInit, OnChanges {
    */
   isLoading(): boolean {
     return this.loading || this.loadingProfile;
+  }
+
+  /**
+   * Get visible page numbers for pagination
+   */
+  getVisiblePages(): number[] {
+    const pages: number[] = [];
+    const start = Math.max(2, this.currentPage - 1);
+    const end = Math.min(this.totalPages - 1, this.currentPage + 1);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  /**
+   * Get start record number for display
+   */
+  getStartRecord(): number {
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  /**
+   * Get end record number for display
+   */
+  getEndRecord(): number {
+    return Math.min(this.currentPage * this.pageSize, this.totalRecords);
+  }
+
+  /**
+   * Handle page size change
+   */
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+    this.loadServices();
   }
 }

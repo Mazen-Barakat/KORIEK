@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map, shareReplay, tap, catchError } from 'rxjs/operators';
+import { map, shareReplay, tap, catchError, timeout } from 'rxjs/operators';
 import {
   WorkshopProfileData,
   WorkShopWorkingHoursAPI,
@@ -539,11 +539,17 @@ export class WorkshopProfileService {
     console.log('Workshop search URL:', url);
 
     return this.http.get<any>(url).pipe(
+      timeout(15000), // 15 second timeout
       tap((response: any) => {
         console.log('Workshop search raw response:', response);
       }),
       catchError((error) => {
         console.error('Workshop search error:', error);
+        if (error.name === 'TimeoutError') {
+          throw new Error(
+            'Request timed out. The server is taking too long to respond. Please try again.'
+          );
+        }
         throw error;
       })
     );

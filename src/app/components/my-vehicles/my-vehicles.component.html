@@ -5,8 +5,12 @@
     <div class="profile-welcome-section">
       <div class="hero-left">
         <div class="hero-badge">Your Dashboard</div>
-        <h1 class="hero-title">Welcome Back, <span class="user-name">{{ profileName }}</span></h1>
-        <p class="hero-subtitle">Your vehicle command center awaits. Monitor, manage, and maintain your fleet with ease.</p>
+        <h1 class="hero-title">
+          Welcome Back, <span class="user-name">{{ profileName }}</span>
+        </h1>
+        <p class="hero-subtitle">
+          Your vehicle command center awaits. Monitor, manage, and maintain your fleet with ease.
+        </p>
         <div class="hero-stats">
           <div class="stat-item">
             <div class="stat-value">{{ vehicles.length }}</div>
@@ -21,12 +25,14 @@
       </div>
       <div class="hero-right">
         <div class="profile-card">
-          <img [src]="profilePicture"
-               alt="Profile Picture"
-               class="profile-picture"
-               (click)="navigateToProfile()"
-               style="cursor: pointer;"
-               (error)="profilePicture = 'Assets/images/default-profile.svg'" />
+          <img
+            [src]="profilePicture"
+            alt="Profile Picture"
+            class="profile-picture"
+            (click)="navigateToProfile()"
+            style="cursor: pointer"
+            (error)="profilePicture = 'Assets/images/default-profile.svg'"
+          />
           <div class="profile-badge">Premium Member</div>
         </div>
       </div>
@@ -48,52 +54,77 @@
       <div class="vehicles-list">
         <!-- Show vehicle cards only when there are vehicles -->
         <ng-container *ngIf="vehicles && vehicles.length > 0; else emptyState">
-          <div *ngFor="let vehicle of vehicles"
-               class="vehicle-card"
-               [class.selected]="selectedVehicleId === vehicle.id"
-               [class.default-vehicle]="vehicle.isDefault"
-               (click)="selectVehicle(vehicle)">
-
+          <div
+            *ngFor="let vehicle of vehicles"
+            class="vehicle-card"
+            [class.selected]="selectedVehicleId === vehicle.id"
+            [class.default-vehicle]="vehicle.isDefault"
+            (click)="selectVehicle(vehicle)"
+          >
             <!-- Car Image from API -->
             <div class="vehicle-image-section">
-              <img [src]="getCarImageUrl(vehicle)"
-                   [alt]="vehicle.make + ' ' + vehicle.model"
-                   class="vehicle-image"
-                   (error)="handleImageError($event)" />
+              <img
+                [src]="getCarImageUrl(vehicle)"
+                [alt]="vehicle.make + ' ' + vehicle.model"
+                class="vehicle-image"
+                (error)="handleImageError($event)"
+              />
             </div>
 
             <!-- Vehicle Header with Title and Actions -->
             <div class="vehicle-header">
               <div class="vehicle-title-section">
                 <div class="title-with-logo">
-                  <img [src]="getCarLogoUrl(vehicle)"
-                       [alt]="vehicle.make + ' logo'"
-                       class="car-logo"
-                       (error)="handleLogoError($event)" />
+                  <img
+                    [src]="getCarLogoUrl(vehicle)"
+                    [alt]="vehicle.make + ' logo'"
+                    class="car-logo"
+                    (error)="handleLogoError($event)"
+                  />
                   <h2 class="vehicle-title">{{ vehicle.make }} {{ vehicle.model }}</h2>
                   <!-- Default Vehicle Badge -->
                   <span *ngIf="vehicle.isDefault" class="default-badge" title="Default Vehicle">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      <path
+                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                      />
                     </svg>
                     Default
                   </span>
                 </div>
                 <div class="vehicle-meta">
                   <span class="vehicle-year">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6"/>
-                      <line x1="8" y1="2" x2="8" y2="6"/>
-                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
                     {{ vehicle.year }}
                   </span>
                   <span class="vehicle-separator">•</span>
                   <span class="license-plate">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="2" y="7" width="20" height="10" rx="2" ry="2"/>
-                      <line x1="7" y1="12" x2="17" y2="12"/>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="2" y="7" width="20" height="10" rx="2" ry="2" />
+                      <line x1="7" y1="12" x2="17" y2="12" />
                     </svg>
                     {{ vehicle.licensePlate }}
                   </span>
@@ -101,38 +132,90 @@
               </div>
               <div class="vehicle-actions">
                 <!-- Set/Unset Default Button -->
-                <button 
+                <button
                   *ngIf="!vehicle.isDefault"
-                  class="action-btn default-btn" 
-                  aria-label="Set as default vehicle" 
-                  (click)="setDefaultVehicle(vehicle, $event)" 
-                  title="Set as Default Vehicle">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  class="action-btn default-btn"
+                  aria-label="Set as default vehicle"
+                  (click)="setDefaultVehicle(vehicle, $event)"
+                  title="Set as Default Vehicle"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    />
                   </svg>
                 </button>
-                <button 
+                <button
                   *ngIf="vehicle.isDefault"
-                  class="action-btn default-btn active" 
-                  aria-label="Unset default vehicle" 
-                  (click)="unsetDefaultVehicle(vehicle, $event)" 
-                  title="Unset Default Vehicle">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  class="action-btn default-btn active"
+                  aria-label="Unset default vehicle"
+                  (click)="unsetDefaultVehicle(vehicle, $event)"
+                  title="Unset Default Vehicle"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    />
                   </svg>
                 </button>
-                <button class="action-btn edit-btn" aria-label="View details" (click)="navigateToCarDetails(vehicle, $event)" title="View Details">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                <button
+                  class="action-btn edit-btn"
+                  aria-label="View details"
+                  (click)="navigateToCarDetails(vehicle, $event)"
+                  title="View Details"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>
                 </button>
-                <button class="action-btn delete-btn" aria-label="Delete vehicle" (click)="promptDelete(vehicle, $event)" title="Delete Vehicle">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    <line x1="10" y1="11" x2="10" y2="17"/>
-                    <line x1="14" y1="11" x2="14" y2="17"/>
+                <button
+                  class="action-btn delete-btn"
+                  aria-label="Delete vehicle"
+                  (click)="promptDelete(vehicle, $event)"
+                  title="Delete Vehicle"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
                   </svg>
                 </button>
               </div>
@@ -141,57 +224,115 @@
             <!-- Mileage Info Card -->
             <div class="mileage-card">
               <div class="mileage-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
                 </svg>
               </div>
               <div class="mileage-info">
                 <span class="mileage-label">Current Mileage</span>
-                <span class="mileage-value">{{ vehicle.currentMileage | number }} <small>km</small></span>
+                <span class="mileage-value"
+                  >{{ vehicle.currentMileage | number }} <small>km</small></span
+                >
               </div>
             </div>
 
             <!-- 4 Car Indicators (Dynamic from Dashboard Selection) -->
-            <div class="car-indicators" *ngIf="vehicle.dashboardIndicators && vehicle.dashboardIndicators.length > 0">
-              <div *ngFor="let indicator of vehicle.dashboardIndicators"
-                   class="indicator-item"
-                   [class.indicator-good]="getIndicatorStatusByLabel(vehicle, indicator.label) === 'good'"
-                   [class.indicator-warning]="getIndicatorStatusByLabel(vehicle, indicator.label) === 'warning'"
-                   [class.indicator-critical]="getIndicatorStatusByLabel(vehicle, indicator.label) === 'critical'"
-                   [class.indicator-unknown]="getIndicatorStatusByLabel(vehicle, indicator.label) === 'unknown'">
+            <div
+              class="car-indicators"
+              *ngIf="vehicle.dashboardIndicators && vehicle.dashboardIndicators.length > 0"
+            >
+              <div
+                *ngFor="let indicator of vehicle.dashboardIndicators"
+                class="indicator-item"
+                [class.indicator-good]="
+                  getIndicatorStatusByLabel(vehicle, indicator.label) === 'good'
+                "
+                [class.indicator-warning]="
+                  getIndicatorStatusByLabel(vehicle, indicator.label) === 'warning'
+                "
+                [class.indicator-critical]="
+                  getIndicatorStatusByLabel(vehicle, indicator.label) === 'critical'
+                "
+                [class.indicator-unknown]="
+                  getIndicatorStatusByLabel(vehicle, indicator.label) === 'unknown'
+                "
+              >
                 <div class="indicator-icon-wrapper">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path [attr.d]="getIndicatorIconPath(indicator.label)"/>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path [attr.d]="getIndicatorIconPath(indicator.label)" />
                   </svg>
                 </div>
                 <div class="indicator-content">
                   <span class="indicator-name">{{ indicator.label }}</span>
-                  <span class="indicator-status">{{ getIndicatorLabelByName(vehicle, indicator.label) }}</span>
+                  <span class="indicator-status">{{
+                    getIndicatorLabelByName(vehicle, indicator.label)
+                  }}</span>
                 </div>
               </div>
             </div>
             <!-- Placeholder when no indicators selected -->
-            <div class="car-indicators-placeholder" *ngIf="!vehicle.dashboardIndicators || vehicle.dashboardIndicators.length === 0">
-              <p class="placeholder-text">No dashboard indicators selected. <a [routerLink]="['/edit-car', vehicle.id]" class="setup-link">Set up now</a></p>
+            <div
+              class="car-indicators-placeholder"
+              *ngIf="!vehicle.dashboardIndicators || vehicle.dashboardIndicators.length === 0"
+            >
+              <p class="placeholder-text">
+                No dashboard indicators selected.
+                <a [routerLink]="['/edit-car', vehicle.id]" class="setup-link">Set up now</a>
+              </p>
             </div>
 
             <!-- Quick Actions -->
             <div class="quick-actions">
               <button class="quick-action-btn" (click)="navigateToCarDetails(vehicle, $event)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 16 16 12 12 8"/>
-                  <line x1="8" y1="12" x2="16" y2="12"/>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 16 16 12 12 8" />
+                  <line x1="8" y1="12" x2="16" y2="12" />
                 </svg>
                 View Details
               </button>
-              <button class="quick-action-btn quick-action-secondary" (click)="bookService(vehicle, $event)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
+              <button
+                class="quick-action-btn quick-action-secondary"
+                (click)="bookService(vehicle, $event)"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
                 Schedule
               </button>
@@ -202,18 +343,39 @@
         <!-- Empty state for new users -->
         <ng-template #emptyState>
           <div class="empty-vehicles">
-            <svg class="empty-icon" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 17h-2v-6l2-5h9l4 5v6h-2"/>
-              <circle cx="7" cy="17" r="2"/>
-              <circle cx="17" cy="17" r="2"/>
-              <path d="M5 9l1.5-4.5h7L15 9"/>
+            <svg
+              class="empty-icon"
+              width="80"
+              height="80"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 17h-2v-6l2-5h9l4 5v6h-2" />
+              <circle cx="7" cy="17" r="2" />
+              <circle cx="17" cy="17" r="2" />
+              <path d="M5 9l1.5-4.5h7L15 9" />
             </svg>
             <h3>No vehicles yet</h3>
-            <p class="empty-text">Start by adding your first vehicle to track maintenance and expenses</p>
+            <p class="empty-text">
+              Start by adding your first vehicle to track maintenance and expenses
+            </p>
             <button class="empty-cta-btn" (click)="openAddVehicleModal()">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Add Your First Vehicle
             </button>
@@ -226,8 +388,17 @@
     <div class="book-service-cta">
       <div class="cta-content">
         <div class="cta-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+            />
           </svg>
         </div>
         <div class="cta-text">
@@ -236,8 +407,15 @@
         </div>
         <button class="cta-book-btn" (click)="navigateToBooking()">
           <span>Book Now</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
       </div>
@@ -253,8 +431,19 @@
       <div class="maintenance-header">
         <div class="maintenance-icon-wrapper">
           <div class="maintenance-icon-badge">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+              />
             </svg>
           </div>
           <div class="maintenance-pulse-ring"></div>
@@ -276,42 +465,85 @@
         <div *ngIf="selectedCarForBookings === null">
           <!-- Loading State -->
           <div *ngIf="loadingBookings" class="maintenance-loading">
-            <svg class="loading-spinner" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+            <svg
+              class="loading-spinner"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"
+              />
             </svg>
             <p class="loading-text">Loading vehicles...</p>
           </div>
 
           <!-- Empty State - No Vehicles -->
           <div *ngIf="!loadingBookings && vehicles.length === 0" class="maintenance-empty">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 17h-2v-6l2-5h9l4 5v6h-2"/>
-              <circle cx="7" cy="17" r="2"/>
-              <circle cx="17" cy="17" r="2"/>
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 17h-2v-6l2-5h9l4 5v6h-2" />
+              <circle cx="7" cy="17" r="2" />
+              <circle cx="17" cy="17" r="2" />
             </svg>
             <p class="empty-title">No Vehicles</p>
             <p class="empty-text">Add a vehicle to view bookings</p>
             <button class="book-now-btn" (click)="openAddVehicleModal()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Add Vehicle
             </button>
           </div>
 
           <!-- Prompt to Select a Car -->
-          <div *ngIf="!loadingBookings && vehicles.length > 0" class="maintenance-empty select-car-prompt">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 17h-2v-6l2-5h9l4 5v6h-2"/>
-              <circle cx="7" cy="17" r="2"/>
-              <circle cx="17" cy="17" r="2"/>
+          <div
+            *ngIf="!loadingBookings && vehicles.length > 0"
+            class="maintenance-empty select-car-prompt"
+          >
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 17h-2v-6l2-5h9l4 5v6h-2" />
+              <circle cx="7" cy="17" r="2" />
+              <circle cx="17" cy="17" r="2" />
             </svg>
             <p class="empty-title">Select a Vehicle</p>
-            <p class="empty-text">Click on any vehicle card to view its bookings and maintenance schedule</p>
+            <p class="empty-text">
+              Click on any vehicle card to view its bookings and maintenance schedule
+            </p>
             <div class="select-car-hint">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="15 18 9 12 15 6"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
               </svg>
               <span>Click a car card</span>
             </div>
@@ -322,51 +554,103 @@
         <div *ngIf="selectedCarForBookings !== null">
           <!-- Back Button -->
           <button class="back-to-cars-btn" (click)="backToAllCars()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="15 18 9 12 15 6" />
             </svg>
             <span>Back to Cars</span>
           </button>
 
           <!-- Loading State -->
           <div *ngIf="loadingCarBookings" class="maintenance-loading">
-            <svg class="loading-spinner" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+            <svg
+              class="loading-spinner"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"
+              />
             </svg>
             <p class="loading-text">Loading bookings...</p>
           </div>
 
           <!-- Empty State -->
           <div *ngIf="!loadingCarBookings && carBookings.length === 0" class="maintenance-empty">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
             </svg>
             <p class="empty-title">No Bookings</p>
             <p class="empty-text">This vehicle has no scheduled appointments</p>
             <button class="book-now-btn" (click)="navigateToBooking()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
               Book Service
             </button>
           </div>
 
-<!-- Bookings List with Pagination -->
-            <div *ngIf="!loadingCarBookings && carBookings.length > 0">
+          <!-- Bookings List with Pagination -->
+          <div *ngIf="!loadingCarBookings && carBookings.length > 0">
             <div class="maintenance-list">
-              <div *ngFor="let booking of carBookings"
-                   class="maintenance-item"
-                   tabindex="0"
-                   role="button"
-                   [attr.aria-label]="booking.serviceName + ' due in ' + booking.daysUntil + ' days - ' + booking.urgency">
+              <div
+                *ngFor="let booking of carBookings"
+                class="maintenance-item"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="
+                  booking.serviceName +
+                  ' due in ' +
+                  booking.daysUntil +
+                  ' days - ' +
+                  booking.urgency
+                "
+              >
                 <div class="maintenance-item-left">
-                  <div class="maintenance-service-icon" [class.urgent-icon]="booking.urgency === 'Urgent'" [class.normal-icon]="booking.urgency === 'Scheduled'">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path [attr.d]="getServiceIcon(booking.serviceName)"/>
+                  <div
+                    class="maintenance-service-icon"
+                    [class.urgent-icon]="booking.urgency === 'Urgent'"
+                    [class.normal-icon]="booking.urgency === 'Scheduled'"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path [attr.d]="getServiceIcon(booking.serviceName)" />
                     </svg>
                   </div>
                   <div class="maintenance-info">
@@ -376,57 +660,224 @@
                 </div>
                 <div class="maintenance-item-right">
                   <p class="maintenance-due-date">{{ formatDate(booking.appointmentDate) }}</p>
-                  <div class="maintenance-status-badge" [class.urgent]="booking.urgency === 'Urgent'" [class.scheduled]="booking.urgency === 'Scheduled'">
+                  <div
+                    class="maintenance-status-badge"
+                    [class.urgent]="booking.urgency === 'Urgent'"
+                    [class.scheduled]="booking.urgency === 'Scheduled'"
+                  >
                     <span class="status-pulse"></span>
                     <span class="status-text">{{ booking.urgency }}</span>
                   </div>
-                  <button *ngIf="canCancelBooking(booking)" class="cancel-booking-btn"
-                          (click)="openCancelPopup(booking, $event)"
-                          [disabled]="cancellingBookingIds.has(booking.id)"
-                          [class.cancelling]="cancellingBookingIds.has(booking.id)"
-                          title="Cancel this booking (available for 12 hours after booking)">
-                    <svg *ngIf="!cancellingBookingIds.has(booking.id)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
+                  <button
+                    *ngIf="canCancelBooking(booking)"
+                    class="cancel-booking-btn"
+                    (click)="openCancelPopup(booking, $event)"
+                    [disabled]="cancellingBookingIds.has(booking.id)"
+                    [class.cancelling]="cancellingBookingIds.has(booking.id)"
+                    title="Cancel this booking (available for 12 hours after booking)"
+                  >
+                    <svg
+                      *ngIf="!cancellingBookingIds.has(booking.id)"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
-                    <svg *ngIf="cancellingBookingIds.has(booking.id)" class="cancel-spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                    <svg
+                      *ngIf="cancellingBookingIds.has(booking.id)"
+                      class="cancel-spinner"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path
+                        d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"
+                      />
                     </svg>
-                    <span>{{ cancellingBookingIds.has(booking.id) ? 'Cancelling...' : 'Cancel' }}</span>
+                    <span>{{
+                      cancellingBookingIds.has(booking.id) ? 'Cancelling...' : 'Cancel'
+                    }}</span>
                   </button>
                 </div>
               </div>
-            </div>            <!-- Pagination Controls -->
-            <div class="pagination-controls" *ngIf="totalPages > 1">
-              <button class="pagination-btn"
-                      (click)="previousPage()"
-                      [disabled]="!hasPreviousPage"
-                      [class.disabled]="!hasPreviousPage">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
-              </button>
-              <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
-              <button class="pagination-btn"
-                      (click)="nextPage()"
-                      [disabled]="!hasNextPage"
-                      [class.disabled]="!hasNextPage">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </button>
+            </div>
+            <!-- Pagination Controls -->
+            <div class="pagination-wrapper" *ngIf="totalPages > 1">
+              <div class="pagination-container">
+                <!-- Results Summary -->
+                <div class="pagination-info">
+                  <span class="showing-text">
+                    Showing <strong>{{ getStartRecord() }}</strong> -
+                    <strong>{{ getEndRecord() }}</strong> of
+                    <strong>{{ totalBookings }}</strong> bookings
+                  </span>
+                </div>
+
+                <!-- Page Navigation -->
+                <div class="pagination-nav">
+                  <!-- First Page -->
+                  <button
+                    class="pagination-btn nav-btn"
+                    [disabled]="currentPage === 1"
+                    (click)="goToPage(1)"
+                    title="First Page"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="11 17 6 12 11 7" />
+                      <polyline points="18 17 13 12 18 7" />
+                    </svg>
+                  </button>
+
+                  <!-- Previous Page -->
+                  <button
+                    class="pagination-btn nav-btn"
+                    [disabled]="!hasPreviousPage"
+                    (click)="previousPage()"
+                    title="Previous Page"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                  </button>
+
+                  <!-- Page Numbers -->
+                  <div class="pagination-pages">
+                    <!-- First page always shown -->
+                    <button
+                      class="page-btn"
+                      [class.active]="currentPage === 1"
+                      (click)="goToPage(1)"
+                    >
+                      1
+                    </button>
+
+                    <!-- Left ellipsis -->
+                    <span class="page-ellipsis" *ngIf="currentPage > 3">...</span>
+
+                    <!-- Pages around current -->
+                    <ng-container *ngFor="let page of getVisiblePages()">
+                      <button
+                        *ngIf="page !== 1 && page !== totalPages"
+                        class="page-btn"
+                        [class.active]="currentPage === page"
+                        (click)="goToPage(page)"
+                      >
+                        {{ page }}
+                      </button>
+                    </ng-container>
+
+                    <!-- Right ellipsis -->
+                    <span class="page-ellipsis" *ngIf="currentPage < totalPages - 2">...</span>
+
+                    <!-- Last page always shown -->
+                    <button
+                      *ngIf="totalPages > 1"
+                      class="page-btn"
+                      [class.active]="currentPage === totalPages"
+                      (click)="goToPage(totalPages)"
+                    >
+                      {{ totalPages }}
+                    </button>
+                  </div>
+
+                  <!-- Next Page -->
+                  <button
+                    class="pagination-btn nav-btn"
+                    [disabled]="!hasNextPage"
+                    (click)="nextPage()"
+                    title="Next Page"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </button>
+
+                  <!-- Last Page -->
+                  <button
+                    class="pagination-btn nav-btn"
+                    [disabled]="currentPage === totalPages"
+                    (click)="goToPage(totalPages)"
+                    title="Last Page"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="13 17 18 12 13 7" />
+                      <polyline points="6 17 11 12 6 7" />
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Page Size Selector -->
+                <div class="page-size-selector">
+                  <label>Per page:</label>
+                  <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
+                    <option [value]="3">3</option>
+                    <option [value]="5">5</option>
+                    <option [value]="10">10</option>
+                    <option [value]="15">15</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Book More Services Button (always shown) -->
-        <button class="view-all-maintenance-btn"
-                (click)="navigateToBooking()"
-                aria-label="Book more services">
+        <button
+          class="view-all-maintenance-btn"
+          (click)="navigateToBooking()"
+          aria-label="Book more services"
+        >
           <span>Book More Services</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
           </svg>
         </button>
       </div>
@@ -437,10 +888,17 @@
       <div class="ai-header">
         <div class="ai-avatar-wrapper">
           <div class="ai-avatar">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
             </svg>
           </div>
           <div class="status-indicator"></div>
@@ -450,8 +908,15 @@
           <p class="ai-subtitle">Always here to help</p>
         </div>
         <button class="ai-expand-btn" aria-label="Expand assistant">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"/>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
       </div>
@@ -459,35 +924,68 @@
       <div class="ai-content">
         <div class="ai-greeting">
           <div class="greeting-icon">👋</div>
-          <p class="greeting-text">Hi! I'm your intelligent vehicle assistant. Ask me anything about maintenance, performance, or best practices.</p>
+          <p class="greeting-text">
+            Hi! I'm your intelligent vehicle assistant. Ask me anything about maintenance,
+            performance, or best practices.
+          </p>
         </div>
 
         <div class="suggested-prompts">
           <p class="prompts-label">Quick actions:</p>
           <button class="prompt-chip" (click)="handleAIPrompt('maintenance')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+              />
             </svg>
             Schedule Maintenance
           </button>
           <button class="prompt-chip" (click)="handleAIPrompt('tips')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             Get Care Tips
           </button>
           <button class="prompt-chip" (click)="handleAIPrompt('diagnostics')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
             Check Diagnostics
           </button>
           <button class="prompt-chip" (click)="handleAIPrompt('history')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
             View History
           </button>
@@ -495,8 +993,16 @@
 
         <div class="ai-input-wrapper">
           <div class="input-container">
-            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <svg
+              class="input-icon"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             <input
               type="text"
@@ -506,9 +1012,16 @@
               (keyup.enter)="sendAIMessage()"
             />
             <button class="send-btn" (click)="sendAIMessage()" [disabled]="!aiInputText.trim()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>
             </button>
           </div>
@@ -535,9 +1048,18 @@
     <div class="tips-news-section">
       <div class="tips-header">
         <div class="tips-icon-wrapper">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-            <circle cx="12" cy="12" r="3"/>
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+            />
+            <circle cx="12" cy="12" r="3" />
           </svg>
         </div>
         <div class="tips-title-wrapper">
@@ -549,9 +1071,12 @@
 
       <div class="tips-content">
         <div class="tips-list">
-          <div class="tip-item" *ngFor="let tip of tips; let i = index"
-               [class.tip-featured]="i === 0"
-               (click)="openTipDetails(tip)">
+          <div
+            class="tip-item"
+            *ngFor="let tip of tips; let i = index"
+            [class.tip-featured]="i === 0"
+            (click)="openTipDetails(tip)"
+          >
             <div class="tip-icon-badge" [class]="'badge-' + tip.category">
               <span class="tip-emoji">{{ tip.icon }}</span>
             </div>
@@ -564,15 +1089,29 @@
               <p class="tip-excerpt">{{ tip.excerpt }}</p>
               <div class="tip-footer">
                 <span class="tip-read-time">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
                   </svg>
                   {{ tip.readTime }} min read
                 </span>
                 <span class="tip-arrow">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9 18 15 12 9 6"/>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </span>
               </div>
@@ -581,8 +1120,15 @@
         </div>
 
         <button class="view-all-tips-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           View All Tips & News
         </button>
@@ -594,9 +1140,7 @@
 <!-- Add Vehicle Modal -->
 <div *ngIf="isAddVehicleModalOpen" class="modal-overlay" (click)="closeAddVehicleModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
-    <app-add-vehicle-form
-      (close)="closeAddVehicleModal()"
-      (saved)="onVehicleSaved($event)">
+    <app-add-vehicle-form (close)="closeAddVehicleModal()" (saved)="onVehicleSaved($event)">
     </app-add-vehicle-form>
   </div>
 </div>
@@ -605,7 +1149,10 @@
 <div *ngIf="showDeleteConfirm" class="modal-overlay" (click)="cancelDelete()">
   <div class="confirm-dialog" (click)="$event.stopPropagation()">
     <h3>Confirm Deletion</h3>
-    <p *ngIf="carToDelete">Delete <strong>{{ carToDelete.make }} {{ carToDelete.model }}</strong>? This action cannot be undone.</p>
+    <p *ngIf="carToDelete">
+      Delete <strong>{{ carToDelete.make }} {{ carToDelete.model }}</strong
+      >? This action cannot be undone.
+    </p>
     <div class="confirm-actions">
       <button class="btn cancel" (click)="cancelDelete()" [disabled]="isDeleting">Cancel</button>
       <button class="btn confirm" (click)="deleteCarConfirmed()" [disabled]="isDeleting">
@@ -625,5 +1172,6 @@
   confirmButtonClass="danger"
   [showWarningIcon]="true"
   (confirmed)="onCancelPopupConfirmed()"
-  (cancelled)="onCancelPopupClosed()">
+  (cancelled)="onCancelPopupClosed()"
+>
 </app-confirmation-popup>

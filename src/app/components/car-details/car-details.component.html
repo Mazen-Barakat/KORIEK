@@ -70,7 +70,7 @@
       Schedule Maintenance
     </button>
     <!-- Export PDF moved to take the place of the removed Add Expense button -->
-    <button class="action-btn secondary">
+    <button class="action-btn secondary" (click)="exportToPDF()">
       <svg
         class="icon"
         width="18"
@@ -678,6 +678,9 @@
               />
             </svg>
             <div class="gauge-center">
+              <div class="gauge-remaining-top">{{ getRemainingKm() | number }}</div>
+              <div class="gauge-remaining-label">km until service</div>
+              <div class="gauge-divider"></div>
               <div class="gauge-value" (click)="editMileage = !editMileage">
                 <input
                   *ngIf="editMileage"
@@ -690,59 +693,558 @@
                 <span *ngIf="!editMileage">{{ vehicle.currentMileage | number }}</span>
               </div>
               <div class="gauge-label">km traveled</div>
-              <div class="gauge-remaining">{{ getRemainingKm() }} km until service</div>
             </div>
           </div>
         </div>
 
-        <!-- Service History Timeline -->
+        <!-- Maintenance History Timeline -->
         <div class="service-history">
           <div class="history-header">
-            <h3>Recent Service History</h3>
+            <h3>
+              <svg
+                class="history-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Maintenance History
+            </h3>
+            <span class="history-count" *ngIf="bookingServiceHistory.length > 0">
+              {{ bookingServiceHistory.length }}
+              {{ bookingServiceHistory.length === 1 ? 'maintenance' : 'maintenances' }}
+            </span>
           </div>
-          <div class="timeline">
-            <div *ngFor="let service of getRecentServices()" class="timeline-item">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <div class="timeline-date">{{ service.date }}</div>
-                <div class="timeline-title">{{ service.type }}</div>
-                <div class="timeline-details">
-                  <span class="timeline-mileage">{{ service.mileage | number }} km</span>
-                  <span class="timeline-cost">{{ service.cost }} EGP</span>
+
+          <!-- Loading State -->
+          <div class="service-history-loading" *ngIf="isLoadingServiceHistory">
+            <div class="loading-spinner"></div>
+            <span>Loading maintenance history...</span>
+          </div>
+
+          <!-- Error State -->
+          <div
+            class="service-history-error"
+            *ngIf="serviceHistoryError && !isLoadingServiceHistory"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{{ serviceHistoryError }}</span>
+            <button class="retry-btn" (click)="loadServiceHistory()">Retry</button>
+          </div>
+
+          <!-- Empty State -->
+          <div
+            class="service-history-empty"
+            *ngIf="
+              !isLoadingServiceHistory && !serviceHistoryError && bookingServiceHistory.length === 0
+            "
+          >
+            <div class="empty-icon">
+              <svg
+                width="56"
+                height="56"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"
+                ></path>
+                <rect x="9" y="3" width="6" height="4" rx="1"></rect>
+                <path d="M9 12h6"></path>
+                <path d="M9 16h6"></path>
+              </svg>
+            </div>
+            <h4>No Maintenance History Yet</h4>
+            <p>Completed bookings with reviews will appear here</p>
+          </div>
+
+          <!-- Service History List -->
+          <div
+            class="service-history-scroll"
+            *ngIf="
+              !isLoadingServiceHistory && !serviceHistoryError && bookingServiceHistory.length > 0
+            "
+          >
+            <div class="service-cards">
+              <div
+                *ngFor="let service of bookingServiceHistory; let i = index"
+                class="service-card"
+                [class.latest]="i === 0"
+              >
+                <!-- Card Number Badge -->
+                <div class="card-number">{{ bookingServiceHistory.length - i }}</div>
+
+                <!-- Card Header -->
+                <div class="card-header">
+                  <div class="service-name">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+                      ></path>
+                    </svg>
+                    <span>{{ service.serviceName }}</span>
+                  </div>
+                  <div class="service-amount-wrapper">
+                    <span class="latest-badge" *ngIf="i === 0">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon
+                          points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                        ></polygon>
+                      </svg>
+                      Latest
+                    </span>
+                    <div class="service-amount">{{ service.reviewPaidAmount | number }} EGP</div>
+                  </div>
+                </div>
+
+                <!-- Service Description -->
+                <div class="service-desc" *ngIf="service.serviceDescription">
+                  {{ service.serviceDescription }}
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer">
+                  <div class="footer-item date">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    {{ formatServiceDate(service.appointmentDate) }}
+                  </div>
+                  <div class="footer-divider"></div>
+                  <div class="footer-item booking-ref">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                      <path
+                        d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                      ></path>
+                    </svg>
+                    Maintenance #{{ bookingServiceHistory.length - i }}
+                  </div>
+                </div>
+
+                <!-- Issue Note -->
+                <div class="issue-note" *ngIf="service.issueDescription">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>{{ service.issueDescription }}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Cost Tracking Graph -->
+        <!-- Cost Analytics Dashboard -->
         <div class="cost-tracking">
-          <h3>Maintenance Spending</h3>
-          <div class="cost-graph">
-            <div class="graph-bars">
-              <div *ngFor="let month of getCostHistory()" class="bar-container">
-                <div class="bar" [style.height.%]="getBarHeight(month.cost)">
-                  <span class="bar-value">{{ month.cost }}</span>
+          <div class="analytics-header">
+            <h3>
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+              </svg>
+              Cost Analytics
+            </h3>
+            <div
+              class="trend-badge"
+              [class.up]="getSpendingTrend() === 'up'"
+              [class.down]="getSpendingTrend() === 'down'"
+            >
+              <svg
+                *ngIf="getSpendingTrend() === 'up'"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg>
+              <svg
+                *ngIf="getSpendingTrend() === 'down'"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                <polyline points="17 18 23 18 23 12"></polyline>
+              </svg>
+              <svg
+                *ngIf="getSpendingTrend() === 'stable'"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              {{
+                getSpendingTrend() === 'up'
+                  ? 'Increasing'
+                  : getSpendingTrend() === 'down'
+                  ? 'Decreasing'
+                  : 'Stable'
+              }}
+            </div>
+          </div>
+
+          <!-- Grand Total Card -->
+          <div class="grand-total-card">
+            <div class="total-main">
+              <div class="total-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
+              <div class="total-text">
+                <span class="total-label">Total Car Expenses</span>
+                <span class="total-value">{{ getGrandTotal() | number }} EGP</span>
+              </div>
+            </div>
+            <div class="total-breakdown">
+              <div class="breakdown-item maintenance">
+                <div class="breakdown-icon-wrapper">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+                    ></path>
+                  </svg>
                 </div>
-                <div class="bar-label">{{ month.month }}</div>
+                <div class="breakdown-info">
+                  <span class="breakdown-label">Maintenance</span>
+                  <span class="breakdown-value">{{ getTotalMaintenanceCost() | number }} EGP</span>
+                </div>
+                <div class="breakdown-badge">{{ getMaintenancePercentage() }}%</div>
+              </div>
+              <div class="breakdown-divider"></div>
+              <div class="breakdown-item expenses">
+                <div class="breakdown-icon-wrapper expenses-icon">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                  </svg>
+                </div>
+                <div class="breakdown-info">
+                  <span class="breakdown-label">Other Expenses</span>
+                  <span class="breakdown-value">{{ getTotalExpensesCost() | number }} EGP</span>
+                </div>
+                <div class="breakdown-badge">{{ getExpensesPercentage() }}%</div>
               </div>
             </div>
           </div>
-          <div class="cost-summary">
-            <div class="cost-stat">
-              <span class="stat-label">Total (6 months)</span>
-              <span class="stat-value">{{ getTotalCost() }} EGP</span>
+
+          <!-- Donut Chart & Stats -->
+          <div class="analytics-row">
+            <!-- Donut Chart -->
+            <div class="donut-chart-container">
+              <div class="donut-chart">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path
+                    class="circle-bg"
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class="circle maintenance-circle"
+                    [attr.stroke-dasharray]="getMaintenancePercentage() + ', 100'"
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class="circle expenses-circle"
+                    [attr.stroke-dasharray]="getExpensesPercentage() + ', 100'"
+                    [attr.stroke-dashoffset]="-getMaintenancePercentage()"
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div class="donut-center">
+                  <span class="donut-total">{{ getGrandTotal() | number }}</span>
+                  <span class="donut-label">EGP Total</span>
+                </div>
+              </div>
+              <div class="donut-legend">
+                <div class="legend-item">
+                  <span class="legend-color maintenance"></span>
+                  <span>Maintenance ({{ getMaintenancePercentage() }}%)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color expenses"></span>
+                  <span>Expenses ({{ getExpensesPercentage() }}%)</span>
+                </div>
+              </div>
             </div>
-            <div class="cost-stat">
-              <span class="stat-label">Average/month</span>
-              <span class="stat-value">{{ getAverageCost() }} EGP</span>
+
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+              <div class="stat-card">
+                <div class="stat-icon blue">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-number">{{ getMaintenanceCount() }}</span>
+                  <span class="stat-label">Maintenances</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon green">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-number">{{ getExpensesCount() }}</span>
+                  <span class="stat-label">Expenses</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon orange">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-number">{{ getMonthlyAverage() | number }}</span>
+                  <span class="stat-label">Avg/Month</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon purple">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-number">{{ getDaysSinceLastMaintenance() }}</span>
+                  <span class="stat-label">Days Ago</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly Trend Chart -->
+          <div class="monthly-chart">
+            <div class="chart-header">
+              <h4>Monthly Spending Trend</h4>
+              <span class="chart-period">Last 6 Months</span>
+            </div>
+            <div class="chart-area">
+              <div class="chart-bars">
+                <div
+                  *ngFor="let month of getCostHistory(); let i = index"
+                  class="chart-bar-wrapper"
+                  [class.highest]="month.cost === getHighestSpendingMonth().cost && month.cost > 0"
+                >
+                  <div class="chart-bar-value">{{ month.cost | number }}</div>
+                  <div class="chart-bar" [style.height.%]="getBarHeight(month.cost)">
+                    <div class="bar-fill" [class.empty]="month.cost === 0"></div>
+                  </div>
+                  <div class="chart-bar-label">{{ month.month }}</div>
+                </div>
+              </div>
+              <div class="chart-baseline"></div>
+            </div>
+          </div>
+
+          <!-- Spending Breakdown by Type -->
+          <div class="spending-breakdown" *ngIf="getExpensesByType().length > 0">
+            <h4>Spending by Category</h4>
+            <div class="breakdown-bars">
+              <div *ngFor="let item of getExpensesByType()" class="breakdown-bar-item">
+                <div class="breakdown-bar-header">
+                  <span class="breakdown-bar-icon">{{ item.icon }}</span>
+                  <span class="breakdown-bar-type">{{ item.type }}</span>
+                  <span class="breakdown-bar-amount">{{ item.amount | number }} EGP</span>
+                </div>
+                <div class="breakdown-bar-track">
+                  <div class="breakdown-bar-fill" [style.width.%]="item.percentage"></div>
+                </div>
+                <span class="breakdown-bar-percentage">{{ item.percentage }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Insights Cards -->
+          <div class="insights-row">
+            <div class="insight-card highest">
+              <div class="insight-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+              </div>
+              <div class="insight-content">
+                <span class="insight-label">Highest Month</span>
+                <span class="insight-value">{{ getHighestSpendingMonth().month }}</span>
+                <span class="insight-amount"
+                  >{{ getHighestSpendingMonth().cost | number }} EGP</span
+                >
+              </div>
+            </div>
+            <div class="insight-card lowest">
+              <div class="insight-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                  <polyline points="17 18 23 18 23 12"></polyline>
+                </svg>
+              </div>
+              <div class="insight-content">
+                <span class="insight-label">Lowest Month</span>
+                <span class="insight-value">{{ getLowestSpendingMonth().month }}</span>
+                <span class="insight-amount">{{ getLowestSpendingMonth().cost | number }} EGP</span>
+              </div>
+            </div>
+            <div class="insight-card last-service">
+              <div class="insight-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+                  ></path>
+                </svg>
+              </div>
+              <div class="insight-content">
+                <span class="insight-label">Last Maintenance</span>
+                <span class="insight-value">{{ getLastMaintenanceDate() }}</span>
+                <span class="insight-amount" *ngIf="getDaysSinceLastMaintenance() > 0"
+                  >{{ getDaysSinceLastMaintenance() }} days ago</span
+                >
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Schedule Maintenance Button -->
         <button class="schedule-maintenance-btn" (click)="scheduleMaintenanceDialog()">
-          <span style="font-size: 20px">📅</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
           Schedule Maintenance Now
         </button>
       </div>
