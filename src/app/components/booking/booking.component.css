@@ -413,54 +413,44 @@
   color: #fff;
   position: relative;
   overflow: hidden;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 1.5rem;
 }
 
-.service-card.has-bg::after {
+/* Dark overlay gradient from transparent to dark at bottom */
+.service-card.has-bg::before {
   content: "";
   position: absolute;
   inset: 0;
-  /* stronger overlay for better text legibility */
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.62) 100%);
-  z-index: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.85) 100%);
+  z-index: 1;
   border-radius: 14px;
 }
 
-/* center title + description within backgrounded category cards */
-.service-card.has-bg {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+/* Hover effect - slightly darken */
+.service-card.has-bg:hover::before {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.9) 100%);
 }
 
 .service-card.has-bg h3 {
   position: relative;
   z-index: 2;
   color: #fff;
-  display: block;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 0.5rem 0.9rem;
-  border-radius: 10px;
   font-weight: 700;
-  font-size: 1.05rem;
-  line-height: 1.2;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  font-size: 1.25rem;
+  line-height: 1.3;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   margin: 0;
+  text-align: left;
+  width: 100%;
 }
 
 .service-card.has-bg .service-description {
-  position: relative;
-  z-index: 2;
-  color: #fff;
-  display: block;
-  margin-top: 0.6rem;
-  background: rgba(0, 0, 0, 0.36);
-  padding: 0.3rem 0.7rem;
-  border-radius: 8px;
-  font-size: 0.92rem;
-  line-height: 1.3;
-  opacity: 0.98;
+  display: none;
 }
 
 .service-check {
