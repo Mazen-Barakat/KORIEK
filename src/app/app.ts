@@ -11,7 +11,13 @@ import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, HeaderComponent, ToastContainerComponent, ReviewModalComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    HeaderComponent,
+    ToastContainerComponent,
+    ReviewModalComponent,
+  ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
@@ -103,16 +109,17 @@ export class App implements OnInit, OnDestroy {
    */
   private initializeReviewModal(): void {
     console.log('📝 Initializing review modal subscription in App component');
-    this.reviewModalService.reviewModal$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((data) => {
-        console.log('📝 App component received review modal state change:', data);
-        this.showReviewModal = data.show;
-        this.reviewBookingId = data.bookingId;
-        console.log('📝 App component state updated:', { showReviewModal: this.showReviewModal, reviewBookingId: this.reviewBookingId });
-        // Force change detection
-        this.cdr.detectChanges();
+    this.reviewModalService.reviewModal$.pipe(takeUntil(this.destroy$)).subscribe((data) => {
+      console.log('📝 App component received review modal state change:', data);
+      this.showReviewModal = data.show;
+      this.reviewBookingId = data.bookingId;
+      console.log('📝 App component state updated:', {
+        showReviewModal: this.showReviewModal,
+        reviewBookingId: this.reviewBookingId,
       });
+      // Force change detection
+      this.cdr.detectChanges();
+    });
   }
 
   /**
