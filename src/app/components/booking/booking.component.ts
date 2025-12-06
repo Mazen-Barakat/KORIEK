@@ -1575,6 +1575,17 @@ export class BookingComponent implements OnInit {
     this.router.navigate(['/my-vehicles']);
   }
 
+  // Get car logo URL from carlogos.org
+  getCarLogoUrl(vehicle: Vehicle): string {
+    const make = vehicle.make.toLowerCase().replace(/\s+/g, '-');
+    return `https://www.carlogos.org/car-logos/${make}-logo.png`;
+  }
+
+  // Handle logo loading error
+  handleLogoError(event: any): void {
+    event.target.style.display = 'none';
+  }
+
   // Payment method popup handlers
   onPaymentMethodSelected(method: string): void {
     this.selectedPaymentMethod = method;
