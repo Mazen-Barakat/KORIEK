@@ -1195,56 +1195,154 @@
             </div>
           </div>
 
-          <!-- Pagination Controls -->
-          <div class="pagination-controls" *ngIf="workshopTotalPages > 1">
-            <button
-              class="pagination-btn"
-              [disabled]="!workshopHasPreviousPage"
-              (click)="previousWorkshopPage()"
-              title="Previous page"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-              Previous
-            </button>
+          <!-- Pagination Wrapper -->
+          <div class="pagination-wrapper" *ngIf="!isLoadingWorkshops && workshops.length > 0">
+            <div class="pagination-container">
+              <!-- Results Summary -->
+              <div class="pagination-info">
+                <span class="showing-text">
+                  Showing <strong>{{ getWorkshopStartRecord() }}</strong> -
+                  <strong>{{ getWorkshopEndRecord() }}</strong> of
+                  <strong>{{ workshopTotalRecords }}</strong> workshops
+                </span>
+              </div>
 
-            <div class="pagination-numbers">
-              <button
-                class="page-number"
-                *ngFor="let page of getWorkshopPageNumbers()"
-                [class.active]="page === workshopCurrentPage"
-                (click)="goToWorkshopPage(page)"
-              >
-                {{ page }}
-              </button>
+              <!-- Page Navigation -->
+              <div class="pagination-nav" *ngIf="workshopTotalPages > 1">
+                <!-- First Page -->
+                <button
+                  class="pagination-btn nav-btn"
+                  [disabled]="workshopCurrentPage === 1"
+                  (click)="goToWorkshopPage(1)"
+                  title="First Page"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="11 17 6 12 11 7" />
+                    <polyline points="18 17 13 12 18 7" />
+                  </svg>
+                </button>
+
+                <!-- Previous Page -->
+                <button
+                  class="pagination-btn nav-btn"
+                  [disabled]="!workshopHasPreviousPage"
+                  (click)="previousWorkshopPage()"
+                  title="Previous Page"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+
+                <!-- Page Numbers -->
+                <div class="pagination-pages">
+                  <!-- First page always shown -->
+                  <button
+                    class="page-btn"
+                    [class.active]="workshopCurrentPage === 1"
+                    (click)="goToWorkshopPage(1)"
+                  >
+                    1
+                  </button>
+
+                  <!-- Left ellipsis -->
+                  <span class="page-ellipsis" *ngIf="workshopCurrentPage > 3">...</span>
+
+                  <!-- Pages around current -->
+                  <ng-container *ngFor="let page of getWorkshopVisiblePages()">
+                    <button
+                      *ngIf="page !== 1 && page !== workshopTotalPages"
+                      class="page-btn"
+                      [class.active]="workshopCurrentPage === page"
+                      (click)="goToWorkshopPage(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  </ng-container>
+
+                  <!-- Right ellipsis -->
+                  <span class="page-ellipsis" *ngIf="workshopCurrentPage < workshopTotalPages - 2"
+                    >...</span
+                  >
+
+                  <!-- Last page always shown -->
+                  <button
+                    *ngIf="workshopTotalPages > 1"
+                    class="page-btn"
+                    [class.active]="workshopCurrentPage === workshopTotalPages"
+                    (click)="goToWorkshopPage(workshopTotalPages)"
+                  >
+                    {{ workshopTotalPages }}
+                  </button>
+                </div>
+
+                <!-- Next Page -->
+                <button
+                  class="pagination-btn nav-btn"
+                  [disabled]="!workshopHasNextPage"
+                  (click)="nextWorkshopPage()"
+                  title="Next Page"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+
+                <!-- Last Page -->
+                <button
+                  class="pagination-btn nav-btn"
+                  [disabled]="workshopCurrentPage === workshopTotalPages"
+                  (click)="goToWorkshopPage(workshopTotalPages)"
+                  title="Last Page"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="13 17 18 12 13 7" />
+                    <polyline points="6 17 11 12 6 7" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Page Size Selector -->
+              <div class="page-size-selector">
+                <label>Per page:</label>
+                <select [(ngModel)]="workshopPageSize" (ngModelChange)="onWorkshopPageSizeChange()">
+                  <option [value]="3">3</option>
+                  <option [value]="6">6</option>
+                  <option [value]="9">9</option>
+                  <option [value]="15">15</option>
+                  <option [value]="30">30</option>
+                  <option [value]="60">60</option>
+                </select>
+              </div>
             </div>
-
-            <button
-              class="pagination-btn"
-              [disabled]="!workshopHasNextPage"
-              (click)="nextWorkshopPage()"
-              title="Next page"
-            >
-              Next
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
           </div>
         </div>
 

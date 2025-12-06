@@ -492,6 +492,15 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  getKoriekProfileSlug(): string {
+    const name = this.profileData?.name || 'workshop';
+    const slug = name
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+    return `koriek.com/workshop/${slug}`;
+  }
+
   getLocation(): string {
     if (!this.profileData) return '';
     const parts = [
@@ -1045,5 +1054,667 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     }
 
     return `${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()} EGP`;
+  }
+
+  // ==================== PDF Export ====================
+  exportToPDF(): void {
+    const workshopName = this.profileData?.name || 'Workshop';
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    // Get services from catalog component if available
+    const catalogServices = this.catalogComponent?.allServices || this.workshopServices || [];
+
+    // Group services by origin for the PDF
+    const servicesByOrigin = this.groupServicesByOrigin(catalogServices);
+
+    // Format rating properly
+    const formattedRating = this.profileData?.rating
+      ? Number(this.profileData.rating).toFixed(1)
+      : '0.0';
+
+    const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>KORIEK - ${workshopName}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #1f2937;
+      line-height: 1.5;
+      padding: 40px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Header - KORIEK Brand */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #ef4444;
+      margin-bottom: 30px;
+    }
+    .header-left {
+      display: flex;
+      flex-direction: column;
+    }
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .koriek-logo {
+      width: 70px;
+      height: auto;
+    }
+    .logo { font-size: 28px; font-weight: 700; color: #ef4444; }
+    .report-title { font-size: 14px; color: #6b7280; margin-top: 4px; }
+    .report-date { font-size: 12px; color: #9ca3af; text-align: right; }
+
+    /* Workshop Header - Clean Professional Design */
+    .workshop-header {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .workshop-logo {
+      width: 70px;
+      height: 70px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 2px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+    .workshop-logo-placeholder {
+      width: 70px;
+      height: 70px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .workshop-info {
+      flex: 1;
+    }
+    .workshop-name-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .workshop-name {
+      font-size: 26px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.5px;
+    }
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #10b981;
+      color: white;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .workshop-type-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+      margin-top: 4px;
+    }
+
+    /* Stats Summary */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .summary-card.rating { border-left: 4px solid #f59e0b; }
+    .summary-card.reviews { border-left: 4px solid #3b82f6; }
+    .summary-card.services { border-left: 4px solid #22c55e; }
+    .summary-card.techs { border-left: 4px solid #ef4444; }
+    .summary-number { font-size: 28px; font-weight: 700; }
+    .summary-card.rating .summary-number { color: #f59e0b; }
+    .summary-card.reviews .summary-number { color: #3b82f6; }
+    .summary-card.services .summary-number { color: #22c55e; }
+    .summary-card.techs .summary-number { color: #ef4444; }
+    .summary-label { font-size: 11px; color: #6b7280; text-transform: uppercase; }
+
+    /* Sections */
+    .section {
+      margin-bottom: 28px;
+      page-break-inside: avoid;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+      margin-bottom: 16px;
+    }
+
+    /* Contact Grid */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .contact-item { }
+    .contact-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; }
+    .contact-value { font-size: 14px; font-weight: 600; color: #374151; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th {
+      background: #f3f4f6;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    .hours-closed { color: #ef4444; font-weight: 500; }
+    .hours-open { color: #22c55e; }
+
+    /* Services Origin Groups */
+    .origin-group {
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+    .origin-header {
+      background: linear-gradient(135deg, #fee2e2 0%, #fef3c7 100%);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .origin-name { font-size: 16px; font-weight: 600; color: #111827; }
+    .origin-count {
+      background: #ef4444;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .service-name { font-weight: 600; color: #1e293b; }
+    .service-description { font-size: 12px; color: #64748b; margin-top: 4px; }
+
+    .price-badge {
+      background: #dcfce7;
+      color: #166534;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .duration-badge {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+    }
+
+    /* Reviews */
+    .reviews-summary {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: linear-gradient(135deg, #fee2e2 0%, #fef3c7 100%);
+      border-radius: 10px;
+    }
+    .average-rating { text-align: center; }
+    .rating-number { font-size: 48px; font-weight: 700; color: #111827; line-height: 1; }
+    .stars { color: #f59e0b; font-size: 18px; margin: 8px 0; }
+    .rating-count { font-size: 13px; color: #6b7280; }
+
+    .rating-bars { flex: 1; }
+    .rating-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .bar-label { font-size: 12px; color: #6b7280; min-width: 50px; }
+    .bar-track {
+      flex: 1;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill { height: 100%; background: #f59e0b; border-radius: 4px; }
+    .bar-count { font-size: 12px; color: #6b7280; min-width: 30px; text-align: right; }
+
+    .review-item {
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+    }
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .reviewer-name { font-weight: 600; color: #1e293b; }
+    .review-date { font-size: 12px; color: #64748b; }
+    .review-rating { color: #f59e0b; font-size: 14px; }
+    .review-comment { font-size: 14px; color: #475569; line-height: 1.6; }
+
+    /* About */
+    .about-text { font-size: 14px; color: #475569; line-height: 1.8; }
+
+    /* Footer */
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 11px;
+    }
+    .footer-brand { font-weight: 700; color: #ef4444; }
+
+    .no-data { color: #9ca3af; font-style: italic; padding: 20px; text-align: center; }
+
+    @media print {
+      body { padding: 20px; }
+      .section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">KORIEK</div>
+      <div class="report-title">Workshop Profile Report</div>
+    </div>
+    <div class="header-right">
+      <img class="koriek-logo" src="${
+        window.location.origin
+      }/Assets/logo.png" alt="KORIEK Logo" onerror="this.style.display='none'" />
+      <div class="report-date">Generated: ${currentDate}</div>
+    </div>
+  </div>
+
+  <div class="workshop-header">
+    ${
+      this.profileData?.logoImageUrl
+        ? `<img class="workshop-logo" src="${this.buildAssetUrl(
+            this.profileData.logoImageUrl
+          )}" alt="${workshopName} logo" />`
+        : `<div class="workshop-logo-placeholder">${this.generateInitials(workshopName)}</div>`
+    }
+    <div class="workshop-info">
+      <div class="workshop-name-row">
+        <span class="workshop-name">${workshopName}</span>
+        ${
+          this.profileData?.verificationStatus === 'Verified'
+            ? '<span class="verified-badge">✓ Verified</span>'
+            : ''
+        }
+      </div>
+      ${
+        this.profileData?.workShopType
+          ? `<span class="workshop-type-badge">${this.profileData.workShopType}</span>`
+          : ''
+      }
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card rating">
+      <div class="summary-number">${formattedRating}</div>
+      <div class="summary-label">Rating</div>
+    </div>
+    <div class="summary-card reviews">
+      <div class="summary-number">${this.reviews?.length || 0}</div>
+      <div class="summary-label">Reviews</div>
+    </div>
+    <div class="summary-card services">
+      <div class="summary-number">${catalogServices?.length || 0}</div>
+      <div class="summary-label">Services</div>
+    </div>
+    <div class="summary-card techs">
+      <div class="summary-number">${this.profileData?.numbersOfTechnicians || 0}</div>
+      <div class="summary-label">Technicians</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Contact Information</div>
+    <div class="contact-grid">
+      <div class="contact-item">
+        <div class="contact-label">Phone</div>
+        <div class="contact-value">${this.profileData?.phoneNumber || 'Not provided'}</div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-label">Email</div>
+        <div class="contact-value">${this.profileData?.email || 'Not provided'}</div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-label">Website</div>
+        <div class="contact-value">${this.profileData?.website || 'Not provided'}</div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-label">Location</div>
+        <div class="contact-value">${
+          this.profileData?.latitude && this.profileData?.longitude
+            ? `${this.profileData.latitude.toFixed(4)}, ${this.profileData.longitude.toFixed(4)}`
+            : 'Not provided'
+        }</div>
+      </div>
+    </div>
+  </div>
+
+  ${
+    this.profileData?.description
+      ? `
+  <div class="section">
+    <div class="section-title">About</div>
+    <p class="about-text">${this.profileData.description}</p>
+  </div>
+  `
+      : ''
+  }
+
+  ${this.generateWorkingHoursHTML()}
+
+  ${this.generateServicesHTML(servicesByOrigin)}
+
+  ${this.generateReviewsHTML()}
+
+  <div class="footer">
+    <p>This report was generated by <span class="footer-brand">KORIEK</span></p>
+    <p>© ${new Date().getFullYear()} All rights reserved</p>
+  </div>
+</body>
+</html>
+    `;
+
+    // Create a hidden iframe for printing instead of opening new window
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document;
+    if (iframeDoc) {
+      iframeDoc.open();
+      iframeDoc.write(printContent);
+      iframeDoc.close();
+
+      // Wait for content to load then print
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.contentWindow?.print();
+          // Remove iframe after printing
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 1000);
+        }, 250);
+      };
+    }
+  }
+
+  private groupServicesByOrigin(services: any[]): Map<string, any[]> {
+    const grouped = new Map<string, any[]>();
+
+    services.forEach((service) => {
+      const origin = service.origin || 'Other';
+      if (!grouped.has(origin)) {
+        grouped.set(origin, []);
+      }
+      grouped.get(origin)!.push(service);
+    });
+
+    return grouped;
+  }
+
+  private generateWorkingHoursHTML(): string {
+    if (!this.workingHours || Object.keys(this.workingHours).length === 0) {
+      return '';
+    }
+
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let rows = '';
+
+    days.forEach((day) => {
+      const hours = this.workingHours[day];
+      let status: string;
+      if (!hours || hours.isClosed) {
+        status = '<span class="hours-closed">Closed</span>';
+      } else {
+        status = `<span class="hours-open">${hours.openTime || 'N/A'} - ${
+          hours.closeTime || 'N/A'
+        }</span>`;
+      }
+      rows += `<tr><td>${day}</td><td>${status}</td></tr>`;
+    });
+
+    return `
+    <div class="section">
+      <div class="section-title">Working Hours</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Hours</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+    `;
+  }
+
+  private generateServicesHTML(servicesByOrigin: Map<string, any[]>): string {
+    if (servicesByOrigin.size === 0) {
+      return '';
+    }
+
+    let html = `
+    <div class="section">
+      <div class="section-title">Services Catalog</div>
+    `;
+
+    servicesByOrigin.forEach((services, origin) => {
+      html += `
+      <div class="origin-group">
+        <div class="origin-header">
+          <span class="origin-name">${this.getOriginDisplayName(origin)}</span>
+          <span class="origin-count">${services.length} service${
+        services.length > 1 ? 's' : ''
+      }</span>
+        </div>
+        <table class="services-table">
+          <thead>
+            <tr>
+              <th style="width: 50%">Service</th>
+              <th style="width: 30%">Price Range</th>
+              <th style="width: 20%">Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      services.forEach((service) => {
+        const price =
+          service.minPrice !== undefined && service.maxPrice !== undefined
+            ? `${service.minPrice.toLocaleString()} - ${service.maxPrice.toLocaleString()} EGP`
+            : 'Price varies';
+        const duration = service.duration ? this.formatDuration(service.duration) : 'Varies';
+
+        html += `
+            <tr>
+              <td>
+                <div class="service-name">${
+                  service.serviceName || service.name || 'Unnamed Service'
+                }</div>
+                ${
+                  service.serviceDescription
+                    ? `<div class="service-description">${service.serviceDescription}</div>`
+                    : ''
+                }
+              </td>
+              <td><span class="price-badge">${price}</span></td>
+              <td><span class="duration-badge">${duration}</span></td>
+            </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      </div>
+      `;
+    });
+
+    html += '</div>';
+    return html;
+  }
+
+  private getOriginDisplayName(origin: string): string {
+    const originNames: { [key: string]: string } = {
+      EU: 'European',
+      USA: 'American',
+      JAP: 'Japanese',
+      KOR: 'Korean',
+      CHI: 'Chinese',
+      Other: 'Other Origins',
+    };
+    return originNames[origin] || origin;
+  }
+
+  private generateReviewsHTML(): string {
+    if (!this.reviews || this.reviews.length === 0) {
+      return '';
+    }
+
+    // Rating bars HTML
+    let ratingBarsHTML = '';
+    this.ratingBars.forEach((bar) => {
+      ratingBarsHTML += `
+        <div class="rating-bar-row">
+          <span class="bar-label">${bar.stars} stars</span>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: ${bar.percentage}%"></div>
+          </div>
+          <span class="bar-count">${bar.count}</span>
+        </div>
+      `;
+    });
+
+    // Reviews list HTML (show top 5 for PDF)
+    const displayReviews = this.reviews.slice(0, 5);
+    let reviewsListHTML = '';
+    displayReviews.forEach((review) => {
+      const stars =
+        '★'.repeat(Math.round(review.rating)) + '☆'.repeat(5 - Math.round(review.rating));
+      const date = new Date(review.date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+
+      reviewsListHTML += `
+        <div class="review-item">
+          <div class="review-header">
+            <div>
+              <span class="reviewer-name">${review.userName}</span>
+              <span class="review-date"> • ${date}</span>
+            </div>
+            <span class="review-rating">${stars}</span>
+          </div>
+          <p class="review-comment">${review.comment || 'No comment provided.'}</p>
+        </div>
+      `;
+    });
+
+    return `
+    <div class="section">
+      <div class="section-title">Customer Reviews (Top 5)</div>
+      <div class="reviews-summary">
+        <div class="average-rating">
+          <div class="rating-number">${this.averageRating.toFixed(1)}</div>
+          <div class="stars">★★★★★</div>
+          <div class="rating-count">${this.reviews.length} review${
+      this.reviews.length > 1 ? 's' : ''
+    }</div>
+        </div>
+        <div class="rating-bars">
+          ${ratingBarsHTML}
+        </div>
+      </div>
+      ${reviewsListHTML}
+      ${
+        this.reviews.length > 5
+          ? `<p style="text-align: center; color: #64748b; margin-top: 16px;">Showing 5 of ${this.reviews.length} reviews</p>`
+          : ''
+      }
+    </div>
+    `;
   }
 }

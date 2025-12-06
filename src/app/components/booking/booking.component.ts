@@ -221,7 +221,7 @@ export class BookingComponent implements OnInit {
 
   // Pagination for workshops
   workshopCurrentPage = 1;
-  workshopPageSize = 5;
+  workshopPageSize = 6;
   workshopTotalRecords = 0;
   workshopTotalPages = 0;
   workshopHasPreviousPage = false;
@@ -1179,7 +1179,20 @@ export class BookingComponent implements OnInit {
         },
         error: (error: any) => {
           console.error('Error loading workshops:', error);
-          this.workshopsError = 'Failed to load workshops. Please try again.';
+
+          // Provide more specific error messages
+          if (error?.message?.includes('timed out')) {
+            this.workshopsError =
+              'The server is taking too long to respond. Please check your connection and try again.';
+          } else if (error?.status === 0) {
+            this.workshopsError =
+              'Cannot connect to the server. Please check if the backend is running.';
+          } else if (error?.status === 404) {
+            this.workshopsError = 'No workshops found for the selected criteria.';
+          } else {
+            this.workshopsError = 'Failed to load workshops. Please try again.';
+          }
+
           this.isLoadingWorkshops = false;
           try {
             this.cdr.detectChanges();
@@ -1336,6 +1349,42 @@ export class BookingComponent implements OnInit {
     }
 
     return pages;
+  }
+
+  /**
+   * Get visible page numbers for new pagination style
+   */
+  getWorkshopVisiblePages(): number[] {
+    const pages: number[] = [];
+    const start = Math.max(2, this.workshopCurrentPage - 1);
+    const end = Math.min(this.workshopTotalPages - 1, this.workshopCurrentPage + 1);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  /**
+   * Get start record number for display
+   */
+  getWorkshopStartRecord(): number {
+    return (this.workshopCurrentPage - 1) * this.workshopPageSize + 1;
+  }
+
+  /**
+   * Get end record number for display
+   */
+  getWorkshopEndRecord(): number {
+    return Math.min(this.workshopCurrentPage * this.workshopPageSize, this.workshopTotalRecords);
+  }
+
+  /**
+   * Handle page size change
+   */
+  onWorkshopPageSizeChange(): void {
+    this.workshopCurrentPage = 1;
+    this.loadWorkshops();
   }
 
   /**
@@ -1578,7 +1627,7 @@ export class BookingComponent implements OnInit {
         if (response.success) {
           // Use booking ID from response as confirmation number
           this.confirmationNumber = 'BK' + String(response.data.id).padStart(6, '0');
-          
+
           // Track booking creation time locally for cancel button eligibility
           try {
             const stored = localStorage.getItem('recentBookingCreationTimes');
@@ -1589,7 +1638,7 @@ export class BookingComponent implements OnInit {
           } catch (error) {
             console.error('Error storing booking creation time:', error);
           }
-          
+
           this.currentStep = 5;
           this.bookingConfirmed = true;
           localStorage.removeItem('bookingDraft');

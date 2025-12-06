@@ -3,7 +3,6 @@ import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './components/header/header.component';
 import { ToastContainerComponent } from './components/shared/toast-container/toast-container.component';
-import { AppointmentConfirmationDialogComponent } from './components/appointment-confirmation-dialog/appointment-confirmation-dialog.component';
 import { ReviewModalComponent } from './components/review-modal/review-modal.component';
 import { AuthService } from './services/auth.service';
 import { SignalRNotificationService } from './services/signalr-notification.service';
@@ -12,7 +11,7 @@ import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, HeaderComponent, ToastContainerComponent, ReviewModalComponent, AppointmentConfirmationDialogComponent],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, ToastContainerComponent, ReviewModalComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })

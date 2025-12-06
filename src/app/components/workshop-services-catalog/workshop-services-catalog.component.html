@@ -21,9 +21,6 @@
         <p class="catalog-subtitle">
           {{ getTotalServicesCount() }} total services
           <span *ngIf="hasActiveFilters()"> · {{ getFilteredServicesCount() }} filtered </span>
-          <span *ngIf="workshopId" style="opacity: 0.5; font-size: 0.75em">
-            (Workshop: {{ workshopId }})
-          </span>
         </p>
       </div>
 
@@ -343,7 +340,7 @@
         [class.list-view]="viewMode === 'list'"
       >
         <div
-          *ngFor="let service of filteredGroupedServices[origin]"
+          *ngFor="let service of getVisibleServicesForOrigin(origin)"
           class="service-card"
           [class.deleting]="deletingServiceId === service.id"
         >
@@ -447,68 +444,89 @@
           </div>
         </div>
       </div>
+
+      <!-- Show More/Less Buttons -->
+      <div *ngIf="isOriginExpanded(origin)" class="show-more-section">
+        <!-- Show More Button -->
+        <button
+          *ngIf="hasMoreServices(origin)"
+          type="button"
+          class="btn-show-more"
+          (click)="loadMoreServices(origin); $event.stopPropagation()"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          Show {{ Math.min(4, getRemainingServicesCount(origin)) }} more
+          <span class="remaining-count">({{ getRemainingServicesCount(origin) }} left)</span>
+        </button>
+
+        <!-- Show Less Button -->
+        <button
+          *ngIf="!hasMoreServices(origin) && getServiceCount(origin) > servicesPerOriginInitial"
+          type="button"
+          class="btn-show-less"
+          (click)="showLessServices(origin); $event.stopPropagation()"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="18 15 12 9 6 15" />
+          </svg>
+          Show less
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Pagination Controls -->
-  <div *ngIf="totalPages > 1" class="pagination-controls">
-    <div class="pagination-info">
-      <span
-        >Showing {{ (currentPage - 1) * pageSize + 1 }} -
-        {{ Math.min(currentPage * pageSize, totalRecords) }} of {{ totalRecords }} services</span
-      >
-    </div>
-    <div class="pagination-buttons">
-      <button
-        type="button"
-        class="btn-pagination btn-prev"
-        [disabled]="!hasPreviousPage || loading"
-        (click)="previousPage()"
-      >
+  <!-- Services Summary -->
+  <div class="services-summary" *ngIf="totalRecords > 0 && !isLoading()">
+    <div class="summary-container">
+      <div class="summary-info">
         <svg
-          width="20"
-          height="20"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
         >
-          <path d="M15 18l-6-6 6-6" />
+          <path
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          />
         </svg>
-        Previous
-      </button>
-
-      <div class="pagination-pages">
-        <button
-          *ngFor="let page of [].constructor(totalPages); let i = index"
-          type="button"
-          class="btn-page"
-          [class.active]="currentPage === i + 1"
-          [disabled]="loading"
-          (click)="goToPage(i + 1)"
-        >
-          {{ i + 1 }}
-        </button>
+        <span>
+          <strong>{{ totalRecords }}</strong> services across
+          <strong>{{ getOriginsCount() }}</strong> categories
+        </span>
       </div>
-
-      <button
-        type="button"
-        class="btn-pagination btn-next"
-        [disabled]="!hasNextPage || loading"
-        (click)="nextPage()"
-      >
-        Next
+      <div class="summary-hint">
         <svg
-          width="20"
-          height="20"
+          width="14"
+          height="14"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
         >
-          <path d="M9 18l6-6-6-6" />
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
         </svg>
-      </button>
+        Click on a category to expand/collapse
+      </div>
     </div>
   </div>
 </div>

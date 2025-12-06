@@ -5,7 +5,11 @@ import { AddVehicleFormComponent } from '../add-vehicle-form/add-vehicle-form.co
 import { ConfirmationPopupComponent } from '../shared/confirmation-popup/confirmation-popup.component';
 import { Router, RouterLink } from '@angular/router';
 import { CarsService } from '../../services/cars.service';
-import { CarExpenseService, CreateCarExpenseRequest, ExpenseType } from '../../services/car-expense.service';
+import {
+  CarExpenseService,
+  CreateCarExpenseRequest,
+  ExpenseType,
+} from '../../services/car-expense.service';
 import { BookingService } from '../../services/booking.service';
 import { forkJoin } from 'rxjs';
 
@@ -76,9 +80,15 @@ interface NewExpenseForm {
 @Component({
   selector: 'app-my-vehicles',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddVehicleFormComponent, RouterLink, ConfirmationPopupComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AddVehicleFormComponent,
+    RouterLink,
+    ConfirmationPopupComponent,
+  ],
   templateUrl: './my-vehicles.component.html',
-  styleUrls: ['./my-vehicles.component.css']
+  styleUrls: ['./my-vehicles.component.css'],
 })
 export class MyVehiclesComponent implements OnInit, OnDestroy {
   vehicles: Vehicle[] = [];
@@ -108,7 +118,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     amount: null,
     description: '',
     carId: null,
-    icon: '⛽'
+    icon: '⛽',
   };
   expenseTypes: ExpenseType[] = ['Fuel', 'Maintenance', 'Repair', 'Insurance', 'Other'];
   welcomeMessage: string = '';
@@ -117,33 +127,36 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     {
       id: 1,
       title: 'Winter Tire Safety: When to Switch',
-      excerpt: 'Learn the optimal time to switch to winter tires and how they can significantly improve your vehicle\'s safety during cold months.',
+      excerpt:
+        "Learn the optimal time to switch to winter tires and how they can significantly improve your vehicle's safety during cold months.",
       category: 'Seasonal',
       icon: '❄️',
       timeAgo: '2 hours ago',
       readTime: 4,
-      content: 'Full article content here...'
+      content: 'Full article content here...',
     },
     {
       id: 2,
       title: 'Top 5 Fuel-Saving Driving Habits',
-      excerpt: 'Discover proven techniques to reduce fuel consumption and save money on every trip.',
+      excerpt:
+        'Discover proven techniques to reduce fuel consumption and save money on every trip.',
       category: 'Fuel',
       icon: '⛽',
       timeAgo: '1 day ago',
       readTime: 3,
-      content: 'Full article content here...'
+      content: 'Full article content here...',
     },
     {
       id: 3,
       title: 'Essential Oil Change Intervals',
-      excerpt: 'Understanding when to change your oil can extend engine life and prevent costly repairs.',
+      excerpt:
+        'Understanding when to change your oil can extend engine life and prevent costly repairs.',
       category: 'Maintenance',
       icon: '🔧',
       timeAgo: '3 days ago',
       readTime: 5,
-      content: 'Full article content here...'
-    }
+      content: 'Full article content here...',
+    },
   ];
 
   // Upcoming bookings for all vehicles
@@ -173,7 +186,9 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   // Getter for popup message
   get cancelPopupMessage(): string {
     if (!this.bookingToCancel) return '';
-    return `Are you sure you want to cancel the appointment for "${this.bookingToCancel.serviceName}" scheduled on ${this.formatDate(this.bookingToCancel.appointmentDate)}?`;
+    return `Are you sure you want to cancel the appointment for "${
+      this.bookingToCancel.serviceName
+    }" scheduled on ${this.formatDate(this.bookingToCancel.appointmentDate)}?`;
   }
 
   constructor(
@@ -192,7 +207,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     if (this.selectedCarId === null) {
       return this.expenses; // Show all expenses
     }
-    return this.expenses.filter(exp => exp.carId === this.selectedCarId);
+    return this.expenses.filter((exp) => exp.carId === this.selectedCarId);
   }
 
   onCarFilterChange(event: Event): void {
@@ -219,18 +234,21 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       if (stored) {
         const data = JSON.parse(stored);
         const now = new Date();
-        
+
         // Only load bookings created within the last 13 hours (12 hours + 1 hour buffer)
         Object.entries(data).forEach(([bookingId, timestamp]) => {
           const creationTime = new Date(timestamp as string);
           const ageHours = (now.getTime() - creationTime.getTime()) / (1000 * 60 * 60);
-          
+
           if (ageHours <= 13) {
             this.localBookingCreationTimes.set(Number(bookingId), creationTime);
-            console.log(`✅ Loaded local creation time for booking ${bookingId}:`, creationTime.toISOString());
+            console.log(
+              `✅ Loaded local creation time for booking ${bookingId}:`,
+              creationTime.toISOString()
+            );
           }
         });
-        
+
         // Clean up old entries from localStorage
         this.cleanupOldBookingTimes();
       }
@@ -249,16 +267,16 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         const data = JSON.parse(stored);
         const now = new Date();
         const cleaned: any = {};
-        
+
         Object.entries(data).forEach(([bookingId, timestamp]) => {
           const creationTime = new Date(timestamp as string);
           const ageHours = (now.getTime() - creationTime.getTime()) / (1000 * 60 * 60);
-          
+
           if (ageHours <= 13) {
             cleaned[bookingId] = timestamp;
           }
         });
-        
+
         localStorage.setItem('recentBookingCreationTimes', JSON.stringify(cleaned));
       }
     } catch (error) {
@@ -279,17 +297,18 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
             photoUrl: response.data.photoUrl,
             imageUrl: response.data.imageUrl,
             picture: response.data.picture,
-            avatar: response.data.avatar
+            avatar: response.data.avatar,
           });
           // Extract profile information - check multiple possible field names
           this.profileName = response.data.name || response.data.firstName || 'Car Owner';
-          const candidate = response.data.profileImageUrl
-            || response.data.profilePicture
-            || response.data.profileImage
-            || response.data.photoUrl
-            || response.data.imageUrl
-            || response.data.picture
-            || response.data.avatar;
+          const candidate =
+            response.data.profileImageUrl ||
+            response.data.profilePicture ||
+            response.data.profileImage ||
+            response.data.photoUrl ||
+            response.data.imageUrl ||
+            response.data.picture ||
+            response.data.avatar;
           // Backend host used for serving uploaded files
           const backendHost = 'https://localhost:44316';
           if (candidate && typeof candidate === 'string') {
@@ -326,17 +345,17 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
                 currentMileage: Number(c.currentMileage),
                 engineCapacity: c.engineCapacity ? Number(c.engineCapacity) : undefined,
                 maintenanceItems: c.maintenanceItems || [],
-                dashboardIndicators
+                dashboardIndicators,
               } as Vehicle;
             });
           } else {
             this.vehicles = [];
           }
           console.log('Loaded cars:', this.vehicles);
-          
+
           // Load default vehicle preference and mark it
           this.loadDefaultVehicle();
-          
+
           // Force change detection in case data arrives after initial render
           this.cdr.detectChanges();
           // Fetch indicator statuses from backend for all vehicles
@@ -357,7 +376,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         console.error('Error loading profile with cars:', err);
         this.vehicles = [];
         this.expenses = [];
-      }
+      },
     });
   }
 
@@ -367,15 +386,15 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       return;
     }
     this.loadingExpenses = true;
-    const requests = this.vehicles.map(v => this.carExpenseService.getByCarId(v.id));
+    const requests = this.vehicles.map((v) => this.carExpenseService.getByCarId(v.id));
     forkJoin(requests).subscribe({
       next: (resultsArrays: any[]) => {
-        const iconMap: Record<string,string> = {
+        const iconMap: Record<string, string> = {
           Fuel: '⛽',
           Maintainance: '🔧',
           Repair: '🛠️',
           Insurance: '📋',
-          Other: '📌'
+          Other: '📌',
         };
         const merged: Expense[] = [];
         resultsArrays.forEach((arr: any[], idx: number) => {
@@ -387,12 +406,12 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
               date: dto.expenseDate,
               amount: dto.amount,
               icon: iconMap[dto.expenseType] ?? '📌',
-              carId: carId
+              carId: carId,
             });
           });
         });
         // Sort by date desc
-        merged.sort((a,b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+        merged.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
         this.expenses = merged;
         this.loadingExpenses = false;
         this.cdr.detectChanges();
@@ -402,7 +421,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         this.loadingExpenses = false;
         this.expenses = [];
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -441,7 +460,11 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
    * If the indicator status is 'unknown', navigate to the car details page
    * and scroll to the Vehicle Health Status section using a fragment.
    */
-  onIndicatorClick(vehicle: Vehicle, indicator: { label: string; icon: string; status?: string }, event: Event): void {
+  onIndicatorClick(
+    vehicle: Vehicle,
+    indicator: { label: string; icon: string; status?: string },
+    event: Event
+  ): void {
     event.stopPropagation();
     try {
       const status = this.getIndicatorStatusByLabel(vehicle, indicator.label);
@@ -469,15 +492,15 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   // Perform deletion after user confirms
   deleteCarConfirmed(): void {
     if (!this.carToDelete) return;
-    
+
     const deletedVehicleId = this.carToDelete.id;
     const wasDefault = this.carToDelete.isDefault;
-    
+
     this.isDeleting = true;
     this.carsService.deleteCar(this.carToDelete.id).subscribe({
       next: (res) => {
         console.log('Deleted car', this.carToDelete?.id, res);
-        
+
         // If the deleted vehicle was the default, clear the preference
         if (wasDefault) {
           const userId = this.getUserId();
@@ -486,7 +509,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
             console.log('✅ Cleared default vehicle preference after deletion');
           }
         }
-        
+
         this.isDeleting = false;
         this.showDeleteConfirm = false;
         this.carToDelete = null;
@@ -496,7 +519,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         console.error('Error deleting car:', err);
         this.isDeleting = false;
         // Keep modal open so user can retry or cancel
-      }
+      },
     });
   }
 
@@ -533,7 +556,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       amount: null,
       description: '',
       carId: null,
-      icon: '⛽'
+      icon: '⛽',
     };
   }
 
@@ -544,7 +567,11 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   addExpense(): void {
     this.submittedExpense = true;
     // Validate required fields
-    if (!this.newExpenseForm.carId || !this.newExpenseForm.expenseType || !this.newExpenseForm.amount) {
+    if (
+      !this.newExpenseForm.carId ||
+      !this.newExpenseForm.expenseType ||
+      !this.newExpenseForm.amount
+    ) {
       this.expenseMessageType = 'error';
       this.expenseMessage = 'Please select car, expense type and enter amount.';
       return;
@@ -560,7 +587,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       description: this.newExpenseForm.description?.trim() || '',
       expenseDate: this.newExpenseForm.expenseDate,
       expenseType: this.newExpenseForm.expenseType as ExpenseType,
-      carId: Number(this.newExpenseForm.carId)
+      carId: Number(this.newExpenseForm.carId),
     };
 
     this.isSavingExpense = true;
@@ -573,7 +600,9 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         const success = resp?.success ?? true;
         // Always show a friendly standardized message on success
         this.expenseMessageType = success ? 'success' : 'error';
-        this.expenseMessage = success ? 'The expense created successfully' : (resp?.message ?? 'Failed to add expense');
+        this.expenseMessage = success
+          ? 'The expense created successfully'
+          : resp?.message ?? 'Failed to add expense';
         // Keep modal open until user closes with X as requested
         // Force UI update immediately (zoneless change detection environment)
         if (success) {
@@ -581,27 +610,27 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
           if (this.newExpenseForm.carId) {
             this.carExpenseService.getByCarId(this.newExpenseForm.carId).subscribe({
               next: (arr) => {
-                const iconMap: Record<string,string> = {
+                const iconMap: Record<string, string> = {
                   Fuel: '⛽',
                   Maintainance: '🔧',
                   Repair: '🛠️',
                   Insurance: '📋',
-                  Other: '📌'
+                  Other: '📌',
                 };
                 // Remove old expenses for that car
-                this.expenses = this.expenses.filter(e => e.carId !== this.newExpenseForm.carId);
+                this.expenses = this.expenses.filter((e) => e.carId !== this.newExpenseForm.carId);
                 // Add refreshed list
-                const refreshed = arr.map(dto => ({
+                const refreshed = arr.map((dto) => ({
                   id: dto.id,
                   name: dto.expenseType,
                   date: dto.expenseDate,
                   amount: dto.amount,
                   icon: iconMap[dto.expenseType] ?? '📌',
-                  carId: dto.carId
+                  carId: dto.carId,
                 }));
                 this.expenses = [...refreshed, ...this.expenses];
                 // Resort
-                this.expenses.sort((a,b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+                this.expenses.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
                 this.cdr.detectChanges();
               },
               error: () => {
@@ -612,11 +641,11 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
                   date: this.newExpenseForm.expenseDate,
                   amount: this.newExpenseForm.amount ?? 0,
                   icon: this.newExpenseForm.icon,
-                  carId: this.newExpenseForm.carId
+                  carId: this.newExpenseForm.carId,
                 };
                 this.expenses.unshift(fallback);
                 this.cdr.detectChanges();
-              }
+              },
             });
           }
         }
@@ -630,7 +659,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         this.expenseMessage = msg;
         // Force UI update so the error message appears without user interaction
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -639,7 +668,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     const numericId = Number(id);
     // optimistic UI: remove from list immediately but keep backup to rollback on error
     const backup = [...this.expenses];
-    this.expenses = this.expenses.filter(e => e.id !== numericId);
+    this.expenses = this.expenses.filter((e) => e.id !== numericId);
     this.deletingExpenseIds.add(numericId);
     this.cdr.detectChanges();
 
@@ -659,7 +688,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         this.expenseMessageType = 'error';
         this.expenseMessage = 'Failed to remove expense. Please try again.';
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -669,7 +698,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       Maintainance: '🔧',
       Repair: '🛠️',
       Insurance: '📋',
-      Other: '📌'
+      Other: '📌',
     };
     if (expenseType) {
       this.newExpenseForm.icon = map[expenseType] ?? '📌';
@@ -678,7 +707,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
 
   getVehicleLabel(carId: number | null | undefined): string {
     if (carId === null || carId === undefined) return 'Unknown Car';
-    const v = this.vehicles.find(v => v.id === Number(carId));
+    const v = this.vehicles.find((v) => v.id === Number(carId));
     if (!v) return `Car #${carId}`;
     return `${v.year} ${v.make} ${v.model} (${v.licensePlate})`;
   }
@@ -727,19 +756,21 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     if (!vehicle.maintenanceItems || vehicle.maintenanceItems.length === 0) return 'good';
 
     const indicatorMap: Record<string, string[]> = {
-      'oil': ['Oil Change', 'Engine Oil', 'Oil'],
-      'tires': ['Tire Rotation', 'Tires', 'Tire'],
-      'battery': ['Battery', 'Battery Check'],
-      'brakes': ['Brake Pads', 'Brakes', 'Brake Fluid', 'Brake']
+      oil: ['Oil Change', 'Engine Oil', 'Oil'],
+      tires: ['Tire Rotation', 'Tires', 'Tire'],
+      battery: ['Battery', 'Battery Check'],
+      brakes: ['Brake Pads', 'Brakes', 'Brake Fluid', 'Brake'],
     };
 
-    const matchingItems = vehicle.maintenanceItems.filter(item =>
-      indicatorMap[indicatorType]?.some(name => item.name.toLowerCase().includes(name.toLowerCase()))
+    const matchingItems = vehicle.maintenanceItems.filter((item) =>
+      indicatorMap[indicatorType]?.some((name) =>
+        item.name.toLowerCase().includes(name.toLowerCase())
+      )
     );
 
     if (matchingItems.length === 0) return 'good';
 
-    const minKm = Math.min(...matchingItems.map(item => item.remainingKm));
+    const minKm = Math.min(...matchingItems.map((item) => item.remainingKm));
 
     if (minKm <= 1000) return 'critical';
     if (minKm <= 3000) return 'warning';
@@ -759,7 +790,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   private loadIndicatorStatusesForAllVehicles(): void {
     if (!this.vehicles.length) return;
 
-    this.vehicles.forEach(vehicle => {
+    this.vehicles.forEach((vehicle) => {
       if (!vehicle.dashboardIndicators || vehicle.dashboardIndicators.length === 0) return;
 
       this.carsService.getCarIndicators(vehicle.id).subscribe({
@@ -767,23 +798,25 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
           console.log(`Loaded indicators for car ${vehicle.id}:`, indicators);
           // Map backend indicators to dashboard indicators
           if (vehicle.dashboardIndicators) {
-            vehicle.dashboardIndicators = vehicle.dashboardIndicators.map(dashIndicator => {
+            vehicle.dashboardIndicators = vehicle.dashboardIndicators.map((dashIndicator) => {
               // Find matching backend indicator by type
-              const backendIndicator = indicators.find(ind =>
+              const backendIndicator = indicators.find((ind) =>
                 this.matchIndicatorType(ind.indicatorType, dashIndicator.label)
               );
 
               if (backendIndicator) {
-                console.log(`Matched ${dashIndicator.label} with backend status: ${backendIndicator.carStatus}`);
+                console.log(
+                  `Matched ${dashIndicator.label} with backend status: ${backendIndicator.carStatus}`
+                );
                 return {
                   ...dashIndicator,
-                  status: backendIndicator.carStatus
+                  status: backendIndicator.carStatus,
                 };
               } else {
                 console.log(`No match found for ${dashIndicator.label} - marking as Unknown`);
                 return {
                   ...dashIndicator,
-                  status: 'Unknown'
+                  status: 'Unknown',
                 };
               }
             });
@@ -792,7 +825,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error(`Failed to load indicators for car ${vehicle.id}:`, err);
-        }
+        },
       });
     });
   }
@@ -808,29 +841,46 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
 
     // Map dashboard labels to backend indicator types
     const labelToBackendType: Record<string, string[]> = {
-      'acservice': ['acservice'],
-      'licenseinsuranceexpiry': ['carlicenseandensuranceexpiry', 'carlicenseandensuanceexpiry', 'carlicenseandinsuranceexpiry'],
-      'generalmaintenance': ['generalmaintenance', 'maintenance'],
-      'oilchange': ['oilchange', 'oil'],
-      'batteryhealth': ['batteryhealth', 'battery'],
-      'tirechange': ['tirechange', 'tire', 'tires']
+      acservice: ['acservice'],
+      licenseinsuranceexpiry: [
+        'carlicenseandensuranceexpiry',
+        'carlicenseandensuanceexpiry',
+        'carlicenseandinsuranceexpiry',
+      ],
+      generalmaintenance: ['generalmaintenance', 'maintenance'],
+      oilchange: ['oilchange', 'oil'],
+      batteryhealth: ['batteryhealth', 'battery'],
+      tirechange: ['tirechange', 'tire', 'tires'],
     };
 
     // Check if normalized label maps to any backend type
     const mappedTypes = labelToBackendType[normalizedLabel];
-    if (mappedTypes && mappedTypes.some(type => normalizedBackend === type || normalizedBackend.includes(type) || type.includes(normalizedBackend))) {
+    if (
+      mappedTypes &&
+      mappedTypes.some(
+        (type) =>
+          normalizedBackend === type ||
+          normalizedBackend.includes(type) ||
+          type.includes(normalizedBackend)
+      )
+    ) {
       return true;
     }
 
     // Fallback: check if one contains the other
-    return normalizedBackend.includes(normalizedLabel) || normalizedLabel.includes(normalizedBackend);
+    return (
+      normalizedBackend.includes(normalizedLabel) || normalizedLabel.includes(normalizedBackend)
+    );
   }
 
   // Get indicator status by label (for dynamic dashboard indicators)
-  getIndicatorStatusByLabel(vehicle: Vehicle, indicatorLabel: string): 'good' | 'warning' | 'critical' | 'unknown' {
+  getIndicatorStatusByLabel(
+    vehicle: Vehicle,
+    indicatorLabel: string
+  ): 'good' | 'warning' | 'critical' | 'unknown' {
     // First check if we have status from backend
     if (vehicle.dashboardIndicators) {
-      const indicator = vehicle.dashboardIndicators.find(ind => ind.label === indicatorLabel);
+      const indicator = vehicle.dashboardIndicators.find((ind) => ind.label === indicatorLabel);
       if (indicator?.status) {
         const status = indicator.status.toLowerCase();
         if (status === 'critical') return 'critical';
@@ -848,7 +898,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       'General Maintenance': 'maintenance',
       'Oil Change': 'oil',
       'Battery Health': 'battery',
-      'Tire Change': 'tires'
+      'Tire Change': 'tires',
     };
 
     const indicatorType = labelToType[indicatorLabel] || indicatorLabel.toLowerCase();
@@ -869,7 +919,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   handleAIPrompt(action: string): void {
     console.log('AI Assistant action:', action);
 
-    switch(action) {
+    switch (action) {
       case 'maintenance':
         // Navigate to booking page
         this.navigateToBooking();
@@ -913,24 +963,33 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     console.log('My Vehicles Icon Path for:', indicatorLabel); // Debug log
     const iconMap: { [key: string]: string } = {
       // Dashboard indicator labels (from indicatorTypeConfig)
-      'AC Service': 'M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
-      'License & Insurance Expiry': 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 13H9v-2h4v2zm0-4H9V9h4v2z',
-      'General Maintenance': 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
+      'AC Service':
+        'M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
+      'License & Insurance Expiry':
+        'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 13H9v-2h4v2zm0-4H9V9h4v2z',
+      'General Maintenance':
+        'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
       'Oil Change': 'M7 13v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6M8 5l4-3 4 3M12 2v10',
       'Battery Health': 'M6 7h11v10H6V7zm11 5h4m-4-2h4',
       'Tire Change': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z',
       // Additional maintenance indicator labels (from regular indicators)
       'Brake Fluid': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 14v-2m2 0v2m-2-6v-2m2 0v2',
       'Engine Air Filter': 'M3 3h18v18H3V3zm0 6h18M9 9v12',
-      'Coolant': 'M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z',
-      'Tire Rotation': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z',
-      'Spark Plugs': 'M12 2v6m0 4v10M4.93 4.93l4.24 4.24m5.66 5.66l4.24 4.24M2 12h6m8 0h6M4.93 19.07l4.24-4.24m5.66-5.66l4.24-4.24',
-      'Transmission Fluid': 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0-7v4m0 6v8M8.22 8.22l2.83 2.83m5.9 5.9l2.83 2.83m-14.83 0l2.83-2.83m5.9-5.9l2.83-2.83',
+      Coolant: 'M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z',
+      'Tire Rotation':
+        'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z',
+      'Spark Plugs':
+        'M12 2v6m0 4v10M4.93 4.93l4.24 4.24m5.66 5.66l4.24 4.24M2 12h6m8 0h6M4.93 19.07l4.24-4.24m5.66-5.66l4.24-4.24',
+      'Transmission Fluid':
+        'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0-7v4m0 6v8M8.22 8.22l2.83 2.83m5.9 5.9l2.83 2.83m-14.83 0l2.83-2.83m5.9-5.9l2.83-2.83',
       'Cabin Air Filter': 'M2 7h20v10H2V7zm0 5h20',
       'Windshield Wipers': 'M2 12l10-5 10 5m-20 5l10-5 10 5',
-      'Brake Pads': 'M5 11h14v10H5V11zm7-6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'
+      'Brake Pads': 'M5 11h14v10H5V11zm7-6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
     };
-    return iconMap[indicatorLabel] || 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z';
+    return (
+      iconMap[indicatorLabel] ||
+      'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'
+    );
   }
 
   // Load upcoming bookings for all vehicles
@@ -941,7 +1000,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     }
 
     this.loadingBookings = true;
-    const requests = this.vehicles.map(v => this.bookingService.getBookingsByCar(v.id));
+    const requests = this.vehicles.map((v) => this.bookingService.getBookingsByCar(v.id));
 
     forkJoin(requests).subscribe({
       next: (responses: any[]) => {
@@ -972,7 +1031,9 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
                 id: booking.id,
                 workshopServiceId: booking.workshopServiceId,
                 createdAtRaw: booking.createdAt,
-                createdAtParsed: booking.createdAt ? new Date(booking.createdAt).toISOString() : 'undefined'
+                createdAtParsed: booking.createdAt
+                  ? new Date(booking.createdAt).toISOString()
+                  : 'undefined',
               });
 
               const bookingObj: UpcomingBooking = {
@@ -986,7 +1047,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
                 daysUntil: daysUntil,
                 workshopId: booking.workShopProfileId,
                 workshopServiceId: booking.workshopServiceId,
-                createdAt: booking.createdAt ? new Date(booking.createdAt) : undefined
+                createdAt: booking.createdAt ? new Date(booking.createdAt) : undefined,
               };
 
               allBookings.push(bookingObj);
@@ -1012,7 +1073,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         this.loadingBookings = false;
         this.upcomingBookings = [];
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -1047,8 +1108,10 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
 
-          const vehicle = this.vehicles.find(v => v.id === this.selectedCarForBookings);
-          const vehicleLabel = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
+          const vehicle = this.vehicles.find((v) => v.id === this.selectedCarForBookings);
+          const vehicleLabel = vehicle
+            ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+            : 'Unknown Vehicle';
 
           // Handle different response structures
           let bookingsData: any[] = [];
@@ -1101,7 +1164,9 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
                 id: booking.id,
                 workshopServiceId: booking.workshopServiceId,
                 createdAtRaw: booking.createdAt,
-                createdAtParsed: booking.createdAt ? new Date(booking.createdAt).toISOString() : 'undefined'
+                createdAtParsed: booking.createdAt
+                  ? new Date(booking.createdAt).toISOString()
+                  : 'undefined',
               });
 
               const bookingObj: UpcomingBooking = {
@@ -1115,7 +1180,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
                 daysUntil: daysUntil,
                 workshopId: booking.workShopProfileId,
                 workshopServiceId: booking.workshopServiceId,
-                createdAt: booking.createdAt ? new Date(booking.createdAt) : undefined
+                createdAt: booking.createdAt ? new Date(booking.createdAt) : undefined,
               };
 
               // Fetch service name if workshopServiceId exists
@@ -1138,7 +1203,9 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
             console.log('All bookings loaded. Total:', this.allCarBookings.length);
 
             // Sort by appointment date (nearest first)
-            this.allCarBookings.sort((a, b) => a.appointmentDate.getTime() - b.appointmentDate.getTime());
+            this.allCarBookings.sort(
+              (a, b) => a.appointmentDate.getTime() - b.appointmentDate.getTime()
+            );
 
             this.totalBookings = this.allCarBookings.length;
 
@@ -1164,14 +1231,14 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
           status: err?.status,
           statusText: err?.statusText,
           message: err?.message,
-          error: err?.error
+          error: err?.error,
         });
         this.loadingCarBookings = false;
         this.allCarBookings = [];
         this.carBookings = [];
         this.totalBookings = 0;
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -1180,7 +1247,11 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
     this.carBookings = this.allCarBookings.slice(startIndex, endIndex);
-    console.log(`Showing bookings ${startIndex + 1} to ${Math.min(endIndex, this.totalBookings)} of ${this.totalBookings}`);
+    console.log(
+      `Showing bookings ${startIndex + 1} to ${Math.min(endIndex, this.totalBookings)} of ${
+        this.totalBookings
+      }`
+    );
   }
 
   // Go back to showing all cars
@@ -1222,6 +1293,44 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     return this.currentPage > 1;
   }
 
+  // Go to specific page
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      this.currentPage = page;
+      this.updatePageView();
+      this.cdr.detectChanges();
+    }
+  }
+
+  // Get visible page numbers for pagination
+  getVisiblePages(): number[] {
+    const pages: number[] = [];
+    const start = Math.max(2, this.currentPage - 1);
+    const end = Math.min(this.totalPages - 1, this.currentPage + 1);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  // Get start record number for display
+  getStartRecord(): number {
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  // Get end record number for display
+  getEndRecord(): number {
+    return Math.min(this.currentPage * this.pageSize, this.totalBookings);
+  }
+
+  // Handle page size change
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+    this.updatePageView();
+    this.cdr.detectChanges();
+  }
+
   // Format date for display
   formatDate(date: Date): string {
     const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
@@ -1231,14 +1340,16 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   // Open cancel confirmation popup
   openCancelPopup(booking: UpcomingBooking, event: Event): void {
     event.stopPropagation();
-    
+
     if (this.cancellingBookingIds.has(booking.id)) {
       return; // Already cancelling
     }
 
     // Validate time constraint before showing popup
     if (!this.canCancelBooking(booking)) {
-      alert('Cancellation period has expired. Bookings can only be cancelled within 12 hours of creation.');
+      alert(
+        'Cancellation period has expired. Bookings can only be cancelled within 12 hours of creation.'
+      );
       return;
     }
 
@@ -1257,12 +1368,14 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     if (!this.bookingToCancel) return;
 
     const booking = this.bookingToCancel;
-    
+
     // Final validation before API call (security measure)
     if (!this.canCancelBooking(booking)) {
       this.showCancelPopup = false;
       this.bookingToCancel = null;
-      alert('Cancellation period has expired. Bookings can only be cancelled within 12 hours of creation.');
+      alert(
+        'Cancellation period has expired. Bookings can only be cancelled within 12 hours of creation.'
+      );
       return;
     }
 
@@ -1273,39 +1386,47 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     const apiUrl = 'https://localhost:44316/api';
-    this.bookingService.http.put(`${apiUrl}/Booking/Update-Booking-Status`, {
-      id: booking.id,
-      status: 'Cancelled'
-    }).subscribe({
-      next: (response: any) => {
-        console.log('Booking cancelled successfully:', response);
-        this.cancellingBookingIds.delete(booking.id);
-        
-        // Remove the cancelled booking from the list immediately
-        this.carBookings = this.carBookings.filter(b => b.id !== booking.id);
-        this.upcomingBookings = this.upcomingBookings.filter(b => b.id !== booking.id);
-        this.totalBookings = Math.max(0, this.totalBookings - 1);
-        
-        // Send notification to the workshop about the cancellation
-        this.sendCancellationNotificationToWorkshop(booking);
-        
-        this.cdr.detectChanges();
-      },
-      error: (err: any) => {
-        console.error('Error cancelling booking:', err);
-        this.cancellingBookingIds.delete(booking.id);
-        
-        // Check if error is related to time constraint
-        const errorMsg = err?.error?.message || err?.message || '';
-        if (errorMsg.toLowerCase().includes('time') || errorMsg.toLowerCase().includes('expired') || errorMsg.toLowerCase().includes('cancellation')) {
-          alert('Cancellation period has expired. Bookings can only be cancelled within 12 hours of creation.');
-        } else {
-          alert('Failed to cancel booking. Please try again.');
-        }
-        
-        this.cdr.detectChanges();
-      }
-    });
+    this.bookingService.http
+      .put(`${apiUrl}/Booking/Update-Booking-Status`, {
+        id: booking.id,
+        status: 'Cancelled',
+      })
+      .subscribe({
+        next: (response: any) => {
+          console.log('Booking cancelled successfully:', response);
+          this.cancellingBookingIds.delete(booking.id);
+
+          // Remove the cancelled booking from the list immediately
+          this.carBookings = this.carBookings.filter((b) => b.id !== booking.id);
+          this.upcomingBookings = this.upcomingBookings.filter((b) => b.id !== booking.id);
+          this.totalBookings = Math.max(0, this.totalBookings - 1);
+
+          // Send notification to the workshop about the cancellation
+          this.sendCancellationNotificationToWorkshop(booking);
+
+          this.cdr.detectChanges();
+        },
+        error: (err: any) => {
+          console.error('Error cancelling booking:', err);
+          this.cancellingBookingIds.delete(booking.id);
+
+          // Check if error is related to time constraint
+          const errorMsg = err?.error?.message || err?.message || '';
+          if (
+            errorMsg.toLowerCase().includes('time') ||
+            errorMsg.toLowerCase().includes('expired') ||
+            errorMsg.toLowerCase().includes('cancellation')
+          ) {
+            alert(
+              'Cancellation period has expired. Bookings can only be cancelled within 12 hours of creation.'
+            );
+          } else {
+            alert('Failed to cancel booking. Please try again.');
+          }
+
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   // Send notification to workshop when booking is cancelled
@@ -1320,9 +1441,11 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       workshopProfileId: booking.workshopId,
       bookingId: booking.id,
       title: 'Booking Cancelled',
-      message: `The booking for "${booking.serviceName}" scheduled on ${this.formatDate(booking.appointmentDate)} has been cancelled by the car owner.`,
+      message: `The booking for "${booking.serviceName}" scheduled on ${this.formatDate(
+        booking.appointmentDate
+      )} has been cancelled by the car owner.`,
       type: 3, // NotificationType.BookingCancelled
-      priority: 'high'
+      priority: 'high',
     };
 
     this.bookingService.http.post(`${apiUrl}/Notification/send`, notificationPayload).subscribe({
@@ -1332,17 +1455,20 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       error: (err: any) => {
         console.error('Error sending cancellation notification to workshop:', err);
         // Don't block the user - notification failure shouldn't affect cancellation
-      }
+      },
     });
   }
 
   // Get service icon based on service name
   getServiceIcon(serviceName: string): string {
     const lowerName = serviceName.toLowerCase();
-    if (lowerName.includes('oil')) return 'M7 13v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6M8 5l4-3 4 3M12 2v10';
-    if (lowerName.includes('tire')) return 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z';
+    if (lowerName.includes('oil'))
+      return 'M7 13v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6M8 5l4-3 4 3M12 2v10';
+    if (lowerName.includes('tire'))
+      return 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z';
     if (lowerName.includes('battery')) return 'M6 7h11v10H6V7zm11 5h4m-4-2h4';
-    if (lowerName.includes('brake')) return 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 14v-2m2 0v2m-2-6v-2m2 0v2';
+    if (lowerName.includes('brake'))
+      return 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 14v-2m2 0v2m-2-6v-2m2 0v2';
     if (lowerName.includes('filter')) return 'M3 3h18v18H3V3zm0 6h18M9 9v12';
     // Default maintenance icon
     return 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z';
@@ -1356,7 +1482,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   canCancelBooking(booking: UpcomingBooking): boolean {
     // Check if we have a local creation time (for newly created bookings)
     const localCreationTime = this.localBookingCreationTimes.get(booking.id);
-    
+
     if (localCreationTime) {
       const now = new Date();
       const timeDiffMs = now.getTime() - localCreationTime.getTime();
@@ -1367,7 +1493,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         localCreatedAt: localCreationTime.toISOString(),
         now: now.toISOString(),
         timeDiffHours: timeDiffHours.toFixed(2),
-        canCancel: timeDiffHours <= 12
+        canCancel: timeDiffHours <= 12,
       });
 
       return timeDiffHours <= 12;
@@ -1389,7 +1515,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       createdAt: createdAt.toISOString(),
       now: now.toISOString(),
       timeDiffHours: timeDiffHours.toFixed(2),
-      canCancel: timeDiffHours <= 12
+      canCancel: timeDiffHours <= 12,
     });
 
     return timeDiffHours <= 12;
@@ -1400,7 +1526,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
    */
   private startCancelButtonUpdateInterval(): void {
     this.stopCancelButtonUpdateInterval(); // Clear any existing interval
-    
+
     // Update every 5 minutes to reflect time-based changes (12-hour window)
     this.cancelButtonUpdateInterval = setInterval(() => {
       this.cdr.detectChanges();
@@ -1424,39 +1550,42 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     if (!booking.workshopServiceId) return;
 
     const apiUrl = 'https://localhost:44316/api';
-    
+
     // First, get the workshopService to extract serviceId
-    this.bookingService.http.get<any>(`${apiUrl}/WorkshopService/${booking.workshopServiceId}`).subscribe({
-      next: (workshopServiceResponse) => {
-        console.log('Workshop Service Response:', workshopServiceResponse);
-        
-        const serviceId = workshopServiceResponse?.data?.serviceId || workshopServiceResponse?.serviceId;
-        
-        if (serviceId) {
-          // Now fetch the service name using serviceId
-          this.bookingService.http.get<any>(`${apiUrl}/Service/${serviceId}`).subscribe({
-            next: (serviceResponse) => {
-              console.log('Service Response:', serviceResponse);
-              
-              const serviceName = serviceResponse?.data?.name || serviceResponse?.name;
-              
-              if (serviceName) {
-                // Update the booking's service name
-                booking.serviceName = serviceName;
-                console.log(`✅ Updated booking ${booking.id} with service name: ${serviceName}`);
-                this.cdr.detectChanges();
-              }
-            },
-            error: (err) => {
-              console.error(`Error fetching service name for serviceId ${serviceId}:`, err);
-            }
-          });
-        }
-      },
-      error: (err) => {
-        console.error(`Error fetching workshop service ${booking.workshopServiceId}:`, err);
-      }
-    });
+    this.bookingService.http
+      .get<any>(`${apiUrl}/WorkshopService/${booking.workshopServiceId}`)
+      .subscribe({
+        next: (workshopServiceResponse) => {
+          console.log('Workshop Service Response:', workshopServiceResponse);
+
+          const serviceId =
+            workshopServiceResponse?.data?.serviceId || workshopServiceResponse?.serviceId;
+
+          if (serviceId) {
+            // Now fetch the service name using serviceId
+            this.bookingService.http.get<any>(`${apiUrl}/Service/${serviceId}`).subscribe({
+              next: (serviceResponse) => {
+                console.log('Service Response:', serviceResponse);
+
+                const serviceName = serviceResponse?.data?.name || serviceResponse?.name;
+
+                if (serviceName) {
+                  // Update the booking's service name
+                  booking.serviceName = serviceName;
+                  console.log(`✅ Updated booking ${booking.id} with service name: ${serviceName}`);
+                  this.cdr.detectChanges();
+                }
+              },
+              error: (err) => {
+                console.error(`Error fetching service name for serviceId ${serviceId}:`, err);
+              },
+            });
+          }
+        },
+        error: (err) => {
+          console.error(`Error fetching workshop service ${booking.workshopServiceId}:`, err);
+        },
+      });
   }
 
   /**
@@ -1468,18 +1597,20 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       if (!userId) return;
 
       const defaultVehicleId = localStorage.getItem(`defaultVehicle_user_${userId}`);
-      
+
       if (defaultVehicleId) {
         const vehicleId = Number(defaultVehicleId);
-        const vehicle = this.vehicles.find(v => v.id === vehicleId);
-        
+        const vehicle = this.vehicles.find((v) => v.id === vehicleId);
+
         if (vehicle) {
           vehicle.isDefault = true;
-          console.log(`✅ Loaded default vehicle: ${vehicle.make} ${vehicle.model} (ID: ${vehicleId})`);
-          
+          console.log(
+            `✅ Loaded default vehicle: ${vehicle.make} ${vehicle.model} (ID: ${vehicleId})`
+          );
+
           // Sort vehicles so default appears first
           this.sortVehiclesByDefault();
-          
+
           // Auto-select default vehicle to show its maintenance
           this.selectedVehicleId = vehicle.id;
         } else {
@@ -1510,7 +1641,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
    */
   setDefaultVehicle(vehicle: Vehicle, event: Event): void {
     event.stopPropagation(); // Prevent card selection
-    
+
     try {
       const userId = this.getUserId();
       if (!userId) {
@@ -1519,25 +1650,25 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       }
 
       // Unset all other vehicles as default
-      this.vehicles.forEach(v => v.isDefault = false);
-      
+      this.vehicles.forEach((v) => (v.isDefault = false));
+
       // Set this vehicle as default
       vehicle.isDefault = true;
-      
+
       // Save to localStorage
       localStorage.setItem(`defaultVehicle_user_${userId}`, vehicle.id.toString());
-      
+
       console.log(`✅ Set default vehicle: ${vehicle.make} ${vehicle.model} (ID: ${vehicle.id})`);
-      
+
       // Sort vehicles so default appears first
       this.sortVehiclesByDefault();
-      
+
       // Auto-select the default vehicle to show its maintenance
       this.selectedVehicleId = vehicle.id;
-      
+
       // Show feedback (you can replace with a toast notification)
       this.showDefaultVehicleFeedback(vehicle);
-      
+
       this.cdr.detectChanges();
     } catch (error) {
       console.error('Error setting default vehicle:', error);
@@ -1549,19 +1680,19 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
    */
   unsetDefaultVehicle(vehicle: Vehicle, event: Event): void {
     event.stopPropagation(); // Prevent card selection
-    
+
     try {
       const userId = this.getUserId();
       if (!userId) return;
 
       vehicle.isDefault = false;
       localStorage.removeItem(`defaultVehicle_user_${userId}`);
-      
+
       console.log(`✅ Unset default vehicle: ${vehicle.make} ${vehicle.model}`);
-      
+
       // Re-sort vehicles by ID since no default now
       this.sortVehiclesByDefault();
-      
+
       this.cdr.detectChanges();
     } catch (error) {
       console.error('Error unsetting default vehicle:', error);
@@ -1574,12 +1705,15 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   private getUserId(): string | null {
     try {
       // Try to get user ID from localStorage (adjust key based on your auth implementation)
-      const userDataStr = localStorage.getItem('userData') || localStorage.getItem('user') || localStorage.getItem('currentUser');
+      const userDataStr =
+        localStorage.getItem('userData') ||
+        localStorage.getItem('user') ||
+        localStorage.getItem('currentUser');
       if (userDataStr) {
         const userData = JSON.parse(userDataStr);
         return userData.id || userData.userId || userData.sub || null;
       }
-      
+
       // Alternative: Get from token
       const token = localStorage.getItem('token') || localStorage.getItem('authToken');
       if (token) {
@@ -1587,7 +1721,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         const payload = JSON.parse(atob(token.split('.')[1]));
         return payload.sub || payload.userId || payload.id || null;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error getting user ID:', error);
@@ -1602,7 +1736,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     // Simple alert - you can replace with a toast notification service
     const message = `${vehicle.make} ${vehicle.model} set as default vehicle`;
     console.log(`📌 ${message}`);
-    
+
     // Optional: Show a temporary visual feedback
     // You can implement a toast notification here if you have a toast service
   }
