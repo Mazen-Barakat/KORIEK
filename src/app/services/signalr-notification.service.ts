@@ -606,6 +606,7 @@ export class SignalRNotificationService {
   /**
    * Load notifications from API when the connection starts.
    * This ensures any missed notifications while offline are retrieved.
+   * Also checks for pending appointment confirmation requests.
    */
   private loadNotificationsFromApi(): void {
     const token = this.authService.getToken();
@@ -618,11 +619,59 @@ export class SignalRNotificationService {
     this.notificationService.fetchNotificationsFromApi(token).subscribe({
       next: (notifications) => {
         console.log(`✅ Loaded ${notifications.length} notifications from API`);
+        
+        // Check for pending appointment confirmation requests in fetched notifications
+        this.checkForPendingAppointmentConfirmations();
       },
       error: (error) => {
         console.error('❌ Failed to load notifications from API:', error);
       }
     });
+  }
+
+  /**
+   * Check for pending appointment confirmation requests in existing notifications
+   * This handles cases where notifications were sent while user was offline
+   */
+  private checkForPendingAppointmentConfirmations(): void {
+    // Get notifications from notification service
+    this.notificationService.getNotifications().subscribe(notifications => {
+      const unreadNotifications = notifications.filter(n => !n.read);
+      
+      console.log('🔍 Checking for pending appointment confirmations in', unreadNotifications.length, 'unread notifications');
+      
+      for (const notification of unreadNotifications) {
+        // Check if this is an appointment confirmation request
+        const notificationData = notification.data as any;
+        
+        if (notificationData?.notificationType !== undefined) {
+          const isAppointmentConfirmation = 
+            this.isNotificationType(notificationData.notificationType, NotificationType.AppointmentConfirmationRequest);
+          
+          if (isAppointmentConfirmation && notificationData.bookingId) {
+            console.log('🔔 Found pending appointment confirmation in API notifications:', notificationData);
+            
+            // Create a NotificationDto-like object to process
+            const dto: NotificationDto = {
+              id: notificationData.notificationId || parseInt(notification.id) || 0,
+              senderId: notificationData.senderId || '',
+              receiverId: notificationData.receiverId || '',
+              message: notification.message,
+              type: NotificationType.AppointmentConfirmationRequest,
+              isRead: notification.read,
+              createdAt: notification.timestamp.toISOString(),
+              bookingId: notificationData.bookingId,
+              title: notification.title
+            };
+            
+            // Only process if not already read
+            if (!notification.read) {
+              this.handleAppointmentConfirmationRequest(dto);
+            }
+          }
+        }
+      }
+    }).unsubscribe(); // Unsubscribe immediately after getting the value
   }
 
   /**
