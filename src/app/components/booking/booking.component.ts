@@ -22,6 +22,7 @@ interface Vehicle {
   origin?: string;
   country?: string;
   CarOrigin?: string;
+  carOrigin?: string;
 }
 
 interface ServiceType {
@@ -93,6 +94,7 @@ interface BookingDraft {
 })
 export class BookingComponent implements OnInit {
   @ViewChild('categoriesGrid') categoriesGrid?: ElementRef;
+  @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
   // Multi-step state
   currentStep = 1;
@@ -130,6 +132,12 @@ export class BookingComponent implements OnInit {
   serviceTypes: ServiceType[] = [];
   selectedServiceType: ServiceType | null = null;
   serviceNotes = '';
+
+  // Photo upload
+  selectedPhotos: { file: File; preview: string }[] = [];
+  isDragging = false;
+  maxPhotos = 5;
+  maxFileSize = 5 * 1024 * 1024; // 5MB
 
   // Date & Time selection
   selectedMonth: number | null = null; // 0-11 (January = 0)
@@ -240,6 +248,16 @@ export class BookingComponent implements OnInit {
   isSubmittingBooking: boolean = false;
   bookingError: string = '';
 
+  // Preselected values from query params (from workshop-details page)
+  preselectedWorkshopId: number | null = null;
+  preselectedWorkshopServiceId: number | null = null;
+  preselectedServiceId: number | null = null;
+  preselectedServiceName: string | null = null;
+  preselectedWorkshopName: string | null = null;
+  preselectedMinPrice: number | null = null;
+  preselectedMaxPrice: number | null = null;
+  preselectedServiceOrigin: string | null = null; // The vehicle origin required by the preselected service
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -252,31 +270,136 @@ export class BookingComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeAvailableDates();
-    // Start loading vehicles (cached promise will prevent duplicate requests)
+    // Start loading vehicles
     this.loadUserVehicles();
     this.loadCategories();
-    // Attempt to restore persisted subcategory selection (if any)
-    this.restoreSubcategoryState();
-    // Restore persisted vehicle origin (if any)
-    this.restoreVehicleOrigin();
 
-    // Check for pre-selected vehicle from query params
+    // Handle query params for pre-selected workshop/service from workshop-details page
+    this.handleQueryParams();
+  }
+
+  /**
+   * Handle query parameters for pre-selected workshop/service from workshop-details
+   */
+  private handleQueryParams(): void {
     this.route.queryParams.subscribe(async (params) => {
+      // Handle pre-selected vehicle
       if (params['vehicleId']) {
         const vehicleId = Number(params['vehicleId']);
-        // Ensure vehicles are loaded before attempting to select one
         try {
           await this.loadUserVehicles();
         } catch (e) {
-          // ignore - loadUserVehicles resolves even on error to avoid blocking
+          // ignore
         }
-
         const vehicle = this.userVehicles.find((v) => v.id === vehicleId);
         if (vehicle) {
           this.selectedVehicle = vehicle;
         }
       }
+
+      // Handle pre-selected workshop and service from workshop-details page
+      if (params['workshopId']) {
+        this.preselectedWorkshopId = Number(params['workshopId']);
+      }
+      if (params['workshopServiceId']) {
+        this.preselectedWorkshopServiceId = Number(params['workshopServiceId']);
+      }
+      if (params['serviceId']) {
+        this.preselectedServiceId = Number(params['serviceId']);
+      }
+      if (params['serviceName']) {
+        this.preselectedServiceName = params['serviceName'];
+      }
+      if (params['workshopName']) {
+        this.preselectedWorkshopName = params['workshopName'];
+      }
+      if (params['minPrice']) {
+        this.preselectedMinPrice = Number(params['minPrice']);
+      }
+      if (params['maxPrice']) {
+        this.preselectedMaxPrice = Number(params['maxPrice']);
+      }
+      if (params['origin']) {
+        this.selectedVehicleOrigin = params['origin'];
+        this.preselectedServiceOrigin = params['origin']; // Store the service's required origin for filtering vehicles
+        console.log('=== PRESELECTED SERVICE ORIGIN FROM QUERY PARAMS ===');
+        console.log('Origin:', params['origin']);
+      }
+
+      // Debug: log all preselection values
+      console.log('=== ALL PRESELECTION VALUES ===');
+      console.log('Workshop ID:', this.preselectedWorkshopId);
+      console.log('Workshop Name:', this.preselectedWorkshopName);
+      console.log('Service ID:', this.preselectedServiceId);
+      console.log('Service Name:', this.preselectedServiceName);
+      console.log('Service Origin:', this.preselectedServiceOrigin);
     });
+  }
+
+  /**
+   * Clear preselected workshop and service (user wants to choose manually)
+   */
+  clearPreselection(): void {
+    this.preselectedWorkshopId = null;
+    this.preselectedWorkshopServiceId = null;
+    this.preselectedServiceId = null;
+    this.preselectedServiceName = null;
+    this.preselectedWorkshopName = null;
+    this.preselectedMinPrice = null;
+    this.preselectedMaxPrice = null;
+    this.preselectedServiceOrigin = null;
+    // Clear URL params without navigation
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      replaceUrl: true,
+    });
+  }
+
+  /**
+   * Get filtered vehicles based on preselected service origin.
+   * If a service is preselected and has a specific origin requirement,
+   * only show vehicles that match that origin.
+   */
+  getFilteredVehicles(): Vehicle[] {
+    // If no preselected service or no origin requirement, show all vehicles
+    if (!this.hasPreselectedService() || !this.preselectedServiceOrigin) {
+      return this.userVehicles;
+    }
+
+    const requiredOrigin = this.preselectedServiceOrigin.toLowerCase().trim();
+    console.log('=== VEHICLE ORIGIN FILTER DEBUG ===');
+    console.log('Required service origin:', requiredOrigin);
+    console.log('All vehicles:', this.userVehicles);
+
+    // Filter vehicles by origin - check all possible origin fields
+    const filtered = this.userVehicles.filter((vehicle) => {
+      // Check all possible origin field names (API might use different casing)
+      const vehicleOrigin = (
+        vehicle.origin ||
+        vehicle.carOrigin ||
+        vehicle.CarOrigin ||
+        vehicle.country ||
+        (vehicle as any).Origin ||
+        (vehicle as any).CarOrigin ||
+        ''
+      )
+        .toLowerCase()
+        .trim();
+
+      console.log(`Vehicle ${vehicle.make} ${vehicle.model}: origin="${vehicleOrigin}"`);
+
+      // Match if origins are equal or one contains the other
+      const matches =
+        vehicleOrigin === requiredOrigin ||
+        vehicleOrigin.includes(requiredOrigin) ||
+        requiredOrigin.includes(vehicleOrigin);
+      console.log(`  Matches required "${requiredOrigin}": ${matches}`);
+      return matches;
+    });
+
+    console.log('Filtered vehicles:', filtered);
+    return filtered;
   }
 
   // Initialize available dates (next 30 days, excluding weekends)
@@ -319,19 +442,15 @@ export class BookingComponent implements OnInit {
       this.carsService.getProfileWithCars().subscribe({
         next: (response: any) => {
           this.userVehicles = response.data?.cars || [];
+          console.log('=== LOADED VEHICLES FROM API ===');
+          console.log('Full response:', response);
+          console.log('Vehicles:', this.userVehicles);
+          if (this.userVehicles.length > 0) {
+            console.log('First vehicle keys:', Object.keys(this.userVehicles[0]));
+            console.log('First vehicle full data:', JSON.stringify(this.userVehicles[0], null, 2));
+          }
           this.vehiclesLoaded = true;
           this.isLoadingVehicles = false;
-          // If the user previously selected a vehicle, try to re-select it
-          try {
-            const persisted = localStorage.getItem('booking_selected_vehicle_id');
-            if (persisted) {
-              const persistedId = Number(persisted);
-              const found = this.userVehicles.find((v) => v.id === persistedId);
-              if (found) this.selectedVehicle = found;
-            }
-          } catch (e) {
-            // ignore storage errors
-          }
           try {
             this.cdr.detectChanges();
           } catch (e) {
@@ -362,69 +481,33 @@ export class BookingComponent implements OnInit {
     this.isLoadingCategories = true;
     this.categoriesError = null;
 
-    const cacheKey = 'categoriesCache';
-    const cacheTTL = 1000 * 60 * 60 * 24; // 24 hours
-
-    // Try to load from cache first to ensure categories persist across reloads
+    // Trigger change detection to show loading state immediately
     try {
-      const raw = localStorage.getItem(cacheKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed.categories && parsed.timestamp) {
-          const age = Date.now() - parsed.timestamp;
-          if (age < cacheTTL) {
-            this.categories = parsed.categories as Category[];
-            this.isLoadingCategories = false;
-            // Scroll to categories section after loading cached data
-            setTimeout(() => {
-              if (this.categoriesGrid) {
-                this.categoriesGrid.nativeElement.scrollIntoView({
-                  behavior: 'smooth',
-                  block: 'center',
-                });
-              }
-            }, 100);
-          } else {
-            // Cache expired
-            localStorage.removeItem(cacheKey);
-          }
-        }
-      }
+      this.cdr.detectChanges();
     } catch (e) {
-      // If cache is corrupt, remove it and continue
-      localStorage.removeItem(cacheKey);
+      /* ignore */
     }
 
-    // Always attempt to refresh from API and update cache; if network fails, keep cached data if present
+    // Load categories directly from API (no caching)
     this.categoryService.getCategories().subscribe({
       next: (categories: Category[]) => {
         this.categories = categories;
-        try {
-          localStorage.setItem(cacheKey, JSON.stringify({ categories, timestamp: Date.now() }));
-        } catch (e) {
-          // Storage might be full or blocked; ignore and proceed
-          console.warn('Could not persist categories to localStorage', e);
-        }
-
         this.isLoadingCategories = false;
-
-        // Scroll to categories section after fresh load
-        setTimeout(() => {
-          if (this.categoriesGrid) {
-            this.categoriesGrid.nativeElement.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-            });
-          }
-        }, 100);
+        try {
+          this.cdr.detectChanges();
+        } catch (e) {
+          /* ignore */
+        }
       },
       error: (error: any) => {
         console.error('Error loading categories:', error);
-        if (!this.categories || this.categories.length === 0) {
-          // Only show error when no cached categories available
-          this.categoriesError = 'Failed to load service categories. Please try again.';
-        }
+        this.categoriesError = 'Failed to load service categories. Please try again.';
         this.isLoadingCategories = false;
+        try {
+          this.cdr.detectChanges();
+        } catch (e) {
+          /* ignore */
+        }
       },
     });
   }
@@ -436,8 +519,6 @@ export class BookingComponent implements OnInit {
     console.log('Selected category:', category);
     // Switch to subcategories view and load subcategories
     this.showingSubcategories = true;
-    // persist provisional selection (will be updated when subcategories load)
-    this.persistSubcategoryState();
     // Ensure view updates immediately to show loading state
     try {
       this.cdr.detectChanges();
@@ -476,9 +557,6 @@ export class BookingComponent implements OnInit {
         this.isLoadingSubcategories = false;
         console.log('Subcategories loaded successfully:', subcategories);
 
-        // Persist the loaded subcategories and selection so they survive reload
-        this.persistSubcategoryState();
-
         // Scroll to subcategories section after loading
         setTimeout(() => {
           const element = document.querySelector('.subcategories-section');
@@ -513,8 +591,6 @@ export class BookingComponent implements OnInit {
     console.log('Selected subcategory:', subcategory);
     // Switch to services view and load services
     this.showingServices = true;
-    // Persist state
-    this.persistServiceState();
     // Ensure view updates immediately to show loading state
     try {
       this.cdr.detectChanges();
@@ -535,9 +611,6 @@ export class BookingComponent implements OnInit {
         this.services = services;
         this.isLoadingServices = false;
         console.log('Services loaded successfully:', services);
-
-        // Persist the loaded services and selection so they survive reload
-        this.persistServiceState();
 
         // Scroll to services section after loading
         setTimeout(() => {
@@ -570,8 +643,6 @@ export class BookingComponent implements OnInit {
   selectService(service: Service): void {
     this.selectedService = service;
     console.log('Selected service:', service);
-    // Persist the selection
-    this.persistServiceState();
   }
 
   // Back to subcategories view
@@ -579,8 +650,6 @@ export class BookingComponent implements OnInit {
     this.showingServices = false;
     this.selectedService = null;
     this.services = [];
-    // Clear persisted service state when user navigates back
-    this.clearServiceState();
     // Scroll to subcategories section
     setTimeout(() => {
       const el = document.querySelector('.subcategories-section');
@@ -597,143 +666,28 @@ export class BookingComponent implements OnInit {
     this.subcategories = [];
     this.services = [];
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Clear persisted subcategory and service state when user navigates back
-    this.clearSubcategoryState();
-    this.clearServiceState();
-  }
-
-  /**
-   * Persistence helpers for selected category / subcategories so the UI
-   * remains in the same state after a full page reload.
-   */
-  private getSubcategoryStorageKey(): string {
-    return 'booking_subcategory_state_v1';
-  }
-
-  private persistSubcategoryState(): void {
-    try {
-      const payload = {
-        showingSubcategories: this.showingSubcategories,
-        selectedCategory: this.selectedCategory,
-        subcategories: this.subcategories,
-        selectedSubcategory: this.selectedSubcategory,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(this.getSubcategoryStorageKey(), JSON.stringify(payload));
-    } catch (e) {
-      console.warn('Could not persist subcategory state', e);
-    }
-  }
-
-  private clearSubcategoryState(): void {
-    try {
-      localStorage.removeItem(this.getSubcategoryStorageKey());
-    } catch (e) {
-      console.warn('Could not clear persisted subcategory state', e);
-    }
-  }
-
-  private restoreSubcategoryState(): void {
-    try {
-      const raw = localStorage.getItem(this.getSubcategoryStorageKey());
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      // Basic validation
-      if (!parsed || typeof parsed !== 'object') return;
-
-      // If a saved state indicates subcategories were showing, restore them.
-      if (parsed.showingSubcategories) {
-        this.showingSubcategories = true;
-        this.selectedCategory = parsed.selectedCategory || null;
-        this.subcategories = parsed.subcategories || [];
-        this.selectedSubcategory = parsed.selectedSubcategory || null;
-        this.isLoadingSubcategories = false;
-
-        // If we have a selectedCategory but no subcategories array (or empty), attempt to reload
-        if (this.selectedCategory && (!this.subcategories || this.subcategories.length === 0)) {
-          // Try to reload subcategories from API to ensure fresh data
-          this.loadSubcategories(this.selectedCategory.id);
-        }
-        // Scroll to subcategories section after next tick
-        setTimeout(() => {
-          const el = document.querySelector('.subcategories-section');
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 150);
-
-        // Also try to restore service state if it exists
-        this.restoreServiceState();
-      }
-    } catch (e) {
-      console.warn('Could not restore persisted subcategory state', e);
-    }
-  }
-
-  /**
-   * Persistence helpers for selected subcategory / services so the UI
-   * remains in the same state after a full page reload.
-   */
-  private getServiceStorageKey(): string {
-    return 'booking_service_state_v1';
-  }
-
-  private persistServiceState(): void {
-    try {
-      const payload = {
-        showingServices: this.showingServices,
-        selectedSubcategory: this.selectedSubcategory,
-        services: this.services,
-        selectedService: this.selectedService,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(this.getServiceStorageKey(), JSON.stringify(payload));
-    } catch (e) {
-      console.warn('Could not persist service state', e);
-    }
-  }
-
-  private clearServiceState(): void {
-    try {
-      localStorage.removeItem(this.getServiceStorageKey());
-    } catch (e) {
-      console.warn('Could not clear persisted service state', e);
-    }
-  }
-
-  private restoreServiceState(): void {
-    try {
-      const raw = localStorage.getItem(this.getServiceStorageKey());
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      // Basic validation
-      if (!parsed || typeof parsed !== 'object') return;
-
-      // If a saved state indicates services were showing, restore them.
-      if (parsed.showingServices) {
-        this.showingServices = true;
-        this.selectedSubcategory = parsed.selectedSubcategory || this.selectedSubcategory;
-        this.services = parsed.services || [];
-        this.selectedService = parsed.selectedService || null;
-        this.isLoadingServices = false;
-
-        // If we have a selectedSubcategory but no services array (or empty), attempt to reload
-        if (this.selectedSubcategory && (!this.services || this.services.length === 0)) {
-          // Try to reload services from API to ensure fresh data
-          this.loadServices(this.selectedSubcategory.id);
-        }
-        // Scroll to services section after next tick
-        setTimeout(() => {
-          const el = document.querySelector('.services-section');
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 150);
-      }
-    } catch (e) {
-      console.warn('Could not restore persisted service state', e);
-    }
   }
 
   // Step navigation
   nextStep(): void {
-    // Show payment popup after workshop selection (step 3)
+    // If preselected service flow: skip step 3 (workshop selection)
+    // since workshop is already selected from workshop-details
+    if (this.hasPreselectedService()) {
+      if (this.currentStep === 1 && this.isStep1Valid()) {
+        // Go directly to step 2 (Date & Time)
+        this.currentStep = 2;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      if (this.currentStep === 2 && this.isStep2Valid()) {
+        // Skip step 3, auto-select the preselected workshop, show payment popup
+        this.autoSelectPreselectedWorkshop();
+        this.showPaymentPopup = true;
+        return;
+      }
+    }
+
+    // Normal flow: Show payment popup after workshop selection (step 3)
     if (this.currentStep === 3 && this.isStep3Valid()) {
       this.showPaymentPopup = true;
       return;
@@ -750,28 +704,148 @@ export class BookingComponent implements OnInit {
     }
   }
 
+  /**
+   * Auto-select the preselected workshop for the booking
+   */
+  private autoSelectPreselectedWorkshop(): void {
+    if (this.preselectedWorkshopId && this.preselectedWorkshopName) {
+      this.selectedWorkshop = {
+        id: this.preselectedWorkshopId,
+        name: this.preselectedWorkshopName,
+        rating: 0,
+        reviewCount: 0,
+        address: '',
+        workshopProfileId: this.preselectedWorkshopId,
+        workshopServiceID: this.preselectedWorkshopServiceId || 0,
+        serviceId: this.preselectedServiceId || 0,
+        price: this.preselectedMinPrice || 0,
+        minPrice: this.preselectedMinPrice || undefined,
+        maxPrice: this.preselectedMaxPrice || undefined,
+      };
+    }
+  }
+
   previousStep(): void {
     if (this.currentStep > 1) {
+      // In preselected flow: 1=Vehicle, 2=Date/Time, 3=Review
+      // Simply go back one step, no special handling needed
       this.currentStep--;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
   goToStep(step: number): void {
-    if (step <= this.currentStep) {
-      this.currentStep = step;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    // In preselected flow, step 3 is Workshop which should be skipped
+    // and the max step is 3 (Review)
+    if (this.hasPreselectedService()) {
+      // Prevent going to step 3 (which would be Workshop in normal flow)
+      // In preselected flow: 1=Vehicle, 2=Date/Time, 3=Review
+      if (step > 3) return;
+      if (step <= this.currentStep) {
+        this.currentStep = step;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else {
+      if (step <= this.currentStep) {
+        this.currentStep = step;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      // Load workshops when navigating to step 3
-      if (step === 3) {
-        this.loadWorkshops();
+        // Load workshops when navigating to step 3
+        if (step === 3) {
+          this.loadWorkshops();
+        }
       }
     }
   }
 
+  // Photo Upload Methods
+  triggerFileInput(): void {
+    this.fileInput?.nativeElement.click();
+  }
+
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      this.handleFiles(Array.from(input.files));
+    }
+    // Reset input so same file can be selected again
+    input.value = '';
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    if (event.dataTransfer?.files) {
+      this.handleFiles(Array.from(event.dataTransfer.files));
+    }
+  }
+
+  private handleFiles(files: File[]): void {
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'));
+
+    for (const file of imageFiles) {
+      // Check max photos limit
+      if (this.selectedPhotos.length >= this.maxPhotos) {
+        alert(`Maximum ${this.maxPhotos} photos allowed`);
+        break;
+      }
+
+      // Check file size
+      if (file.size > this.maxFileSize) {
+        alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
+        continue;
+      }
+
+      // Create preview and add to array
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.selectedPhotos.push({
+          file: file,
+          preview: e.target?.result as string,
+        });
+        // Trigger change detection since FileReader runs outside Angular zone
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removePhoto(index: number): void {
+    this.selectedPhotos.splice(index, 1);
+  }
+
+  /**
+   * Check if user came from workshop-details with a preselected service
+   */
+  hasPreselectedService(): boolean {
+    return !!(
+      this.preselectedWorkshopId &&
+      this.preselectedWorkshopServiceId &&
+      this.preselectedServiceName
+    );
+  }
+
   // Step validation
   isStep1Valid(): boolean {
-    // Require selected vehicle and selected service. Issue description is optional.
+    // If preselected service from workshop-details, only need vehicle selection
+    if (this.hasPreselectedService()) {
+      return this.selectedVehicle !== null;
+    }
+    // Otherwise, require selected vehicle and selected service
     return this.selectedVehicle !== null && this.selectedService !== null;
   }
 
@@ -786,26 +860,18 @@ export class BookingComponent implements OnInit {
   // Vehicle selection
   selectVehicle(vehicle: Vehicle): void {
     this.selectedVehicle = vehicle;
-    // Persist selected vehicle id so selection survives reloads/navigation
-    try {
-      localStorage.setItem('booking_selected_vehicle_id', String(vehicle.id));
-    } catch (e) {
-      // ignore storage errors
-    }
-    // Detect and persist vehicle origin
-    this.detectAndPersistVehicleOrigin(vehicle);
+    // Detect vehicle origin
+    this.detectVehicleOrigin(vehicle);
   }
 
   /**
    * Detect vehicle origin from the vehicle object or fallback to cars-data.json lookup.
-   * Sets selectedVehicleOrigin and persists to localStorage.
    */
-  private detectAndPersistVehicleOrigin(vehicle: Vehicle): void {
+  private detectVehicleOrigin(vehicle: Vehicle): void {
     // Try to detect origin from vehicle fields first
     const directOrigin = vehicle.origin || vehicle.country || vehicle.CarOrigin;
     if (directOrigin && directOrigin.trim() !== '') {
       this.selectedVehicleOrigin = directOrigin.trim();
-      this.persistVehicleOrigin(this.selectedVehicleOrigin);
       console.log('Vehicle origin detected from vehicle fields:', this.selectedVehicleOrigin);
       return;
     }
@@ -823,40 +889,12 @@ export class BookingComponent implements OnInit {
           this.selectedVehicleOrigin = 'General';
           console.log('Vehicle origin not found, defaulting to General');
         }
-        this.persistVehicleOrigin(this.selectedVehicleOrigin);
       },
       error: (err) => {
         console.warn('Could not load cars-data.json for origin lookup, defaulting to General', err);
         this.selectedVehicleOrigin = 'General';
-        this.persistVehicleOrigin(this.selectedVehicleOrigin);
       },
     });
-  }
-
-  /**
-   * Persist vehicle origin to localStorage
-   */
-  private persistVehicleOrigin(origin: string): void {
-    try {
-      localStorage.setItem('booking_selected_vehicle_origin', origin);
-    } catch (e) {
-      console.warn('Could not persist vehicle origin', e);
-    }
-  }
-
-  /**
-   * Restore vehicle origin from localStorage
-   */
-  private restoreVehicleOrigin(): void {
-    try {
-      const stored = localStorage.getItem('booking_selected_vehicle_origin');
-      if (stored && stored.trim() !== '') {
-        this.selectedVehicleOrigin = stored.trim();
-        console.log('Restored vehicle origin from localStorage:', this.selectedVehicleOrigin);
-      }
-    } catch (e) {
-      console.warn('Could not restore vehicle origin', e);
-    }
   }
 
   // Service type selection
@@ -1442,7 +1480,13 @@ export class BookingComponent implements OnInit {
       this.bookingError = 'Please select a workshop';
       return;
     }
-    if (!this.selectedService && !this.selectedWorkshop.serviceId) {
+    // For preselected flow, we have workshopServiceId from query params
+    // For normal flow, we need selectedService
+    if (
+      !this.hasPreselectedService() &&
+      !this.selectedService &&
+      !this.selectedWorkshop.serviceId
+    ) {
       this.bookingError = 'Please select a service';
       return;
     }
@@ -1488,16 +1532,19 @@ export class BookingComponent implements OnInit {
       return;
     }
 
-    // Prepare booking data for backend API
-    const bookingData = {
-      AppointmentDate: bookingDateTime,
-      IssueDescription: this.serviceNotes || '',
-      PaymentMethod: apiPaymentMethod,
-      CarId: this.selectedVehicle.id,
-      WorkShopProfileId: workshopProfileId,
-      WorkshopServiceId: workshopServiceId,
-      Photos: [] as string[],
-    };
+    // Prepare booking data using FormData for file upload
+    const formData = new FormData();
+    formData.append('AppointmentDate', bookingDateTime);
+    formData.append('IssueDescription', this.serviceNotes || '');
+    formData.append('PaymentMethod', apiPaymentMethod);
+    formData.append('CarId', String(this.selectedVehicle.id));
+    formData.append('WorkShopProfileId', String(workshopProfileId));
+    formData.append('WorkshopServiceId', String(workshopServiceId));
+
+    // Add photos to FormData
+    for (const photo of this.selectedPhotos) {
+      formData.append('Photos', photo.file, photo.file.name);
+    }
 
     console.log('=== BOOKING DATA FOR BACKEND ===');
     console.log('Booking DateTime (ISO):', bookingDateTime);
@@ -1513,10 +1560,10 @@ export class BookingComponent implements OnInit {
         hour12: true,
       })
     );
-    console.log('Full booking data:', bookingData);
+    console.log('Photos count:', this.selectedPhotos.length);
 
-    // Send to backend API
-    this.bookingService.createBooking(bookingData).subscribe({
+    // Send to backend API with FormData
+    this.bookingService.createBookingWithPhotos(formData).subscribe({
       next: (response) => {
         console.log('=== BOOKING API RESPONSE ===');
         console.log('Full response:', response);
@@ -1612,24 +1659,20 @@ export class BookingComponent implements OnInit {
     this.bookingConfirmed = false;
     this.confirmationNumber = '';
 
-    // Clear persisted states
-    this.clearSubcategoryState();
-    this.clearServiceState();
-    this.clearVehicleOrigin();
+    // Clear photos
+    this.selectedPhotos = [];
+    this.isDragging = false;
+
+    // Clear preselected values
+    this.preselectedWorkshopId = null;
+    this.preselectedWorkshopServiceId = null;
+    this.preselectedServiceId = null;
+    this.preselectedServiceName = null;
+    this.preselectedWorkshopName = null;
+    this.preselectedMinPrice = null;
+    this.preselectedMaxPrice = null;
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  /**
-   * Clear persisted vehicle origin from localStorage
-   */
-  private clearVehicleOrigin(): void {
-    try {
-      localStorage.removeItem('booking_selected_vehicle_origin');
-      localStorage.removeItem('booking_selected_vehicle_id');
-    } catch (e) {
-      console.warn('Could not clear persisted vehicle data', e);
-    }
   }
 
   goToMyVehicles(): void {
