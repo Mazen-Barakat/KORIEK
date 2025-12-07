@@ -11,7 +11,7 @@ import {
   MediaItem,
   DashboardMetrics,
   Transaction,
-  Payout
+  Payout,
 } from '../models/booking.model';
 
 // Interface for booking response from API
@@ -44,7 +44,7 @@ export interface EnrichedBooking {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class BookingService {
   public apiUrl = 'https://localhost:44316/api';
@@ -68,13 +68,13 @@ export class BookingService {
    * @param bookingData Booking information matching API request format
    */
   createBooking(bookingData: {
-    AppointmentDate: string;       // ISO string (UTC) - e.g., "2025-11-30T15:33:11.286Z"
-    IssueDescription: string;       // Description of the issue/notes
-    PaymentMethod: string;          // "Cash" or "CreditCard"
-    CarId: number;                  // Vehicle ID
-    WorkShopProfileId: number;      // Workshop profile ID
-    WorkshopServiceId: number;      // Workshop service ID
-    Photos?: string[];              // Optional array of photo URLs
+    AppointmentDate: string; // ISO string (UTC) - e.g., "2025-11-30T15:33:11.286Z"
+    IssueDescription: string; // Description of the issue/notes
+    PaymentMethod: string; // "Cash" or "CreditCard"
+    CarId: number; // Vehicle ID
+    WorkShopProfileId: number; // Workshop profile ID
+    WorkshopServiceId: number; // Workshop service ID
+    Photos?: string[]; // Optional array of photo URLs
   }): Observable<{
     success: boolean;
     message: string;
@@ -94,7 +94,10 @@ export class BookingService {
   }> {
     console.log('Creating booking with data:', bookingData);
     console.log('AppointmentDate (ISO/UTC):', bookingData.AppointmentDate);
-    console.log('AppointmentDate (Cairo):', new Date(bookingData.AppointmentDate).toLocaleString('en-US', { timeZone: 'Africa/Cairo' }));
+    console.log(
+      'AppointmentDate (Cairo):',
+      new Date(bookingData.AppointmentDate).toLocaleString('en-US', { timeZone: 'Africa/Cairo' })
+    );
 
     // Build FormData for multipart/form-data submission
     const formData = new FormData();
@@ -143,6 +146,44 @@ export class BookingService {
       })
     );
   }
+  createBookingWithPhotos(formData: FormData): Observable<{
+    success: boolean;
+    message: string;
+    data: {
+      id: number;
+      status: string;
+      appointmentDate: string;
+      issueDescription: string;
+      paymentMethod: string;
+      paidAmount: number;
+      paymentStatus: string;
+      createdAt: string;
+      carId: number;
+      workShopProfileId: number;
+      workshopServiceId: number;
+    };
+  }> {
+    console.log('Creating booking with FormData (photos included)');
+
+    // HttpClient will automatically set the correct Content-Type header with boundary for FormData
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      data: {
+        id: number;
+        status: string;
+        appointmentDate: string;
+        issueDescription: string;
+        paymentMethod: string;
+        paidAmount: number;
+        paymentStatus: string;
+        createdAt: string;
+        carId: number;
+        workShopProfileId: number;
+        workshopServiceId: number;
+      };
+    }>(`${this.apiUrl}/Booking`, formData);
+  }
 
   // =============== Workshop Schedule Bookings ===============
 
@@ -151,8 +192,8 @@ export class BookingService {
    */
   getBookingsByWorkshop(workshopId: number): Observable<BookingResponse[]> {
     return this.http.get<any>(`${this.apiUrl}/Booking/ByWorkshop/${workshopId}`).pipe(
-      map(response => response?.data || response || []),
-      catchError(err => {
+      map((response) => response?.data || response || []),
+      catchError((err) => {
         console.error('Error fetching workshop bookings:', err);
         return of([]);
       })
@@ -164,7 +205,7 @@ export class BookingService {
    */
   getCarOwnerProfileByBooking(bookingId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/CarOwnerProfile/by-booking/${bookingId}`).pipe(
-      map(response => response?.data || response),
+      map((response) => response?.data || response),
       catchError(() => of(null))
     );
   }
@@ -174,7 +215,7 @@ export class BookingService {
    */
   getWorkshopServiceById(workshopServiceId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/WorkshopService/${workshopServiceId}`).pipe(
-      map(response => response?.data || response),
+      map((response) => response?.data || response),
       catchError(() => of(null))
     );
   }
@@ -184,7 +225,7 @@ export class BookingService {
    */
   getServiceById(serviceId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/Service/${serviceId}`).pipe(
-      map(response => response?.data || response),
+      map((response) => response?.data || response),
       catchError(() => of(null))
     );
   }
@@ -202,18 +243,21 @@ export class BookingService {
           return of([]);
         }
 
-        const enrichedRequests = bookings.map(booking => {
+        const enrichedRequests = bookings.map((booking) => {
           // Get car owner profile and workshop service in parallel
           const carOwnerRequest = this.getCarOwnerProfileByBooking(booking.id);
           const workshopServiceRequest = this.getWorkshopServiceById(booking.workshopServiceId);
 
-          return forkJoin({ carOwner: carOwnerRequest, workshopService: workshopServiceRequest }).pipe(
+          return forkJoin({
+            carOwner: carOwnerRequest,
+            workshopService: workshopServiceRequest,
+          }).pipe(
             switchMap(({ carOwner, workshopService }) => {
               // Get the service name from the serviceId in workshopService
               const serviceId = workshopService?.serviceId;
               if (serviceId) {
                 return this.getServiceById(serviceId).pipe(
-                  map(service => ({
+                  map((service) => ({
                     id: booking.id,
                     status: booking.status,
                     appointmentDate: new Date(booking.appointmentDate),
@@ -221,9 +265,11 @@ export class BookingService {
                     paymentMethod: booking.paymentMethod,
                     paidAmount: booking.paidAmount || 0,
                     paymentStatus: booking.paymentStatus || 'pending',
-                    customerName: carOwner ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() || 'Unknown' : 'Unknown',
+                    customerName: carOwner
+                      ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() || 'Unknown'
+                      : 'Unknown',
                     serviceName: service?.name || workshopService?.name || 'Service',
-                    carId: booking.carId
+                    carId: booking.carId,
                   }))
                 );
               }
@@ -235,29 +281,33 @@ export class BookingService {
                 paymentMethod: booking.paymentMethod,
                 paidAmount: booking.paidAmount || 0,
                 paymentStatus: booking.paymentStatus || 'pending',
-                customerName: carOwner ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() || 'Unknown' : 'Unknown',
+                customerName: carOwner
+                  ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() || 'Unknown'
+                  : 'Unknown',
                 serviceName: workshopService?.name || 'Service',
-                carId: booking.carId
+                carId: booking.carId,
               });
             }),
-            catchError(() => of({
-              id: booking.id,
-              status: booking.status,
-              appointmentDate: new Date(booking.appointmentDate),
-              issueDescription: booking.issueDescription,
-              paymentMethod: booking.paymentMethod,
-              paidAmount: booking.paidAmount || 0,
-              paymentStatus: booking.paymentStatus || 'pending',
-              customerName: 'Unknown',
-              serviceName: 'Service',
-              carId: booking.carId
-            }))
+            catchError(() =>
+              of({
+                id: booking.id,
+                status: booking.status,
+                appointmentDate: new Date(booking.appointmentDate),
+                issueDescription: booking.issueDescription,
+                paymentMethod: booking.paymentMethod,
+                paidAmount: booking.paidAmount || 0,
+                paymentStatus: booking.paymentStatus || 'pending',
+                customerName: 'Unknown',
+                serviceName: 'Service',
+                carId: booking.carId,
+              })
+            )
           );
         });
 
         return forkJoin(enrichedRequests);
       }),
-      catchError(err => {
+      catchError((err) => {
         console.error('Error enriching bookings:', err);
         return of([]);
       })
@@ -271,18 +321,20 @@ export class BookingService {
    * @param date Date in YYYY-MM-DD format
    */
   getBookedSlots(workshopId: number, serviceId: number, date: string): Observable<string[]> {
-    return this.http.get<any>(`${this.apiUrl}/Booking/booked-slots`, {
-      params: {
-        workshopId: workshopId.toString(),
-        serviceId: serviceId.toString(),
-        date: date
-      }
-    }).pipe(
-      map(response => {
-        // Assuming response returns array of ISO datetime strings
-        return response.data || response || [];
+    return this.http
+      .get<any>(`${this.apiUrl}/Booking/booked-slots`, {
+        params: {
+          workshopId: workshopId.toString(),
+          serviceId: serviceId.toString(),
+          date: date,
+        },
       })
-    );
+      .pipe(
+        map((response) => {
+          // Assuming response returns array of ISO datetime strings
+          return response.data || response || [];
+        })
+      );
   }
 
   /**
@@ -336,7 +388,7 @@ export class BookingService {
    * @param confirmationSentAt Optional confirmation sent timestamp
    */
   confirmAppointment(
-    bookingId: number, 
+    bookingId: number,
     isConfirmed: boolean,
     confirmationDeadline?: Date,
     confirmationSentAt?: Date
@@ -347,21 +399,21 @@ export class BookingService {
   }> {
     const request: any = {
       bookingId: bookingId,
-      isConfirmed: isConfirmed
+      isConfirmed: isConfirmed,
     };
-    
+
     // Add confirmationDeadline if provided
     if (confirmationDeadline) {
       request.confirmationDeadline = confirmationDeadline.toISOString();
     }
-    
+
     // Add confirmationSentAt if provided
     if (confirmationSentAt) {
       request.confirmationSentAt = confirmationSentAt.toISOString();
     }
-    
+
     console.log('📤 Sending appointment confirmation:', request);
-    
+
     return this.http.post<{
       success: boolean;
       message: string;
@@ -410,23 +462,25 @@ export class BookingService {
       remainingSeconds?: number;
     };
   }> {
-    return this.http.get<{
-      success: boolean;
-      data?: {
-        carOwnerConfirmed: boolean;
-        workshopConfirmed: boolean;
-        bothConfirmed: boolean;
-        status: string;
-        confirmationSentAt?: string;
-        confirmationDeadline?: string;
-        remainingSeconds?: number;
-      };
-    }>(`${this.apiUrl}/Booking/${bookingId}/confirmation-status`).pipe(
-      catchError(err => {
-        console.error('Error fetching confirmation status:', err);
-        return of({ success: false, data: undefined });
-      })
-    );
+    return this.http
+      .get<{
+        success: boolean;
+        data?: {
+          carOwnerConfirmed: boolean;
+          workshopConfirmed: boolean;
+          bothConfirmed: boolean;
+          status: string;
+          confirmationSentAt?: string;
+          confirmationDeadline?: string;
+          remainingSeconds?: number;
+        };
+      }>(`${this.apiUrl}/Booking/${bookingId}/confirmation-status`)
+      .pipe(
+        catchError((err) => {
+          console.error('Error fetching confirmation status:', err);
+          return of({ success: false, data: undefined });
+        })
+      );
   }
 
   /**
@@ -448,7 +502,7 @@ export class BookingService {
     };
   }> {
     return this.http.get<any>(`${this.apiUrl}/Booking/${bookingId}/time-status`).pipe(
-      catchError(err => {
+      catchError((err) => {
         console.error('Error fetching booking time status:', err);
         return of({ success: false, data: undefined });
       })
@@ -462,26 +516,22 @@ export class BookingService {
   }
 
   getJobsByStatus(status: JobStatus): Observable<Job[]> {
-    return this.jobs$.pipe(
-      map(jobs => jobs.filter(job => job.status === status))
-    );
+    return this.jobs$.pipe(map((jobs) => jobs.filter((job) => job.status === status)));
   }
 
   getJobById(jobId: string): Observable<Job | undefined> {
-    return this.jobs$.pipe(
-      map(jobs => jobs.find(job => job.id === jobId))
-    );
+    return this.jobs$.pipe(map((jobs) => jobs.find((job) => job.id === jobId)));
   }
 
   updateJobStatus(jobId: string, status: JobStatus): Observable<Job> {
     const jobs = this.jobsSubject.value;
-    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    const jobIndex = jobs.findIndex((j) => j.id === jobId);
 
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
         status,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       this.jobsSubject.next([...jobs]);
       return of(jobs[jobIndex]);
@@ -492,13 +542,13 @@ export class BookingService {
 
   updateJobStage(jobId: string, stage: Job['stage']): Observable<Job> {
     const jobs = this.jobsSubject.value;
-    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    const jobIndex = jobs.findIndex((j) => j.id === jobId);
 
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
         stage,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       this.jobsSubject.next([...jobs]);
       return of(jobs[jobIndex]);
@@ -523,17 +573,17 @@ export class BookingService {
       discount: quote.discount || 0,
       total: quote.total || 0,
       status: 'draft',
-      notes: quote.notes
+      notes: quote.notes,
     };
 
     const jobs = this.jobsSubject.value;
-    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    const jobIndex = jobs.findIndex((j) => j.id === jobId);
 
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
         quote: newQuote,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       this.jobsSubject.next([...jobs]);
     }
@@ -550,7 +600,7 @@ export class BookingService {
         job.quote = {
           ...job.quote,
           status: 'sent',
-          sentAt: new Date()
+          sentAt: new Date(),
         };
         job.updatedAt = new Date();
         this.jobsSubject.next([...jobs]);
@@ -570,7 +620,7 @@ export class BookingService {
         job.quote = {
           ...job.quote,
           status: 'approved',
-          approvedAt: new Date()
+          approvedAt: new Date(),
         };
         job.status = 'in-progress';
         job.updatedAt = new Date();
@@ -584,7 +634,10 @@ export class BookingService {
 
   // =============== Additional Repairs (Upsell) ===============
 
-  suggestAdditionalRepair(jobId: string, repair: Partial<AdditionalRepair>): Observable<AdditionalRepair> {
+  suggestAdditionalRepair(
+    jobId: string,
+    repair: Partial<AdditionalRepair>
+  ): Observable<AdditionalRepair> {
     const newRepair: AdditionalRepair = {
       id: this.generateId(),
       jobId,
@@ -593,17 +646,17 @@ export class BookingService {
       media: repair.media || [],
       estimatedCost: repair.estimatedCost || 0,
       status: 'pending',
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     const jobs = this.jobsSubject.value;
-    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    const jobIndex = jobs.findIndex((j) => j.id === jobId);
 
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
         additionalRepairs: [...jobs[jobIndex].additionalRepairs, newRepair],
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       this.jobsSubject.next([...jobs]);
     }
@@ -613,15 +666,15 @@ export class BookingService {
 
   approveAdditionalRepair(jobId: string, repairId: string): Observable<AdditionalRepair> {
     const jobs = this.jobsSubject.value;
-    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    const jobIndex = jobs.findIndex((j) => j.id === jobId);
 
     if (jobIndex !== -1) {
-      const repairIndex = jobs[jobIndex].additionalRepairs.findIndex(r => r.id === repairId);
+      const repairIndex = jobs[jobIndex].additionalRepairs.findIndex((r) => r.id === repairId);
       if (repairIndex !== -1) {
         jobs[jobIndex].additionalRepairs[repairIndex] = {
           ...jobs[jobIndex].additionalRepairs[repairIndex],
           status: 'approved',
-          respondedAt: new Date()
+          respondedAt: new Date(),
         };
         jobs[jobIndex].updatedAt = new Date();
         this.jobsSubject.next([...jobs]);
@@ -642,17 +695,17 @@ export class BookingService {
       senderType: message.senderType || 'workshop',
       message: message.message || '',
       timestamp: new Date(),
-      read: false
+      read: false,
     };
 
     const jobs = this.jobsSubject.value;
-    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    const jobIndex = jobs.findIndex((j) => j.id === jobId);
 
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
         chatMessages: [...jobs[jobIndex].chatMessages, newMessage],
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       this.jobsSubject.next([...jobs]);
     }
@@ -670,17 +723,17 @@ export class BookingService {
       thumbnail: media.thumbnail,
       uploadedAt: new Date(),
       caption: media.caption,
-      uploadedBy: media.uploadedBy
+      uploadedBy: media.uploadedBy,
     };
 
     const jobs = this.jobsSubject.value;
-    const jobIndex = jobs.findIndex(j => j.id === jobId);
+    const jobIndex = jobs.findIndex((j) => j.id === jobId);
 
     if (jobIndex !== -1) {
       jobs[jobIndex] = {
         ...jobs[jobIndex],
         media: [...jobs[jobIndex].media, newMedia],
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       this.jobsSubject.next([...jobs]);
     }
@@ -701,10 +754,10 @@ export class BookingService {
       payoutsChange: -3.2,
       shopRating: 4.8,
       totalReviews: 247,
-      newBookingRequests: jobs.filter(j => j.status === 'new').length,
-      quotesAwaitingApproval: jobs.filter(j => j.quote?.status === 'sent').length,
-      carsReadyForPickup: jobs.filter(j => j.status === 'ready').length,
-      activeJobs: jobs.filter(j => j.status === 'in-progress').length
+      newBookingRequests: jobs.filter((j) => j.status === 'new').length,
+      quotesAwaitingApproval: jobs.filter((j) => j.quote?.status === 'sent').length,
+      carsReadyForPickup: jobs.filter((j) => j.status === 'ready').length,
+      activeJobs: jobs.filter((j) => j.status === 'in-progress').length,
     };
 
     return of(metrics);
@@ -733,17 +786,23 @@ export class BookingService {
     const currentYear = new Date().getFullYear();
 
     return jobs
-      .filter(job => {
+      .filter((job) => {
         const jobDate = new Date(job.createdAt);
-        return jobDate.getMonth() === currentMonth && jobDate.getFullYear() === currentYear && job.invoice;
+        return (
+          jobDate.getMonth() === currentMonth &&
+          jobDate.getFullYear() === currentYear &&
+          job.invoice
+        );
       })
       .reduce((sum, job) => sum + (job.invoice?.quote.total || 0), 0);
   }
 
   private calculatePendingPayouts(jobs: Job[]): number {
-    return jobs
-      .filter(job => job.status === 'completed' && job.invoice?.paymentStatus === 'paid')
-      .reduce((sum, job) => sum + (job.invoice?.quote.total || 0), 0) * 0.85; // 85% after platform fee
+    return (
+      jobs
+        .filter((job) => job.status === 'completed' && job.invoice?.paymentStatus === 'paid')
+        .reduce((sum, job) => sum + (job.invoice?.quote.total || 0), 0) * 0.85
+    ); // 85% after platform fee
   }
 
   private generateMockJobs(): Job[] {
@@ -757,7 +816,7 @@ export class BookingService {
           name: 'Ahmed Hassan',
           email: 'ahmed.hassan@email.com',
           phone: '+20 123 456 7890',
-          avatar: 'https://i.pravatar.cc/150?img=12'
+          avatar: 'https://i.pravatar.cc/150?img=12',
         },
         vehicle: {
           id: 'vehicle-001',
@@ -767,12 +826,13 @@ export class BookingService {
           plateNumber: 'ABC 1234',
           vin: '1HGBH41JXMN109186',
           color: 'Silver',
-          mileage: 45000
+          mileage: 45000,
         },
         status: 'new',
         stage: 'received',
         urgency: 'high',
-        customerComplaint: 'Strange noise from engine, especially when accelerating. Check engine light is on.',
+        customerComplaint:
+          'Strange noise from engine, especially when accelerating. Check engine light is on.',
         requestedServices: ['Engine Diagnostics', 'Oil Change'],
         scheduledDate: new Date(Date.now() + 86400000),
         media: [],
@@ -780,7 +840,7 @@ export class BookingService {
         additionalRepairs: [],
         createdAt: new Date(Date.now() - 3600000),
         updatedAt: new Date(Date.now() - 3600000),
-        tags: ['urgent', 'engine']
+        tags: ['urgent', 'engine'],
       },
       {
         id: 'job-002',
@@ -790,7 +850,7 @@ export class BookingService {
           name: 'Sara Mohamed',
           email: 'sara.mohamed@email.com',
           phone: '+20 111 222 3333',
-          avatar: 'https://i.pravatar.cc/150?img=5'
+          avatar: 'https://i.pravatar.cc/150?img=5',
         },
         vehicle: {
           id: 'vehicle-002',
@@ -800,7 +860,7 @@ export class BookingService {
           plateNumber: 'XYZ 5678',
           vin: '2HGFC2F59KH542893',
           color: 'Blue',
-          mileage: 62000
+          mileage: 62000,
         },
         status: 'in-progress',
         stage: 'repairing',
@@ -820,8 +880,8 @@ export class BookingService {
             senderType: 'workshop',
             message: 'Started working on the brake service. Will update you in 2 hours.',
             timestamp: new Date(Date.now() - 7200000),
-            read: true
-          }
+            read: true,
+          },
         ],
         additionalRepairs: [],
         quote: {
@@ -835,8 +895,8 @@ export class BookingService {
               duration: 120,
               price: 800,
               quantity: 1,
-              total: 800
-            }
+              total: 800,
+            },
           ],
           parts: [
             {
@@ -844,8 +904,8 @@ export class BookingService {
               name: 'Brake Pads (Front)',
               price: 350,
               quantity: 1,
-              total: 350
-            }
+              total: 350,
+            },
           ],
           laborCost: 800,
           partsCost: 350,
@@ -854,12 +914,12 @@ export class BookingService {
           discount: 0,
           total: 1322.5,
           status: 'approved',
-          approvedAt: new Date(Date.now() - 82800000)
+          approvedAt: new Date(Date.now() - 82800000),
         },
         createdAt: new Date(Date.now() - 172800000),
         updatedAt: new Date(Date.now() - 3600000),
-        tags: ['brake-service']
-      }
+        tags: ['brake-service'],
+      },
     ];
   }
 
@@ -873,7 +933,7 @@ export class BookingService {
         date: new Date(Date.now() - 86400000),
         status: 'completed',
         fee: 198.375,
-        invoiceId: 'inv-001'
+        invoiceId: 'inv-001',
       },
       {
         id: 'txn-002',
@@ -883,8 +943,8 @@ export class BookingService {
         date: new Date(Date.now() - 172800000),
         status: 'completed',
         fee: 375,
-        invoiceId: 'inv-002'
-      }
+        invoiceId: 'inv-002',
+      },
     ];
   }
 
@@ -898,8 +958,8 @@ export class BookingService {
         scheduledDate: new Date(Date.now() + 259200000),
         status: 'scheduled',
         method: 'Bank Transfer',
-        transactions: []
-      }
+        transactions: [],
+      },
     ];
   }
 }

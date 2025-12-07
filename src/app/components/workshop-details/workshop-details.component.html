@@ -732,29 +732,19 @@
                 <h2>Available Services</h2>
                 <p>{{ workshopServices.length }} services offered at this workshop</p>
               </div>
-              <button class="book-now-btn" (click)="bookService()">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                </svg>
-                Book Now
-              </button>
+              <!-- Removed Book Now button -->
+              <!-- <button class="book-now-btn" (click)="bookService()">
+                <svg ...> ... </svg> Book Now </button> -->
             </div>
 
             <!-- Services Grid -->
             <div class="services-grid">
               <div
-                class="service-card"
+                class="service-card clickable"
                 *ngFor="let service of workshopServices; let i = index"
                 [style.animation-delay]="i * 0.05 + 's'"
+                (click)="bookService(service)"
+                title="Click to book this service"
               >
                 <div class="service-header">
                   <div class="service-icon">
@@ -793,6 +783,27 @@
                     {{ formatServiceDuration(service.duration) }}
                   </span>
                   <span class="service-origin" *ngIf="service.origin">{{ service.origin }}</span>
+                </div>
+                <!-- Move Book button to bottom right -->
+                <div class="service-actions">
+                  <button
+                    class="book-service-btn"
+                    (click)="bookService(service); $event.stopPropagation()"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                    </svg>
+                    Book
+                  </button>
                 </div>
               </div>
             </div>
