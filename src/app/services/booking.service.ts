@@ -132,6 +132,18 @@ export class BookingService {
     }>(`${this.apiUrl}/Booking`, formData);
   }
 
+  /**
+   * Get booking by ID - for validation before showing confirmation dialog
+   */
+  getBookingById(bookingId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/Booking/${bookingId}`).pipe(
+      catchError(err => {
+        console.error('Error fetching booking:', err);
+        throw err;
+      })
+    );
+  }
+
   // =============== Workshop Schedule Bookings ===============
 
   /**
@@ -355,6 +367,31 @@ export class BookingService {
       message: string;
       data?: any;
     }>(`${this.apiUrl}/Booking/confirm-appointment`, request);
+  }
+
+  /**
+   * Update booking status
+   * @param bookingId The booking ID to update
+   * @param status The new status (e.g., 'NoShow', 'Cancelled', etc.)
+   */
+  updateBookingStatus(bookingId: number, status: string): Observable<{
+    success: boolean;
+    message: string;
+    data?: any;
+  }> {
+    return this.http.put<{
+      success: boolean;
+      message: string;
+      data?: any;
+    }>(`${this.apiUrl}/Booking/Update-Booking-Status`, {
+      id: bookingId,
+      status: status
+    }).pipe(
+      catchError(err => {
+        console.error('Error updating booking status:', err);
+        throw err;
+      })
+    );
   }
 
   /**

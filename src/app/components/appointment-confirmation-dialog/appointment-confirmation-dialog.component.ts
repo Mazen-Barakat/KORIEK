@@ -38,6 +38,19 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
   userRole: string = '';
   hasCurrentUserConfirmed = false;
 
+  // Booking details for display
+  bookingDetails: {
+    carOwnerFullName: string;
+    carName: string;
+    serviceName: string;
+    isLoading: boolean;
+  } = {
+    carOwnerFullName: '',
+    carName: '',
+    serviceName: '',
+    isLoading: false
+  };
+
   // Active confirmation tracking - stores booking IDs with their deadline
   private activeConfirmations = new Map<number, Date>();
 
@@ -297,12 +310,12 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
 
       const appointmentDate = new Date(booking.appointmentDate);
       
-      // Check if appointment is due (within -5 to +15 minutes of now)
+      // Calculate time difference to appointment (remaining time)
       const diffMinutes = (appointmentDate.getTime() - now.getTime()) / (1000 * 60);
       
-      // Show dialog if appointment is within 5 minutes ago to 15 minutes from now
-      if (diffMinutes >= -5 && diffMinutes <= 15) {
-        console.log(`🔔 Found due booking ${booking.id} at ${appointmentDate.toISOString()}, diff: ${diffMinutes.toFixed(1)} minutes`);
+      // Only show dialog if remaining time to appointment is less than 0.5 minutes (30 seconds)
+      if (diffMinutes < 0.5 && diffMinutes >= 0) {
+        console.log(`🔔 Found due booking ${booking.id} at ${appointmentDate.toISOString()}, remaining time: ${diffMinutes.toFixed(2)} minutes`);
         
         // Mark as shown to avoid duplicates
         this.shownBookingIds.add(booking.id);
@@ -373,8 +386,27 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
       return;
     }
 
-    // Check if there's already a pending notification in the API for this booking
-    this.checkForPendingNotification(notification);
+    // Check booking status before showing dialog
+    this.bookingService.getBookingById(notification.bookingId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (booking: any) => {
+          const bookingData = booking?.data || booking;
+          
+          // Only show dialog if booking status is "Confirmed"
+          if (bookingData.status !== 'Confirmed') {
+            console.log('⚠️ Booking status is not Confirmed:', bookingData.status, '- Not showing dialog');
+            return;
+          }
+          
+          // Status is Confirmed, proceed to check for pending notification
+          this.checkForPendingNotification(notification);
+        },
+        error: (err: any) => {
+          console.error('❌ Error checking booking status:', err);
+          // Don't show dialog if we can't verify status
+        }
+      });
   }
 
   /**
@@ -468,9 +500,127 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
   }
 
   /**
+   * Fetch booking details from backend endpoints
+   */
+  private fetchBookingDetails(bookingId: number): void {
+    this.bookingDetails.isLoading = true;
+    this.bookingDetails.carOwnerFullName = '';
+    this.bookingDetails.carName = '';
+    this.bookingDetails.serviceName = '';
+    this.cdr.detectChanges();
+
+    // Fetch the booking to get workshopServiceId and carId
+    this.bookingService.getBookingById(bookingId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (bookingResponse: any) => {
+          const booking = bookingResponse?.data || bookingResponse;
+          const workshopServiceId = booking?.workshopServiceId;
+          const bookingCarId = booking?.carId;
+
+          console.log('📦 Booking data loaded:', booking);
+
+          // Fetch car owner profile
+          this.bookingService.getCarOwnerProfileByBooking(bookingId)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (carOwner: any) => {
+                if (carOwner) {
+                  const firstName = carOwner.firstName || '';
+                  const lastName = carOwner.lastName || '';
+                  this.bookingDetails.carOwnerFullName = `${firstName} ${lastName}`.trim() || 'Unknown';
+                  console.log('👤 Car Owner:', this.bookingDetails.carOwnerFullName);
+                  this.cdr.detectChanges();
+                }
+              },
+              error: (err) => {
+                console.error('Error fetching car owner:', err);
+                this.bookingDetails.carOwnerFullName = 'Unknown';
+                this.cdr.detectChanges();
+              }
+            });
+
+          // Fetch car details
+          if (bookingCarId) {
+            this.carsService.getCarById(bookingCarId)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: (carResponse: any) => {
+                  const car = carResponse?.data || carResponse;
+                  if (car) {
+                    this.bookingDetails.carName = `${car.year || ''} ${car.make || ''} ${car.model || ''}`.trim() || 'Unknown Car';
+                    console.log('🚗 Car:', this.bookingDetails.carName);
+                    this.cdr.detectChanges();
+                  }
+                },
+                error: (err) => {
+                  console.error('Error fetching car:', err);
+                  this.bookingDetails.carName = 'Unknown Car';
+                  this.cdr.detectChanges();
+                }
+              });
+          }
+
+          // Fetch workshop service to get serviceId
+          if (workshopServiceId) {
+            this.bookingService.getWorkshopServiceById(workshopServiceId)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: (workshopService: any) => {
+                  const serviceId = workshopService?.serviceId;
+                  if (serviceId) {
+                    // Fetch the actual service name
+                    this.bookingService.getServiceById(serviceId)
+                      .pipe(takeUntil(this.destroy$))
+                      .subscribe({
+                        next: (service: any) => {
+                          if (service) {
+                            this.bookingDetails.serviceName = service.name || 'Unknown Service';
+                            console.log('🔧 Service:', this.bookingDetails.serviceName);
+                            this.bookingDetails.isLoading = false;
+                            this.cdr.detectChanges();
+                          }
+                        },
+                        error: (err) => {
+                          console.error('Error fetching service:', err);
+                          this.bookingDetails.serviceName = 'Unknown Service';
+                          this.bookingDetails.isLoading = false;
+                          this.cdr.detectChanges();
+                        }
+                      });
+                  } else {
+                    this.bookingDetails.serviceName = workshopService?.name || 'Unknown Service';
+                    this.bookingDetails.isLoading = false;
+                    this.cdr.detectChanges();
+                  }
+                },
+                error: (err) => {
+                  console.error('Error fetching workshop service:', err);
+                  this.bookingDetails.serviceName = 'Unknown Service';
+                  this.bookingDetails.isLoading = false;
+                  this.cdr.detectChanges();
+                }
+              });
+          } else {
+            this.bookingDetails.isLoading = false;
+            this.cdr.detectChanges();
+          }
+        },
+        error: (err) => {
+          console.error('Error fetching booking:', err);
+          this.bookingDetails.carOwnerFullName = 'Unknown';
+          this.bookingDetails.carName = 'Unknown Car';
+          this.bookingDetails.serviceName = 'Unknown Service';
+          this.bookingDetails.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  /**
    * Show the confirmation dialog
    */
-  private showConfirmationDialog(notification: AppointmentConfirmationNotification): void {
+  public showConfirmationDialog(notification: AppointmentConfirmationNotification): void {
     this.currentNotification = notification;
     this.isVisible = true;
     this.isExpired = false;
@@ -480,6 +630,9 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
     this.carOwnerConfirmed = false;
     this.workshopConfirmed = false;
     this.hasCurrentUserConfirmed = false;
+
+    // Fetch booking details for display
+    this.fetchBookingDetails(notification.bookingId);
 
     // Check confirmation status from backend
     this.checkConfirmationStatus(notification.bookingId);
@@ -524,6 +677,18 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
             this.toastService.warning(
               'Cannot Confirm',
               'This appointment can no longer be confirmed.',
+              4000
+            );
+            return;
+          }
+          
+          // Check if booking is InProgress (both confirmations null)
+          if (details.bookingStatus === 'InProgress' || 
+              (details.carOwnerConfirmed === null && details.workshopOwnerConfirmed === null)) {
+            console.log('⚠️ Booking is already InProgress - not showing dialog');
+            this.toastService.info(
+              'Appointment In Progress',
+              'This appointment has already started.',
               4000
             );
             return;
@@ -613,8 +778,10 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
       
       console.log('⏰ Confirmation deadline expired for booking:', this.currentNotification.bookingId);
       
-      // The backend should automatically mark as NoShow
-      // We just close the dialog
+      // Check if both parties confirmed - if not, mark as NoShow
+      this.handleExpiredConfirmation(this.currentNotification.bookingId);
+      
+      // Close the dialog after showing expired message
       setTimeout(() => {
         this.isVisible = false;
         this.currentNotification = null;
@@ -630,6 +797,55 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
   }
 
   /**
+   * Handle expired confirmation - check if both parties confirmed and update to NoShow if needed
+   */
+  private handleExpiredConfirmation(bookingId: number): void {
+    console.log('🔍 Checking confirmation status for expired booking:', bookingId);
+    
+    this.bookingService.getBookingConfirmationStatus(bookingId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            const { carOwnerConfirmed, workshopConfirmed, bothConfirmed } = response.data;
+            
+            // If not both confirmed, update status to NoShow
+            if (!bothConfirmed) {
+              console.log('❌ Not all parties confirmed. Updating booking status to NoShow...');
+              console.log(`   Car Owner: ${carOwnerConfirmed ? '✅' : '❌'} | Workshop: ${workshopConfirmed ? '✅' : '❌'}`);
+              
+              this.bookingService.updateBookingStatus(bookingId, 'NoShow')
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  next: (updateResponse) => {
+                    console.log('✅ Booking status updated to NoShow:', updateResponse);
+                    this.toastService.warning(
+                      'Appointment Missed',
+                      'The booking has been marked as No-Show due to incomplete confirmation.',
+                      5000
+                    );
+                  },
+                  error: (err) => {
+                    console.error('❌ Error updating booking status to NoShow:', err);
+                    this.toastService.error(
+                      'Update Failed',
+                      'Failed to update booking status.',
+                      4000
+                    );
+                  }
+                });
+            } else {
+              console.log('✅ Both parties confirmed. No status update needed.');
+            }
+          }
+        },
+        error: (err) => {
+          console.error('❌ Error checking confirmation status:', err);
+        }
+      });
+  }
+
+  /**
    * Check confirmation status for a booking
    */
   private checkConfirmationStatus(bookingId: number): void {
@@ -638,8 +854,9 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
       .subscribe({
         next: (response) => {
           if (response.success && response.data) {
-            this.carOwnerConfirmed = response.data.carOwnerConfirmed;
-            this.workshopConfirmed = response.data.workshopConfirmed;
+            // Use false as default for null values (don't treat null as InProgress here)
+            this.carOwnerConfirmed = response.data.carOwnerConfirmed ?? false;
+            this.workshopConfirmed = response.data.workshopConfirmed ?? false;
             
             // Check if current user has already confirmed
             if (this.userRole === 'WORKSHOP' || this.userRole === 'Workshop') {
@@ -717,12 +934,12 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
               this.carOwnerConfirmed = true;
             }
 
-            // Check if both parties have confirmed
-            const bothConfirmed = this.carOwnerConfirmed && this.workshopConfirmed;
+            // Only close dialog if BOTH parties have confirmed (explicitly true)
+            const bothConfirmed = this.carOwnerConfirmed === true && this.workshopConfirmed === true;
             
             if (bothConfirmed) {
               console.log('✅ Both parties confirmed - Booking status now InProgress');
-              console.log('🔄 Resetting confirmation status values:', {
+              console.log('🔄 Closing dialog as both parties confirmed:', {
                 carOwnerConfirmed: this.carOwnerConfirmed,
                 workshopConfirmed: this.workshopConfirmed,
                 hasCurrentUserConfirmed: this.hasCurrentUserConfirmed
@@ -808,11 +1025,12 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
           .subscribe({
             next: (response) => {
               if (response.success && response.data) {
-                this.carOwnerConfirmed = response.data.carOwnerConfirmed;
-                this.workshopConfirmed = response.data.workshopConfirmed;
+                // Update confirmation status (null values default to false)
+                this.carOwnerConfirmed = response.data.carOwnerConfirmed ?? false;
+                this.workshopConfirmed = response.data.workshopConfirmed ?? false;
                 
-                // Check if both confirmed
-                if (this.carOwnerConfirmed && this.workshopConfirmed) {
+                // Only close dialog if BOTH parties have actually confirmed (true values, not null)
+                if (response.data.carOwnerConfirmed === true && response.data.workshopConfirmed === true) {
                   console.log('✅ Both parties confirmed via polling - Booking status now InProgress');
                   console.log('🔄 Resetting confirmation status values:', {
                     carOwnerConfirmed: this.carOwnerConfirmed,
@@ -863,19 +1081,40 @@ export class AppointmentConfirmationDialogComponent implements OnInit, OnDestroy
 
   /**
    * Close the dialog
-   * Marks the booking as shown to prevent dialog from reappearing
+   * Creates a notification in the panel so user can reopen within 15-minute window
    */
   closeDialog(): void {
     if (this.currentNotification) {
       const bookingId = this.currentNotification.bookingId;
       
-      // Mark booking as shown to prevent dialog from reappearing
+      // Mark booking as shown to prevent dialog from reappearing automatically
       this.shownBookingIds.add(bookingId);
       
       // Remove from active confirmations
       this.activeConfirmations.delete(bookingId);
       
-      console.log('🚪 Dialog closed for booking:', bookingId, '- Will not reappear');
+      // Store notification in panel so user can reopen and confirm within 15-minute window
+      // The notification already exists from backend, so we just need to ensure it's in the panel
+      // and not dismissed. The user can click it anytime to reopen the dialog.
+      this.notificationService.addNotification({
+        title: this.currentNotification.title,
+        message: this.currentNotification.message,
+        type: 'appointment-confirmation',
+        priority: 'high',
+        actionLabel: 'Confirm Arrival',
+        confirmationDeadline: this.currentNotification.confirmationDeadline,
+        data: {
+          bookingId: this.currentNotification.bookingId,
+          notificationId: this.currentNotification.notificationId,
+          appointmentDate: this.currentNotification.bookingDetails?.appointmentDate,
+          confirmationDeadline: this.currentNotification.confirmationDeadline,
+          workshopName: this.currentNotification.bookingDetails?.workshopName,
+          notificationType: 13, // AppointmentConfirmationRequest
+          canReopen: true
+        }
+      });
+      
+      console.log('🚪 Dialog closed for booking:', bookingId, '- Notification stored in panel for 15-minute window');
     }
     
     this.stopTimer();

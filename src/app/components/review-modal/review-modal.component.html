@@ -76,70 +76,72 @@
 
       <!-- Review Form -->
       <div class="review-form">
-        <!-- Rating Section -->
-        <div class="form-group">
-          <label for="rating" class="required">How would you rate this service?</label>
-          <div class="rating-container">
-            <app-star-rating
-              [(rating)]="rating"
-              [maxStars]="5"
-              [readonly]="isSubmitting || hasSubmitted"
-              [size]="'large'"
-              (ratingChange)="onRatingChange($event)"
-            ></app-star-rating>
-            <span class="rating-text" *ngIf="rating > 0">{{ rating }} out of 5</span>
-          </div>
-          <div class="error-message" *ngIf="showValidationErrors && rating === 0">
-            Please select a rating
-          </div>
-        </div>
-
-        <!-- Comment Section -->
-        <div class="form-group">
-          <label for="comment" class="required">Your Feedback</label>
-          <textarea
-            id="comment"
-            [(ngModel)]="comment"
-            (input)="onCommentInput()"
-            [disabled]="isSubmitting || hasSubmitted"
-            [maxlength]="maxCommentLength"
-            placeholder="Share your experience with this workshop. What did you like? What could be improved?"
-            rows="5"
-            class="form-control"
-            [class.error]="showValidationErrors && (!comment || comment.trim().length === 0)"
-          ></textarea>
-          <div class="input-footer">
-            <div
-              class="error-message"
-              *ngIf="showValidationErrors && (!comment || comment.trim().length === 0)"
-            >
-              Please enter your feedback
+        <!-- Bento Grid Layout -->
+        <div class="bento-grid">
+          <!-- Rating Card - Large Card -->
+          <div class="bento-card bento-rating-card">
+            <div class="card-label">How would you rate this service?</div>
+            <div class="rating-display">
+              <app-star-rating
+                [(rating)]="rating"
+                [maxStars]="5"
+                [readonly]="isSubmitting || hasSubmitted"
+                [size]="'large'"
+                (ratingChange)="onRatingChange($event)"
+              ></app-star-rating>
             </div>
-            <div class="character-count" [class.warning]="getRemainingCharacters() < 50">
-              {{ comment.length }} / {{ maxCommentLength }}
+            <div class="rating-feedback" *ngIf="rating > 0">
+              <span class="rating-number">{{ rating }}</span>
+              <span class="rating-text">out of 5</span>
+            </div>
+            <div class="error-message" *ngIf="showValidationErrors && rating === 0">
+              Please select a rating
             </div>
           </div>
-        </div>
 
-        <!-- Paid Amount Section -->
-        <div class="form-group">
-          <label for="paidAmount">Amount Paid (EGP)</label>
-          <div class="input-with-icon">
-            <span class="icon">💰</span>
-            <input
-              type="number"
-              id="paidAmount"
-              [(ngModel)]="paidAmount"
+          <!-- Feedback Card - Large Card -->
+          <div class="bento-card bento-feedback-card">
+            <div class="card-label">Your Feedback</div>
+            <textarea
+              id="comment"
+              [(ngModel)]="comment"
+              (input)="onCommentInput()"
               [disabled]="isSubmitting || hasSubmitted"
-              min="0"
-              step="0.01"
-              placeholder="Enter the amount you paid"
-              class="form-control"
-              [class.error]="showValidationErrors && paidAmount < 0"
-            />
+              [maxlength]="maxCommentLength"
+              placeholder="Share your experience with this workshop. What did you like? What could be improved?"
+              class="feedback-textarea"
+              [class.error]="showValidationErrors && (!comment || comment.trim().length === 0)"
+            ></textarea>
+            <div class="textarea-footer">
+              <div class="error-message" *ngIf="showValidationErrors && (!comment || comment.trim().length === 0)">
+                Please enter your feedback
+              </div>
+              <div class="character-count" [class.warning]="getRemainingCharacters() < 50">
+                {{ comment.length }} / {{ maxCommentLength }}
+              </div>
+            </div>
           </div>
-          <div class="error-message" *ngIf="showValidationErrors && paidAmount < 0">
-            Amount cannot be negative
+
+          <!-- Amount Card -->
+          <div class="bento-card bento-amount-card">
+            <div class="card-label">Amount Paid</div>
+            <div class="input-wrapper">
+              <span class="currency-icon">EGP</span>
+              <input
+                type="number"
+                id="paidAmount"
+                [(ngModel)]="paidAmount"
+                [disabled]="isSubmitting || hasSubmitted"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                class="amount-input"
+                [class.error]="showValidationErrors && paidAmount < 0"
+              />
+            </div>
+            <div class="error-message" *ngIf="showValidationErrors && paidAmount < 0">
+              Amount cannot be negative
+            </div>
           </div>
         </div>
 
