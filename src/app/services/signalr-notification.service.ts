@@ -33,12 +33,16 @@ export class SignalRNotificationService {
 
   // Subject for appointment confirmation requests
   public appointmentConfirmationReceived = new Subject<AppointmentConfirmationNotification>();
-  
+
   // Subject for confirmation status updates
   public confirmationStatusUpdate = new Subject<any>();
-  
+
   // Track bookings that have already received confirmation in dialog
   private bookingsWithConfirmationReceived = new Set<number>();
+
+  // Track processed notifications to prevent duplicates (notification ID -> timestamp)
+  private processedNotifications = new Map<number, number>();
+  private readonly NOTIFICATION_CACHE_DURATION = 60000; // 60 seconds
 
   constructor(
     private authService: AuthService,
@@ -49,6 +53,9 @@ export class SignalRNotificationService {
     private ngZone: NgZone
   ) {
     console.log('🔔 SignalRNotificationService initialized');
+
+    // Clean up old processed notifications every 2 minutes
+    setInterval(() => this.cleanupProcessedNotifications(), 120000);
   }
 
   /**
@@ -63,14 +70,20 @@ export class SignalRNotificationService {
 
     // Check if already connected
     if (this.hubConnection?.state === HubConnectionState.Connected) {
-      console.log('✅ SignalR already connected');
+      console.log('✅ SignalR already connected - skipping duplicate connection');
       return;
     }
 
     // Check if connection is in progress
     if (this.hubConnection?.state === HubConnectionState.Connecting) {
-      console.log('⏳ SignalR connection already in progress');
+      console.log('⏳ SignalR connection already in progress - skipping duplicate connection');
       return;
+    }
+
+    // If we have an existing connection that's disconnected, clean it up
+    if (this.hubConnection) {
+      console.log('🧹 Cleaning up old SignalR connection before starting new one');
+      await this.stopConnection();
     }
 
     this.isManualDisconnect = false;
@@ -126,6 +139,9 @@ export class SignalRNotificationService {
 
     if (this.hubConnection) {
       try {
+        // Remove event listeners before stopping
+        this.removeEventListeners();
+
         await this.hubConnection.stop();
         console.log('🛑 SignalR disconnected');
       } catch (err) {
@@ -149,10 +165,31 @@ export class SignalRNotificationService {
   }
 
   /**
+   * Remove all event listeners to prevent duplicates
+   */
+  private removeEventListeners(): void {
+    if (!this.hubConnection) return;
+
+    try {
+      this.hubConnection.off('ReceiveNotification');
+      this.hubConnection.off('ConfirmationStatusUpdate');
+      this.hubConnection.off('ReceiveBroadcast');
+      console.log('🧹 Removed all SignalR event listeners');
+    } catch (err) {
+      console.warn('⚠️ Error removing event listeners:', err);
+    }
+  }
+
+  /**
    * Setup SignalR event listeners for notifications
    */
   private setupEventListeners(): void {
     if (!this.hubConnection) return;
+
+    // Remove any existing listeners first to prevent duplicates
+    this.removeEventListeners();
+
+    console.log('🔧 Setting up SignalR event listeners');
 
     // Listen for incoming notifications from the hub
     this.hubConnection.on('ReceiveNotification', (notificationDto: NotificationDto) => {
@@ -161,16 +198,25 @@ export class SignalRNotificationService {
         console.log('📩 Received notification from SignalR:', notificationDto);
         console.log('📩 Notification type:', notificationDto.type, 'typeof:', typeof notificationDto.type);
 
+        // Check if we've already processed this notification (prevent duplicates)
+        if (this.isNotificationAlreadyProcessed(notificationDto.id)) {
+          console.log('⚠️ Duplicate notification detected - skipping:', notificationDto.id);
+          return;
+        }
+
+        // Mark this notification as processed
+        this.markNotificationAsProcessed(notificationDto.id);
+
         // Check if this is an AppointmentConfirmationRequest
         if (this.isNotificationType(notificationDto.type, NotificationType.AppointmentConfirmationRequest)) {
           console.log('🔔 Appointment confirmation request received:', notificationDto);
-          
+
           // Check if booking status has changed (don't emit if already InProgress, completed, etc.)
           const notificationData = notificationDto as any;
           const status = notificationData.status || notificationData.bookingStatus;
           const jobStatus = notificationData.jobStatus;
-          
-          if (status === 'InProgress' || jobStatus === 'in-progress' || 
+
+          if (status === 'InProgress' || jobStatus === 'in-progress' ||
               jobStatus === 'completed' || jobStatus === 'ready' || jobStatus === 'cancelled') {
             console.log('⚠️ Skipping appointment confirmation - booking status already changed:', status || jobStatus);
           } else {
@@ -181,18 +227,34 @@ export class SignalRNotificationService {
         // Map backend NotificationDto to frontend AppNotification
         const appNotification = this.mapToAppNotification(notificationDto);
 
-        // Add notification to the notification service
-        this.notificationService.addNotification(appNotification);
+        // Check if this is a self-action notification (user triggering notification about their own action)
+        const currentUserId = this.authService.getUserId();
+        const isSelfAction = notificationDto.senderId === currentUserId;
 
-        // Show browser notification if permitted
-        this.notificationService.showBrowserNotification({
-          id: notificationDto.id.toString(),
-          timestamp: new Date(notificationDto.createdAt),
-          read: notificationDto.isRead,
-          ...appNotification,
-        });
+        // List of notification types that should be suppressed if user triggered them
+        const selfActionTypes = [
+          NotificationType.BookingCreated,
+          NotificationType.BookingInProgress,
+          NotificationType.BookingReadyForPickup,
+          NotificationType.BookingCompleted,
+          NotificationType.BookingCancelled,
+          NotificationType.BookingAccepted
+        ];
+
+        const shouldSuppressSelfAction = isSelfAction && selfActionTypes.some(type =>
+          this.isNotificationType(notificationDto.type, type)
+        );
+
+        // Add notification to the notification service
+        // Skip adding to notification panel if user triggered this action themselves
+        if (!shouldSuppressSelfAction) {
+          this.notificationService.addNotification(appNotification);
+        } else {
+          console.log('🔕 Suppressing notification panel entry: User triggered their own action:', NotificationType[notificationDto.type]);
+        }
 
         // Show toast notification for high-priority notifications
+        // (Toast handler has its own filtering logic)
         this.showToastForNotification(notificationDto, appNotification);
       });
     });
@@ -318,14 +380,14 @@ export class SignalRNotificationService {
   private isNotificationType(dtoType: any, expectedType: NotificationType): boolean {
     // Direct numeric match
     if (dtoType === expectedType) return true;
-    
+
     // String match for enum name
     const typeName = NotificationType[expectedType];
     if (typeof dtoType === 'string') {
-      return dtoType === typeName || 
+      return dtoType === typeName ||
              dtoType.toLowerCase() === typeName.toLowerCase();
     }
-    
+
     return false;
   }
 
@@ -514,7 +576,16 @@ export class SignalRNotificationService {
     if (isReadyForPickupMessage && !isCompletedMessage) {
       console.log('🚗 Detected ReadyForPickup by message - NOT opening review modal');
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'ready');
-      this.toastService.success(title, message, 7000);
+
+      // Only show toast if user didn't trigger this action
+      const currentUserId = this.authService.getUserId();
+      const isSelfAction = dto.senderId === currentUserId;
+
+      if (!isSelfAction) {
+        this.toastService.success(title, message, 7000);
+      } else {
+        console.log('🔕 Suppressing self-action notification: User marked booking as ready (detected by message)');
+      }
       // Explicitly NOT opening review modal - vehicle is just ready, not completed
       return;
     }
@@ -523,9 +594,18 @@ export class SignalRNotificationService {
     if (isCompletedMessage) {
       console.log('✅ Detected BookingCompleted by message - will open review modal');
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'completed');
-      this.toastService.success(title, message, 7000);
-      // Trigger review modal for car owners
-      this.tryOpenReviewModal(dto.bookingId, 'CompletedMessage');
+
+      // Only show toast if user didn't trigger this action
+      const currentUserId = this.authService.getUserId();
+      const isSelfAction = dto.senderId === currentUserId;
+
+      if (!isSelfAction) {
+        this.toastService.success(title, message, 7000);
+        // Trigger review modal for car owners
+        this.tryOpenReviewModal(dto.bookingId, 'CompletedMessage');
+      } else {
+        console.log('🔕 Suppressing self-action notification: User marked booking as completed (detected by message)');
+      }
       return;
     }
 
@@ -533,8 +613,13 @@ export class SignalRNotificationService {
     if (this.isNotificationType(dto.type, NotificationType.BookingCreated)) {
       // Dispatch event so job-board can refresh and show new booking immediately
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'created');
-      
-      // Show toast for both workshops and car owners
+
+      // Get current user ID to check if they are the sender
+      const currentUserId = this.authService.getUserId();
+      const isSelfNotification = dto.senderId === currentUserId;
+
+      // Only show toast if this is NOT a self-notification (car owner creating their own booking)
+      // Show toast for workshops (they receive bookings from customers)
       if (isWorkshop) {
         this.toastService.booking(title, message, {
           label: 'View Job Board',
@@ -546,7 +631,9 @@ export class SignalRNotificationService {
             }
           },
         });
-      } else {
+      } else if (!isSelfNotification) {
+        // Car owners should NOT see notifications for bookings they created themselves
+        // Only show if someone else created a booking involving this user
         this.toastService.booking(title, message, {
           label: 'View Booking',
           callback: () => {
@@ -555,6 +642,8 @@ export class SignalRNotificationService {
             }
           },
         });
+      } else {
+        console.log('🔕 Suppressing self-notification: Car owner created their own booking');
       }
     }
     // Show toast for appointment confirmation request (both car owner and workshop owner)
@@ -563,39 +652,81 @@ export class SignalRNotificationService {
       console.log('🔔 Appointment confirmation request - dialog will handle display');
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'confirmation-required');
     }
-    // Show toast for booking cancelled (notify both workshop and car owner)
+    // Show toast for booking cancelled (notify the other party, not who cancelled)
     else if (this.isNotificationType(dto.type, NotificationType.BookingCancelled)) {
       // Dispatch event so job-board can refresh and remove cancelled booking
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'cancelled');
-      
-      // Show toast for both workshops and car owners
-      this.toastService.warning(title, message, 6000);
+
+      // Only show toast if user didn't cancel the booking themselves
+      const currentUserId = this.authService.getUserId();
+      const isSelfAction = dto.senderId === currentUserId;
+
+      if (!isSelfAction) {
+        this.toastService.warning(title, message, 6000);
+      } else {
+        console.log('🔕 Suppressing self-action notification: User cancelled their own booking');
+      }
     }
     // Show toast for booking ready for pickup (notify car owner)
     else if (dto.type === NotificationType.BookingReadyForPickup) {
       console.log('🚗 ReadyForPickup notification (by type) - NOT opening review modal');
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'ready');
-      this.toastService.success(title, message, 7000);
+
+      // Only show toast if user didn't trigger this action
+      const currentUserId = this.authService.getUserId();
+      const isSelfAction = dto.senderId === currentUserId;
+
+      if (!isSelfAction) {
+        this.toastService.success(title, message, 7000);
+      } else {
+        console.log('🔕 Suppressing self-action notification: User marked booking as ready');
+      }
     }
-    // Show toast for booking in progress (notify car owner)
+    // Show toast for booking in progress (notify the other party, not the one who triggered it)
     else if (this.isNotificationType(dto.type, NotificationType.BookingInProgress)) {
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'inprogress');
-      this.toastService.info(title, message, 6000);
+
+      // Only show toast if user didn't trigger this status change
+      const currentUserId = this.authService.getUserId();
+      const isSelfAction = dto.senderId === currentUserId;
+
+      if (!isSelfAction) {
+        this.toastService.info(title, message, 6000);
+      } else {
+        console.log('🔕 Suppressing self-action notification: User confirmed arrival');
+      }
     }
     // Show toast for booking completed (notify car owner)
     else if (dto.type === NotificationType.BookingCompleted) {
       console.log('✅ BookingCompleted notification (by type) - will open review modal');
       this.dispatchBookingStatusChangedEvent(dto.bookingId, 'completed');
-      this.toastService.success(title, message, 7000);
-      this.tryOpenReviewModal(dto.bookingId, 'BookingCompleted');
+
+      // Only show toast if user didn't trigger this action
+      const currentUserId = this.authService.getUserId();
+      const isSelfAction = dto.senderId === currentUserId;
+
+      if (!isSelfAction) {
+        this.toastService.success(title, message, 7000);
+        this.tryOpenReviewModal(dto.bookingId, 'BookingCompleted');
+      } else {
+        console.log('🔕 Suppressing self-action notification: User marked booking as completed');
+      }
     }
     // Show toast for payment received
     else if (dto.type === NotificationType.PaymentReceived) {
       this.toastService.success(title, message, 5000);
     }
-    // Show toast for booking accepted (car owners)
+    // Show toast for booking accepted (notify car owner, not workshop who accepted)
     else if (this.isNotificationType(dto.type, NotificationType.BookingAccepted)) {
-      this.toastService.info(title, message, 6000);
+      // Only show toast if user didn't accept the booking themselves
+      const currentUserId = this.authService.getUserId();
+      const isSelfAction = dto.senderId === currentUserId;
+
+      if (!isSelfAction) {
+        this.toastService.info(title, message, 6000);
+      } else {
+        console.log('🔕 Suppressing self-action notification: Workshop accepted their own booking');
+      }
     }
     // Handle JobStatusChanged
     else if (dto.type === NotificationType.JobStatusChanged) {
@@ -666,10 +797,10 @@ export class SignalRNotificationService {
     this.notificationService.fetchNotificationsFromApi(token).subscribe({
       next: (notifications) => {
         console.log(`✅ Loaded ${notifications.length} notifications from API`);
-        
+
         // Fetch unread count from backend to sync with actual state
         this.notificationService.fetchUnreadCountFromBackend(token);
-        
+
         // Check for pending appointment confirmation requests in fetched notifications
         this.checkForPendingAppointmentConfirmations();
       },
@@ -687,30 +818,30 @@ export class SignalRNotificationService {
     // Get notifications from notification service
     this.notificationService.getNotifications().subscribe(notifications => {
       const unreadNotifications = notifications.filter(n => !n.read);
-      
+
       console.log('🔍 Checking for pending appointment confirmations in', unreadNotifications.length, 'unread notifications');
-      
+
       for (const notification of unreadNotifications) {
         // Check if this is an appointment confirmation request
         const notificationData = notification.data as any;
-        
+
         if (notificationData?.notificationType !== undefined) {
-          const isAppointmentConfirmation = 
+          const isAppointmentConfirmation =
             this.isNotificationType(notificationData.notificationType, NotificationType.AppointmentConfirmationRequest);
-          
+
           if (isAppointmentConfirmation && notificationData.bookingId) {
             console.log('🔔 Found pending appointment confirmation in API notifications:', notificationData);
-            
+
             // Check if booking status has changed
             const status = notificationData.status || notificationData.bookingStatus;
             const jobStatus = notificationData.jobStatus;
-            
-            if (status === 'InProgress' || jobStatus === 'in-progress' || 
+
+            if (status === 'InProgress' || jobStatus === 'in-progress' ||
                 jobStatus === 'completed' || jobStatus === 'ready' || jobStatus === 'cancelled') {
               console.log('⚠️ Skipping pending appointment confirmation - booking status already changed:', status || jobStatus);
               continue;
             }
-            
+
             // Create a NotificationDto-like object to process
             const dto: NotificationDto = {
               id: notificationData.notificationId || parseInt(notification.id) || 0,
@@ -723,7 +854,7 @@ export class SignalRNotificationService {
               bookingId: notificationData.bookingId,
               title: notification.title
             };
-            
+
             // Only process if not already read
             if (!notification.read) {
               this.handleAppointmentConfirmationRequest(dto);
@@ -770,8 +901,42 @@ export class SignalRNotificationService {
 
     console.log('🔔 Emitting appointment confirmation notification:', confirmationNotification);
     this.appointmentConfirmationReceived.next(confirmationNotification);
-    
+
     // Mark this booking as having received confirmation
     this.bookingsWithConfirmationReceived.add(dto.bookingId);
+  }
+
+  /**
+   * Check if a notification has already been processed
+   */
+  private isNotificationAlreadyProcessed(notificationId: number): boolean {
+    return this.processedNotifications.has(notificationId);
+  }
+
+  /**
+   * Mark a notification as processed with current timestamp
+   */
+  private markNotificationAsProcessed(notificationId: number): void {
+    this.processedNotifications.set(notificationId, Date.now());
+  }
+
+  /**
+   * Clean up old processed notifications to prevent memory leaks
+   */
+  private cleanupProcessedNotifications(): void {
+    const now = Date.now();
+    const keysToDelete: number[] = [];
+
+    this.processedNotifications.forEach((timestamp, notificationId) => {
+      if (now - timestamp > this.NOTIFICATION_CACHE_DURATION) {
+        keysToDelete.push(notificationId);
+      }
+    });
+
+    keysToDelete.forEach(key => this.processedNotifications.delete(key));
+
+    if (keysToDelete.length > 0) {
+      console.log(`🧹 Cleaned up ${keysToDelete.length} old processed notifications`);
+    }
   }
 }

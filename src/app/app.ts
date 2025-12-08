@@ -84,11 +84,7 @@ export class App implements OnInit, OnDestroy {
    * Initialize SignalR real-time notification system
    */
   private async initializeSignalR(): Promise<void> {
-    // Connect SignalR if user is already authenticated on app load
-    if (this.authService.isAuthenticated()) {
-      console.log('🔔 User authenticated on app load - starting SignalR connection');
-      await this.signalRService.startConnection();
-    }
+    let isInitialConnection = true;
 
     // Subscribe to authentication state changes
     this.authService.isAuthenticated$
@@ -96,12 +92,18 @@ export class App implements OnInit, OnDestroy {
       .subscribe(async (isAuthenticated) => {
         if (isAuthenticated) {
           // User logged in - start SignalR connection
-          console.log('🔔 User logged in - starting SignalR connection');
+          if (isInitialConnection) {
+            console.log('🔔 User authenticated on app load - starting SignalR connection');
+            isInitialConnection = false;
+          } else {
+            console.log('🔔 User logged in - starting SignalR connection');
+          }
           await this.signalRService.startConnection();
         } else {
           // User logged out - stop SignalR connection
           console.log('🔔 User logged out - stopping SignalR connection');
           await this.signalRService.stopConnection();
+          isInitialConnection = true; // Reset for next login
         }
       });
   }

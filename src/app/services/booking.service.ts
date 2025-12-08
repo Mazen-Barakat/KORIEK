@@ -41,6 +41,10 @@ export interface EnrichedBooking {
   customerName: string;
   serviceName: string;
   carId: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+  customerId?: number;
+  quotedPrice?: number;
 }
 
 @Injectable({
@@ -324,7 +328,7 @@ export class BookingService {
    * @param confirmationSentAt Optional confirmation sent timestamp
    */
   confirmAppointment(
-    bookingId: number, 
+    bookingId: number,
     isConfirmed: boolean,
     confirmationDeadline?: Date,
     confirmationSentAt?: Date
@@ -337,19 +341,19 @@ export class BookingService {
       bookingId: bookingId,
       isConfirmed: isConfirmed
     };
-    
+
     // Add confirmationDeadline if provided
     if (confirmationDeadline) {
       request.confirmationDeadline = confirmationDeadline.toISOString();
     }
-    
+
     // Add confirmationSentAt if provided
     if (confirmationSentAt) {
       request.confirmationSentAt = confirmationSentAt.toISOString();
     }
-    
+
     console.log('📤 Sending appointment confirmation:', request);
-    
+
     return this.http.post<{
       success: boolean;
       message: string;
@@ -667,7 +671,17 @@ export class BookingService {
       newBookingRequests: jobs.filter(j => j.status === 'new').length,
       quotesAwaitingApproval: jobs.filter(j => j.quote?.status === 'sent').length,
       carsReadyForPickup: jobs.filter(j => j.status === 'ready').length,
-      activeJobs: jobs.filter(j => j.status === 'in-progress').length
+      activeJobs: jobs.filter(j => j.status === 'in-progress').length,
+      completionRate: 0,
+      weeklyRevenue: 0,
+      todaysAppointments: 0,
+      totalBookingsThisMonth: 0,
+      cancellationRate: 0,
+      averageResponseTime: 0,
+      averageJobDuration: 0,
+      repeatCustomers: 0,
+      pendingQuotes: 0,
+      overdueJobs: 0
     };
 
     return of(metrics);

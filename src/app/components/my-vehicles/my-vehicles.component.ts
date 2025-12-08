@@ -11,6 +11,7 @@ import {
   ExpenseType,
 } from '../../services/car-expense.service';
 import { BookingService } from '../../services/booking.service';
+import { CarTipsService, CarTip } from '../../services/car-tips.service';
 import { forkJoin } from 'rxjs';
 
 interface Vehicle {
@@ -43,8 +44,8 @@ interface Expense {
   receipt?: string;
 }
 
-interface Tip {
-  id: number;
+interface Tip extends CarTip {
+  id: string | number;
   title: string;
   excerpt: string;
   category: string;
@@ -123,41 +124,14 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   expenseTypes: ExpenseType[] = ['Fuel', 'Maintenance', 'Repair', 'Insurance', 'Other'];
   welcomeMessage: string = '';
   aiInputText: string = '';
-  tips: Tip[] = [
-    {
-      id: 1,
-      title: 'Winter Tire Safety: When to Switch',
-      excerpt:
-        "Learn the optimal time to switch to winter tires and how they can significantly improve your vehicle's safety during cold months.",
-      category: 'Seasonal',
-      icon: '❄️',
-      timeAgo: '2 hours ago',
-      readTime: 4,
-      content: 'Full article content here...',
-    },
-    {
-      id: 2,
-      title: 'Top 5 Fuel-Saving Driving Habits',
-      excerpt:
-        'Discover proven techniques to reduce fuel consumption and save money on every trip.',
-      category: 'Fuel',
-      icon: '⛽',
-      timeAgo: '1 day ago',
-      readTime: 3,
-      content: 'Full article content here...',
-    },
-    {
-      id: 3,
-      title: 'Essential Oil Change Intervals',
-      excerpt:
-        'Understanding when to change your oil can extend engine life and prevent costly repairs.',
-      category: 'Maintenance',
-      icon: '🔧',
-      timeAgo: '3 days ago',
-      readTime: 5,
-      content: 'Full article content here...',
-    },
-  ];
+  tips: Tip[] = [];
+  loadingTips = false;
+  showTipModal = false;
+  selectedTip: Tip | null = null;
+  displayedTipsCount = 5;
+  totalTipsLimit = 15;
+  private readonly TIPS_STORAGE_KEY = 'carTips_cached';
+  private readonly TIPS_DATE_KEY = 'carTips_lastLoadDate';
 
   // Upcoming bookings for all vehicles
   upcomingBookings: UpcomingBooking[] = [];
@@ -196,7 +170,8 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     private carsService: CarsService,
     private cdr: ChangeDetectorRef,
     private carExpenseService: CarExpenseService,
-    private bookingService: BookingService
+    private bookingService: BookingService,
+    private carTipsService: CarTipsService
   ) {}
 
   // Note: removed Escape key handler to prevent closing the Add Vehicle modal
@@ -219,6 +194,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadLocalBookingCreationTimes();
     this.loadVehiclesFromBackend();
+    this.checkAndLoadTips();
   }
 
   ngOnDestroy(): void {
@@ -953,10 +929,224 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   }
 
   // Tips & News Methods
+
+  /**
+   * Check if tips need to be renewed (daily) and load accordingly
+   */
+  private checkAndLoadTips(): void {
+    const lastLoadDate = localStorage.getItem(this.TIPS_DATE_KEY);
+    const today = new Date().toDateString();
+
+    // Check if we need to load fresh tips (new day or first time)
+    if (!lastLoadDate || lastLoadDate !== today) {
+      console.log('🔄 Loading fresh tips for new day...');
+      this.loadCarTips();
+    } else {
+      // Try to load from cache
+      const cachedTips = localStorage.getItem(this.TIPS_STORAGE_KEY);
+      if (cachedTips) {
+        try {
+          this.tips = JSON.parse(cachedTips) as Tip[];
+          this.displayedTipsCount = this.tips.length;
+          console.log('✅ Loaded tips from cache:', this.tips.length);
+          this.cdr.detectChanges();
+        } catch (error) {
+          console.error('Error parsing cached tips:', error);
+          this.loadCarTips();
+        }
+      } else {
+        this.loadCarTips();
+      }
+    }
+  }
+
+  /**
+   * Load car tips from API with fallback to curated content
+   */
+  private loadCarTips(): void {
+    this.loadingTips = true;
+
+    // Set a safety timeout to ensure tips load even if something fails
+    const safetyTimeout = setTimeout(() => {
+      if (this.loadingTips) {
+        console.warn('⏱️ Tips loading timeout - loading fallback tips');
+        this.loadFallbackTips();
+      }
+    }, 5000); // 5 second timeout
+
+    // Try to get location-based weather tips
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          clearTimeout(safetyTimeout);
+          const { latitude, longitude } = position.coords;
+
+          // Get both regular tips and weather-based tips
+          forkJoin({
+            regularTips: this.carTipsService.getCarTips(3),
+            weatherTips: this.carTipsService.getWeatherBasedTips(latitude, longitude)
+          }).subscribe({
+            next: ({ regularTips, weatherTips }) => {
+              // Combine and limit to 5 total tips (prioritize weather tips)
+              this.tips = [...weatherTips, ...regularTips].slice(0, 5) as Tip[];
+              this.saveTipsToCache();
+              this.loadingTips = false;
+              this.cdr.detectChanges();
+              console.log('✅ Loaded car tips with weather data:', this.tips.length);
+            },
+            error: (error) => {
+              console.error('Error loading tips:', error);
+              this.loadFallbackTips();
+            }
+          });
+        },
+        (error) => {
+          clearTimeout(safetyTimeout);
+          console.warn('Geolocation not available, loading tips without weather data:', error);
+          this.loadRegularTipsOnly();
+        },
+        {
+          timeout: 3000, // 3 second timeout for geolocation
+          maximumAge: 300000 // Accept cached location up to 5 minutes old
+        }
+      );
+    } else {
+      clearTimeout(safetyTimeout);
+      console.warn('Geolocation not supported, loading tips without weather data');
+      this.loadRegularTipsOnly();
+    }
+  }
+
+  /**
+   * Load regular tips without weather data
+   */
+  private loadRegularTipsOnly(): void {
+    this.carTipsService.getCarTips(5).subscribe({
+      next: (tips) => {
+        this.tips = tips as Tip[];
+        this.saveTipsToCache();
+        this.loadingTips = false;
+        this.cdr.detectChanges();
+        console.log('✅ Loaded regular car tips:', this.tips.length);
+      },
+      error: (error) => {
+        console.error('Error loading tips:', error);
+        this.loadFallbackTips();
+      }
+    });
+  }
+
+  /**
+   * Load fallback curated tips
+   */
+  private loadFallbackTips(): void {
+    try {
+      const fallbackTips = this.carTipsService.getFallbackTips();
+      console.log('📋 Raw fallback tips:', fallbackTips);
+      this.tips = fallbackTips.slice(0, 5) as Tip[];
+      this.saveTipsToCache();
+      this.loadingTips = false;
+      console.log('✅ Loaded fallback tips:', this.tips.length, this.tips);
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('❌ Error loading fallback tips:', error);
+      this.tips = [];
+      this.loadingTips = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Open tip details (opens URL or shows content)
+   */
   openTipDetails(tip: Tip): void {
     console.log('Opening tip:', tip);
-    // Future implementation: Navigate to tip details page or open modal
-    // this.router.navigate(['/tips', tip.id]);
+    this.selectedTip = tip;
+    this.showTipModal = true;
+  }
+
+  closeTipModal(): void {
+    this.showTipModal = false;
+    this.selectedTip = null;
+  }
+
+  openExternalLink(url: string): void {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  /**
+   * Save tips to localStorage with today's date
+   */
+  private saveTipsToCache(): void {
+    try {
+      localStorage.setItem(this.TIPS_STORAGE_KEY, JSON.stringify(this.tips));
+      localStorage.setItem(this.TIPS_DATE_KEY, new Date().toDateString());
+      console.log('💾 Tips cached for today');
+    } catch (error) {
+      console.error('Error caching tips:', error);
+    }
+  }
+
+  loadMoreTips(): void {
+    if (this.loadingTips || this.displayedTipsCount >= this.totalTipsLimit) {
+      return;
+    }
+
+    this.loadingTips = true;
+    const newLimit = Math.min(this.displayedTipsCount + 5, this.totalTipsLimit);
+
+    // Get location-based tips if available
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          forkJoin({
+            regularTips: this.carTipsService.getCarTips(newLimit - 2),
+            weatherTips: this.carTipsService.getWeatherBasedTips(latitude, longitude)
+          }).subscribe({
+            next: ({ regularTips, weatherTips }) => {
+              this.tips = [...weatherTips, ...regularTips].slice(0, newLimit) as Tip[];
+              this.displayedTipsCount = this.tips.length;
+              this.saveTipsToCache();
+              this.loadingTips = false;
+              this.cdr.detectChanges();
+            },
+            error: () => {
+              this.loadMoreRegularTips(newLimit);
+            }
+          });
+        },
+        () => {
+          this.loadMoreRegularTips(newLimit);
+        },
+        { timeout: 3000, maximumAge: 300000 }
+      );
+    } else {
+      this.loadMoreRegularTips(newLimit);
+    }
+  }
+
+  private loadMoreRegularTips(limit: number): void {
+    this.carTipsService.getCarTips(limit).subscribe({
+      next: (tips) => {
+        this.tips = tips as Tip[];
+        this.displayedTipsCount = this.tips.length;
+        this.saveTipsToCache();
+        this.loadingTips = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loadingTips = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /**
+   * Refresh tips (can be called from UI button)
+   */
+  refreshTips(): void {
+    this.loadCarTips();
   }
 
   getIndicatorIconPath(indicatorLabel: string): string {
