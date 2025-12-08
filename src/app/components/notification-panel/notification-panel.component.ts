@@ -33,8 +33,11 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   notifications: AppNotification[] = [];
+  allNotifications: AppNotification[] = []; // Store all notifications
   unreadCount: number = 0;
   isOpen: boolean = false;
+  displayLimit: number = 20; // Initial display limit
+  displayIncrement: number = 20; // How many to add when scrolling
 
   constructor(
     private notificationService: NotificationService,
@@ -122,7 +125,8 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
       .getNotifications()
       .pipe(takeUntil(this.destroy$))
       .subscribe((notifications) => {
-        this.notifications = notifications.slice(0, 10); // Show last 10
+        this.allNotifications = notifications; // Store all notifications
+        this.updateDisplayedNotifications(); // Update displayed notifications based on limit
         // Force change detection to update the UI immediately
         this.cdr.detectChanges();
       });
@@ -149,10 +153,50 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
   togglePanel(): void {
     this.isOpen = !this.isOpen;
+    if (this.isOpen) {
+      // Reset display limit when opening panel
+      this.displayLimit = 20;
+      this.updateDisplayedNotifications();
+    }
   }
 
   closePanel(): void {
     this.isOpen = false;
+  }
+
+  /**
+   * Handle scroll event to load more notifications
+   */
+  onNotificationListScroll(event: Event): void {
+    const element = event.target as HTMLElement;
+    const scrollTop = element.scrollTop;
+    const scrollHeight = element.scrollHeight;
+    const clientHeight = element.clientHeight;
+
+    // Check if user scrolled near bottom (within 50px)
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50;
+
+    if (isNearBottom && this.notifications.length < this.allNotifications.length) {
+      // Load more notifications
+      this.loadMoreNotifications();
+    }
+  }
+
+  /**
+   * Load more notifications by increasing the display limit
+   */
+  private loadMoreNotifications(): void {
+    this.displayLimit += this.displayIncrement;
+    this.updateDisplayedNotifications();
+    this.cdr.detectChanges();
+    console.log(`📄 Loaded more notifications. Now showing ${this.notifications.length} of ${this.allNotifications.length}`);
+  }
+
+  /**
+   * Update displayed notifications based on current limit
+   */
+  private updateDisplayedNotifications(): void {
+    this.notifications = this.allNotifications.slice(0, this.displayLimit);
   }
 
   markAsRead(notification: AppNotification, event: Event): void {
@@ -270,7 +314,13 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
   formatTime(date: Date): string {
     const now = new Date();
-    const notificationDate = new Date(date);
+    // Parse the date - handle both string and Date objects
+    let notificationDate = typeof date === 'string' ? new Date(date) : new Date(date);
+
+    // Backend stores times 2 hours behind, so add 2 hours to correct it
+    notificationDate = new Date(notificationDate.getTime() + (2 * 60 * 60 * 1000));
+
+    // Calculate the time difference with corrected timestamp
     const diff = now.getTime() - notificationDate.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
@@ -281,9 +331,8 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
 
-    // For older notifications, show Cairo local time
-    return notificationDate.toLocaleString('en-EG', {
-      timeZone: 'Africa/Cairo',
+    // For older notifications, show the corrected time
+    return notificationDate.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -357,10 +406,10 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     if ((window as any).reopenAppointmentDialog) {
       // New signature: reopenAppointmentDialog(notificationId, bookingId?)
       (window as any).reopenAppointmentDialog(backendNotificationId, bookingId);
-      
+
       // Mark notification as read
       this.notificationService.markAsRead(notification.id);
-      
+
       // Close the notification panel
       this.closePanel();
     } else {
