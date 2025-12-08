@@ -7,10 +7,22 @@
         <h1 class="title">{{ shopName }}</h1>
         <p class="subtitle">{{ getCurrentDate() }}</p>
       </div>
-      <div class="shop-status">
-        <span class="status-text">{{ isShopOpen ? 'Open' : 'Closed' }}</span>
-        <div class="toggle-switch" [class.active]="isShopOpen" (click)="toggleShopStatus()">
-          <div class="toggle-slider"></div>
+      <div class="header-actions">
+        <button class="export-pdf-btn" (click)="exportToPDF()" title="Export PDF Report">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>Export PDF</span>
+        </button>
+        <div class="shop-status">
+          <span class="status-text">{{ isShopOpen ? 'Open' : 'Closed' }}</span>
+          <div class="toggle-switch" [class.active]="isShopOpen" (click)="toggleShopStatus()">
+            <div class="toggle-slider"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -102,10 +114,10 @@
   <div class="dashboard-content">
     <!-- Main Column -->
     <div class="main-column">
-      
+
       <!-- Combined Schedule & Quick Actions Section (70/30 Layout) -->
       <div class="combined-schedule-section">
-        
+
         <!-- Main Schedule Area (70%) -->
         <div class="section-card schedule-main-area">
         <div class="section-header">
@@ -123,11 +135,11 @@
               <p class="section-subtitle">{{ currentMonth }} {{ currentYear }}</p>
             </div>
           </div>
-          
+
           <!-- View Mode Toggle & Navigation -->
           <div class="schedule-controls">
             <div class="view-mode-toggle">
-              <button class="view-mode-btn" [class.active]="calendarViewMode === 'grid'" 
+              <button class="view-mode-btn" [class.active]="calendarViewMode === 'grid'"
                       (click)="setViewMode('grid')" title="Grid View">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="3" y="3" width="7" height="7"/>
@@ -136,7 +148,7 @@
                   <rect x="14" y="14" width="7" height="7"/>
                 </svg>
               </button>
-              <button class="view-mode-btn" [class.active]="calendarViewMode === 'list'" 
+              <button class="view-mode-btn" [class.active]="calendarViewMode === 'list'"
                       (click)="setViewMode('list')" title="List View">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="8" y1="6" x2="21" y2="6"/>
@@ -148,7 +160,7 @@
                 </svg>
               </button>
             </div>
-            
+
             <div class="calendar-nav-controls">
               <button class="nav-arrow-btn" (click)="previousWeek()" title="Previous week">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -166,7 +178,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Enhanced Week Overview with Status Breakdown -->
         <div class="week-overview-enhanced">
           <div class="overview-main">
@@ -183,7 +195,7 @@
                 <span class="stat-label">Total Bookings</span>
               </div>
             </div>
-            
+
             <div class="overview-stat">
               <div class="stat-icon pending-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,7 +208,7 @@
                 <span class="stat-label">Pending</span>
               </div>
             </div>
-            
+
             <div class="overview-stat">
               <div class="stat-icon slots-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -209,7 +221,7 @@
                 <span class="stat-label">Available</span>
               </div>
             </div>
-            
+
             <div class="overview-stat">
               <div class="stat-icon revenue-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -223,10 +235,10 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Status Pills Summary -->
           <div class="status-pills-row" *ngIf="getWeekStatusCounts().length > 0">
-            <div class="status-pill" *ngFor="let status of getWeekStatusCounts()" 
+            <div class="status-pill" *ngFor="let status of getWeekStatusCounts()"
                  [style.--status-color]="status.color">
               <span class="pill-dot"></span>
               <span class="pill-label">{{ status.label }}</span>
@@ -243,33 +255,33 @@
 
         <!-- GRID VIEW -->
         <div class="calendar-grid-enhanced" *ngIf="!isLoadingBookings && calendarViewMode === 'grid'">
-          <div class="calendar-day-card" *ngFor="let day of calendarDays; let i = index" 
-               [class.today]="day.isToday" 
+          <div class="calendar-day-card" *ngFor="let day of calendarDays; let i = index"
+               [class.today]="day.isToday"
                [class.has-appointments]="day.appointments.length > 0"
                [class.expanded]="day.isExpanded"
                [ngClass]="getDensityClass(day)">
-            
+
             <!-- Day Header -->
             <div class="day-card-header" (click)="toggleDayExpansion(i)">
               <div class="day-info">
                 <span class="day-name">{{ day.dayName }}</span>
                 <span class="day-date">{{ day.dayNumber }}</span>
               </div>
-              
+
               <div class="day-meta">
                 <!-- Density Indicator -->
-                <div class="density-indicator" *ngIf="day.appointments.length > 0" 
+                <div class="density-indicator" *ngIf="day.appointments.length > 0"
                      [attr.title]="getDensityLabel(day.densityLevel)">
                   <span class="density-bar" *ngFor="let bar of [1,2,3,4]"
                         [class.active]="bar <= (day.densityLevel === 'critical' ? 4 : day.densityLevel === 'high' ? 3 : day.densityLevel === 'medium' ? 2 : 1)">
                   </span>
                 </div>
-                
+
                 <!-- Count Badge -->
                 <div class="count-badge" *ngIf="day.appointments.length > 0">
                   {{ day.appointments.length }}
                 </div>
-                
+
                 <!-- Expand Icon -->
                 <button class="expand-btn" *ngIf="day.appointments.length > maxVisibleAppointments"
                         [class.rotated]="day.isExpanded">
@@ -279,16 +291,16 @@
                 </button>
               </div>
             </div>
-            
+
             <!-- Status Dots Preview (Collapsed) -->
             <div class="status-dots-preview" *ngIf="!day.isExpanded && day.statusGroups.length > 0">
-              <div class="status-dot-group" *ngFor="let group of day.statusGroups" 
+              <div class="status-dot-group" *ngFor="let group of day.statusGroups"
                    [style.--status-color]="group.color" [attr.title]="group.label + ': ' + group.count">
                 <span class="status-dot" *ngFor="let _ of [].constructor(Math.min(group.count, 3))"></span>
                 <span class="status-more" *ngIf="group.count > 3">+{{ group.count - 3 }}</span>
               </div>
             </div>
-            
+
             <!-- Appointments List -->
             <div class="day-appointments-container" [class.expanded]="day.isExpanded">
               <div class="appointments-scroll">
@@ -299,9 +311,9 @@
                   (viewDetails)="viewBookingDetails($event)">
                 </app-booking-card>
               </div>
-              
+
               <!-- Show More Button -->
-              <button class="show-more-btn" *ngIf="getHiddenCount(day) > 0" 
+              <button class="show-more-btn" *ngIf="getHiddenCount(day) > 0"
                       (click)="toggleDayExpansion(i); $event.stopPropagation()">
                 <span>+{{ getHiddenCount(day) }} more</span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -309,7 +321,7 @@
                 </svg>
               </button>
             </div>
-            
+
             <!-- Empty State -->
             <div class="day-empty" *ngIf="day.appointments.length === 0">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
@@ -325,10 +337,10 @@
 
         <!-- LIST VIEW -->
         <div class="calendar-list-view" *ngIf="!isLoadingBookings && calendarViewMode === 'list'">
-          <div class="list-day-group" *ngFor="let day of calendarDays" 
+          <div class="list-day-group" *ngFor="let day of calendarDays"
                [class.today]="day.isToday"
                [class.empty]="day.appointments.length === 0">
-            
+
             <div class="list-day-header">
               <div class="list-day-info">
                 <span class="list-day-name">{{ day.dayName }}</span>
@@ -339,7 +351,7 @@
                 {{ day.appointments.length }} appointment{{ day.appointments.length === 1 ? '' : 's' }}
               </div>
             </div>
-            
+
             <div class="list-appointments" *ngIf="day.appointments.length > 0">
               <div class="list-appointment-item" *ngFor="let apt of day.appointments"
                    [ngClass]="'status-' + (apt.status || 'unknown').toLowerCase()"
@@ -365,23 +377,23 @@
                 </button>
               </div>
             </div>
-            
+
             <div class="list-empty-day" *ngIf="day.appointments.length === 0">
               <span>No appointments scheduled</span>
             </div>
           </div>
         </div>
       </div>
-        
+
         <!-- Quick Actions Sidebar (30%) -->
         <div class="quick-actions-sidebar">
-          
+
           <!-- Performance Snapshot -->
           <div class="sidebar-section performance-snapshot">
             <div class="sidebar-header">
               <h3 class="sidebar-title">Performance Snapshot</h3>
             </div>
-            
+
             <div class="stat-cards-grid">
               <!-- Active Jobs Counter -->
               <div class="stat-card clickable" (click)="navigateTo('/workshop/job-board')">
@@ -466,7 +478,7 @@
             <div class="sidebar-header">
               <h3 class="sidebar-title">Quick Actions</h3>
             </div>
-            
+
             <div class="action-buttons-stack">
               <button class="action-button primary" (click)="navigateTo('/workshop/job-board')">
                 <div class="action-icon">
@@ -486,7 +498,7 @@
                 </div>
                 <span>Workshop Settings</span>
               </button>
-              
+
               <button class="action-button secondary" (click)="navigateToProfile()">
                 <div class="action-icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -496,7 +508,7 @@
                 </div>
                 <span>Workshop Profile</span>
               </button>
-              
+
               <button class="action-button secondary" (click)="navigateTo('/workshop/wallet')">
                 <div class="action-icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -530,12 +542,12 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Two Column Layout -->
         <div class="analytics-two-column">
           <!-- LEFT COLUMN: Existing Analytics -->
           <div class="analytics-left-column">
-        
+
         <!-- Main Revenue Display -->
         <div class="analytics-revenue-card">
           <div class="revenue-main">
@@ -655,10 +667,10 @@
           </div>
         </div>
           </div>
-          
+
           <!-- RIGHT COLUMN: Time-Based Analytics -->
           <div class="analytics-right-column">
-            
+
             <!-- Peak Hours Performance - Neomorphic -->
             <div class="neo-time-card peak-hours-card">
               <div class="neo-card-header">
@@ -673,12 +685,12 @@
                   <p class="neo-card-subtitle">Busiest hours for bookings</p>
                 </div>
               </div>
-              
+
               <div class="neo-peak-hours-chart">
                 <div class="neo-peak-bar" *ngFor="let hour of getPeakHours()">
                   <div class="neo-peak-time">{{ hour.label }}</div>
                   <div class="neo-peak-track">
-                    <div class="neo-peak-fill" 
+                    <div class="neo-peak-fill"
                          [style.width.%]="hour.percentage"
                          [class.high]="hour.percentage > 70"
                          [class.medium]="hour.percentage > 40 && hour.percentage <= 70"
@@ -689,7 +701,7 @@
                   <div class="neo-peak-count">{{ hour.count }}</div>
                 </div>
               </div>
-              
+
               <div class="neo-insight-box">
                 <div class="neo-insight-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -699,7 +711,7 @@
                 <span class="neo-insight-text">{{ getPeakHoursInsight() }}</span>
               </div>
             </div>
-            
+
             <!-- Weekly Trends - Neomorphic -->
             <div class="neo-time-card weekly-trends-card">
               <div class="neo-card-header">
@@ -716,11 +728,11 @@
                   <p class="neo-card-subtitle">Bookings by day of week</p>
                 </div>
               </div>
-              
+
               <div class="neo-weekly-chart">
                 <div class="neo-weekly-bar" *ngFor="let day of getWeeklyTrends()">
                   <div class="neo-bar-container">
-                    <div class="neo-bar-fill" 
+                    <div class="neo-bar-fill"
                          [style.height.%]="day.percentage"
                          [class.weekend]="day.isWeekend"
                          [class.today]="day.isToday">
@@ -731,7 +743,7 @@
                   <div class="neo-day-label" [class.today]="day.isToday">{{ day.label }}</div>
                 </div>
               </div>
-              
+
               <div class="neo-weekly-stats">
                 <div class="neo-stat-box busiest">
                   <div class="neo-stat-icon">
@@ -757,7 +769,7 @@
                 </div>
               </div>
             </div>
-            
+
           </div>
         </div>
       </div>
