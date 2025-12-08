@@ -161,8 +161,12 @@
         </div>
 
         <!-- Success Message -->
-        <div class="alert alert-success" *ngIf="hasSubmitted">
-          <strong>✅ Review submitted successfully!</strong>
+        <div 
+          class="alert alert-success" 
+          *ngIf="hasSubmitted"
+          [@successAnimation]="hasSubmitted ? 'visible' : 'hidden'"
+        >
+          <strong>Review submitted successfully!</strong>
           <p>Thank you for your feedback!</p>
         </div>
       </div>

@@ -32,6 +32,13 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       ]),
       transition(':leave', [animate('150ms ease-in', style({ opacity: 0 }))]),
     ]),
+    trigger('successAnimation', [
+      state('hidden', style({ opacity: 0, transform: 'scale(0.5) translateY(20px)' })),
+      state('visible', style({ opacity: 1, transform: 'scale(1) translateY(0)' })),
+      transition('hidden => visible', [
+        animate('500ms cubic-bezier(0.34, 1.56, 0.64, 1)'),
+      ]),
+    ]),
   ],
 })
 export class ReviewModalComponent implements OnInit, OnDestroy {
