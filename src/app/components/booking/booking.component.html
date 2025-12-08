@@ -647,30 +647,18 @@
               class="subcategory-card"
               *ngFor="let subcategory of subcategories"
               [class.selected]="selectedSubcategory?.id === subcategory.id"
+              [class.has-bg]="true"
+              [style.background-image]="'url(' + getSubcategoryBgUrl(subcategory) + ')'"
               (click)="selectSubcategory(subcategory)"
             >
               <div class="subcategory-check" *ngIf="selectedSubcategory?.id === subcategory.id">
                 <svg
-                  width="16"
-                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="3"
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-              </div>
-              <div class="subcategory-image-wrapper">
-                <img
-                  *ngIf="subcategory.imageUrl"
-                  [src]="subcategory.imageUrl"
-                  [alt]="subcategory.name"
-                  class="subcategory-image"
-                />
-                <div *ngIf="!subcategory.imageUrl" class="subcategory-placeholder">
-                  <span>{{ subcategory.icon || '⚙️' }}</span>
-                </div>
               </div>
               <h4>{{ subcategory.name }}</h4>
               <p class="subcategory-description">
@@ -797,7 +785,6 @@
                   [checked]="selectedService?.id === service.id"
                   (change)="selectService(service)"
                 />
-                <label [for]="'service-' + service.id" class="radio-label"></label>
               </div>
               <div class="service-info">
                 <h4>{{ service.name }}</h4>
