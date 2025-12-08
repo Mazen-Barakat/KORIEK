@@ -130,7 +130,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
             } else if (data.Rating !== undefined && data.Rating !== null) {
               this.metrics = { ...this.metrics, shopRating: data.Rating };
             }
-            
+
             // Force change detection to render data immediately
             this.cdr.detectChanges();
 
@@ -583,13 +583,13 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
     startOfWeek.setHours(0, 0, 0, 0);
-    
+
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6); // End of week (Saturday)
     endOfWeek.setHours(23, 59, 59, 999);
-    
+
     let weekRevenue = 0;
-    
+
     // Sum up revenue from appointments this week
     this.calendarDays.forEach(day => {
       const dayDate = new Date(day.date);
@@ -602,7 +602,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
         });
       }
     });
-    
+
     return weekRevenue;
   }
 
@@ -772,11 +772,11 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
   getTopServices(): { name: string; count: number; revenue: number; percentage: number; color: string }[] {
     // Group bookings by service
     const serviceMap = new Map<string, { count: number; revenue: number }>();
-    
+
     this.allBookings.forEach(booking => {
       const serviceName = booking.serviceName || 'Other Service';
       const revenue = this.estimateBookingRevenue(booking);
-      
+
       if (serviceMap.has(serviceName)) {
         const existing = serviceMap.get(serviceName)!;
         existing.count++;
@@ -801,7 +801,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
     // Calculate percentages
     const maxRevenue = services.length > 0 ? services[0].revenue : 1;
     const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
-    
+
     services.forEach((service, index) => {
       service.percentage = Math.round((service.revenue / maxRevenue) * 100);
       service.color = colors[index] || '#6b7280';
@@ -855,7 +855,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
    */
   getPeakHoursInsight(): string {
     const hours = this.getPeakHours();
-    const peakHour = hours.reduce((prev, current) => 
+    const peakHour = hours.reduce((prev, current) =>
       (current.count > prev.count) ? current : prev
     );
 
@@ -872,7 +872,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
   getWeeklyTrends(): { label: string; count: number; percentage: number; isWeekend: boolean; isToday: boolean; dayIndex: number }[] {
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const today = new Date().getDay();
-    
+
     // Get bookings from current week
     const now = new Date();
     const weekStart = new Date(now);
@@ -882,7 +882,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
     const dayCounts = daysOfWeek.map((label, index) => {
       const count = this.allBookings.filter(booking => {
         const bookingDate = new Date(booking.appointmentDate);
-        return bookingDate >= weekStart && 
+        return bookingDate >= weekStart &&
                bookingDate.getDay() === index;
       }).length;
 
@@ -910,7 +910,7 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
    */
   getBusiestDayOfWeek(): string {
     const trends = this.getWeeklyTrends();
-    const busiestDay = trends.reduce((prev, current) => 
+    const busiestDay = trends.reduce((prev, current) =>
       (current.count > prev.count) ? current : prev
     );
 
@@ -927,5 +927,509 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
   getTotalWeekBookings(): number {
     const trends = this.getWeeklyTrends();
     return trends.reduce((sum, day) => sum + day.count, 0);
+  }
+
+  /**
+   * Export comprehensive workshop dashboard report as PDF
+   */
+  exportToPDF(): void {
+    const today = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    // Get data for the report
+    const topServices = this.getTopServices();
+    const peakHours = this.getPeakHours();
+    const weeklyTrends = this.getWeeklyTrends();
+    const completedJobsCount = this.getCompletedJobsCount();
+    const completionRate = this.getCompletionRate();
+    const customerSatisfaction = this.getCustomerSatisfaction();
+
+    // Build top services rows
+    const topServicesRows = topServices
+      .map(
+        (service) => `
+      <tr>
+        <td>${service.name}</td>
+        <td class="amount">${service.revenue.toLocaleString()} EGP</td>
+        <td>${service.count}</td>
+        <td>
+          <div class="progress-bar-container">
+            <div class="progress-bar" style="width: ${service.percentage}%; background-color: ${service.color}"></div>
+            <span class="progress-label">${service.percentage}%</span>
+          </div>
+        </td>
+      </tr>
+    `
+      )
+      .join('');
+
+    // Build peak hours chart
+    const peakHoursChart = peakHours
+      .map(
+        (hour) => `
+      <div class="chart-bar-item">
+        <div class="chart-bar-label">${hour.label}</div>
+        <div class="chart-bar-container">
+          <div class="chart-bar" style="width: ${hour.percentage}%">
+            <span class="chart-bar-value">${hour.count}</span>
+          </div>
+        </div>
+      </div>
+    `
+      )
+      .join('');
+
+    // Build weekly trends chart
+    const weeklyTrendsChart = weeklyTrends
+      .map(
+        (day) => `
+      <div class="chart-bar-item ${day.isWeekend ? 'weekend' : ''} ${day.isToday ? 'today' : ''}">
+        <div class="chart-bar-label">${day.label}</div>
+        <div class="chart-bar-container">
+          <div class="chart-bar" style="height: ${day.percentage}%">
+            <span class="chart-bar-value">${day.count}</span>
+          </div>
+        </div>
+      </div>
+    `
+      )
+      .join('');
+
+    // Build recent bookings table
+    const recentBookingsRows = this.allBookings
+      .slice(0, 10) // Last 10 bookings
+      .map(
+        (booking) => `
+      <tr>
+        <td>${new Date(booking.appointmentDate).toLocaleDateString('en-US')}</td>
+        <td>${booking.customerName || 'N/A'}</td>
+        <td>${booking.serviceName || 'Service'}</td>
+        <td><span class="status-badge ${booking.status.toLowerCase()}">${booking.status}</span></td>
+        <td class="amount">${this.estimateBookingRevenue(booking).toLocaleString()} EGP</td>
+      </tr>
+    `
+      )
+      .join('');
+
+    // Generate PDF-ready HTML
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Workshop Dashboard Report - ${this.shopName}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #1f2937;
+            line-height: 1.5;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #ef4444;
+            margin-bottom: 30px;
+          }
+          .header-left {
+            display: flex;
+            flex-direction: column;
+          }
+          .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+          }
+          .logo { font-size: 28px; font-weight: 700; color: #ef4444; }
+          .report-title { font-size: 14px; color: #6b7280; margin-top: 4px; }
+          .report-date { font-size: 12px; color: #9ca3af; text-align: right; }
+
+          .workshop-header {
+            background: linear-gradient(135deg, #fee2e2 0%, #fef3c7 100%);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+          }
+          .workshop-name { font-size: 24px; font-weight: 700; color: #111827; }
+          .workshop-subtitle { font-size: 14px; color: #6b7280; margin-top: 4px; }
+          .workshop-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+          }
+          .detail-item { }
+          .detail-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; }
+          .detail-value { font-size: 14px; font-weight: 600; color: #374151; }
+
+          .section {
+            margin-bottom: 28px;
+            page-break-inside: avoid;
+          }
+          .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 16px;
+          }
+
+          .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+          }
+          .metric-card {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+          }
+          .metric-card.revenue { border-left: 4px solid #ef4444; }
+          .metric-card.payout { border-left: 4px solid #f59e0b; }
+          .metric-card.rating { border-left: 4px solid #10b981; }
+          .metric-card.jobs { border-left: 4px solid #3b82f6; }
+          .metric-number { font-size: 28px; font-weight: 700; }
+          .metric-card.revenue .metric-number { color: #ef4444; }
+          .metric-card.payout .metric-number { color: #f59e0b; }
+          .metric-card.rating .metric-number { color: #10b981; }
+          .metric-card.jobs .metric-number { color: #3b82f6; }
+          .metric-label { font-size: 11px; color: #6b7280; text-transform: uppercase; margin-top: 4px; }
+
+          .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+          }
+          .analytics-card {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+          }
+          .analytics-value { font-size: 32px; font-weight: 700; color: #111827; }
+          .analytics-label { font-size: 11px; color: #6b7280; text-transform: uppercase; margin-top: 4px; }
+          .analytics-subtitle { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+          }
+          th {
+            background: #f3f4f6;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+          }
+          td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          td.amount { text-align: right; font-weight: 600; color: #111827; }
+          tr:last-child td { border-bottom: none; }
+
+          .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+          }
+          .status-badge.pending { background: #fef3c7; color: #92400e; }
+          .status-badge.accepted { background: #d1fae5; color: #065f46; }
+          .status-badge.progress, .status-badge.inprogress { background: #dbeafe; color: #1e3a8a; }
+          .status-badge.completed { background: #dcfce7; color: #166534; }
+          .status-badge.rejected, .status-badge.cancelled { background: #fee2e2; color: #991b1b; }
+
+          .progress-bar-container {
+            position: relative;
+            width: 100%;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+          }
+          .progress-bar {
+            height: 100%;
+            background: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            transition: width 0.3s ease;
+          }
+          .progress-label {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+            mix-blend-mode: difference;
+          }
+
+          .chart-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+          }
+          .chart-bar-label {
+            min-width: 80px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+          }
+          .chart-bar-container {
+            flex: 1;
+            height: 32px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+          }
+          .chart-bar {
+            height: 100%;
+            background: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+          }
+          .chart-bar-value {
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+          }
+
+          .weekly-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: 12px;
+            height: 180px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 20px;
+          }
+          .weekly-chart .chart-bar-item {
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            margin-bottom: 0;
+          }
+          .weekly-chart .chart-bar-container {
+            width: 100%;
+            height: 140px;
+            background: #e5e7eb;
+            display: flex;
+            align-items: flex-end;
+          }
+          .weekly-chart .chart-bar {
+            width: 100%;
+            background: #3b82f6;
+            justify-content: center;
+            padding: 4px;
+          }
+          .weekly-chart .chart-bar-item.weekend .chart-bar { background: #f59e0b; }
+          .weekly-chart .chart-bar-item.today .chart-bar { background: #ef4444; }
+          .weekly-chart .chart-bar-label {
+            margin-top: 8px;
+            text-align: center;
+          }
+
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 11px;
+          }
+
+          .no-data { color: #9ca3af; font-style: italic; padding: 20px; text-align: center; }
+
+          @media print {
+            body { padding: 20px; }
+            .section { page-break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="header-left">
+            <div class="logo">KORIEK</div>
+            <div class="report-title">Workshop Dashboard Report</div>
+          </div>
+          <div class="header-right">
+            <div class="report-date">Generated: ${today}</div>
+          </div>
+        </div>
+
+        <div class="workshop-header">
+          <div class="workshop-name">${this.shopName}</div>
+          <div class="workshop-subtitle">Performance Overview & Analytics</div>
+          <div class="workshop-details">
+            <div class="detail-item">
+              <div class="detail-label">Shop Status</div>
+              <div class="detail-value">${this.isShopOpen ? 'Open' : 'Closed'}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Total Bookings</div>
+              <div class="detail-value">${this.allBookings.length}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Report Date</div>
+              <div class="detail-value">${today}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Key Performance Metrics</div>
+          <div class="metrics-grid">
+            <div class="metric-card revenue">
+              <div class="metric-number">${this.formatCurrency(this.metrics.monthlyRevenue)}</div>
+              <div class="metric-label">Monthly Revenue</div>
+            </div>
+            <div class="metric-card payout">
+              <div class="metric-number">${this.formatCurrency(this.metrics.pendingPayouts)}</div>
+              <div class="metric-label">Pending Payouts</div>
+            </div>
+            <div class="metric-card rating">
+              <div class="metric-number">${this.formatRating(this.metrics.shopRating)}/5.0</div>
+              <div class="metric-label">Shop Rating</div>
+            </div>
+            <div class="metric-card jobs">
+              <div class="metric-number">${this.metrics.activeJobs}</div>
+              <div class="metric-label">Active Jobs</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Business Analytics</div>
+          <div class="analytics-grid">
+            <div class="analytics-card">
+              <div class="analytics-value">${completedJobsCount}</div>
+              <div class="analytics-label">Completed Jobs</div>
+              <div class="analytics-subtitle">${completionRate}% completion rate</div>
+            </div>
+            <div class="analytics-card">
+              <div class="analytics-value">${customerSatisfaction}%</div>
+              <div class="analytics-label">Customer Satisfaction</div>
+              <div class="analytics-subtitle">Based on ${this.metrics.totalReviews} reviews</div>
+            </div>
+            <div class="analytics-card">
+              <div class="analytics-value">${this.metrics.newBookingRequests}</div>
+              <div class="analytics-label">New Requests</div>
+              <div class="analytics-subtitle">Pending approval</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Top Services by Revenue</div>
+          ${
+            topServices.length > 0
+              ? `
+          <table>
+            <thead>
+              <tr>
+                <th>Service Name</th>
+                <th style="text-align: right;">Revenue</th>
+                <th>Bookings</th>
+                <th style="width: 200px;">Performance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topServicesRows}
+            </tbody>
+          </table>
+          `
+              : '<div class="no-data">No service data available</div>'
+          }
+        </div>
+
+        <div class="section">
+          <div class="section-title">Peak Hours Performance</div>
+          ${
+            peakHours.length > 0
+              ? `<div>${peakHoursChart}</div>`
+              : '<div class="no-data">No booking time data available</div>'
+          }
+        </div>
+
+        <div class="section">
+          <div class="section-title">Weekly Booking Trends</div>
+          ${
+            weeklyTrends.length > 0
+              ? `<div class="weekly-chart">${weeklyTrendsChart}</div>`
+              : '<div class="no-data">No weekly trend data available</div>'
+          }
+        </div>
+
+        <div class="section">
+          <div class="section-title">Recent Bookings (Last 10)</div>
+          ${
+            this.allBookings.length > 0
+              ? `
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Status</th>
+                <th style="text-align: right;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${recentBookingsRows}
+            </tbody>
+          </table>
+          `
+              : '<div class="no-data">No booking records found</div>'
+          }
+        </div>
+
+        <div class="footer">
+          <p>This report was automatically generated by KORIEK Workshop Management System.</p>
+          <p>For questions or support, please contact us through the app.</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Open print window
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      // Wait for content to load, then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      };
+    }
   }
 }

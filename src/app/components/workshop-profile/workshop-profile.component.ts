@@ -1539,33 +1539,48 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     let rows = '';
 
-    days.forEach((day) => {
+    days.forEach((day, index) => {
       const hours = this.workingHours[day];
       let status: string;
-      if (!hours || hours.isClosed) {
-        status = '<span class="hours-closed">Closed</span>';
+      const isClosed = !hours || hours.isClosed;
+      
+      if (isClosed) {
+        status = 'Closed';
       } else {
-        status = `<span class="hours-open">${hours.openTime || 'N/A'} - ${
-          hours.closeTime || 'N/A'
-        }</span>`;
+        status = `${hours.openTime || 'N/A'} - ${hours.closeTime || 'N/A'}`;
       }
-      rows += `<tr><td>${day}</td><td>${status}</td></tr>`;
+      
+      const isOpen = !isClosed;
+      const dayNumber = index + 1;
+      
+      rows += `
+        <div class="working-hours-item ${isOpen ? 'open' : 'closed'}">
+          <div class="day-info">
+            <div class="day-name">${day}</div>
+            <div class="day-number">Day ${dayNumber}</div>
+          </div>
+          <div class="hours-content">
+            <div class="hours-time ${isOpen ? 'open-text' : 'closed-text'}">${status}</div>
+          </div>
+          <div class="status-indicator">
+            <span class="status-dot ${isOpen ? 'open' : 'closed'}"></span>
+          </div>
+        </div>
+      `;
     });
 
     return `
     <div class="section">
-      <div class="section-title">Working Hours</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Day</th>
-            <th>Hours</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
+      <div class="working-hours-header">
+        <div class="working-hours-title-wrapper">
+          <h3 class="working-hours-title">Working Hours</h3>
+          <p class="working-hours-subtitle">7 days service availability</p>
+        </div>
+        <div class="working-hours-badge">Open Today</div>
+      </div>
+      <div class="working-hours-grid">
+        ${rows}
+      </div>
     </div>
     `;
   }

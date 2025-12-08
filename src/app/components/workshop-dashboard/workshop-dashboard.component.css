@@ -82,6 +82,48 @@
   font-weight: 500;
 }
 
+/* Header Actions Container */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Export PDF Button */
+.export-pdf-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3),
+              0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.export-pdf-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4),
+              0 4px 8px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.export-pdf-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3),
+              0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.export-pdf-btn svg {
+  flex-shrink: 0;
+}
+
 /* Shop Status Toggle */
 .shop-status {
   display: flex;
@@ -3435,7 +3477,7 @@
   .analytics-two-column {
     grid-template-columns: 1fr;
   }
-  
+
   .analytics-right-column {
     margin-top: 0;
   }
@@ -3457,20 +3499,20 @@
   .performance-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .time-analytics-card {
     padding: 16px;
   }
-  
+
   .peak-hour-bar {
     grid-template-columns: 60px 1fr 35px;
     gap: 8px;
   }
-  
+
   .weekly-chart {
     height: 150px;
   }
-  
+
   .weekly-bar-container {
     height: 110px;
   }
@@ -3874,16 +3916,16 @@
   .neo-action-card {
     padding: 16px;
   }
-  
+
   .neo-action-icon {
     width: 46px;
     height: 46px;
   }
-  
+
   .neo-action-label {
     font-size: 14px;
   }
-  
+
   .neo-action-desc {
     font-size: 11px;
   }
