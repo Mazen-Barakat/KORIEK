@@ -61,12 +61,65 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   private readonly maxLoadRetries = 3;
 
   selectedTab: JobStatus = 'new';
-  viewMode: 'kanban' | 'list' = 'kanban';
+  private _viewMode: 'kanban' | 'list' = 'kanban';
+
+  get viewMode(): 'kanban' | 'list' {
+    return this._viewMode;
+  }
+
+  set viewMode(value: 'kanban' | 'list') {
+    this._viewMode = value;
+    // Persist to localStorage
+    try {
+      localStorage.setItem('job-board-view-mode', value);
+    } catch (e) {
+      console.error('Error saving view mode to localStorage:', e);
+    }
+  }
+
+  // List density mode
+  private _listDensity: 'comfortable' | 'compact' = 'comfortable';
+
+  get listDensity(): 'comfortable' | 'compact' {
+    return this._listDensity;
+  }
+
+  set listDensity(value: 'comfortable' | 'compact') {
+    this._listDensity = value;
+    // Persist to localStorage
+    try {
+      localStorage.setItem('job-board-list-density', value);
+    } catch (e) {
+      console.error('Error saving list density to localStorage:', e);
+    }
+  }
+
+  // Card density mode for kanban view
+  private _cardDensity: 'comfortable' | 'compact' | 'dense' = 'comfortable';
+
+  get cardDensity(): 'comfortable' | 'compact' | 'dense' {
+    return this._cardDensity;
+  }
+
+  set cardDensity(value: 'comfortable' | 'compact' | 'dense') {
+    this._cardDensity = value;
+    // Persist to localStorage
+    try {
+      localStorage.setItem('job-board-card-density', value);
+    } catch (e) {
+      console.error('Error saving card density to localStorage:', e);
+    }
+  }
 
   // Real bookings from API
   workshopProfileId: number = 0;
   realBookings: RealBooking[] = [];
   isLoadingRealBookings = false;
+  isRefreshing = false;
+  lastUpdated: Date | null = null;
+  autoRefreshEnabled = false;
+  autoRefreshInterval = 30000; // 30 seconds default
+  private autoRefreshTimer: any = null;
 
   // Categorized real bookings by status
   pendingBookings: RealBooking[] = [];      // new requests (Pending)
@@ -107,6 +160,47 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Load saved view mode from localStorage
+    try {
+      const savedViewMode = localStorage.getItem('job-board-view-mode');
+      if (savedViewMode === 'kanban' || savedViewMode === 'list') {
+        this._viewMode = savedViewMode;
+      }
+    } catch (e) {
+      console.error('Error loading view mode from localStorage:', e);
+    }
+
+    // Load saved list density from localStorage
+    try {
+      const savedListDensity = localStorage.getItem('job-board-list-density');
+      if (savedListDensity === 'comfortable' || savedListDensity === 'compact') {
+        this._listDensity = savedListDensity;
+      }
+    } catch (e) {
+      console.error('Error loading list density from localStorage:', e);
+    }
+
+    // Load card density preference
+    try {
+      const savedCardDensity = localStorage.getItem('job-board-card-density');
+      if (savedCardDensity === 'comfortable' || savedCardDensity === 'compact' || savedCardDensity === 'dense') {
+        this._cardDensity = savedCardDensity;
+      }
+    } catch (e) {
+      console.error('Error loading card density from localStorage:', e);
+    }
+
+    // Load auto-refresh preference
+    try {
+      const savedAutoRefresh = localStorage.getItem('job-board-auto-refresh');
+      if (savedAutoRefresh === 'true') {
+        this.autoRefreshEnabled = true;
+        this.startAutoRefresh();
+      }
+    } catch (e) {
+      console.error('Error loading auto-refresh preference:', e);
+    }
+
     // Check for tab query param
     this.route.queryParams.subscribe(params => {
       if (params['tab']) {
@@ -125,6 +219,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopAutoRefresh(); // Clean up auto-refresh timer
     this.destroy$.next();
     this.destroy$.complete();
     window.removeEventListener('booking:status-changed', this.onExternalBookingStatusChanged as EventListener);
@@ -246,6 +341,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           this.realBookings = enrichedBookings;
           this.categorizeRealBookings();
           this.isLoadingRealBookings = false;
+          this.lastUpdated = new Date(); // Update timestamp on successful load
           console.log('Bookings loaded successfully:', enrichedBookings.length);
           console.log('Categorized - Pending:', this.pendingBookings.length,
                       'Accepted:', this.acceptedBookings.length,
@@ -659,6 +755,81 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Timeline interactivity - scroll to column
+  scrollToColumn(columnId: string): void {
+    const element = document.getElementById(columnId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+
+      // Add temporary highlight effect
+      element.classList.add('column-highlighted');
+      setTimeout(() => {
+        element.classList.remove('column-highlighted');
+      }, 1500);
+    }
+  }
+
+  refreshBookings(): void {
+    if (this.isRefreshing) return;
+
+    this.isRefreshing = true;
+    this.loadRealBookings();
+    this.lastUpdated = new Date();
+
+    // Reset refreshing state after a minimum of 500ms for UX feedback
+    setTimeout(() => {
+      this.isRefreshing = false;
+    }, 500);
+  }
+
+  getLastUpdatedText(): string {
+    if (!this.lastUpdated) return '';
+
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - this.lastUpdated.getTime()) / 1000);
+
+    if (diff < 10) return 'Just now';
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return 'Over a day ago';
+  }
+
+  toggleAutoRefresh(): void {
+    this.autoRefreshEnabled = !this.autoRefreshEnabled;
+
+    if (this.autoRefreshEnabled) {
+      this.startAutoRefresh();
+    } else {
+      this.stopAutoRefresh();
+    }
+
+    // Persist preference
+    try {
+      localStorage.setItem('job-board-auto-refresh', this.autoRefreshEnabled.toString());
+    } catch (e) {
+      console.error('Error saving auto-refresh preference:', e);
+    }
+  }
+
+  private startAutoRefresh(): void {
+    this.stopAutoRefresh(); // Clear any existing timer
+    this.autoRefreshTimer = setInterval(() => {
+      this.refreshBookings();
+    }, this.autoRefreshInterval);
+  }
+
+  private stopAutoRefresh(): void {
+    if (this.autoRefreshTimer) {
+      clearInterval(this.autoRefreshTimer);
+      this.autoRefreshTimer = null;
+    }
+  }
+
   getStageProgress(stage: string): number {
     const stages = ['received', 'diagnosing', 'repairing', 'testing', 'done'];
     const index = stages.indexOf(stage);
@@ -700,5 +871,474 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   // TrackBy function for better performance with large lists
   trackByBookingId(index: number, booking: RealBooking): number {
     return booking.id;
+  }
+
+  // Export all bookings to PDF
+  exportToPDF(): void {
+    const today = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    // Calculate statistics
+    const totalBookings = this.realBookings.length;
+    const pendingCount = this.pendingBookings.length;
+    const acceptedCount = this.acceptedBookings.length;
+    const inProgressCount = this.inProgressBookings.length;
+    const readyCount = this.readyForPickupBookings.length;
+    const completedCount = this.completedBookings.length;
+
+    // Helper to format date
+    const formatDate = (date: Date) => {
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    };
+
+    // Helper to get urgency badge HTML
+    const getUrgencyBadge = (urgency: string) => {
+      const urgencyLower = urgency.toLowerCase();
+      const urgencyMap: { [key: string]: string } = {
+        urgent: 'Urgent',
+        high: 'High',
+        normal: 'Normal',
+        low: 'Low',
+      };
+      const label = urgencyMap[urgencyLower] || urgency;
+      return `<span class="urgency-badge ${urgencyLower}">${label}</span>`;
+    };
+
+    // Build booking rows for each status
+    const buildBookingRows = (bookings: RealBooking[]) => {
+      if (bookings.length === 0) {
+        return '<tr><td colspan="6" class="no-data">No bookings in this category</td></tr>';
+      }
+      return bookings
+        .map(
+          (booking) => `
+        <tr>
+          <td>#${booking.id}</td>
+          <td>${booking.customerName}</td>
+          <td>${booking.carYear} ${booking.carMake} ${booking.carModel}</td>
+          <td>${booking.serviceName}</td>
+          <td>${formatDate(booking.appointmentDate)}</td>
+          <td>${getUrgencyBadge(booking.urgency)}</td>
+        </tr>
+      `
+        )
+        .join('');
+    };
+
+    // Generate PDF-ready HTML with Apple-inspired design
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Workshop Bookings Report - KORIEK</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: #1d1d1f;
+            line-height: 1.47059;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+          }
+
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 28px;
+            border-bottom: 2px solid #ef4444;
+            margin-bottom: 36px;
+          }
+          .header-left { display: flex; flex-direction: column; gap: 6px; }
+          .logo {
+            font-size: 36px;
+            font-weight: 700;
+            color: #ef4444;
+            letter-spacing: -0.03em;
+          }
+          .report-title {
+            font-size: 17px;
+            color: #6e6e73;
+            font-weight: 500;
+            letter-spacing: -0.015em;
+          }
+          .header-right { text-align: right; }
+          .report-date {
+            font-size: 14px;
+            color: #86868b;
+            font-weight: 400;
+          }
+
+          .summary-section {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #fca5a5 100%);
+            border-radius: 18px;
+            padding: 32px;
+            margin-bottom: 40px;
+          }
+          .summary-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+          }
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+          }
+          .summary-card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px 18px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+          }
+          .summary-card.total { border-left: 4px solid #ef4444; }
+          .summary-card.pending { border-left: 4px solid #f87171; }
+          .summary-card.accepted { border-left: 4px solid #dc2626; }
+          .summary-card.in-progress { border-left: 4px solid #b91c1c; }
+          .summary-card.ready { border-left: 4px solid #991b1b; }
+          .summary-card.completed { border-left: 4px solid #7f1d1d; }
+          .summary-number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1;
+            letter-spacing: -0.03em;
+          }
+          .summary-card.total .summary-number { color: #ef4444; }
+          .summary-card.pending .summary-number { color: #f87171; }
+          .summary-card.accepted .summary-number { color: #dc2626; }
+          .summary-card.in-progress .summary-number { color: #b91c1c; }
+          .summary-card.ready .summary-number { color: #991b1b; }
+          .summary-card.completed .summary-number { color: #7f1d1d; }
+          .summary-label {
+            font-size: 11px;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+          }
+
+          .section {
+            margin-bottom: 48px;
+            page-break-inside: avoid;
+          }
+          .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            padding-bottom: 14px;
+            border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.02em;
+          }
+          .section-count {
+            font-size: 15px;
+            color: #86868b;
+            font-weight: 500;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+          }
+          th {
+            background: #f5f5f7;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #1d1d1f;
+            border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+          }
+          td {
+            padding: 16px;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+            color: #1d1d1f;
+            font-size: 14px;
+          }
+          tr:last-child td { border-bottom: none; }
+          tr:hover { background: #fafafa; }
+
+          .urgency-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+          }
+          .urgency-badge.urgent { background: #ff3b30; color: white; }
+          .urgency-badge.high { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 0.5px solid rgba(239, 68, 68, 0.2); }
+          .urgency-badge.normal { background: rgba(0, 122, 255, 0.1); color: #007aff; border: 0.5px solid rgba(0, 122, 255, 0.2); }
+          .urgency-badge.low { background: rgba(142, 142, 147, 0.1); color: #8e8e93; border: 0.5px solid rgba(142, 142, 147, 0.2); }
+
+          .no-data {
+            color: #86868b;
+            font-style: italic;
+            padding: 28px;
+            text-align: center;
+            font-size: 14px;
+          }
+
+          .footer {
+            margin-top: 56px;
+            padding-top: 28px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            text-align: center;
+            color: #86868b;
+            font-size: 13px;
+          }
+          .footer-brand {
+            color: #ef4444;
+            font-weight: 600;
+          }
+
+          @media print {
+            body { padding: 20px; }
+            .section { page-break-inside: avoid; }
+            tr { page-break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="header-left">
+            <div class="logo">KORIEK</div>
+            <div class="report-title">Workshop Bookings Report</div>
+          </div>
+          <div class="header-right">
+            <div class="report-date">Generated: ${today}</div>
+          </div>
+        </div>
+
+        <div class="summary-section">
+          <div class="summary-title">Booking Overview</div>
+          <div class="summary-grid">
+            <div class="summary-card total">
+              <div class="summary-number">${totalBookings}</div>
+              <div class="summary-label">Total</div>
+            </div>
+            <div class="summary-card pending">
+              <div class="summary-number">${pendingCount}</div>
+              <div class="summary-label">Pending</div>
+            </div>
+            <div class="summary-card accepted">
+              <div class="summary-number">${acceptedCount}</div>
+              <div class="summary-label">Accepted</div>
+            </div>
+            <div class="summary-card in-progress">
+              <div class="summary-number">${inProgressCount}</div>
+              <div class="summary-label">In Progress</div>
+            </div>
+            <div class="summary-card ready">
+              <div class="summary-number">${readyCount}</div>
+              <div class="summary-label">Ready</div>
+            </div>
+            <div class="summary-card completed">
+              <div class="summary-number">${completedCount}</div>
+              <div class="summary-label">Completed</div>
+            </div>
+          </div>
+        </div>
+
+        ${
+          pendingCount > 0
+            ? `
+        <div class="section">
+          <div class="section-title">
+            Pending Bookings
+            <span class="section-count">(${pendingCount})</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
+                <th>Service</th>
+                <th>Appointment</th>
+                <th>Urgency</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${buildBookingRows(this.pendingBookings)}
+            </tbody>
+          </table>
+        </div>
+        `
+            : ''
+        }
+
+        ${
+          acceptedCount > 0
+            ? `
+        <div class="section">
+          <div class="section-title">
+            Accepted Bookings
+            <span class="section-count">(${acceptedCount})</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
+                <th>Service</th>
+                <th>Appointment</th>
+                <th>Urgency</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${buildBookingRows(this.acceptedBookings)}
+            </tbody>
+          </table>
+        </div>
+        `
+            : ''
+        }
+
+        ${
+          inProgressCount > 0
+            ? `
+        <div class="section">
+          <div class="section-title">
+            In Progress
+            <span class="section-count">(${inProgressCount})</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
+                <th>Service</th>
+                <th>Appointment</th>
+                <th>Urgency</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${buildBookingRows(this.inProgressBookings)}
+            </tbody>
+          </table>
+        </div>
+        `
+            : ''
+        }
+
+        ${
+          readyCount > 0
+            ? `
+        <div class="section">
+          <div class="section-title">
+            Ready for Pickup
+            <span class="section-count">(${readyCount})</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
+                <th>Service</th>
+                <th>Appointment</th>
+                <th>Urgency</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${buildBookingRows(this.readyForPickupBookings)}
+            </tbody>
+          </table>
+        </div>
+        `
+            : ''
+        }
+
+        ${
+          completedCount > 0
+            ? `
+        <div class="section">
+          <div class="section-title">
+            Completed Bookings
+            <span class="section-count">(${completedCount})</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
+                <th>Service</th>
+                <th>Appointment</th>
+                <th>Urgency</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${buildBookingRows(this.completedBookings)}
+            </tbody>
+          </table>
+        </div>
+        `
+            : ''
+        }
+
+        ${
+          totalBookings === 0
+            ? `
+        <div class="section">
+          <div class="no-data" style="padding: 80px; font-size: 16px;">
+            No bookings available to export.
+          </div>
+        </div>
+        `
+            : ''
+        }
+
+        <div class="footer">
+          <p>This report was generated by <span class="footer-brand">KORIEK</span> Workshop Management System</p>
+          <p>© ${new Date().getFullYear()} All rights reserved</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Open print window
+    const printWindow = window.open('', '_blank', 'width=1200,height=800');
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      // Wait for content to load, then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 300);
+      };
+    } else {
+      this.toastService.error(
+        'Export Failed',
+        'Failed to open print window. Please check your browser settings.'
+      );
+    }
   }
 }
