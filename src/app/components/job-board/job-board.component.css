@@ -12,6 +12,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -896,4 +897,251 @@
     width: 100%;
     justify-content: center;
   }
+
+  /* Mobile Tooltip Styles */
+  .owner-tooltip {
+    position: fixed !important;
+    left: 50% !important;
+    top: auto !important;
+    bottom: 20px !important;
+    transform: translateX(-50%) !important;
+    max-width: calc(100vw - 2rem);
+    width: auto;
+    animation: tooltipSlideUp 0.3s ease-out;
+  }
+
+  @keyframes tooltipSlideUp {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  .tooltip-content {
+    min-width: 280px;
+    max-width: calc(100vw - 2rem);
+    padding: 1.25rem;
+    border-radius: 14px;
+  }
+
+  /* Mobile: No arrow needed for bottom tooltip */
+  .tooltip-content::after {
+    display: none;
+  }
+
+  .tooltip-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+    padding-bottom: 0.875rem;
+  }
+
+  .tooltip-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+  }
+
+  .tooltip-header-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .tooltip-name {
+    font-size: 1rem;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .tooltip-label {
+    font-size: 0.625rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .tooltip-details {
+    gap: 0.625rem;
+  }
+
+  .tooltip-detail-item {
+    padding: 0.625rem;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .tooltip-detail-item svg {
+    width: 14px;
+    height: 14px;
+    margin-top: 0;
+  }
+
+  .tooltip-detail-item span {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+}
+
+/* Car Owner Profile Tooltip */
+.customer-name-hoverable {
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.customer-name-hoverable:hover {
+  color: var(--brand-primary);
+}
+
+.owner-tooltip {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: auto;
+  animation: tooltipSlideIn 0.2s ease-out;
+  transform-origin: left center;
+}
+
+@keyframes tooltipSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.tooltip-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  min-width: 320px;
+  max-width: 400px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f3f4f6;
+  margin-bottom: 1rem;
+}
+
+.tooltip-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.tooltip-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tooltip-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tooltip-label {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tooltip-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.tooltip-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.tooltip-detail-item:hover {
+  background: #f3f4f6;
+  border-color: #ef4444;
+}
+
+.tooltip-detail-item svg {
+  stroke: #ef4444;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tooltip-detail-item span {
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.tooltip-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 1rem;
+}
+
+.loading-spinner-small {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #ef4444;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.tooltip-loading p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
+}
+
+.tooltip-error {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  text-align: center;
+  margin: 1rem 0;
+  font-weight: 500;
 }
