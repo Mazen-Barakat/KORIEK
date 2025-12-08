@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -32,6 +32,7 @@ export interface RealBooking {
   serviceName: string;
   urgency: string;
   createdAt?: Date;
+  fullProfile?: CarOwnerProfile; // Cache full profile to avoid re-loading
 }
 
 // Interface for car owner profile from API
@@ -39,6 +40,7 @@ interface CarOwnerProfile {
   id?: number;
   firstName?: string;
   lastName?: string;
+  fullName?: string;
   phoneNumber?: string;
   profileImageUrl?: string;
   country?: string;
@@ -148,6 +150,12 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   // Accordion state - track which booking cards are expanded
   expandedBookings: Set<number> = new Set();
 
+  // Tooltip state for car owner profile
+  hoveredBookingId: number | null = null;
+  tooltipProfile: CarOwnerProfile | null = null;
+  tooltipLoading: boolean = false;
+  tooltipPosition: { x: number; y: number } = { x: 0, y: 0 };
+
   constructor(
     private bookingService: BookingService,
     private workshopProfileService: WorkshopProfileService,
@@ -241,6 +249,18 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Handle clicks anywhere on the document to close tooltip
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    // Only close if tooltip is open and click is outside tooltip and customer name
+    if (this.hoveredBookingId !== null) {
+      if (!target.closest('.owner-tooltip') && !target.closest('.customer-name-hoverable')) {
+        this.hideOwnerTooltip();
+      }
+    }
+  }
+
   private loadWorkshopProfileAndBookings(): void {
     this.isLoadingRealBookings = true;
     this.workshopProfileService.getMyWorkshopProfile()
@@ -311,7 +331,8 @@ export class JobBoardComponent implements OnInit, OnDestroy {
                   carLicensePlate: carData?.licensePlate || '',
                   serviceName: serviceName || 'Service',
                   urgency: this.determineUrgency(new Date(booking.appointmentDate)),
-                  createdAt: booking.createdAt ? new Date(booking.createdAt) : undefined
+                  createdAt: booking.createdAt ? new Date(booking.createdAt) : undefined,
+                  fullProfile: carOwner || undefined // Store the full profile
                 } as RealBooking;
               }),
               catchError(() => of({
@@ -871,6 +892,87 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   // TrackBy function for better performance with large lists
   trackByBookingId(index: number, booking: RealBooking): number {
     return booking.id;
+  }
+
+  // Tooltip methods for car owner profile - now click-based
+  showOwnerTooltip(bookingId: number, event: Event): void {
+    event.stopPropagation();
+    
+    // Toggle tooltip - if already showing this booking, hide it
+    if (this.hoveredBookingId === bookingId) {
+      this.hideOwnerTooltip();
+      return;
+    }
+    
+    // Get the position of the clicked element
+    const target = event.target as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    
+    // Position tooltip to the right of the name, or left if not enough space
+    const tooltipWidth = 350; // Approximate tooltip width
+    const viewportWidth = window.innerWidth;
+    const spaceOnRight = viewportWidth - rect.right;
+    
+    if (spaceOnRight > tooltipWidth + 20) {
+      // Position to the right
+      this.tooltipPosition = {
+        x: rect.right + 10,
+        y: rect.top
+      };
+    } else {
+      // Position to the left
+      this.tooltipPosition = {
+        x: rect.left - tooltipWidth - 10,
+        y: rect.top
+      };
+    }
+    
+    this.hoveredBookingId = bookingId;
+    this.tooltipLoading = true;
+    this.tooltipProfile = null;
+
+    // Check if we already have the profile cached in the booking object
+    const booking = this.realBookings.find(b => b.id === bookingId);
+    if (booking && booking.fullProfile) {
+      this.tooltipProfile = booking.fullProfile;
+      this.tooltipLoading = false;
+      return;
+    }
+
+    // Fallback: Fetch car owner profile from API if not cached
+    this.getCarOwnerByBookingId(bookingId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (profile) => {
+          if (this.hoveredBookingId === bookingId) {
+            this.tooltipProfile = profile;
+            this.tooltipLoading = false;
+            this.cdr.detectChanges();
+            
+            // Updates cache for next time
+            if (booking && profile) {
+              booking.fullProfile = profile;
+            }
+          }
+        },
+        error: (err) => {
+          console.error('Error loading car owner profile:', err);
+          this.tooltipLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  hideOwnerTooltip(): void {
+    this.hoveredBookingId = null;
+    this.tooltipProfile = null;
+    this.tooltipLoading = false;
+  }
+
+  getFullAddress(profile: CarOwnerProfile | null): string {
+    if (!profile) return '';
+    const parts = [profile.city, profile.governorate, profile.country].filter(p => p && p.trim());
+    return parts.join(', ') || 'Address not available';
   }
 
   // Export all bookings to PDF

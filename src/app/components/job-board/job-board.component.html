@@ -195,7 +195,10 @@
                    [alt]="booking.customerName"
                    class="customer-avatar">
               <div class="customer-info">
-                <span class="customer-name">{{ booking.customerName }}</span>
+                <span class="customer-name customer-name-hoverable"
+                      (click)="showOwnerTooltip(booking.id, $event)">
+                  {{ booking.customerName }}
+                </span>
                 <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
               </div>
             </div>
@@ -292,7 +295,7 @@
                    [alt]="booking.customerName"
                    class="customer-avatar">
               <div class="customer-info">
-                <span class="customer-name">
+                <span class="customer-name customer-name-hoverable" (click)="showOwnerTooltip(booking.id, $event)">
                   <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
                   {{ booking.customerName }}
                 </span>
@@ -381,8 +384,8 @@
                    [alt]="booking.customerName"
                    class="customer-avatar">
               <div class="customer-info">
-                <span class="customer-name">
-                  <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
+                <span class="customer-name customer-name-hoverable"
+                      (click)="showOwnerTooltip(booking.id, $event)">
                   {{ booking.customerName }}
                 </span>
                 <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
@@ -478,7 +481,10 @@
                 {{ booking.customerName.charAt(0) || 'C' }}
               </div>
               <div class="customer-info">
-                <span class="customer-name">{{ booking.customerName }}</span>
+                <span class="customer-name customer-name-hoverable"
+                      (click)="showOwnerTooltip(booking.id, $event)">
+                  {{ booking.customerName }}
+                </span>
                 <span class="job-id">#{{ booking.id }}</span>
               </div>
             </div>
@@ -561,7 +567,10 @@
                 {{ booking.customerName.charAt(0) || 'C' }}
               </div>
               <div class="customer-info">
-                <span class="customer-name">{{ booking.customerName }}</span>
+                <span class="customer-name customer-name-hoverable"
+                      (click)="showOwnerTooltip(booking.id, $event)">
+                  {{ booking.customerName }}
+                </span>
                 <span class="job-id">#{{ booking.id }}</span>
               </div>
             </div>
@@ -600,6 +609,51 @@
           <p>No completed bookings</p>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Car Owner Profile Tooltip -->
+  <div class="owner-tooltip" *ngIf="hoveredBookingId !== null" 
+       [style.left.px]="tooltipPosition.x"
+       [style.top.px]="tooltipPosition.y">
+    <div class="tooltip-content" *ngIf="tooltipLoading">
+      <div class="tooltip-loading">
+        <div class="loading-spinner-small"></div>
+        <p>Loading profile...</p>
+      </div>
+    </div>
+    
+    <div class="tooltip-content" *ngIf="!tooltipLoading && tooltipProfile">
+      <div class="tooltip-header">
+        <img [src]="tooltipProfile.profileImageUrl ? 'https://localhost:44316' + tooltipProfile.profileImageUrl : 'https://i.pravatar.cc/150?img=' + (hoveredBookingId % 70)" 
+             [alt]="tooltipProfile.fullName || tooltipProfile.firstName"
+             class="tooltip-avatar">
+        <div class="tooltip-header-info">
+          <h4 class="tooltip-name">{{ tooltipProfile.fullName || (tooltipProfile.firstName + ' ' + tooltipProfile.lastName) }}</h4>
+          <span class="tooltip-label">Car Owner</span>
+        </div>
+      </div>
+      
+      <div class="tooltip-details">
+        <div class="tooltip-detail-item" *ngIf="tooltipProfile.phoneNumber">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          <span>{{ tooltipProfile.phoneNumber }}</span>
+        </div>
+        
+        <div class="tooltip-detail-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span>{{ getFullAddress(tooltipProfile) }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="tooltip-content" *ngIf="!tooltipLoading && !tooltipProfile">
+      <p class="tooltip-error">Profile not available</p>
     </div>
   </div>
 
