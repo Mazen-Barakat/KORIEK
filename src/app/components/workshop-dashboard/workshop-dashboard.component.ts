@@ -1,11 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BookingService, EnrichedBooking } from '../../services/booking.service';
 import { DashboardMetrics, Job } from '../../models/booking.model';
-import { ActionBadgeComponent } from '../shared/action-badge/action-badge.component';
-import { SectionHeaderComponent } from '../shared/section-header/section-header.component';
 import { BookingCardComponent, BookingCardData } from '../booking-card/booking-card.component';
 import { AuthService } from '../../services/auth.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -37,7 +35,7 @@ interface CalendarDay {
 @Component({
   selector: 'app-workshop-dashboard',
   standalone: true,
-  imports: [CommonModule, NgIf, NgFor, RouterModule, ActionBadgeComponent, SectionHeaderComponent, BookingCardComponent],
+  imports: [CommonModule, NgIf, NgFor, RouterModule, BookingCardComponent],
   templateUrl: './workshop-dashboard.component.html',
   styleUrl: './workshop-dashboard.component.css',
 })
@@ -98,7 +96,8 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private authService: AuthService,
     private notificationService: NotificationService,
-    private workshopProfileService: WorkshopProfileService
+    private workshopProfileService: WorkshopProfileService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -127,10 +126,13 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
 
             // Update shop rating from profile if available
             if (data.rating !== undefined && data.rating !== null) {
-              this.metrics.shopRating = data.rating;
+              this.metrics = { ...this.metrics, shopRating: data.rating };
             } else if (data.Rating !== undefined && data.Rating !== null) {
-              this.metrics.shopRating = data.Rating;
+              this.metrics = { ...this.metrics, shopRating: data.Rating };
             }
+            
+            // Force change detection to render data immediately
+            this.cdr.detectChanges();
 
             this.loadWorkshopBookings();
           } else {
@@ -170,12 +172,15 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
           this.calculateMetricsFromBookings(bookings);
           this.setupCalendar();
           this.isLoadingBookings = false;
+          // Force change detection to render data immediately
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error loading bookings:', err);
           this.allBookings = [];
           this.setupCalendar();
           this.isLoadingBookings = false;
+          this.cdr.detectChanges();
         },
       });
   }
@@ -218,10 +223,10 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
       ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
       : 0;
 
-    // Calculate Active Jobs (in progress or accepted)
+    // Calculate Active Jobs (only in progress - matching Job Board "In Progress" card)
     const activeJobs = bookings.filter(b => {
-      const status = b.status.toLowerCase();
-      return status === 'progress' || status === 'in-progress' || status === 'accepted' || status === 'approved';
+      const status = b.status.toLowerCase().trim();
+      return status === 'inprogress' || status === 'in-progress' || status === 'in progress';
     }).length;
 
     // Calculate New Requests (pending status)
@@ -518,6 +523,18 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
     console.log('Shop status:', this.isShopOpen ? 'Open' : 'Closed');
   }
 
+  /**
+   * Format shop rating to display nicely (max 1 decimal, no trailing zeros)
+   */
+  formatRating(rating: number): string {
+    if (rating === null || rating === undefined) {
+      return '0';
+    }
+    // Round to 1 decimal place and remove trailing zeros
+    const rounded = Math.round(rating * 10) / 10;
+    return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(1);
+  }
+
   navigateTo(route: string): void {
     this.router.navigate([route]);
   }
@@ -558,6 +575,35 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
 
   getChangeClass(change: number): string {
     return change >= 0 ? 'positive' : 'negative';
+  }
+
+  getWeekRevenue(): number {
+    // Calculate revenue from current week's appointments
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // End of week (Saturday)
+    endOfWeek.setHours(23, 59, 59, 999);
+    
+    let weekRevenue = 0;
+    
+    // Sum up revenue from appointments this week
+    this.calendarDays.forEach(day => {
+      const dayDate = new Date(day.date);
+      if (dayDate >= startOfWeek && dayDate <= endOfWeek) {
+        day.appointments.forEach(apt => {
+          if (apt.status === 'Completed' || apt.status === 'Ready for Pickup') {
+            // Estimate revenue per appointment (this should come from actual booking data)
+            weekRevenue += 500; // Placeholder - replace with actual revenue calculation
+          }
+        });
+      }
+    });
+    
+    return weekRevenue;
   }
 
   getTimeOfDay(): string {
@@ -667,13 +713,6 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
       .filter(item => item.count > 0);
   }
 
-  getBusiestDay(): CalendarDay | null {
-    if (this.calendarDays.length === 0) return null;
-    return this.calendarDays.reduce((busiest, day) =>
-      day.appointments.length > busiest.appointments.length ? day : busiest
-    );
-  }
-
   getPendingCount(): number {
     return this.calendarDays.reduce((total, day) => {
       return total + day.appointments.filter(apt =>
@@ -693,5 +732,200 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
     }
 
     return all;
+  }
+
+  // ============================================
+  // ANALYTICS METHODS
+  // ============================================
+
+  /**
+   * Get the count of completed jobs
+   */
+  getCompletedJobsCount(): number {
+    return this.allBookings.filter(b => {
+      const status = b.status.toLowerCase();
+      return status === 'completed' || status === 'paid';
+    }).length;
+  }
+
+  /**
+   * Calculate job completion rate percentage
+   */
+  getCompletionRate(): number {
+    const total = this.allBookings.length;
+    if (total === 0) return 0;
+    const completed = this.getCompletedJobsCount();
+    return Math.round((completed / total) * 100);
+  }
+
+  /**
+   * Calculate customer satisfaction percentage based on ratings
+   */
+  getCustomerSatisfaction(): number {
+    if (this.metrics.shopRating === 0) return 0;
+    return Math.round((this.metrics.shopRating / 5) * 100);
+  }
+
+  /**
+   * Get top services by revenue and booking count
+   */
+  getTopServices(): { name: string; count: number; revenue: number; percentage: number; color: string }[] {
+    // Group bookings by service
+    const serviceMap = new Map<string, { count: number; revenue: number }>();
+    
+    this.allBookings.forEach(booking => {
+      const serviceName = booking.serviceName || 'Other Service';
+      const revenue = this.estimateBookingRevenue(booking);
+      
+      if (serviceMap.has(serviceName)) {
+        const existing = serviceMap.get(serviceName)!;
+        existing.count++;
+        existing.revenue += revenue;
+      } else {
+        serviceMap.set(serviceName, { count: 1, revenue });
+      }
+    });
+
+    // Convert to array and sort by revenue
+    const services = Array.from(serviceMap.entries())
+      .map(([name, data]) => ({
+        name,
+        count: data.count,
+        revenue: data.revenue,
+        percentage: 0,
+        color: ''
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5); // Top 5 services
+
+    // Calculate percentages
+    const maxRevenue = services.length > 0 ? services[0].revenue : 1;
+    const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+    
+    services.forEach((service, index) => {
+      service.percentage = Math.round((service.revenue / maxRevenue) * 100);
+      service.color = colors[index] || '#6b7280';
+    });
+
+    return services;
+  }
+
+  /**
+   * Get peak hours performance from booking data
+   */
+  getPeakHours(): { label: string; count: number; percentage: number; hour: number }[] {
+    // Initialize hours array (6 AM to 10 PM in 2-hour blocks)
+    const hourBlocks = [
+      { start: 6, end: 8, label: '6-8 AM' },
+      { start: 8, end: 10, label: '8-10 AM' },
+      { start: 10, end: 12, label: '10-12 PM' },
+      { start: 12, end: 14, label: '12-2 PM' },
+      { start: 14, end: 16, label: '2-4 PM' },
+      { start: 16, end: 18, label: '4-6 PM' },
+      { start: 18, end: 20, label: '6-8 PM' },
+      { start: 20, end: 22, label: '8-10 PM' }
+    ];
+
+    const hourCounts = hourBlocks.map(block => {
+      const count = this.allBookings.filter(booking => {
+        const bookingDate = new Date(booking.appointmentDate);
+        const hour = bookingDate.getHours();
+        return hour >= block.start && hour < block.end;
+      }).length;
+
+      return {
+        label: block.label,
+        count,
+        percentage: 0,
+        hour: block.start
+      };
+    });
+
+    // Calculate percentages
+    const maxCount = Math.max(...hourCounts.map(h => h.count), 1);
+    hourCounts.forEach(hour => {
+      hour.percentage = Math.round((hour.count / maxCount) * 100);
+    });
+
+    return hourCounts;
+  }
+
+  /**
+   * Get insight text for peak hours
+   */
+  getPeakHoursInsight(): string {
+    const hours = this.getPeakHours();
+    const peakHour = hours.reduce((prev, current) => 
+      (current.count > prev.count) ? current : prev
+    );
+
+    if (peakHour.count === 0) {
+      return 'No bookings data available yet';
+    }
+
+    return `Peak time is ${peakHour.label} with ${peakHour.count} booking${peakHour.count !== 1 ? 's' : ''}`;
+  }
+
+  /**
+   * Get weekly booking trends
+   */
+  getWeeklyTrends(): { label: string; count: number; percentage: number; isWeekend: boolean; isToday: boolean; dayIndex: number }[] {
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = new Date().getDay();
+    
+    // Get bookings from current week
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+    weekStart.setHours(0, 0, 0, 0);
+
+    const dayCounts = daysOfWeek.map((label, index) => {
+      const count = this.allBookings.filter(booking => {
+        const bookingDate = new Date(booking.appointmentDate);
+        return bookingDate >= weekStart && 
+               bookingDate.getDay() === index;
+      }).length;
+
+      return {
+        label,
+        count,
+        percentage: 0,
+        isWeekend: index === 0 || index === 6,
+        isToday: index === today,
+        dayIndex: index
+      };
+    });
+
+    // Calculate percentages
+    const maxCount = Math.max(...dayCounts.map(d => d.count), 1);
+    dayCounts.forEach(day => {
+      day.percentage = Math.round((day.count / maxCount) * 100);
+    });
+
+    return dayCounts;
+  }
+
+  /**
+   * Get the busiest day of the week
+   */
+  getBusiestDayOfWeek(): string {
+    const trends = this.getWeeklyTrends();
+    const busiestDay = trends.reduce((prev, current) => 
+      (current.count > prev.count) ? current : prev
+    );
+
+    if (busiestDay.count === 0) {
+      return 'N/A';
+    }
+
+    return `${busiestDay.label} (${busiestDay.count})`;
+  }
+
+  /**
+   * Get total bookings for current week
+   */
+  getTotalWeekBookings(): number {
+    const trends = this.getWeeklyTrends();
+    return trends.reduce((sum, day) => sum + day.count, 0);
   }
 }

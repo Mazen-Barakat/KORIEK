@@ -3,7 +3,8 @@
   <div class="dashboard-header">
     <div class="header-top">
       <div class="greeting">
-        <h1 class="title">Good {{ getTimeOfDay() }}, {{ shopName }} 👋</h1>
+        <p class="welcome-text">Welcome back,</p>
+        <h1 class="title">{{ shopName }}</h1>
         <p class="subtitle">{{ getCurrentDate() }}</p>
       </div>
       <div class="shop-status">
@@ -14,11 +15,17 @@
       </div>
     </div>
 
-    <!-- Key Metrics Row - Enhanced -->
-    <div class="smart-metrics-grid">
-      <!-- Primary Metric - Featured -->
-      <div class="metric-card featured-metric revenue-card">
-        <div class="metric-badge pulse">💰</div>
+    <!-- Key Metrics Row - Enhanced (4 Cards) -->
+    <div class="smart-metrics-grid four-columns">
+      <!-- Monthly Revenue - Dark Theme -->
+      <div class="metric-card featured-metric revenue-card dark-theme">
+        <div class="revenue-gradient-bg"></div>
+        <div class="metric-badge pulse">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
         <div class="metric-content">
           <div class="metric-header">
             <span class="metric-label">Monthly Revenue</span>
@@ -39,40 +46,27 @@
         </div>
       </div>
 
+      <!-- Pay Out Card -->
+      <div class="metric-card payout-card">
+        <div class="metric-icon-wrapper payout-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+            <line x1="1" y1="10" x2="23" y2="10"/>
+          </svg>
+        </div>
+        <div class="metric-info">
+          <div class="metric-label-small">Pay Out</div>
+          <div class="metric-value-medium">{{ formatCurrency(metrics.pendingPayouts) }}</div>
+          <div class="metric-status-badge" *ngIf="metrics.payoutsChange > 0">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="18 15 12 9 6 15"/>
+            </svg>
+            {{ metrics.payoutsChange }}% this month
+          </div>
+        </div>
+      </div>
+
       <!-- Secondary Metrics -->
-      <div class="metric-card jobs-card">
-        <div class="metric-icon-wrapper jobs-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </div>
-        <div class="metric-info">
-          <div class="metric-label-small">Active Jobs</div>
-          <div class="metric-value-medium">{{ metrics.activeJobs }}</div>
-          <div class="metric-progress">
-            <div class="progress-bar" [style.width]="(metrics.activeJobs / 20 * 100) + '%'"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="metric-card requests-card">
-        <div class="metric-icon-wrapper requests-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-          </svg>
-        </div>
-        <div class="metric-info">
-          <div class="metric-label-small">New Requests</div>
-          <div class="metric-value-medium">{{ metrics.newBookingRequests }}</div>
-          <div class="metric-status-badge" *ngIf="metrics.newBookingRequests > 0">
-            {{ metrics.newBookingRequests }} pending
-          </div>
-        </div>
-      </div>
-
       <div class="metric-card rating-card">
         <div class="metric-icon-wrapper rating-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -81,59 +75,39 @@
         </div>
         <div class="metric-info">
           <div class="metric-label-small">Shop Rating</div>
-          <div class="metric-value-medium">{{ metrics.shopRating }}<span class="rating-max">/5.0</span></div>
+          <div class="metric-value-medium">{{ formatRating(metrics.shopRating) }}<span class="rating-max">/5.0</span></div>
           <div class="star-rating">
             <span class="star filled" *ngFor="let star of [1,2,3,4,5].slice(0, Math.floor(metrics.shopRating))">★</span>
             <span class="star" *ngFor="let star of [1,2,3,4,5].slice(Math.floor(metrics.shopRating))">★</span>
           </div>
         </div>
       </div>
+
+      <div class="metric-card reviews-card">
+        <div class="metric-icon-wrapper reviews-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          </svg>
+        </div>
+        <div class="metric-info">
+          <div class="metric-label-small">Total Reviews</div>
+          <div class="metric-value-medium">{{ metrics.totalReviews }}</div>
+          <div class="metric-subtitle-small">{{ formatRating(metrics.shopRating) }}/5.0 average</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Main Dashboard Grid -->
-  <div class="dashboard-grid">
-    <!-- Left Column -->
-    <div class="left-column">
+  <!-- Main Dashboard Content -->
+  <div class="dashboard-content">
+    <!-- Main Column -->
+    <div class="main-column">
       
-      <!-- Action Required -->
-      <div class="section-card urgent-actions">
-        <app-section-header 
-          title="Action Required" 
-          subtitle="Items that need your attention"
-          [badge]="metrics.newBookingRequests + metrics.quotesAwaitingApproval + metrics.carsReadyForPickup"
-          badgeVariant="primary">
-        </app-section-header>
-
-        <div class="action-badges-grid">
-          <app-action-badge
-            [count]="metrics.newBookingRequests"
-            label="New Booking Requests"
-            priority="high"
-            icon="📋"
-            (clicked)="viewNewRequests()">
-          </app-action-badge>
-
-          <app-action-badge
-            [count]="metrics.quotesAwaitingApproval"
-            label="Quotes Awaiting Approval"
-            priority="medium"
-            icon="💰"
-            (clicked)="viewPendingQuotes()">
-          </app-action-badge>
-
-          <app-action-badge
-            [count]="metrics.carsReadyForPickup"
-            label="Cars Ready for Pickup"
-            priority="high"
-            icon="✅"
-            (clicked)="viewReadyForPickup()">
-          </app-action-badge>
-        </div>
-      </div>
-
-      <!-- This Week's Schedule - REDESIGNED -->
-      <div class="section-card schedule-card">
+      <!-- Combined Schedule & Quick Actions Section (70/30 Layout) -->
+      <div class="combined-schedule-section">
+        
+        <!-- Main Schedule Area (70%) -->
+        <div class="section-card schedule-main-area">
         <div class="section-header">
           <div class="section-title-group">
             <div class="section-icon schedule-icon">
@@ -233,6 +207,19 @@
               <div class="stat-content">
                 <span class="stat-value">{{ getAvailableSlots() }}</span>
                 <span class="stat-label">Available</span>
+              </div>
+            </div>
+            
+            <div class="overview-stat">
+              <div class="stat-icon revenue-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ formatCurrency(getWeekRevenue()) }}</span>
+                <span class="stat-label">Week Revenue</span>
               </div>
             </div>
           </div>
@@ -385,262 +372,392 @@
           </div>
         </div>
       </div>
-
-      <!-- Recent Activity -->
-      <div class="section-card activity-card">
-        <div class="section-header">
-          <div class="section-title-group">
-            <div class="section-icon activity-icon-header">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-            </div>
-            <div>
-              <h2 class="section-title">Recent Activity</h2>
-              <p class="section-subtitle">Latest updates from your workshop</p>
-            </div>
-          </div>
-          <button class="view-all-btn" (click)="navigateTo('/workshop/job-board')">
-            View All
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        </div>
         
-        <div class="activity-timeline">
-          <div class="timeline-item" *ngFor="let activity of recentActivity; let last = last" [class.last]="last">
-            <div class="timeline-marker" [ngClass]="activity.color">
-              <div class="marker-dot"></div>
+        <!-- Quick Actions Sidebar (30%) -->
+        <div class="quick-actions-sidebar">
+          
+          <!-- Performance Snapshot -->
+          <div class="sidebar-section performance-snapshot">
+            <div class="sidebar-header">
+              <h3 class="sidebar-title">Performance Snapshot</h3>
             </div>
-            <div class="timeline-content">
-              <div class="activity-card-item">
-                <div class="activity-header">
-                  <div class="activity-icon-wrapper" [ngClass]="activity.color">
-                    <svg *ngIf="activity.icon === 'calendar'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6"/>
-                      <line x1="8" y1="2" x2="8" y2="6"/>
-                      <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    <svg *ngIf="activity.icon === 'document'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                    <svg *ngIf="activity.icon === 'check'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                  </div>
-                  <span class="activity-time-badge">{{ activity.time }}</span>
+            
+            <div class="stat-cards-grid">
+              <!-- Active Jobs Counter -->
+              <div class="stat-card clickable" (click)="navigateTo('/workshop/job-board')">
+                <div class="stat-icon orange">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
                 </div>
-                <div class="activity-body">
-                  <h4 class="activity-title-text">{{ activity.title }}</h4>
-                  <p class="activity-description-text">{{ activity.description }}</p>
+                <div class="stat-content">
+                  <div class="stat-value">{{ metrics.activeJobs }}</div>
+                  <div class="stat-label">Active Jobs</div>
+                </div>
+                <div class="stat-arrow">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Pending Requests Counter -->
+              <div class="stat-card clickable" (click)="viewNewRequests()">
+                <div class="stat-icon blue">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ metrics.newBookingRequests }}</div>
+                  <div class="stat-label">Pending Requests</div>
+                </div>
+                <div class="stat-arrow">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Ready for Pickup Counter -->
+              <div class="stat-card clickable" (click)="viewReadyForPickup()">
+                <div class="stat-icon green">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ metrics.carsReadyForPickup }}</div>
+                  <div class="stat-label">Ready for Pickup</div>
+                </div>
+                <div class="stat-arrow">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Completed Jobs Counter -->
+              <div class="stat-card clickable" (click)="navigateTo('/workshop/job-board')">
+                <div class="stat-icon purple">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ getCompletedJobsCount() }}</div>
+                  <div class="stat-label">Completed Jobs</div>
+                </div>
+                <div class="stat-arrow">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
                 </div>
               </div>
             </div>
           </div>
+
+          <!-- Quick Actions Buttons -->
+          <div class="sidebar-section quick-actions-buttons">
+            <div class="sidebar-header">
+              <h3 class="sidebar-title">Quick Actions</h3>
+            </div>
+            
+            <div class="action-buttons-stack">
+              <button class="action-button primary" (click)="navigateTo('/workshop/job-board')">
+                <div class="action-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                  </svg>
+                </div>
+                <span>View All Jobs</span>
+              </button>
+
+              <button class="action-button secondary" (click)="navigateTo('/workshop/settings')">
+                <div class="action-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                  </svg>
+                </div>
+                <span>Workshop Settings</span>
+              </button>
+              
+              <button class="action-button secondary" (click)="navigateToProfile()">
+                <div class="action-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <span>Workshop Profile</span>
+              </button>
+              
+              <button class="action-button secondary" (click)="navigateTo('/workshop/wallet')">
+                <div class="action-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                </div>
+                <span>Wallet & Payments</span>
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
 
-    <!-- Right Column -->
-    <div class="right-column">
-      
-      <!-- Quick Actions -->
-      <div class="section-card actions-card">
+      <!-- Workshop Analytics -->
+      <div class="section-card analytics-card">
         <div class="section-header">
           <div class="section-title-group">
-            <div class="section-icon actions-icon-header">
+            <div class="section-icon analytics-icon-header">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="1"/>
-                <circle cx="19" cy="12" r="1"/>
-                <circle cx="5" cy="12" r="1"/>
+                <path d="M21 21H4.6c-.56 0-.6-.01-.6-.6V3"/>
+                <path d="M9 18v-6"/>
+                <path d="M13 18V9"/>
+                <path d="M17 18v-3"/>
               </svg>
             </div>
             <div>
-              <h2 class="section-title">Quick Actions</h2>
-              <p class="section-subtitle">Navigate to key features</p>
+              <h2 class="section-title">Workshop Analytics</h2>
+              <p class="section-subtitle">Performance insights & trends</p>
             </div>
           </div>
         </div>
         
-        <div class="quick-actions-list">
-          <button class="quick-action-item job-board-action" (click)="navigateTo('/workshop/job-board')">
-            <div class="action-icon-large">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="14" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <!-- Two Column Layout -->
+        <div class="analytics-two-column">
+          <!-- LEFT COLUMN: Existing Analytics -->
+          <div class="analytics-left-column">
+        
+        <!-- Main Revenue Display -->
+        <div class="analytics-revenue-card">
+          <div class="revenue-main">
+            <div class="revenue-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/>
               </svg>
             </div>
-            <div class="action-text">
-              <span class="action-label">Job Board</span>
-              <span class="action-description">Manage all jobs</span>
+            <div class="revenue-content">
+              <div class="revenue-label">Total Monthly Revenue</div>
+              <div class="revenue-value">{{ formatCurrency(metrics.monthlyRevenue) }} EGP</div>
+              <div class="revenue-trend" [class.positive]="metrics.revenueChange >= 0" [class.negative]="metrics.revenueChange < 0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline [attr.points]="metrics.revenueChange >= 0 ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+                </svg>
+                <span>{{ Math.abs(metrics.revenueChange) }}% vs last month</span>
+              </div>
             </div>
-            <svg class="action-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-          
-          <button class="quick-action-item wallet-action" (click)="navigateTo('/workshop/wallet')">
-            <div class="action-icon-large">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          </div>
+        </div>
+
+        <!-- Quick Stats Grid -->
+        <div class="analytics-stats-grid">
+          <div class="analytics-stat-box">
+            <div class="stat-box-icon maintenance">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+            </div>
+            <div class="stat-box-content">
+              <div class="stat-box-value">{{ getCompletedJobsCount() }}</div>
+              <div class="stat-box-label">Jobs Completed</div>
+            </div>
+          </div>
+
+          <div class="analytics-stat-box">
+            <div class="stat-box-icon revenue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
                 <line x1="1" y1="10" x2="23" y2="10"/>
               </svg>
             </div>
-            <div class="action-text">
-              <span class="action-label">Wallet & Payments</span>
-              <span class="action-description">Financial overview</span>
+            <div class="stat-box-content">
+              <div class="stat-box-value">{{ formatCurrency(metrics.pendingPayouts) }}</div>
+              <div class="stat-box-label">Pending Payouts</div>
             </div>
-            <svg class="action-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-          
-          <button class="quick-action-item profile-action" (click)="navigateToProfile()">
-            <div class="action-icon-large">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            </div>
-            <div class="action-text">
-              <span class="action-label">Workshop Profile</span>
-              <span class="action-description">View & edit profile</span>
-            </div>
-            <svg class="action-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-          
-          <button class="quick-action-item settings-action" (click)="navigateTo('/workshop/settings')">
-            <div class="action-icon-large">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M12 1v6m0 6v6"/>
-                <path d="M21 12h-6m-6 0H3"/>
-              </svg>
-            </div>
-            <div class="action-text">
-              <span class="action-label">Settings</span>
-              <span class="action-description">Configure preferences</span>
-            </div>
-            <svg class="action-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        </div>
-      </div>
+          </div>
 
-      <!-- Quick Stats -->
-      <div class="section-card stats-card">
-        <div class="section-header">
-          <h2 class="section-title">Quick Stats</h2>
-        </div>
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-icon active-jobs">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <div class="analytics-stat-box">
+            <div class="stat-box-icon rating">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </div>
+            <div class="stat-box-content">
+              <div class="stat-box-value">{{ formatRating(metrics.shopRating) }}</div>
+              <div class="stat-box-label">Avg Rating</div>
+            </div>
+          </div>
+
+          <div class="analytics-stat-box">
+            <div class="stat-box-icon efficiency">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
               </svg>
             </div>
-            <div class="stat-content">
-              <span class="stat-value">{{ metrics.activeJobs }}</span>
-              <span class="stat-label">Active Jobs</span>
-            </div>
-          </div>
-          
-          <div class="stat-item">
-            <div class="stat-icon new-requests">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{{ metrics.newBookingRequests }}</span>
-              <span class="stat-label">New Requests</span>
-            </div>
-          </div>
-          
-          <div class="stat-item">
-            <div class="stat-icon ready-cars">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
-                <circle cx="7.5" cy="17.5" r="1.5"/>
-                <circle cx="16.5" cy="17.5" r="1.5"/>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{{ metrics.carsReadyForPickup }}</span>
-              <span class="stat-label">Ready to Pickup</span>
-            </div>
-          </div>
-          
-          <div class="stat-item">
-            <div class="stat-icon pending-quotes">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{{ metrics.quotesAwaitingApproval }}</span>
-              <span class="stat-label">Pending Quotes</span>
+            <div class="stat-box-content">
+              <div class="stat-box-value">{{ getCompletionRate() }}%</div>
+              <div class="stat-box-label">Completion Rate</div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Financial Overview -->
-      <div class="section-card financial-card">
-        <div class="section-header">
-          <div class="section-title-group">
-            <div class="section-icon financial-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="1" x2="12" y2="23"/>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              </svg>
-            </div>
-            <div>
-              <h2 class="section-title">Financials</h2>
-              <p class="section-subtitle">Current balance overview</p>
+        <!-- Service Performance Chart -->
+        <div class="analytics-chart-section">
+          <h3 class="chart-title">Top Services by Revenue</h3>
+          <div class="service-bars">
+            <div class="service-bar-item" *ngFor="let service of getTopServices()">
+              <div class="service-bar-info">
+                <span class="service-bar-name">{{ service.name }}</span>
+                <span class="service-bar-count">{{ service.count }} jobs</span>
+              </div>
+              <div class="service-bar-track">
+                <div class="service-bar-fill" [style.width.%]="service.percentage" [style.background]="service.color"></div>
+              </div>
+              <span class="service-bar-value">{{ service.percentage }}%</span>
             </div>
           </div>
         </div>
-        
-        <div class="simple-financial-grid">
-          <div class="simple-financial-box">
-            <div class="financial-box-header">
-              <span class="financial-box-label">Pending Payouts</span>
-              <span class="financial-box-change positive">+{{ metrics.payoutsChange }}%</span>
+
+        <!-- Performance Metrics -->
+        <div class="analytics-performance">
+          <h3 class="performance-title">This Month's Performance</h3>
+          <div class="performance-grid">
+            <div class="performance-item">
+              <div class="performance-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                  <path class="circle" [attr.stroke-dasharray]="getCompletionRate() + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                </svg>
+                <div class="percentage-text">{{ getCompletionRate() }}%</div>
+              </div>
+              <span class="performance-label">Job Completion</span>
             </div>
-            <div class="financial-box-value">{{ formatCurrency(metrics.pendingPayouts) }}</div>
-            <div class="financial-box-footer">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-              <span>vs last month</span>
+
+            <div class="performance-item">
+              <div class="performance-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart customer">
+                  <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                  <path class="circle" [attr.stroke-dasharray]="getCustomerSatisfaction() + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                </svg>
+                <div class="percentage-text">{{ getCustomerSatisfaction() }}%</div>
+              </div>
+              <span class="performance-label">Customer Satisfaction</span>
             </div>
           </div>
-
-          <div class="simple-financial-box">
-            <div class="financial-box-header">
-              <span class="financial-box-label">Total Reviews</span>
+        </div>
+          </div>
+          
+          <!-- RIGHT COLUMN: Time-Based Analytics -->
+          <div class="analytics-right-column">
+            
+            <!-- Peak Hours Performance - Neomorphic -->
+            <div class="neo-time-card peak-hours-card">
+              <div class="neo-card-header">
+                <div class="neo-icon-wrapper peak-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </div>
+                <div class="neo-card-title-group">
+                  <h3 class="neo-card-title">Peak Hours Performance</h3>
+                  <p class="neo-card-subtitle">Busiest hours for bookings</p>
+                </div>
+              </div>
+              
+              <div class="neo-peak-hours-chart">
+                <div class="neo-peak-bar" *ngFor="let hour of getPeakHours()">
+                  <div class="neo-peak-time">{{ hour.label }}</div>
+                  <div class="neo-peak-track">
+                    <div class="neo-peak-fill" 
+                         [style.width.%]="hour.percentage"
+                         [class.high]="hour.percentage > 70"
+                         [class.medium]="hour.percentage > 40 && hour.percentage <= 70"
+                         [class.low]="hour.percentage <= 40">
+                      <div class="neo-peak-shine"></div>
+                    </div>
+                  </div>
+                  <div class="neo-peak-count">{{ hour.count }}</div>
+                </div>
+              </div>
+              
+              <div class="neo-insight-box">
+                <div class="neo-insight-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+                <span class="neo-insight-text">{{ getPeakHoursInsight() }}</span>
+              </div>
             </div>
-            <div class="financial-box-value">{{ metrics.totalReviews }}</div>
-            <div class="financial-box-footer">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/>
-              </svg>
-              <span>{{ metrics.shopRating }}/5.0 rating</span>
+            
+            <!-- Weekly Trends - Neomorphic -->
+            <div class="neo-time-card weekly-trends-card">
+              <div class="neo-card-header">
+                <div class="neo-icon-wrapper weekly-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+                <div class="neo-card-title-group">
+                  <h3 class="neo-card-title">Weekly Booking Trends</h3>
+                  <p class="neo-card-subtitle">Bookings by day of week</p>
+                </div>
+              </div>
+              
+              <div class="neo-weekly-chart">
+                <div class="neo-weekly-bar" *ngFor="let day of getWeeklyTrends()">
+                  <div class="neo-bar-container">
+                    <div class="neo-bar-fill" 
+                         [style.height.%]="day.percentage"
+                         [class.weekend]="day.isWeekend"
+                         [class.today]="day.isToday">
+                      <span class="neo-bar-value" *ngIf="day.count > 0">{{ day.count }}</span>
+                      <div class="neo-bar-shine"></div>
+                    </div>
+                  </div>
+                  <div class="neo-day-label" [class.today]="day.isToday">{{ day.label }}</div>
+                </div>
+              </div>
+              
+              <div class="neo-weekly-stats">
+                <div class="neo-stat-box busiest">
+                  <div class="neo-stat-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                  </div>
+                  <div class="neo-stat-content">
+                    <div class="neo-stat-label">Busiest Day</div>
+                    <div class="neo-stat-value">{{ getBusiestDayOfWeek() }}</div>
+                  </div>
+                </div>
+                <div class="neo-stat-box total">
+                  <div class="neo-stat-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    </svg>
+                  </div>
+                  <div class="neo-stat-content">
+                    <div class="neo-stat-label">Total This Week</div>
+                    <div class="neo-stat-value">{{ getTotalWeekBookings() }}</div>
+                  </div>
+                </div>
+              </div>
             </div>
+            
           </div>
         </div>
       </div>

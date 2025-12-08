@@ -33,6 +33,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isLogoSpinning = false;
   isContactModalOpen = false;
   isWorkshopOwner = false;
+  isCurrentWorkshopOwner = false;
   isAdmin = false;
   isRoleSelectionPage = false;
   isAuthFormPage = false;
@@ -103,6 +104,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     // Check if on landing page
     this.checkLandingPage();
+    this.checkWorkshopOwnership();
 
     // If already authenticated on init (token persisted), fetch profile immediately
     if (this.authService.isAuthenticated()) {
@@ -123,6 +125,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         this.checkLandingPage();
+        this.checkWorkshopOwnership();
         // Do NOT auto-animate logo on every navigation end — only animate on user click
       });
 
@@ -193,6 +196,35 @@ export class HeaderComponent implements OnInit, OnDestroy {
     } catch (e) {
       // ignore and keep previous value
     }
+  }
+
+  checkWorkshopOwnership() {
+    // Check if the current user is the owner of the workshop being viewed
+    // This determines if "Wallet & Payments" link should be shown
+    if (!this.isAuthenticated || !this.isWorkshopOwner) {
+      this.isCurrentWorkshopOwner = false;
+      return;
+    }
+
+    // For workshop dashboard route, always show wallet link (user viewing their own dashboard)
+    const url = this.router.url;
+    if (url.startsWith('/workshop/dashboard') || url.startsWith('/workshop/job-board') || url.startsWith('/workshop/wallet')) {
+      this.isCurrentWorkshopOwner = true;
+      return;
+    }
+
+    // For workshop profile routes, check if the profile ID matches the current user ID
+    const profileMatch = url.match(/\/workshop-profile\/(\d+)/);
+    if (profileMatch) {
+      const profileId = parseInt(profileMatch[1], 10);
+      const currentUserIdStr = this.authService.getUserId();
+      const currentUserId = currentUserIdStr ? parseInt(currentUserIdStr, 10) : null;
+      this.isCurrentWorkshopOwner = currentUserId === profileId;
+      return;
+    }
+
+    // Default: show wallet link for workshop owners on their own pages
+    this.isCurrentWorkshopOwner = true;
   }
 
   toggleLanguage() {
