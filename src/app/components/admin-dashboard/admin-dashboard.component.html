@@ -7,6 +7,12 @@
         <p class="header-subtitle">Welcome back, {{ adminName }}</p>
       </div>
       <div class="header-actions">
+        <button class="btn-icon" (click)="refreshDashboard()" title="Refresh Data">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" [class.spinning]="isLoadingAnalytics">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
         <button class="btn-icon" title="Notifications">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -21,6 +27,15 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- WORKSHOP MANAGEMENT SECTION -->
+  <!-- ============================================ -->
+
+  <div class="management-section-header">
+    <h2>Workshop Management</h2>
+    <p>Approve or reject pending workshops and view all verified workshops</p>
   </div>
 
   <!-- Metrics Grid -->
@@ -87,6 +102,581 @@
     </div>
   </div>
 
+  <!-- ============================================ -->
+  <!-- ANALYTICS OVERVIEW SECTION -->
+  <!-- ============================================ -->
+
+  <div class="analytics-section" [class.loading]="isLoadingAnalytics">
+    <!-- Total Revenue Hero Card -->
+    <div class="total-revenue-card">
+      <div class="total-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      <div class="total-text">
+        <span class="total-label">Total Revenue</span>
+        <span class="total-value">{{ dashboardStats.totalRevenue | number:'1.0-0' }} EGP</span>
+      </div>
+      <div class="total-breakdown">
+        <div class="breakdown-item">
+          <div class="breakdown-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="6" width="18" height="15" rx="2"/>
+              <path d="M3 10h18"/>
+            </svg>
+          </div>
+          <div class="breakdown-info">
+            <span class="breakdown-label">Total Bookings</span>
+            <span class="breakdown-value">{{ dashboardStats.totalBookings }}</span>
+          </div>
+        </div>
+        <div class="breakdown-divider"></div>
+        <div class="breakdown-item">
+          <div class="breakdown-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+          <div class="breakdown-info">
+            <span class="breakdown-label">Avg per Booking</span>
+            <span class="breakdown-value">{{ getAverageBookingValue() | number:'1.0-0' }} EGP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Row: Donut Charts + Quick Stats -->
+    <div class="analytics-row">
+      <!-- Workshop Type Distribution Donut -->
+      <div class="donut-chart-container">
+        <h4>Workshop Types</h4>
+        <div class="donut-chart">
+          <svg viewBox="0 0 36 36" class="circular-chart">
+            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            <path *ngIf="dashboardStats.workshopTypeDistribution.length > 0"
+              class="circle maintenance-circle"
+              [attr.stroke-dasharray]="dashboardStats.workshopTypeDistribution[0]?.percentage + ', 100'"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            <path *ngIf="dashboardStats.workshopTypeDistribution.length > 1"
+              class="circle expenses-circle"
+              [attr.stroke-dasharray]="dashboardStats.workshopTypeDistribution[1]?.percentage + ', 100'"
+              [attr.stroke-dashoffset]="-(dashboardStats.workshopTypeDistribution[0]?.percentage || 0)"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          </svg>
+          <div class="donut-center">
+            <span class="donut-total">{{ dashboardStats.totalWorkshops }}</span>
+            <span class="donut-label">Total</span>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item" *ngFor="let item of dashboardStats.workshopTypeDistribution">
+            <span class="legend-color" [class.maintenance]="item.type === 'MaintainanceCenter'" [class.expenses]="item.type === 'Independent'"></span>
+            <span>{{ item.type }} ({{ item.percentage }}%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats Grid -->
+      <div class="quick-stats">
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ dashboardStats.totalUsers }}</span>
+            <span class="stat-label">Total Users</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ dashboardStats.verifiedWorkshops }}</span>
+            <span class="stat-label">Verified</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ dashboardStats.pendingWorkshops }}</span>
+            <span class="stat-label">Pending</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/>
+              <path d="M12 14l3-3"/>
+              <path d="M12 8v4"/>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ dashboardStats.averageWorkshopRating | number:'1.1-1' }}</span>
+            <span class="stat-label">Avg Rating</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Revenue Trend Chart -->
+    <div class="monthly-chart">
+      <div class="chart-header">
+        <h4>Monthly Revenue Trend</h4>
+        <span class="chart-period">Last 6 Months</span>
+      </div>
+      <div class="chart-area">
+        <div class="chart-bars">
+          <div *ngFor="let month of dashboardStats.monthlyRevenue" class="chart-bar-wrapper"
+            [class.highest]="isHighestMonth(month)">
+            <div class="chart-bar-value" *ngIf="month.revenue > 0">{{ month.revenue | number:'1.0-0' }}</div>
+            <div class="chart-bar" [style.height.%]="getBarHeight(month.revenue)">
+              <div class="bar-fill" [class.empty]="month.revenue === 0"></div>
+            </div>
+            <div class="chart-bar-label">{{ month.month }}</div>
+          </div>
+        </div>
+        <div class="chart-baseline"></div>
+      </div>
+    </div>
+
+    <!-- Insights Cards -->
+    <div class="insights-row">
+      <div class="insight-card highest" *ngIf="dashboardStats.topPerformingWorkshops.length > 0">
+        <div class="insight-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </div>
+        <div class="insight-content">
+          <span class="insight-label">Top Workshop</span>
+          <span class="insight-value">{{ dashboardStats.topPerformingWorkshops[0]?.name }}</span>
+          <span class="insight-amount">{{ dashboardStats.topPerformingWorkshops[0]?.totalBookings }} bookings</span>
+        </div>
+      </div>
+      <div class="insight-card lowest">
+        <div class="insight-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <div class="insight-content">
+          <span class="insight-label">Total Cars</span>
+          <span class="insight-value">{{ dashboardStats.totalCars }}</span>
+          <span class="insight-amount">{{ dashboardStats.totalCarOwners }} car owners</span>
+        </div>
+      </div>
+      <div class="insight-card last-service">
+        <div class="insight-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <div class="insight-content">
+          <span class="insight-label">Booking Status</span>
+          <span class="insight-value" *ngIf="dashboardStats.bookingStatusDistribution.length > 0">
+            {{ getMostCommonStatus() }}
+          </span>
+          <span class="insight-amount" *ngIf="dashboardStats.bookingStatusDistribution.length > 0">
+            {{ getMostCommonStatusPercentage() }}% of total
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State for Analytics -->
+  <div class="analytics-loading" *ngIf="isLoadingAnalytics">
+    <div class="loading-spinner"></div>
+    <p>Loading dashboard analytics...</p>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- ENHANCED ANALYTICS SECTIONS -->
+  <!-- ============================================ -->
+
+  <!-- Payment & Revenue Analytics -->
+  <div class="enhanced-analytics-section" *ngIf="!isLoadingAnalytics && dashboardStats.paymentMethodDistribution.length > 0">
+    <div class="section-header-enhanced">
+      <h2>💳 Payment & Revenue Analytics</h2>
+      <p>Payment methods and revenue breakdown by category</p>
+    </div>
+
+    <div class="analytics-grid">
+      <!-- Payment Methods Chart -->
+      <div class="chart-card">
+        <h3>Payment Methods</h3>
+        <div class="donut-chart-container">
+          <div class="payment-method-list">
+            <div class="payment-method-item" *ngFor="let method of dashboardStats.paymentMethodDistribution">
+              <div class="payment-method-info">
+                <span class="payment-method-dot" [style.background-color]="getPaymentColor(method.method)"></span>
+                <span class="payment-method-name">{{ method.method }}</span>
+              </div>
+              <div class="payment-method-stats">
+                <span class="payment-count">{{ method.count }} bookings</span>
+                <span class="payment-percentage">{{ method.percentage }}%</span>
+              </div>
+              <div class="payment-revenue">{{ formatCurrency(method.revenue) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue by Workshop Type -->
+      <div class="chart-card">
+        <h3>Revenue by Workshop Type</h3>
+        <div class="bar-chart-horizontal">
+          <div class="bar-item" *ngFor="let type of dashboardStats.revenueByWorkshopType">
+            <div class="bar-label">{{ type.type }}</div>
+            <div class="bar-container">
+              <div class="bar-fill" [style.width.%]="type.percentage" [style.background-color]="getWorkshopTypeColor(type.type)"></div>
+              <span class="bar-value">{{ formatCurrency(type.revenue) }}</span>
+            </div>
+            <div class="bar-meta">{{ type.bookingCount }} bookings • Avg: {{ formatCurrency(type.averageValue) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Operational Metrics -->
+      <div class="chart-card operational-metrics">
+        <h3>⚡ Operational Performance</h3>
+        <div class="metrics-list">
+          <div class="metric-row">
+            <span class="metric-label">Average Lead Time</span>
+            <span class="metric-value-large">{{ dashboardStats.operationalMetrics.averageLeadTime }} days</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Confirmation Rate</span>
+            <span class="metric-value-large success">{{ dashboardStats.operationalMetrics.confirmationRate }}%</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Completion Rate</span>
+            <span class="metric-value-large success">{{ dashboardStats.operationalMetrics.completionRate }}%</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Avg Service Value</span>
+            <span class="metric-value-large">{{ formatCurrency(dashboardStats.operationalMetrics.averageServiceValue) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fleet Analytics -->
+  <div class="enhanced-analytics-section" *ngIf="!isLoadingAnalytics && dashboardStats.topCarBrands.length > 0">
+    <div class="section-header-enhanced">
+      <h2>🚗 Vehicle Fleet Analytics</h2>
+      <p>Comprehensive analysis of vehicle types, brands, and characteristics</p>
+    </div>
+
+    <div class="analytics-grid">
+      <!-- Top Car Brands -->
+      <div class="chart-card">
+        <h3>Top 10 Car Brands</h3>
+        <div class="bar-chart-vertical">
+          <div class="brand-item" *ngFor="let brand of dashboardStats.topCarBrands">
+            <div class="brand-bar-container">
+              <div class="brand-bar" [style.height.%]="(brand.count / dashboardStats.topCarBrands[0].count) * 100"></div>
+              <span class="brand-count">{{ brand.count }}</span>
+            </div>
+            <span class="brand-name">{{ brand.brand }}</span>
+            <span class="brand-percentage">{{ brand.percentage }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transmission & Fuel Types -->
+      <div class="chart-card">
+        <h3>Transmission & Fuel Distribution</h3>
+        <div class="split-chart">
+          <div class="chart-half">
+            <h4>Transmission Type</h4>
+            <div class="type-list">
+              <div class="type-item" *ngFor="let trans of dashboardStats.transmissionTypeDistribution">
+                <div class="type-bar">
+                  <div class="type-fill" [style.width.%]="trans.percentage"></div>
+                </div>
+                <div class="type-info">
+                  <span class="type-name">{{ trans.type }}</span>
+                  <span class="type-stats">{{ trans.count }} ({{ trans.percentage }}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="chart-half">
+            <h4>Fuel Type</h4>
+            <div class="type-list">
+              <div class="type-item" *ngFor="let fuel of dashboardStats.fuelTypeDistribution">
+                <div class="type-bar">
+                  <div class="type-fill fuel" [style.width.%]="fuel.percentage"></div>
+                </div>
+                <div class="type-info">
+                  <span class="type-name">{{ fuel.type }}</span>
+                  <span class="type-stats">{{ fuel.count }} ({{ fuel.percentage }}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fleet Age Distribution -->
+      <div class="chart-card">
+        <h3>Fleet Age Distribution</h3>
+        <div class="age-distribution">
+          <div class="age-item" *ngFor="let age of dashboardStats.fleetAgeDistribution">
+            <div class="age-label">{{ age.ageRange }}</div>
+            <div class="age-bar-container">
+              <div class="age-bar" [style.width.%]="age.percentage"></div>
+            </div>
+            <div class="age-stats">
+              <span class="age-count">{{ age.count }} vehicles</span>
+              <span class="age-percentage">{{ age.percentage }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workshop Performance Analytics -->
+  <div class="enhanced-analytics-section workshop-performance" *ngIf="!isLoadingAnalytics">
+    <div class="section-header-enhanced">
+      <div class="header-with-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+        <div>
+          <h2>Workshop Performance & Distribution</h2>
+          <p>Comprehensive analysis of top performers, ratings, and size distribution</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Leaders Section -->
+    <div class="performance-section">
+      <div class="section-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+        <h3>Top Revenue Generators</h3>
+        <span class="badge">Top 10</span>
+      </div>
+      <div class="revenue-leaderboard">
+        <div class="leaderboard-header">
+          <span class="col-rank">Rank</span>
+          <span class="col-workshop">Workshop</span>
+          <span class="col-performance">Performance</span>
+          <span class="col-revenue">Revenue</span>
+        </div>
+        <div class="leaderboard-row" *ngFor="let workshop of dashboardStats.topWorkshopsByRevenue; let i = index">
+          <div class="col-rank">
+            <div class="rank-badge" [class.gold]="i === 0" [class.silver]="i === 1" [class.bronze]="i === 2">
+              <span *ngIf="i < 3" class="medal">{{ i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉' }}</span>
+              <span *ngIf="i >= 3">{{ i + 1 }}</span>
+            </div>
+          </div>
+          <div class="col-workshop">
+            <div class="workshop-cell">
+              <div class="workshop-avatar">
+                <img [src]="buildAssetUrl(workshop.logoImageUrl || '')"
+                     alt="{{ workshop.name }}"
+                     *ngIf="workshop.logoImageUrl"
+                     (error)="$event.target.src='assets/images/default-workshop.png'">
+                <div class="avatar-placeholder" *ngIf="!workshop.logoImageUrl">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                  </svg>
+                </div>
+              </div>
+              <span class="workshop-name">{{ workshop.name }}</span>
+            </div>
+          </div>
+          <div class="col-performance">
+            <div class="performance-metrics">
+              <div class="metric-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                <span>{{ workshop.rating.toFixed(1) }}</span>
+              </div>
+              <div class="metric-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="6" width="18" height="15" rx="2"/>
+                  <path d="M3 10h18"/>
+                </svg>
+                <span>{{ workshop.totalBookings }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-revenue">
+            <span class="revenue-amount">{{ formatCurrency(workshop.totalRevenue) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rating & Size Grid -->
+    <div class="performance-grid">
+      <!-- Rating Distribution -->
+      <div class="performance-card">
+        <div class="card-header">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <h3>Rating Distribution</h3>
+        </div>
+        <div class="rating-distribution">
+          <div class="rating-item" *ngFor="let rating of dashboardStats.ratingDistribution.slice().reverse()">
+            <div class="rating-label">
+              <span class="star-count">{{ rating.rating }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="rating-bar-wrapper">
+              <div class="rating-bar-bg">
+                <div class="rating-bar-fill" [style.width.%]="rating.percentage"></div>
+              </div>
+              <span class="rating-value">{{ rating.count }}</span>
+            </div>
+            <span class="rating-percent">{{ rating.percentage }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Size Categories -->
+      <div class="performance-card">
+        <div class="card-header">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <h3>Workshop Size Distribution</h3>
+        </div>
+        <div class="size-distribution">
+          <div class="size-item" *ngFor="let size of dashboardStats.workshopSizeCategories">
+            <div class="size-info">
+              <div class="size-icon-circle" [class]="'size-' + size.category.split(' ')[0].toLowerCase()">
+                {{ getSizeEmoji(size.category) }}
+              </div>
+              <div class="size-details">
+                <span class="size-name">{{ size.category }}</span>
+                <span class="size-desc">{{ size.count }} workshops</span>
+              </div>
+            </div>
+            <div class="size-percentage-circle">
+              <span>{{ size.percentage }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer & Geographic Analytics -->
+  <div class="enhanced-analytics-section" *ngIf="!isLoadingAnalytics && dashboardStats.geographicDistribution.length > 0">
+    <div class="section-header-enhanced">
+      <h2>👥 Customer Insights & Geographic Distribution</h2>
+      <p>Customer behavior patterns and regional analytics</p>
+    </div>
+
+    <div class="analytics-grid">
+      <!-- Customer Insights -->
+      <div class="chart-card">
+        <h3>Customer Behavior</h3>
+        <div class="customer-insights">
+          <div class="insight-metric">
+            <div class="insight-icon">👥</div>
+            <div class="insight-content">
+              <div class="insight-label">Total Customers</div>
+              <div class="insight-value-big">{{ dashboardStats.customerInsights.totalCustomers }}</div>
+            </div>
+          </div>
+          <div class="insight-metric">
+            <div class="insight-icon">🔄</div>
+            <div class="insight-content">
+              <div class="insight-label">Active Customers</div>
+              <div class="insight-value-big success">{{ dashboardStats.customerInsights.activeCustomers }}</div>
+              <div class="insight-sublabel">Last 90 days</div>
+            </div>
+          </div>
+          <div class="insight-metric">
+            <div class="insight-icon">📊</div>
+            <div class="insight-content">
+              <div class="insight-label">Avg Bookings per Customer</div>
+              <div class="insight-value-big">{{ dashboardStats.customerInsights.averageBookingsPerCustomer }}</div>
+            </div>
+          </div>
+          <div class="insight-metric">
+            <div class="insight-icon">😴</div>
+            <div class="insight-content">
+              <div class="insight-label">Inactive Customers</div>
+              <div class="insight-value-big warning">{{ dashboardStats.customerInsights.inactiveCustomers }}</div>
+              <div class="insight-sublabel">Need re-engagement</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Geographic Distribution -->
+      <div class="chart-card geographic">
+        <h3>📍 Geographic Distribution</h3>
+        <div class="geo-table">
+          <div class="geo-header">
+            <span>Governorate</span>
+            <span>Workshops</span>
+            <span>Customers</span>
+            <span>Total</span>
+          </div>
+          <div class="geo-row" *ngFor="let geo of dashboardStats.geographicDistribution.slice(0, 10)">
+            <span class="geo-name">{{ geo.governorate }}</span>
+            <span class="geo-count workshops">{{ geo.workshopCount }}</span>
+            <span class="geo-count users">{{ geo.userCount }}</span>
+            <span class="geo-count total">{{ geo.totalCount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language Preferences -->
+      <div class="chart-card" *ngIf="dashboardStats.languagePreferences.length > 0">
+        <h3>🌐 Language Preferences</h3>
+        <div class="language-chart">
+          <div class="language-item" *ngFor="let lang of dashboardStats.languagePreferences">
+            <div class="language-header">
+              <span class="language-name">{{ lang.language }}</span>
+              <span class="language-percentage">{{ lang.percentage }}%</span>
+            </div>
+            <div class="language-bar-container">
+              <div class="language-bar" [style.width.%]="lang.percentage"></div>
+            </div>
+            <div class="language-count">{{ lang.count }} users</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Content Grid -->
   <div class="content-grid">
     <!-- Unverified Workshops -->
@@ -142,6 +732,36 @@
           <polyline points="20 6 9 17 4 12"/>
         </svg>
         <p>No unverified workshops</p>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination-controls" *ngIf="!isLoading && pendingWorkshops.length > 0 && unverifiedTotalPages > 1">
+        <button class="pagination-btn"
+                [disabled]="unverifiedPage === 1"
+                (click)="changeUnverifiedPage(unverifiedPage - 1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Previous
+        </button>
+
+        <div class="pagination-numbers">
+          <button *ngFor="let page of getPageNumbers(unverifiedTotalPages)"
+                  class="page-number"
+                  [class.active]="page === unverifiedPage"
+                  (click)="changeUnverifiedPage(page)">
+            {{ page }}
+          </button>
+        </div>
+
+        <button class="pagination-btn"
+                [disabled]="unverifiedPage === unverifiedTotalPages"
+                (click)="changeUnverifiedPage(unverifiedPage + 1)">
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -199,6 +819,36 @@
         </svg>
         <p>No verified workshops</p>
       </div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination-controls" *ngIf="!isLoadingVerified && verifiedWorkshops.length > 0 && verifiedTotalPages > 1">
+        <button class="pagination-btn"
+                [disabled]="verifiedPage === 1"
+                (click)="changeVerifiedPage(verifiedPage - 1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Previous
+        </button>
+
+        <div class="pagination-numbers">
+          <button *ngFor="let page of getPageNumbers(verifiedTotalPages)"
+                  class="page-number"
+                  [class.active]="page === verifiedPage"
+                  (click)="changeVerifiedPage(page)">
+            {{ page }}
+          </button>
+        </div>
+
+        <button class="pagination-btn"
+                [disabled]="verifiedPage === verifiedTotalPages"
+                (click)="changeVerifiedPage(verifiedPage + 1)">
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Recent Activity -->
@@ -225,10 +875,9 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Quick Actions -->
-  <div class="quick-actions">
+    <!-- Quick Actions -->
+    <div class="quick-actions">
     <h2>Quick Actions</h2>
     <div class="actions-grid">
       <button class="action-btn" (click)="navigateTo('/admin/users')">
@@ -277,107 +926,176 @@
       </div>
 
       <div class="modal-body" *ngIf="selectedWorkshop">
-        <div class="detail-grid">
-          <!-- Basic Information -->
-          <div class="detail-section">
-            <h3>Basic Information</h3>
-            <div class="detail-item">
-              <span class="label">Workshop Name:</span>
-              <span class="value">{{ selectedWorkshop.name || 'N/A' }}</span>
+        <!-- Workshop Header with Logo -->
+        <div class="modal-workshop-header">
+          <div class="workshop-logo-container">
+            <img [src]="buildAssetUrl(selectedWorkshop.logoImageUrl || '')"
+                 alt="{{ selectedWorkshop.name }}"
+                 *ngIf="selectedWorkshop.logoImageUrl"
+                 (error)="$event.target.src='assets/images/default-workshop.png'">
+            <div class="logo-placeholder" *ngIf="!selectedWorkshop.logoImageUrl">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
             </div>
-            <div class="detail-item">
-              <span class="label">Type:</span>
-              <span class="value">{{ selectedWorkshop.workShopType || 'N/A' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Description:</span>
-              <span class="value">{{ selectedWorkshop.description || 'No description provided' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Status:</span>
-              <span class="value status-tag" [ngClass]="selectedWorkshop.verificationStatus.toLowerCase()">
+          </div>
+          <div class="workshop-title-info">
+            <h2>{{ selectedWorkshop.name }}</h2>
+            <div class="workshop-meta">
+              <span class="type-badge">{{ selectedWorkshop.workShopType }}</span>
+              <span class="status-badge-modal" [ngClass]="selectedWorkshop.verificationStatus.toLowerCase()">
                 {{ selectedWorkshop.verificationStatus }}
               </span>
-            </div>
-          </div>
-
-          <!-- Contact Information -->
-          <div class="detail-section">
-            <h3>Contact Information</h3>
-            <div class="detail-item">
-              <span class="label">Phone Number:</span>
-              <span class="value">{{ selectedWorkshop.phoneNumber || 'N/A' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Country:</span>
-              <span class="value">{{ selectedWorkshop.country || 'N/A' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Governorate:</span>
-              <span class="value">{{ selectedWorkshop.governorate || 'N/A' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">City:</span>
-              <span class="value">{{ selectedWorkshop.city || 'N/A' }}</span>
-            </div>
-          </div>
-
-          <!-- Additional Details -->
-          <div class="detail-section">
-            <h3>Additional Details</h3>
-            <div class="detail-item">
-              <span class="label">Number of Technicians:</span>
-              <span class="value">{{ selectedWorkshop.numbersOfTechnicians || 0 }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Rating:</span>
-              <span class="value">{{ selectedWorkshop.rating || 0 }} ⭐</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Location Coordinates:</span>
-              <span class="value">{{ selectedWorkshop.latitude }}, {{ selectedWorkshop.longitude }}</span>
-            </div>
-          </div>
-
-          <!-- License Image -->
-          <div class="detail-section full-width">
-            <h3>License Plate / Document</h3>
-            <div class="license-preview" *ngIf="selectedWorkshop.licenceImageUrl">
-              <img [src]="buildAssetUrl(selectedWorkshop.licenceImageUrl)" alt="License Document" />
-            </div>
-            <div class="no-image" *ngIf="!selectedWorkshop.licenceImageUrl">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
-              </svg>
-              <p>No license document uploaded</p>
-            </div>
-          </div>
-
-          <!-- Logo Image -->
-          <div class="detail-section full-width" *ngIf="selectedWorkshop.logoImageUrl">
-            <h3>Workshop Logo</h3>
-            <div class="logo-preview">
-              <img [src]="buildAssetUrl(selectedWorkshop.logoImageUrl)" alt="Workshop Logo" />
+              <span class="rating-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                {{ selectedWorkshop.rating.toFixed(1) }}
+              </span>
             </div>
           </div>
         </div>
 
+        <!-- Workshop Details Grid -->
+        <div class="detail-grid-enhanced">
+          <!-- Contact & Location -->
+          <div class="detail-card">
+            <div class="card-icon contact">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <div class="card-content">
+              <h4>Contact Information</h4>
+              <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value">{{ selectedWorkshop.phoneNumber || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location -->
+          <div class="detail-card">
+            <div class="card-icon location">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="card-content">
+              <h4>Location</h4>
+              <div class="info-row">
+                <span class="info-value">{{ selectedWorkshop.city }}, {{ selectedWorkshop.governorate }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-value secondary">{{ selectedWorkshop.country }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Technicians -->
+          <div class="detail-card">
+            <div class="card-icon team">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="card-content">
+              <h4>Team Size</h4>
+              <div class="info-row">
+                <span class="info-value large">{{ selectedWorkshop.numbersOfTechnicians }}</span>
+                <span class="info-label">Technicians</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coordinates -->
+          <div class="detail-card">
+            <div class="card-icon coordinates">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <div class="card-content">
+              <h4>GPS Coordinates</h4>
+              <div class="info-row">
+                <span class="info-value small">{{ selectedWorkshop.latitude }}, {{ selectedWorkshop.longitude }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="description-section" *ngIf="selectedWorkshop.description">
+          <h4>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Description
+          </h4>
+          <p>{{ selectedWorkshop.description }}</p>
+        </div>
+
+        <!-- Documents Section -->
+        <div class="documents-section">
+          <h4>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+              <polyline points="13 2 13 9 20 9"/>
+            </svg>
+            License Document
+          </h4>
+          <div class="document-preview" *ngIf="selectedWorkshop.licenceImageUrl">
+            <img [src]="buildAssetUrl(selectedWorkshop.licenceImageUrl)" alt="License Document" />
+          </div>
+          <div class="no-document" *ngIf="!selectedWorkshop.licenceImageUrl">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <p>No license document uploaded</p>
+          </div>
+        </div>
+
         <!-- Action Buttons -->
-        <div class="modal-actions" *ngIf="selectedWorkshop.verificationStatus === 'Pending'">
-          <button class="btn-modal-reject" (click)="rejectWorkshop(selectedWorkshop.id)" [disabled]="isLoading">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="modal-actions-enhanced" *ngIf="selectedWorkshop.verificationStatus === 'Pending'">
+          <button class="btn-action secondary" (click)="closeDetailModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
-            Reject (Set to Unverified)
+            Cancel
           </button>
-          <button class="btn-modal-approve" (click)="approveWorkshop(selectedWorkshop.id)" [disabled]="isLoading">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
+          <button class="btn-action reject" (click)="rejectWorkshop(selectedWorkshop.id)" [disabled]="isLoading">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            Reject Workshop
+          </button>
+          <button class="btn-action approve" (click)="approveWorkshop(selectedWorkshop.id)" [disabled]="isLoading">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
             Verify Workshop
+          </button>
+        </div>
+
+        <div class="modal-actions-enhanced" *ngIf="selectedWorkshop.verificationStatus !== 'Pending'">
+          <button class="btn-action secondary full-width" (click)="closeDetailModal()">
+            Close
           </button>
         </div>
       </div>
