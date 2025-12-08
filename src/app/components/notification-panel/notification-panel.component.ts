@@ -316,10 +316,10 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     const now = new Date();
     // Parse the date - handle both string and Date objects
     let notificationDate = typeof date === 'string' ? new Date(date) : new Date(date);
-    
+
     // Backend stores times 2 hours behind, so add 2 hours to correct it
     notificationDate = new Date(notificationDate.getTime() + (2 * 60 * 60 * 1000));
-    
+
     // Calculate the time difference with corrected timestamp
     const diff = now.getTime() - notificationDate.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -406,10 +406,10 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     if ((window as any).reopenAppointmentDialog) {
       // New signature: reopenAppointmentDialog(notificationId, bookingId?)
       (window as any).reopenAppointmentDialog(backendNotificationId, bookingId);
-      
+
       // Mark notification as read
       this.notificationService.markAsRead(notification.id);
-      
+
       // Close the notification panel
       this.closePanel();
     } else {
