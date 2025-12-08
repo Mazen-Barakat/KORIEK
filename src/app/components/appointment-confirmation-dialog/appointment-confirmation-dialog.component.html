@@ -1,109 +1,126 @@
 <!-- Appointment Confirmation Dialog -->
 <div class="dialog-overlay" *ngIf="isVisible" (click)="$event.stopPropagation()">
   <div class="dialog-container" [class.expired]="isExpired">
-    <!-- Header -->
-    <div class="dialog-header">
-      <div class="header-icon" [class.expired-icon]="isExpired">
-        <svg *ngIf="!isExpired" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Compact Header with Icon -->
+    <div class="compact-header">
+      <div class="header-icon-small" [class.expired-icon]="isExpired">
+        <svg *ngIf="!isExpired" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <polyline points="12 6 12 12 16 14"/>
         </svg>
-        <svg *ngIf="isExpired" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg *ngIf="isExpired" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <line x1="15" y1="9" x2="9" y2="15"/>
           <line x1="9" y1="9" x2="15" y2="15"/>
         </svg>
       </div>
-      <h2 class="dialog-title">{{ currentNotification?.title || 'Confirm Your Appointment' }}</h2>
+      <h2 class="compact-title">New Notification</h2>
     </div>
 
-    <!-- Timer -->
-    <div class="timer-container" [class.timer-expired]="isExpired">
-      <div class="timer-label">Time Remaining</div>
-      <div class="timer-value">{{ remainingTime }}</div>
+    <!-- Timer - Compact -->
+    <div class="timer-compact" [class.timer-expired]="isExpired">
+      <div class="timer-label-small">TIME REMAINING</div>
+      <div class="timer-value-large">{{ remainingTime }}</div>
     </div>
 
-    <!-- Booking Details (if available) -->
-    <div class="booking-details" *ngIf="currentNotification?.bookingDetails">
-      <div class="detail-row" *ngIf="currentNotification && currentNotification.bookingDetails && currentNotification.bookingDetails.customerName">
-        <span class="detail-label">Customer:</span>
-        <span class="detail-value">{{ currentNotification.bookingDetails.customerName }}</span>
+    <!-- Booking Details - Compact Grid -->
+    <div class="booking-card-compact" *ngIf="!bookingDetails.isLoading">
+      <div class="booking-header-compact">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <span>Booking Details</span>
       </div>
-      <div class="detail-row" *ngIf="currentNotification && currentNotification.bookingDetails && currentNotification.bookingDetails.workshopName">
-        <span class="detail-label">Workshop:</span>
-        <span class="detail-value">{{ currentNotification.bookingDetails.workshopName }}</span>
-      </div>
-      <div class="detail-row" *ngIf="currentNotification && currentNotification.bookingDetails && currentNotification.bookingDetails.serviceName">
-        <span class="detail-label">Service:</span>
-        <span class="detail-value">{{ currentNotification.bookingDetails.serviceName }}</span>
-      </div>
-      <div class="detail-row" *ngIf="currentNotification && currentNotification.bookingDetails && currentNotification.bookingDetails.appointmentDate">
-        <span class="detail-label">Time:</span>
-        <span class="detail-value">{{ currentNotification.bookingDetails.appointmentDate | date:'MMM d, y, h:mm a' }}</span>
-      </div>
-    </div>
-
-    <!-- Message -->
-    <div class="dialog-message">
-      <p>{{ currentNotification?.message }}</p>
-    </div>
-
-    <!-- Confirmation Status Display -->
-    <div class="confirmation-status" *ngIf="!isExpired">
-      <div class="status-header">Confirmation Status</div>
-      <div class="status-grid">
-        <div class="status-item" [class.confirmed]="carOwnerConfirmed">
-          <div class="status-icon">
-            <svg *ngIf="carOwnerConfirmed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <svg *ngIf="!carOwnerConfirmed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
+      
+      <div class="booking-grid-compact">
+        <div class="booking-item-compact" *ngIf="bookingDetails.carOwnerFullName">
+          <div class="item-icon customer-bg">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
             </svg>
           </div>
-          <span class="status-label">Car Owner</span>
-          <span class="status-badge" [class.confirmed]="carOwnerConfirmed">
-            {{ carOwnerConfirmed ? 'Confirmed' : 'Pending' }}
-          </span>
+          <div class="item-text">
+            <div class="item-label">CUSTOMER</div>
+            <div class="item-value">{{ bookingDetails.carOwnerFullName }}</div>
+          </div>
         </div>
-        <div class="status-item" [class.confirmed]="workshopConfirmed">
-          <div class="status-icon">
-            <svg *ngIf="workshopConfirmed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <svg *ngIf="!workshopConfirmed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
+
+        <div class="booking-item-compact" *ngIf="bookingDetails.carName">
+          <div class="item-icon vehicle-bg">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+              <circle cx="6.5" cy="16.5" r="2.5"></circle>
+              <circle cx="16.5" cy="16.5" r="2.5"></circle>
             </svg>
           </div>
-          <span class="status-label">Workshop</span>
-          <span class="status-badge" [class.confirmed]="workshopConfirmed">
-            {{ workshopConfirmed ? 'Confirmed' : 'Pending' }}
-          </span>
+          <div class="item-text">
+            <div class="item-label">VEHICLE</div>
+            <div class="item-value">{{ bookingDetails.carName }}</div>
+          </div>
+        </div>
+
+        <div class="booking-item-compact service-full" *ngIf="bookingDetails.serviceName">
+          <div class="item-icon service-bg">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+          </div>
+          <div class="item-text">
+            <div class="item-label">SERVICE</div>
+            <div class="item-value">{{ bookingDetails.serviceName }}</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Warning Info Box -->
-    <div class="info-box">
-      <svg class="info-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Loading State - Compact -->
+    <div class="loading-compact" *ngIf="bookingDetails.isLoading">
+      <div class="loading-spinner-small"></div>
+      <span>Loading details...</span>
+    </div>
+
+    <!-- Message - Compact -->
+    <div class="message-compact">
+      <p>{{ currentNotification?.message || 'Car owner has confirmed arrival. Please confirm your readiness.' }}</p>
+    </div>
+
+    <!-- Confirmation Status - Compact -->
+    <div class="status-compact" *ngIf="!isExpired">
+      <div class="status-title">CONFIRMATION STATUS</div>
+      <div class="status-row">
+        <div class="status-col" [class.confirmed]="carOwnerConfirmed">
+          <div class="status-circle">
+            <svg *ngIf="carOwnerConfirmed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="status-text">Car Owner</div>
+          <div class="status-state">{{ carOwnerConfirmed ? 'CONFIRMED' : 'PENDING' }}</div>
+        </div>
+        <div class="status-col" [class.confirmed]="workshopConfirmed">
+          <div class="status-circle">
+            <svg *ngIf="workshopConfirmed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="status-text">Workshop</div>
+          <div class="status-state">{{ workshopConfirmed ? 'CONFIRMED' : 'PENDING' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Banner - Compact -->
+    <div class="info-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
         <line x1="12" y1="16" x2="12" y2="12"/>
         <line x1="12" y1="8" x2="12.01" y2="8"/>
       </svg>
-      <span class="info-text">
-        <span *ngIf="!hasCurrentUserConfirmed && !isExpired">
-          Both you and the other party must confirm for the appointment to proceed.
-        </span>
-        <span *ngIf="hasCurrentUserConfirmed && !carOwnerConfirmed && (userRole === 'WORKSHOP' || userRole === 'Workshop') && !isExpired">
-          <strong>You've confirmed!</strong> Waiting for the car owner to confirm.
-        </span>
-        <span *ngIf="hasCurrentUserConfirmed && !workshopConfirmed && userRole !== 'WORKSHOP' && userRole !== 'Workshop' && !isExpired">
-          <strong>You've confirmed!</strong> Waiting for the workshop to confirm.
-        </span>
-        <span *ngIf="isExpired" class="expired-warning">
-          <br><strong>The confirmation deadline has passed.</strong>
-        </span>
-      </span>
+      <span *ngIf="!hasCurrentUserConfirmed && !isExpired">Both parties must confirm for the appointment to proceed.</span>
+      <span *ngIf="hasCurrentUserConfirmed && !isExpired">You've confirmed! Waiting for the other party.</span>
+      <span *ngIf="isExpired">The confirmation deadline has passed.</span>
     </div>
 
     <!-- Action Buttons -->

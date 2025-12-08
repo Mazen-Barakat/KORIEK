@@ -449,11 +449,29 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/workshops']);
   }
 
-  bookService(): void {
+  /**
+   * Navigate to booking page with workshop and optionally service pre-selected
+   */
+  bookService(service?: WorkshopService): void {
     if (this.workshop) {
-      this.router.navigate(['/booking'], {
-        queryParams: { workshopId: this.workshop.id },
-      });
+      const queryParams: any = {
+        workshopId: this.workshop.id,
+        workshopName: this.workshop.name,
+      };
+
+      // If a specific service is selected, include its details
+      if (service) {
+        queryParams.workshopServiceId = service.id;
+        queryParams.serviceId = service.serviceId;
+        queryParams.serviceName = service.serviceName;
+        queryParams.minPrice = service.minPrice;
+        queryParams.maxPrice = service.maxPrice;
+        if (service.origin) {
+          queryParams.origin = service.origin;
+        }
+      }
+
+      this.router.navigate(['/booking'], { queryParams });
     }
   }
 
