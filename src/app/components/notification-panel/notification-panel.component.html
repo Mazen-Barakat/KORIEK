@@ -17,7 +17,7 @@
       </button>
     </div>
 
-    <div class="notifications-list">
+    <div class="notifications-list" (scroll)="onNotificationListScroll($event)">
       <div
         class="notification-item"
         *ngFor="let notification of notifications"
@@ -60,6 +60,11 @@
       <div class="empty-state" *ngIf="notifications.length === 0">
         <div class="empty-icon">🔕</div>
         <p class="empty-message">No notifications</p>
+      </div>
+
+      <!-- Load more indicator -->
+      <div class="load-more-indicator" *ngIf="notifications.length < allNotifications.length">
+        <p>Scroll for more notifications ({{ notifications.length }} of {{ allNotifications.length }})</p>
       </div>
     </div>
 
