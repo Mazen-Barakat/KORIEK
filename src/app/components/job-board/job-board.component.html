@@ -295,7 +295,7 @@
                    [alt]="booking.customerName"
                    class="customer-avatar">
               <div class="customer-info">
-                <span class="customer-name">
+                <span class="customer-name customer-name-hoverable" (click)="showOwnerTooltip(booking.id, $event)">
                   <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
                   {{ booking.customerName }}
                 </span>

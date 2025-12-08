@@ -11,73 +11,178 @@
     <!-- Navigation Links - Unified for All Pages -->
     <nav class="nav-links">
       <!-- Landing Page Link (Home) -->
-      <a routerLink="/" class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
+      <a
+        routerLink="/"
+        class="nav-link"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
         <span>Home</span>
       </a>
 
       <!-- My Vehicles Link (only show when authenticated and NOT a workshop owner and NOT admin) -->
-      <a *ngIf="isAuthenticated && !isWorkshopOwner && !isAdmin && !isAuthFormPage" routerLink="/my-vehicles" class="nav-link" routerLinkActive="active">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
-          <circle cx="7.5" cy="17.5" r="1.5"/>
-          <circle cx="16.5" cy="17.5" r="1.5"/>
+      <a
+        *ngIf="isAuthenticated && !isWorkshopOwner && !isAdmin && !isAuthFormPage"
+        routerLink="/my-vehicles"
+        class="nav-link"
+        routerLinkActive="active"
+      >
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z" />
+          <circle cx="7.5" cy="17.5" r="1.5" />
+          <circle cx="16.5" cy="17.5" r="1.5" />
         </svg>
         <span>My Vehicles</span>
       </a>
 
       <!-- Booking Link (only show when authenticated and NOT a workshop owner and NOT admin) -->
-      <a *ngIf="isAuthenticated && !isWorkshopOwner && !isAdmin && !isAuthFormPage" routerLink="/booking" class="nav-link" routerLinkActive="active">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="6" width="18" height="15" rx="2"/>
-          <path d="M3 10h18"/>
-          <path d="M8 3v4"/>
-          <path d="M16 3v4"/>
+      <a
+        *ngIf="isAuthenticated && !isWorkshopOwner && !isAdmin && !isAuthFormPage"
+        routerLink="/booking"
+        class="nav-link"
+        routerLinkActive="active"
+      >
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="6" width="18" height="15" rx="2" />
+          <path d="M3 10h18" />
+          <path d="M8 3v4" />
+          <path d="M16 3v4" />
         </svg>
         <span>Booking</span>
       </a>
 
       <!-- Workshops Discovery Link (only show when authenticated and NOT a workshop owner and NOT admin) -->
-      <a *ngIf="isAuthenticated && !isWorkshopOwner && !isAdmin && !isAuthFormPage" routerLink="/workshops" class="nav-link" routerLinkActive="active">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 21h18"/>
-          <path d="M5 21V7l8-4v18"/>
-          <path d="M19 21V11l-6-4"/>
-          <path d="M9 9v.01"/>
-          <path d="M9 12v.01"/>
-          <path d="M9 15v.01"/>
+      <a
+        *ngIf="isAuthenticated && !isWorkshopOwner && !isAdmin && !isAuthFormPage"
+        routerLink="/workshops"
+        class="nav-link"
+        routerLinkActive="active"
+      >
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 21h18" />
+          <path d="M5 21V7l8-4v18" />
+          <path d="M19 21V11l-6-4" />
+          <path d="M9 9v.01" />
+          <path d="M9 12v.01" />
+          <path d="M9 15v.01" />
         </svg>
         <span>Workshops</span>
       </a>
 
       <!-- Admin Dashboard Link (only show for admins when authenticated) -->
-      <a *ngIf="isAuthenticated && isAdmin && !isAuthFormPage" routerLink="/admin/dashboard" class="nav-link" routerLinkActive="active">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5"/>
-          <path d="M2 12l10 5 10-5"/>
+      <a
+        *ngIf="isAuthenticated && isAdmin && !isAuthFormPage"
+        routerLink="/admin/dashboard"
+        class="nav-link"
+        routerLinkActive="active"
+      >
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
         </svg>
         <span>Admin Dashboard</span>
       </a>
 
       <!-- Workshop Manager Links (only show for workshop owners when authenticated) -->
-      <a *ngIf="isAuthenticated && isWorkshopOwner && !isAuthFormPage" routerLink="/workshop/dashboard" class="nav-link" routerLinkActive="active">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7"/>
-          <rect x="14" y="3" width="7" height="7"/>
-          <rect x="14" y="14" width="7" height="7"/>
-          <rect x="3" y="14" width="7" height="7"/>
+      <a
+        *ngIf="isAuthenticated && isWorkshopOwner && !isAuthFormPage"
+        routerLink="/workshop/dashboard"
+        class="nav-link"
+        routerLinkActive="active"
+      >
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
         </svg>
         <span>Dashboard</span>
       </a>
 
-      <a *ngIf="isAuthenticated && isWorkshopOwner && !isAuthFormPage" routerLink="/workshop/job-board" class="nav-link" routerLinkActive="active">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-          <line x1="9" y1="3" x2="9" y2="21"/>
+      <a
+        *ngIf="isAuthenticated && isWorkshopOwner && !isAuthFormPage"
+        routerLink="/workshop/job-board"
+        class="nav-link"
+        routerLinkActive="active"
+      >
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <line x1="9" y1="3" x2="9" y2="21" />
         </svg>
         <span>Jobs</span>
       </a>
@@ -85,41 +190,106 @@
       <!-- Profile link removed for workshop owners as requested -->
 
       <!-- Testimonials Link (only show on landing) -->
-      <a *ngIf="!isAuthenticated && !isAuthFormPage" [routerLink]="null" class="nav-link" (click)="scrollToSection('testimonials')">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/>
+      <a
+        *ngIf="!isAuthenticated && !isAuthFormPage"
+        [routerLink]="null"
+        class="nav-link"
+        (click)="scrollToSection('testimonials')"
+      >
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"
+          />
         </svg>
         <span>Testimonials</span>
       </a>
 
       <!-- FAQs Link (only show on landing) -->
-      <a *ngIf="!isAuthenticated && !isAuthFormPage" [routerLink]="null" class="nav-link" (click)="scrollToSection('faq')">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
+      <a
+        *ngIf="!isAuthenticated && !isAuthFormPage"
+        [routerLink]="null"
+        class="nav-link"
+        (click)="scrollToSection('faq')"
+      >
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
         <span>FAQs</span>
       </a>
 
       <!-- Contact Link -->
       <a class="nav-link" (click)="openContactModal()">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-          <circle cx="12" cy="10" r="3"/>
+        <svg
+          class="nav-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
         </svg>
         <span>Contact</span>
       </a>
     </nav>
 
+    <!-- Mobile Hamburger Button (visible on small screens) -->
+    <button
+      class="mobile-hamburger"
+      [class.open]="isMobileMenuOpen"
+      aria-label="Toggle menu"
+      (click)="toggleMobileMenu()"
+      [attr.aria-expanded]="isMobileMenuOpen"
+    >
+      <span class="hamburger-line" aria-hidden="true"></span>
+      <span class="hamburger-line" aria-hidden="true"></span>
+      <span class="hamburger-line" aria-hidden="true"></span>
+    </button>
+
     <!-- Right Section: Language, Get the App, Log In, Sign Up, Logout -->
     <div class="header-actions">
       <!-- Language Selector -->
       <button class="language-btn" (click)="toggleLanguage()">
-        <svg class="language-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        <svg
+          class="language-icon"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+          <path
+            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+          />
         </svg>
         <span class="language-text">{{ currentLanguage }}</span>
       </button>
@@ -134,9 +304,16 @@
 
         <!-- Get the App Button (only on landing page) -->
         <button *ngIf="isLandingPage" (click)="scrollToApp()" class="btn btn-app">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-            <line x1="12" y1="18" x2="12" y2="18"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+            <line x1="12" y1="18" x2="12" y2="18" />
           </svg>
           Get the App
         </button>
@@ -156,6 +333,122 @@
   </div>
 </header>
 
+<!-- Mobile Slide-In Panel -->
+<div class="mobile-panel-overlay" *ngIf="isMobileMenuOpen" (click)="closeMobileMenu()">
+  <aside
+    class="mobile-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Main menu"
+    tabindex="-1"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="mobile-panel-header">
+      <a [routerLink]="getLogoRoute()" class="mobile-logo-link" (click)="closeMobileMenu()">
+        <img src="/Assets/logo.png" alt="Korek" class="mobile-logo" />
+      </a>
+      <button class="mobile-close" aria-label="Close menu" (click)="closeMobileMenu()">✕</button>
+    </div>
+
+    <div class="mobile-panel-actions">
+      <ng-container *ngIf="!isAuthenticated">
+        <a routerLink="/select-role" class="btn btn-login" (click)="closeMobileMenu()">Log In</a>
+        <a routerLink="/select-role" class="btn btn-signup" (click)="closeMobileMenu()">Sign Up</a>
+      </ng-container>
+
+      <ng-container *ngIf="isAuthenticated && !isAuthFormPage">
+        <div class="mobile-action-icons">
+          <app-notification-panel (click)="closeMobileMenu()"></app-notification-panel>
+          <app-profile-button (click)="closeMobileMenu()"></app-profile-button>
+        </div>
+        <button (click)="logout(); closeMobileMenu()" class="btn btn-logout">Logout</button>
+      </ng-container>
+    </div>
+
+    <nav class="mobile-nav">
+      <!-- Reuse same link conditions as desktop; close menu on click -->
+      <a
+        routerLink="/"
+        class="mobile-nav-link"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeMobileMenu()"
+        >Home</a
+      >
+
+      <a
+        *ngIf="isAuthenticated && !isWorkshopOwner && !isAdmin && !isAuthFormPage"
+        routerLink="/my-vehicles"
+        class="mobile-nav-link"
+        routerLinkActive="active"
+        (click)="closeMobileMenu()"
+        >My Vehicles</a
+      >
+
+      <a
+        *ngIf="isAuthenticated && !isWorkshopOwner && !isAdmin && !isAuthFormPage"
+        routerLink="/booking"
+        class="mobile-nav-link"
+        routerLinkActive="active"
+        (click)="closeMobileMenu()"
+        >Booking</a
+      >
+
+      <a
+        *ngIf="isAuthenticated && !isWorkshopOwner && !isAdmin && !isAuthFormPage"
+        routerLink="/workshops"
+        class="mobile-nav-link"
+        routerLinkActive="active"
+        (click)="closeMobileMenu()"
+        >Workshops</a
+      >
+
+      <a
+        *ngIf="isAuthenticated && isAdmin && !isAuthFormPage"
+        routerLink="/admin/dashboard"
+        class="mobile-nav-link"
+        routerLinkActive="active"
+        (click)="closeMobileMenu()"
+        >Admin Dashboard</a
+      >
+
+      <a
+        *ngIf="isAuthenticated && isWorkshopOwner && !isAuthFormPage"
+        routerLink="/workshop/dashboard"
+        class="mobile-nav-link"
+        routerLinkActive="active"
+        (click)="closeMobileMenu()"
+        >Dashboard</a
+      >
+
+      <a
+        *ngIf="isAuthenticated && isWorkshopOwner && !isAuthFormPage"
+        routerLink="/workshop/job-board"
+        class="mobile-nav-link"
+        routerLinkActive="active"
+        (click)="closeMobileMenu()"
+        >Jobs</a
+      >
+
+      <a
+        *ngIf="!isAuthenticated && !isAuthFormPage"
+        (click)="scrollToSection('testimonials'); closeMobileMenu()"
+        class="mobile-nav-link"
+        >Testimonials</a
+      >
+
+      <a
+        *ngIf="!isAuthenticated && !isAuthFormPage"
+        (click)="scrollToSection('faq'); closeMobileMenu()"
+        class="mobile-nav-link"
+        >FAQs</a
+      >
+
+      <a class="mobile-nav-link" (click)="openContactModal(); closeMobileMenu()">Contact</a>
+    </nav>
+  </aside>
+</div>
+
 <!-- Contact Modal -->
 <div class="contact-modal-overlay" *ngIf="isContactModalOpen" (click)="closeContactModal()">
   <div class="contact-modal" (click)="$event.stopPropagation()">
@@ -163,9 +456,17 @@
     <div class="modal-header">
       <div class="modal-title-section">
         <div class="modal-icon-wrapper">
-          <svg class="modal-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
+          <svg
+            class="modal-icon"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
           </svg>
         </div>
         <div>
@@ -174,9 +475,16 @@
         </div>
       </div>
       <button class="modal-close-btn" (click)="closeContactModal()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
     </div>
@@ -189,8 +497,17 @@
         <div class="contact-info-grid">
           <div class="info-card">
             <div class="info-icon phone">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                />
               </svg>
             </div>
             <div class="info-content">
@@ -201,9 +518,18 @@
 
           <div class="info-card">
             <div class="info-icon email">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                />
+                <polyline points="22,6 12,13 2,6" />
               </svg>
             </div>
             <div class="info-content">
@@ -214,9 +540,16 @@
 
           <div class="info-card">
             <div class="info-icon location">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                <circle cx="12" cy="10" r="3"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
               </svg>
             </div>
             <div class="info-content">
@@ -227,9 +560,16 @@
 
           <div class="info-card">
             <div class="info-icon hours">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
             </div>
             <div class="info-content">
@@ -254,7 +594,8 @@
                 placeholder="Enter your name"
                 [(ngModel)]="contactForm.name"
                 name="name"
-                required>
+                required
+              />
             </div>
 
             <div class="form-group">
@@ -266,7 +607,8 @@
                 placeholder="your.email@example.com"
                 [(ngModel)]="contactForm.email"
                 name="email"
-                required>
+                required
+              />
             </div>
           </div>
 
@@ -280,7 +622,8 @@
                 placeholder="+20 123 456 7890"
                 [(ngModel)]="contactForm.phone"
                 name="phone"
-                required>
+                required
+              />
             </div>
 
             <div class="form-group">
@@ -290,7 +633,8 @@
                 class="form-input"
                 [(ngModel)]="contactForm.subject"
                 name="subject"
-                required>
+                required
+              >
                 <option value="" disabled selected>Select a subject</option>
                 <option value="general">General Inquiry</option>
                 <option value="complaint">Complaint</option>
@@ -310,15 +654,23 @@
               [(ngModel)]="contactForm.message"
               name="message"
               rows="4"
-              required></textarea>
+              required
+            ></textarea>
           </div>
 
           <div class="form-actions">
             <button type="button" class="btn-cancel" (click)="closeContactModal()">Cancel</button>
             <button type="submit" class="btn-submit">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>
               Send Message
             </button>

@@ -20,7 +20,7 @@ import { Subscription } from 'rxjs';
     RouterLinkActive,
     ProfileButtonComponent,
     NotificationPanelComponent,
-    FormsModule
+    FormsModule,
   ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
@@ -43,7 +43,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     email: '',
     phone: '',
     subject: '',
-    message: ''
+    message: '',
   };
 
   private routerSub: Subscription | null = null;
@@ -52,12 +52,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private popStateHandler: ((ev?: PopStateEvent) => void) | null = null;
   private pageShowHandler: ((ev: PageTransitionEvent | Event) => void) | null = null;
   private _contactSub: import('rxjs').Subscription | null = null;
+  // Mobile menu state
+  isMobileMenuOpen = false;
+  private bodyOverflowBackup: string | null = null;
+  // Focus trapping for accessible mobile menu
+  private keydownHandler: ((ev: KeyboardEvent) => void) | null = null;
+  private mobilePanelFirstEl: HTMLElement | null = null;
+  private mobilePanelLastEl: HTMLElement | null = null;
+  private previouslyFocusedElement: HTMLElement | null = null;
+  private mobileSetTabindex = false;
 
   constructor(
     private authService: AuthService,
     private profileService: ProfileService,
-    private router: Router
-    , private contactService: ContactService
+    private router: Router,
+    private contactService: ContactService
   ) {}
 
   getWorkshopProfileRoute(): string {
@@ -96,7 +105,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           next: () => {},
           error: () => {
             // Ignore profile fetch errors here; ProfileButton will show placeholder.
-          }
+          },
         });
       }
     });
@@ -112,8 +121,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
 
     // Also subscribe to user data changes to update displayed name dynamically
-    this.userSub = this.authService.currentUser$.subscribe(user => {
-      this.userName = user ? (user.userName || user.name || user.fullName || user.email) : null;
+    this.userSub = this.authService.currentUser$.subscribe((user) => {
+      this.userName = user ? user.userName || user.name || user.fullName || user.email : null;
       // Recompute role when currentUser changes (e.g., after login/logout)
       this.checkLandingPage();
     });
@@ -123,6 +132,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         this.checkLandingPage();
+        // Close mobile menu on navigation
+        this.closeMobileMenu();
         // Do NOT auto-animate logo on every navigation end — only animate on user click
       });
 
@@ -144,11 +155,42 @@ export class HeaderComponent implements OnInit, OnDestroy {
     window.addEventListener('pageshow', this.pageShowHandler as EventListener);
 
     // Subscribe to global contact open/close events
-    this._contactSub = this.contactService.open$?.subscribe?.((open) => {
-      if (open) {
-        this.openContactModal();
+    this._contactSub =
+      this.contactService.open$?.subscribe?.((open) => {
+        if (open) {
+          this.openContactModal();
+        }
+      }) || null;
+
+    // Keydown handler for Escape and Tab focus trap while mobile menu is open
+    this.keydownHandler = (ev: KeyboardEvent) => {
+      try {
+        if (ev.key === 'Escape' || ev.key === 'Esc') {
+          this.closeMobileMenu();
+          return;
+        }
+
+        if (ev.key === 'Tab' && this.isMobileMenuOpen) {
+          // simple focus trap: keep focus inside mobile panel
+          const first = this.mobilePanelFirstEl;
+          const last = this.mobilePanelLastEl;
+          if (!first || !last) return;
+
+          const active = document.activeElement as HTMLElement | null;
+          const shift = ev.shiftKey;
+          if (shift && active === first) {
+            ev.preventDefault();
+            last.focus();
+          } else if (!shift && active === last) {
+            ev.preventDefault();
+            first.focus();
+          }
+        }
+      } catch (e) {
+        // ignore
       }
-    }) || null;
+    };
+    window.addEventListener('keydown', this.keydownHandler);
   }
 
   ngOnDestroy(): void {
@@ -176,6 +218,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this._contactSub.unsubscribe();
       this._contactSub = null;
     }
+    if (this.keydownHandler) {
+      window.removeEventListener('keydown', this.keydownHandler);
+      this.keydownHandler = null;
+    }
+    // Ensure body scroll restored if left locked
+    this.setBodyScrollLocked(false);
   }
 
   checkLandingPage() {
@@ -183,11 +231,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.isRoleSelectionPage = this.router.url.startsWith('/select-role');
     // Authentication-related pages where nav should hide landing-only links
     const path = this.router.url || '';
-    this.isAuthFormPage = path.startsWith('/select-role') || path.startsWith('/signup') || path.startsWith('/login');
+    this.isAuthFormPage =
+      path.startsWith('/select-role') || path.startsWith('/signup') || path.startsWith('/login');
     // Recompute role flags on each navigation using latest stored user
     try {
       const storedUser = this.authService.getUser();
-      const roleFromStored = storedUser?.roles?.length ? storedUser.roles[0] : (storedUser?.role || storedUser?.roleName || '');
+      const roleFromStored = storedUser?.roles?.length
+        ? storedUser.roles[0]
+        : storedUser?.role || storedUser?.roleName || '';
       this.isWorkshopOwner = !!storedUser && RoleHelper.isWorkshop(roleFromStored);
       this.isAdmin = !!storedUser && RoleHelper.isAdmin(roleFromStored);
     } catch (e) {
@@ -237,7 +288,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       email: '',
       phone: '',
       subject: '',
-      message: ''
+      message: '',
     };
   }
 
@@ -250,5 +301,107 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     // Close modal
     this.closeContactModal();
+  }
+
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    this.setBodyScrollLocked(this.isMobileMenuOpen);
+    if (this.isMobileMenuOpen) {
+      // remember focused element so we can restore focus on close
+      this.previouslyFocusedElement = document.activeElement as HTMLElement | null;
+      // Delay to allow panel to render
+      setTimeout(() => {
+        this.updateMobilePanelFocusable();
+        const panel = document.querySelector('.mobile-panel') as HTMLElement | null;
+        if (panel) {
+          panel.focus();
+        }
+      }, 30);
+    } else {
+      this.mobilePanelFirstEl = null;
+      this.mobilePanelLastEl = null;
+    }
+  }
+
+  closeMobileMenu() {
+    if (!this.isMobileMenuOpen) return;
+    this.isMobileMenuOpen = false;
+    this.setBodyScrollLocked(false);
+    // restore focus to the element that had focus before opening (or hamburger)
+    try {
+      const hamburger = document.querySelector('.mobile-hamburger') as HTMLElement | null;
+      const toFocus = this.previouslyFocusedElement || hamburger;
+      if (toFocus) {
+        toFocus.focus();
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Remove any tabindex we may have injected
+    try {
+      if (this.mobileSetTabindex) {
+        if (this.mobilePanelFirstEl && this.mobilePanelFirstEl.getAttribute('tabindex') === '0') {
+          this.mobilePanelFirstEl.removeAttribute('tabindex');
+        }
+        const panel = document.querySelector('.mobile-panel') as HTMLElement | null;
+        if (panel && panel.getAttribute('tabindex') === '0') {
+          panel.removeAttribute('tabindex');
+        }
+        this.mobileSetTabindex = false;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  private setBodyScrollLocked(locked: boolean) {
+    try {
+      const body = document && document.body;
+      if (!body) return;
+      if (locked) {
+        // Backup current overflow so it can be restored
+        this.bodyOverflowBackup = body.style.overflow || '';
+        body.style.overflow = 'hidden';
+      } else {
+        if (this.bodyOverflowBackup !== null) {
+          body.style.overflow = this.bodyOverflowBackup;
+        } else {
+          body.style.overflow = '';
+        }
+        this.bodyOverflowBackup = null;
+      }
+    } catch (e) {
+      // ignore DOM errors in SSR or unusual hosts
+    }
+  }
+
+  private updateMobilePanelFocusable() {
+    try {
+      const panel = document.querySelector('.mobile-panel') as HTMLElement | null;
+      if (!panel) return;
+      const selector =
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+      const nodes = Array.from(panel.querySelectorAll(selector)) as HTMLElement[];
+      if (nodes.length) {
+        this.mobilePanelFirstEl = nodes[0];
+        this.mobilePanelLastEl = nodes[nodes.length - 1];
+        // ensure first focusable is reachable
+        // only set tabindex if not already focusable by default
+        if (!this.mobilePanelFirstEl.hasAttribute('tabindex')) {
+          this.mobilePanelFirstEl.setAttribute('tabindex', '0');
+          this.mobileSetTabindex = true;
+        }
+      } else {
+        this.mobilePanelFirstEl = panel;
+        this.mobilePanelLastEl = panel;
+        if (!panel.hasAttribute('tabindex')) {
+          panel.setAttribute('tabindex', '0');
+          this.mobileSetTabindex = true;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 }
