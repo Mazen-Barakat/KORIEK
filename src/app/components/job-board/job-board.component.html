@@ -6,13 +6,164 @@
       <p class="page-subtitle">Manage all workshop bookings and repairs</p>
     </div>
     <div class="header-right">
+      <!-- Refresh Controls -->
+      <div class="refresh-controls">
+        <button
+          class="refresh-btn"
+          (click)="refreshBookings()"
+          [disabled]="isRefreshing"
+          [class.refreshing]="isRefreshing"
+          title="Refresh bookings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+        <div class="refresh-info">
+          <span class="last-updated" *ngIf="lastUpdated">{{ getLastUpdatedText() }}</span>
+          <button class="auto-refresh-toggle" (click)="toggleAutoRefresh()" [class.active]="autoRefreshEnabled" title="Toggle auto-refresh">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            {{ autoRefreshInterval / 1000 }}s
+          </button>
+        </div>
+      </div>
+
+      <!-- Card Density Toggle (visible only in kanban view) -->
+      <div class="density-toggle" *ngIf="viewMode === 'kanban'">
+        <button
+          class="density-btn"
+          [class.active]="cardDensity === 'comfortable'"
+          (click)="cardDensity = 'comfortable'"
+          title="Comfortable density">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </button>
+        <button
+          class="density-btn"
+          [class.active]="cardDensity === 'compact'"
+          (click)="cardDensity = 'compact'"
+          title="Compact density">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="4" rx="1"/>
+            <rect x="3" y="10" width="18" height="4" rx="1"/>
+            <rect x="3" y="16" width="18" height="4" rx="1"/>
+          </svg>
+        </button>
+        <button
+          class="density-btn"
+          [class.active]="cardDensity === 'dense'"
+          (click)="cardDensity = 'dense'"
+          title="Dense">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <line x1="3" y1="14" x2="21" y2="14"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Export PDF Button -->
+      <button class="export-pdf-btn" (click)="exportToPDF()" title="Export all bookings to PDF">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export PDF
+      </button>
+
+      <!-- View Mode Toggle (iOS-style Segmented Control) -->
+      <div class="view-toggle">
+        <button
+          class="view-toggle-btn"
+          [class.active]="viewMode === 'kanban'"
+          (click)="viewMode = 'kanban'"
+          title="Grid View">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          Grid
+        </button>
+        <button
+          class="view-toggle-btn"
+          [class.active]="viewMode === 'list'"
+          (click)="viewMode = 'list'"
+          title="List View">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          List
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Progression Timeline -->
+  <div class="status-timeline" *ngIf="viewMode === 'kanban'">
+    <div class="timeline-line"></div>
+    <div class="timeline-milestone"
+         data-status="new"
+         [class.active]="pendingBookings.length > 0"
+         (click)="scrollToColumn('new-column')"
+         title="Scroll to New Requests">
+      <div class="milestone-dot"></div>
+      <span class="milestone-label">New</span>
+    </div>
+    <div class="timeline-milestone"
+         data-status="upcoming"
+         [class.active]="acceptedBookings.length > 0"
+         (click)="scrollToColumn('upcoming-column')"
+         title="Scroll to Upcoming">
+      <div class="milestone-dot"></div>
+      <span class="milestone-label">Upcoming</span>
+    </div>
+    <div class="timeline-milestone"
+         data-status="inprogress"
+         [class.active]="inProgressBookings.length > 0"
+         (click)="scrollToColumn('inprogress-column')"
+         title="Scroll to In Progress">
+      <div class="milestone-dot"></div>
+      <span class="milestone-label">In Progress</span>
+    </div>
+    <div class="timeline-milestone"
+         data-status="ready"
+         [class.active]="readyForPickupBookings.length > 0"
+         (click)="scrollToColumn('ready-column')"
+         title="Scroll to Ready">
+      <div class="milestone-dot"></div>
+      <span class="milestone-label">Ready</span>
+    </div>
+    <div class="timeline-milestone"
+         data-status="completed"
+         [class.active]="completedBookings.length > 0"
+         (click)="scrollToColumn('completed-column')"
+         title="Scroll to Completed">
+      <div class="milestone-dot"></div>
+      <span class="milestone-label">Completed</span>
     </div>
   </div>
 
   <!-- Kanban View -->
-  <div class="kanban-board" *ngIf="viewMode === 'kanban'">
+  <div class="kanban-board" *ngIf="viewMode === 'kanban'" [class.card-compact]="cardDensity === 'compact'" [class.card-dense]="cardDensity === 'dense'">
     <!-- New Requests Column -->
-    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'new')">
+    <div id="new-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'new')">
       <div class="column-header new-header">
         <div class="column-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -23,7 +174,9 @@
           </svg>
           <span>New Requests</span>
         </div>
-        <span class="column-count">{{ pendingBookings.length }}</span>
+        <span class="column-count"
+              [class.capacity-warning]="pendingBookings.length >= 6 && pendingBookings.length < 10"
+              [class.capacity-critical]="pendingBookings.length >= 10">{{ pendingBookings.length }}</span>
       </div>
       <div class="column-content">
         <!-- Loading state -->
@@ -101,14 +254,18 @@
 
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && pendingBookings.length === 0">
-          <div class="empty-icon">📋</div>
+          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <path d="M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            <path d="M9 12h6M9 16h6"/>
+          </svg>
           <p>No new requests</p>
         </div>
       </div>
     </div>
 
     <!-- Upcoming Column -->
-    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'upcoming')">
+    <div id="upcoming-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'upcoming')">
       <div class="column-header upcoming-header">
         <div class="column-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -117,9 +274,11 @@
           </svg>
           <span>Upcoming</span>
         </div>
-        <span class="column-count">{{ acceptedBookings.length }}</span>
+        <span class="column-count"
+              [class.capacity-warning]="readyForPickupBookings.length >= 6 && readyForPickupBookings.length < 10"
+              [class.capacity-critical]="readyForPickupBookings.length >= 10">{{ readyForPickupBookings.length }}</span>
       </div>
-      <div class="column-content">
+      <div class="column-content" [class.has-overflow]="readyForPickupBookings.length > 6">
         <!-- Loading state -->
         <div class="loading-state" *ngIf="isLoadingRealBookings">
           <div class="loading-spinner"></div>
@@ -136,16 +295,20 @@
                    [alt]="booking.customerName"
                    class="customer-avatar">
               <div class="customer-info">
-                <span class="customer-name customer-name-hoverable"
-                      (click)="showOwnerTooltip(booking.id, $event)">
+                <span class="customer-name">
+                  <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
                   {{ booking.customerName }}
                 </span>
                 <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
               </div>
             </div>
-            <span class="urgency-badge" [ngClass]="getUrgencyClass(booking.urgency)">
-              {{ getUrgencyLabel(booking.urgency) }}
-            </span>
+            <svg *ngIf="booking.urgency === 'urgent' || booking.urgency === 'high'"
+                 class="urgency-icon" [ngClass]="getUrgencyClass(booking.urgency)"
+                 width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
           </div>
 
           <div class="job-vehicle">
@@ -179,14 +342,20 @@
 
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && acceptedBookings.length === 0">
-          <div class="empty-icon">📅</div>
+          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
+          </svg>
           <p>No upcoming appointments</p>
         </div>
       </div>
     </div>
 
     <!-- In Progress Column -->
-    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'in-progress')">
+    <div id="inprogress-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'in-progress')">
       <div class="column-header inprogress-header">
         <div class="column-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -194,9 +363,11 @@
           </svg>
           <span>In Progress</span>
         </div>
-        <span class="column-count">{{ inProgressBookings.length }}</span>
+        <span class="column-count"
+              [class.capacity-warning]="inProgressBookings.length >= 6 && inProgressBookings.length < 10"
+              [class.capacity-critical]="inProgressBookings.length >= 10">{{ inProgressBookings.length }}</span>
       </div>
-      <div class="column-content">
+      <div class="column-content" [class.has-overflow]="inProgressBookings.length > 6">
         <!-- Loading state -->
         <div class="loading-state" *ngIf="isLoadingRealBookings">
           <div class="loading-spinner"></div>
@@ -220,9 +391,13 @@
                 <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
               </div>
             </div>
-            <span class="urgency-badge" [ngClass]="getUrgencyClass(booking.urgency)">
-              {{ getUrgencyLabel(booking.urgency) }}
-            </span>
+            <svg *ngIf="booking.urgency === 'urgent' || booking.urgency === 'high'"
+                 class="urgency-icon" [ngClass]="getUrgencyClass(booking.urgency)"
+                 width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
           </div>
 
           <div class="job-vehicle">
@@ -272,14 +447,21 @@
 
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && inProgressBookings.length === 0">
-          <div class="empty-icon">🔧</div>
+          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line x1="12" y1="2" x2="12" y2="5"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="4.93" y1="4.93" x2="7.05" y2="7.05"/>
+            <line x1="16.95" y1="16.95" x2="19.07" y2="19.07"/>
+          </svg>
           <p>No jobs in progress</p>
         </div>
       </div>
     </div>
 
     <!-- Ready Column -->
-    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'ready')">
+    <div id="ready-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'ready')">
       <div class="column-header ready-header">
         <div class="column-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -352,14 +534,18 @@
 
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && readyForPickupBookings.length === 0">
-          <div class="empty-icon">✅</div>
+          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M16 4h2a2 2 0 012 2v2M16 20h2a2 2 0 002-2v-2M8 4H6a2 2 0 00-2 2v2M8 20H6a2 2 0 01-2-2v-2"/>
+          </svg>
           <p>No vehicles ready for pickup</p>
         </div>
       </div>
     </div>
 
     <!-- Completed Column -->
-    <div class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'completed')">
+    <div id="completed-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'completed')">
       <div class="column-header completed-header">
         <div class="column-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -368,9 +554,11 @@
           </svg>
           <span>Completed</span>
         </div>
-        <span class="column-count">{{ completedBookings.length }}</span>
+        <span class="column-count"
+              [class.capacity-warning]="completedBookings.length >= 6 && completedBookings.length < 10"
+              [class.capacity-critical]="completedBookings.length >= 10">{{ completedBookings.length }}</span>
       </div>
-      <div class="column-content">
+      <div class="column-content" [class.has-overflow]="completedBookings.length > 6">
         <div class="job-card"
              *ngFor="let booking of completedBookings; trackBy: trackByBookingId">
           <div class="job-header">
@@ -414,7 +602,10 @@
 
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && completedBookings.length === 0">
-          <div class="empty-icon">✓</div>
+          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
           <p>No completed bookings</p>
         </div>
       </div>
@@ -463,6 +654,195 @@
     
     <div class="tooltip-content" *ngIf="!tooltipLoading && !tooltipProfile">
       <p class="tooltip-error">Profile not available</p>
+    </div>
+  </div>
+
+  <!-- List View -->
+  <div class="list-view" *ngIf="viewMode === 'list'" [class.compact]="listDensity === 'compact'">
+    <!-- Density Toggle -->
+    <div class="list-header">
+      <h2 class="list-title">All Bookings</h2>
+      <div class="density-toggle">
+        <button
+          class="density-btn"
+          [class.active]="listDensity === 'comfortable'"
+          (click)="listDensity = 'comfortable'"
+          title="Comfortable View">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </button>
+        <button
+          class="density-btn"
+          [class.active]="listDensity === 'compact'"
+          (click)="listDensity = 'compact'"
+          title="Compact View">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="5" x2="21" y2="5"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="19" x2="21" y2="19"/>
+            <line x1="3" y1="5" x2="3.01" y2="5"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="19" x2="3.01" y2="19"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="list-container">
+      <!-- New Requests -->
+      <div class="list-section" *ngIf="pendingBookings.length > 0">
+        <h3 class="list-section-title">New Requests <span class="section-count">{{ pendingBookings.length }}</span></h3>
+        <div class="list-item" *ngFor="let booking of pendingBookings; trackBy: trackByBookingId" (click)="viewBookingDetails(booking)">
+          <div class="list-item-customer">
+            <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
+                 [alt]="booking.customerName"
+                 class="list-avatar">
+            <div class="list-customer-info">
+              <span class="list-customer-name">
+                <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
+                {{ booking.customerName }}
+              </span>
+              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+            </div>
+          </div>
+          <div class="list-item-service">
+            <span class="list-service-name">{{ booking.serviceName }}</span>
+            <span class="list-date">{{ formatDate(booking.appointmentDate) }}</span>
+          </div>
+          <div class="list-item-actions">
+            <button class="list-btn list-btn-confirm" (click)="confirmBooking(booking, $event)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Confirm
+            </button>
+            <button class="list-btn list-btn-decline" (click)="declineBooking(booking, $event)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming -->
+      <div class="list-section" *ngIf="acceptedBookings.length > 0">
+        <h3 class="list-section-title">Upcoming <span class="section-count">{{ acceptedBookings.length }}</span></h3>
+        <div class="list-item" *ngFor="let booking of acceptedBookings; trackBy: trackByBookingId" (click)="viewBookingDetails(booking)">
+          <div class="list-item-customer">
+            <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
+                 [alt]="booking.customerName"
+                 class="list-avatar">
+            <div class="list-customer-info">
+              <span class="list-customer-name">
+                <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
+                {{ booking.customerName }}
+              </span>
+              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+            </div>
+          </div>
+          <div class="list-item-service">
+            <span class="list-service-name">{{ booking.serviceName }}</span>
+            <span class="list-date">{{ formatDate(booking.appointmentDate) }}</span>
+          </div>
+          <div class="list-item-actions">
+            <span class="list-status status-upcoming">Confirmed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- In Progress -->
+      <div class="list-section" *ngIf="inProgressBookings.length > 0">
+        <h3 class="list-section-title">In Progress <span class="section-count">{{ inProgressBookings.length }}</span></h3>
+        <div class="list-item" *ngFor="let booking of inProgressBookings; trackBy: trackByBookingId" (click)="viewBookingDetails(booking)">
+          <div class="list-item-customer">
+            <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
+                 [alt]="booking.customerName"
+                 class="list-avatar">
+            <div class="list-customer-info">
+              <span class="list-customer-name">
+                <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
+                {{ booking.customerName }}
+              </span>
+              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+            </div>
+          </div>
+          <div class="list-item-service">
+            <span class="list-service-name">{{ booking.serviceName }}</span>
+            <div class="list-progress">
+              <div class="list-progress-bar">
+                <div class="list-progress-fill" style="width: 60%"></div>
+              </div>
+              <span class="list-progress-text">60%</span>
+            </div>
+          </div>
+          <div class="list-item-actions">
+            <button class="list-btn list-btn-ready" (click)="markAsReady(booking, $event)">Mark Ready</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ready for Pickup -->
+      <div class="list-section" *ngIf="readyForPickupBookings.length > 0">
+        <h3 class="list-section-title">Ready for Pickup <span class="section-count">{{ readyForPickupBookings.length }}</span></h3>
+        <div class="list-item" *ngFor="let booking of readyForPickupBookings; trackBy: trackByBookingId">
+          <div class="list-item-customer">
+            <div class="list-avatar-placeholder">{{ booking.customerName.charAt(0) || 'C' }}</div>
+            <div class="list-customer-info">
+              <span class="list-customer-name">{{ booking.customerName }}</span>
+              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+            </div>
+          </div>
+          <div class="list-item-service">
+            <span class="list-service-name">{{ booking.serviceName }}</span>
+            <span class="list-date">Ready since {{ formatDate(booking.appointmentDate) }}</span>
+          </div>
+          <div class="list-item-actions">
+            <button class="list-btn list-btn-notify" (click)="notifyCustomer(booking, $event)">Notify</button>
+            <button class="list-btn list-btn-complete" (click)="completeBooking(booking, $event)">Complete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed -->
+      <div class="list-section" *ngIf="completedBookings.length > 0">
+        <h3 class="list-section-title">Completed <span class="section-count">{{ completedBookings.length }}</span></h3>
+        <div class="list-item" *ngFor="let booking of completedBookings; trackBy: trackByBookingId">
+          <div class="list-item-customer">
+            <div class="list-avatar-placeholder">{{ booking.customerName.charAt(0) || 'C' }}</div>
+            <div class="list-customer-info">
+              <span class="list-customer-name">{{ booking.customerName }}</span>
+              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+            </div>
+          </div>
+          <div class="list-item-service">
+            <span class="list-service-name">{{ booking.serviceName }}</span>
+            <span class="list-date">Completed {{ formatDate(booking.appointmentDate) }}</span>
+          </div>
+          <div class="list-item-actions">
+            <span class="list-status status-completed">✓ Done</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State for List View -->
+      <div class="list-empty" *ngIf="!isLoadingRealBookings && pendingBookings.length === 0 && acceptedBookings.length === 0 && inProgressBookings.length === 0 && readyForPickupBookings.length === 0 && completedBookings.length === 0">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="9" y1="9" x2="15" y2="9"/>
+          <line x1="9" y1="13" x2="15" y2="13"/>
+          <line x1="9" y1="17" x2="13" y2="17"/>
+        </svg>
+        <h3>No bookings yet</h3>
+        <p>Your job board will show up here once you start receiving booking requests</p>
+      </div>
     </div>
   </div>
 </div>
