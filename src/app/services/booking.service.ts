@@ -41,6 +41,10 @@ export interface EnrichedBooking {
   customerName: string;
   serviceName: string;
   carId: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+  customerId?: number;
+  quotedPrice?: number;
 }
 
 @Injectable({

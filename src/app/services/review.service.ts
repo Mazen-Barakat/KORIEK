@@ -43,6 +43,22 @@ export class ReviewService {
   }
 
   /**
+   * Get all reviews for a workshop
+   * GET https://localhost:44316/api/Review/all-Review/{workshopId}
+   */
+  getAllWorkshopReviews(workshopId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/Review/all-Review/${workshopId}`);
+  }
+
+  /**
+   * Get workshop average rating
+   * GET https://localhost:44316/api/Review/average-rating/{workshopId}
+   */
+  getWorkshopAverageRating(workshopId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/Review/average-rating/${workshopId}`);
+  }
+
+  /**
    * Submit a new review
    * POST https://localhost:44316/api/Review
    */
