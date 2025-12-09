@@ -51,7 +51,7 @@ export interface EnrichedBooking {
   providedIn: 'root',
 })
 export class BookingService {
-  public apiUrl = 'https://localhost:44316/api';
+  public apiUrl = 'https://korik-demo.runasp.net/api';
   private jobsSubject = new BehaviorSubject<Job[]>([]);
   public jobs$ = this.jobsSubject.asObservable();
 
@@ -144,7 +144,7 @@ export class BookingService {
    */
   getBookingById(bookingId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/Booking/${bookingId}`).pipe(
-      catchError(err => {
+      catchError((err) => {
         console.error('Error fetching booking:', err);
         throw err;
       })
@@ -430,24 +430,29 @@ export class BookingService {
    * @param bookingId The booking ID to update
    * @param status The new status (e.g., 'NoShow', 'Cancelled', etc.)
    */
-  updateBookingStatus(bookingId: number, status: string): Observable<{
+  updateBookingStatus(
+    bookingId: number,
+    status: string
+  ): Observable<{
     success: boolean;
     message: string;
     data?: any;
   }> {
-    return this.http.put<{
-      success: boolean;
-      message: string;
-      data?: any;
-    }>(`${this.apiUrl}/Booking/Update-Booking-Status`, {
-      id: bookingId,
-      status: status
-    }).pipe(
-      catchError(err => {
-        console.error('Error updating booking status:', err);
-        throw err;
+    return this.http
+      .put<{
+        success: boolean;
+        message: string;
+        data?: any;
+      }>(`${this.apiUrl}/Booking/Update-Booking-Status`, {
+        id: bookingId,
+        status: status,
       })
-    );
+      .pipe(
+        catchError((err) => {
+          console.error('Error updating booking status:', err);
+          throw err;
+        })
+      );
   }
 
   /**

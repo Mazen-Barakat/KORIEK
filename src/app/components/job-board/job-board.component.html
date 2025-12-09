@@ -13,8 +13,18 @@
           (click)="refreshBookings()"
           [disabled]="isRefreshing"
           [class.refreshing]="isRefreshing"
-          title="Refresh bookings">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          title="Refresh bookings"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <polyline points="23 4 23 10 17 10"></polyline>
             <polyline points="1 20 1 14 7 14"></polyline>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
@@ -22,10 +32,22 @@
         </button>
         <div class="refresh-info">
           <span class="last-updated" *ngIf="lastUpdated">{{ getLastUpdatedText() }}</span>
-          <button class="auto-refresh-toggle" (click)="toggleAutoRefresh()" [class.active]="autoRefreshEnabled" title="Toggle auto-refresh">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
+          <button
+            class="auto-refresh-toggle"
+            (click)="toggleAutoRefresh()"
+            [class.active]="autoRefreshEnabled"
+            title="Toggle auto-refresh"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
             {{ autoRefreshInterval / 1000 }}s
           </button>
@@ -38,42 +60,75 @@
           class="density-btn"
           [class.active]="cardDensity === 'comfortable'"
           (click)="cardDensity = 'comfortable'"
-          title="Comfortable density">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7" rx="1"/>
-            <rect x="3" y="14" width="7" height="7" rx="1"/>
-            <rect x="14" y="3" width="7" height="7" rx="1"/>
-            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          title="Comfortable density"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
           </svg>
         </button>
         <button
           class="density-btn"
           [class.active]="cardDensity === 'compact'"
           (click)="cardDensity = 'compact'"
-          title="Compact density">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="4" rx="1"/>
-            <rect x="3" y="10" width="18" height="4" rx="1"/>
-            <rect x="3" y="16" width="18" height="4" rx="1"/>
+          title="Compact density"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="4" width="18" height="4" rx="1" />
+            <rect x="3" y="10" width="18" height="4" rx="1" />
+            <rect x="3" y="16" width="18" height="4" rx="1" />
           </svg>
         </button>
         <button
           class="density-btn"
           [class.active]="cardDensity === 'dense'"
           (click)="cardDensity = 'dense'"
-          title="Dense">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-            <line x1="3" y1="14" x2="21" y2="14"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
+          title="Dense"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+            <line x1="3" y1="14" x2="21" y2="14" />
+            <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
       </div>
 
       <!-- Export PDF Button -->
       <button class="export-pdf-btn" (click)="exportToPDF()" title="Export all bookings to PDF">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -87,12 +142,20 @@
           class="view-toggle-btn"
           [class.active]="viewMode === 'kanban'"
           (click)="viewMode = 'kanban'"
-          title="Grid View">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"/>
-            <rect x="14" y="3" width="7" height="7"/>
-            <rect x="3" y="14" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/>
+          title="Grid View"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
           </svg>
           Grid
         </button>
@@ -100,14 +163,22 @@
           class="view-toggle-btn"
           [class.active]="viewMode === 'list'"
           (click)="viewMode = 'list'"
-          title="List View">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6"/>
-            <line x1="8" y1="12" x2="21" y2="12"/>
-            <line x1="8" y1="18" x2="21" y2="18"/>
-            <line x1="3" y1="6" x2="3.01" y2="6"/>
-            <line x1="3" y1="12" x2="3.01" y2="12"/>
-            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          title="List View"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" />
+            <line x1="3" y1="12" x2="3.01" y2="12" />
+            <line x1="3" y1="18" x2="3.01" y2="18" />
           </svg>
           List
         </button>
@@ -118,65 +189,95 @@
   <!-- Status Progression Timeline -->
   <div class="status-timeline" *ngIf="viewMode === 'kanban'">
     <div class="timeline-line"></div>
-    <div class="timeline-milestone"
-         data-status="new"
-         [class.active]="pendingBookings.length > 0"
-         (click)="scrollToColumn('new-column')"
-         title="Scroll to New Requests">
+    <div
+      class="timeline-milestone"
+      data-status="new"
+      [class.active]="pendingBookings.length > 0"
+      (click)="scrollToColumn('new-column')"
+      title="Scroll to New Requests"
+    >
       <div class="milestone-dot"></div>
       <span class="milestone-label">New</span>
     </div>
-    <div class="timeline-milestone"
-         data-status="upcoming"
-         [class.active]="acceptedBookings.length > 0"
-         (click)="scrollToColumn('upcoming-column')"
-         title="Scroll to Upcoming">
+    <div
+      class="timeline-milestone"
+      data-status="upcoming"
+      [class.active]="acceptedBookings.length > 0"
+      (click)="scrollToColumn('upcoming-column')"
+      title="Scroll to Upcoming"
+    >
       <div class="milestone-dot"></div>
       <span class="milestone-label">Upcoming</span>
     </div>
-    <div class="timeline-milestone"
-         data-status="inprogress"
-         [class.active]="inProgressBookings.length > 0"
-         (click)="scrollToColumn('inprogress-column')"
-         title="Scroll to In Progress">
+    <div
+      class="timeline-milestone"
+      data-status="inprogress"
+      [class.active]="inProgressBookings.length > 0"
+      (click)="scrollToColumn('inprogress-column')"
+      title="Scroll to In Progress"
+    >
       <div class="milestone-dot"></div>
       <span class="milestone-label">In Progress</span>
     </div>
-    <div class="timeline-milestone"
-         data-status="ready"
-         [class.active]="readyForPickupBookings.length > 0"
-         (click)="scrollToColumn('ready-column')"
-         title="Scroll to Ready">
+    <div
+      class="timeline-milestone"
+      data-status="ready"
+      [class.active]="readyForPickupBookings.length > 0"
+      (click)="scrollToColumn('ready-column')"
+      title="Scroll to Ready"
+    >
       <div class="milestone-dot"></div>
       <span class="milestone-label">Ready</span>
     </div>
-    <div class="timeline-milestone"
-         data-status="completed"
-         [class.active]="completedBookings.length > 0"
-         (click)="scrollToColumn('completed-column')"
-         title="Scroll to Completed">
+    <div
+      class="timeline-milestone"
+      data-status="completed"
+      [class.active]="completedBookings.length > 0"
+      (click)="scrollToColumn('completed-column')"
+      title="Scroll to Completed"
+    >
       <div class="milestone-dot"></div>
       <span class="milestone-label">Completed</span>
     </div>
   </div>
 
   <!-- Kanban View -->
-  <div class="kanban-board" *ngIf="viewMode === 'kanban'" [class.card-compact]="cardDensity === 'compact'" [class.card-dense]="cardDensity === 'dense'">
+  <div
+    class="kanban-board"
+    *ngIf="viewMode === 'kanban'"
+    [class.card-compact]="cardDensity === 'compact'"
+    [class.card-dense]="cardDensity === 'dense'"
+  >
     <!-- New Requests Column -->
-    <div id="new-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'new')">
+    <div
+      id="new-column"
+      class="kanban-column"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event, 'new')"
+    >
       <div class="column-header new-header">
         <div class="column-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
           <span>New Requests</span>
         </div>
-        <span class="column-count"
-              [class.capacity-warning]="pendingBookings.length >= 6 && pendingBookings.length < 10"
-              [class.capacity-critical]="pendingBookings.length >= 10">{{ pendingBookings.length }}</span>
+        <span
+          class="column-count"
+          [class.capacity-warning]="pendingBookings.length >= 6 && pendingBookings.length < 10"
+          [class.capacity-critical]="pendingBookings.length >= 10"
+          >{{ pendingBookings.length }}</span
+        >
       </div>
       <div class="column-content">
         <!-- Loading state -->
@@ -186,20 +287,28 @@
         </div>
 
         <!-- Real Bookings Cards -->
-        <div class="job-card"
-             *ngFor="let booking of pendingBookings; trackBy: trackByBookingId"
-             (click)="viewBookingDetails(booking)">
+        <div
+          class="job-card"
+          *ngFor="let booking of pendingBookings; trackBy: trackByBookingId"
+          (click)="viewBookingDetails(booking)"
+        >
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
-                   [alt]="booking.customerName"
-                   class="customer-avatar">
+              <img
+                [src]="
+                  booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)
+                "
+                [alt]="booking.customerName"
+                class="customer-avatar"
+              />
               <div class="customer-info">
-                <span class="customer-name customer-name-hoverable"
-                      (click)="showOwnerTooltip(booking.id, $event)">
+                <span
+                  class="customer-name customer-name-hoverable"
+                  (click)="showOwnerTooltip(booking.id, $event)"
+                >
                   {{ booking.customerName }}
                 </span>
-                <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
+                <span class="job-id">#job-{{ booking.id | number : '3.0-0' }}</span>
               </div>
             </div>
             <span class="urgency-badge" [ngClass]="getUrgencyClass(booking.urgency)">
@@ -208,16 +317,26 @@
           </div>
 
           <div class="job-vehicle">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
-              <circle cx="7.5" cy="17.5" r="1.5"/>
-              <circle cx="16.5" cy="17.5" r="1.5"/>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z" />
+              <circle cx="7.5" cy="17.5" r="1.5" />
+              <circle cx="16.5" cy="17.5" r="1.5" />
             </svg>
             <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
 
           <div class="job-complaint" *ngIf="booking.issueDescription">
-            <p>{{ booking.issueDescription | slice:0:100 }}{{ booking.issueDescription.length > 100 ? '...' : '' }}</p>
+            <p>
+              {{ booking.issueDescription | slice : 0 : 100
+              }}{{ booking.issueDescription.length > 100 ? '...' : '' }}
+            </p>
           </div>
 
           <div class="job-services">
@@ -226,9 +345,16 @@
 
           <div class="job-footer">
             <span class="job-time">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
               {{ formatDate(booking.appointmentDate) }}
             </span>
@@ -236,16 +362,38 @@
 
           <!-- Action Buttons -->
           <div class="booking-actions">
-            <button class="btn-confirm" (click)="confirmBooking(booking, $event)" title="Accept booking">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
+            <button
+              class="btn-confirm"
+              (click)="confirmBooking(booking, $event)"
+              title="Accept booking"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>
               Confirm
             </button>
-            <button class="btn-decline" (click)="declineBooking(booking, $event)" title="Decline booking">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
+            <button
+              class="btn-decline"
+              (click)="declineBooking(booking, $event)"
+              title="Decline booking"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
               Decline
             </button>
@@ -254,10 +402,18 @@
 
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && pendingBookings.length === 0">
-          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
-            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-            <path d="M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            <path d="M9 12h6M9 16h6"/>
+          <svg
+            class="empty-icon"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#ef4444"
+            stroke-width="1.5"
+          >
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+            <path d="M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            <path d="M9 12h6M9 16h6" />
           </svg>
           <p>No new requests</p>
         </div>
@@ -265,18 +421,35 @@
     </div>
 
     <!-- Upcoming Column -->
-    <div id="upcoming-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'upcoming')">
+    <div
+      id="upcoming-column"
+      class="kanban-column"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event, 'upcoming')"
+    >
       <div class="column-header upcoming-header">
         <div class="column-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
           </svg>
           <span>Upcoming</span>
         </div>
-        <span class="column-count"
-              [class.capacity-warning]="readyForPickupBookings.length >= 6 && readyForPickupBookings.length < 10"
-              [class.capacity-critical]="readyForPickupBookings.length >= 10">{{ readyForPickupBookings.length }}</span>
+        <span
+          class="column-count"
+          [class.capacity-warning]="
+            readyForPickupBookings.length >= 6 && readyForPickupBookings.length < 10
+          "
+          [class.capacity-critical]="readyForPickupBookings.length >= 10"
+          >{{ readyForPickupBookings.length }}</span
+        >
       </div>
       <div class="column-content" [class.has-overflow]="readyForPickupBookings.length > 6">
         <!-- Loading state -->
@@ -286,42 +459,69 @@
         </div>
 
         <!-- Real Accepted Bookings -->
-        <div class="job-card"
-             *ngFor="let booking of acceptedBookings; trackBy: trackByBookingId"
-             (click)="viewBookingDetails(booking)">
+        <div
+          class="job-card"
+          *ngFor="let booking of acceptedBookings; trackBy: trackByBookingId"
+          (click)="viewBookingDetails(booking)"
+        >
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
-                   [alt]="booking.customerName"
-                   class="customer-avatar">
+              <img
+                [src]="
+                  booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)
+                "
+                [alt]="booking.customerName"
+                class="customer-avatar"
+              />
               <div class="customer-info">
-                <span class="customer-name customer-name-hoverable" (click)="showOwnerTooltip(booking.id, $event)">
+                <span
+                  class="customer-name customer-name-hoverable"
+                  (click)="showOwnerTooltip(booking.id, $event)"
+                >
                   <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
                   {{ booking.customerName }}
                 </span>
-                <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
+                <span class="job-id">#job-{{ booking.id | number : '3.0-0' }}</span>
               </div>
             </div>
-            <svg *ngIf="booking.urgency === 'urgent' || booking.urgency === 'high'"
-                 class="urgency-icon" [ngClass]="getUrgencyClass(booking.urgency)"
-                 width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            <svg
+              *ngIf="booking.urgency === 'urgent' || booking.urgency === 'high'"
+              class="urgency-icon"
+              [ngClass]="getUrgencyClass(booking.urgency)"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
 
           <div class="job-vehicle">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
-              <circle cx="7.5" cy="17.5" r="1.5"/>
-              <circle cx="16.5" cy="17.5" r="1.5"/>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z" />
+              <circle cx="7.5" cy="17.5" r="1.5" />
+              <circle cx="16.5" cy="17.5" r="1.5" />
             </svg>
             <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
 
           <div class="job-complaint" *ngIf="booking.issueDescription">
-            <p>{{ booking.issueDescription | slice:0:100 }}{{ booking.issueDescription.length > 100 ? '...' : '' }}</p>
+            <p>
+              {{ booking.issueDescription | slice : 0 : 100
+              }}{{ booking.issueDescription.length > 100 ? '...' : '' }}
+            </p>
           </div>
 
           <div class="job-services">
@@ -330,9 +530,16 @@
 
           <div class="job-footer">
             <span class="job-time">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
               {{ formatDate(booking.appointmentDate) }}
             </span>
@@ -342,12 +549,20 @@
 
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && acceptedBookings.length === 0">
-          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
+          <svg
+            class="empty-icon"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#f59e0b"
+            stroke-width="1.5"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
           </svg>
           <p>No upcoming appointments</p>
         </div>
@@ -355,17 +570,36 @@
     </div>
 
     <!-- In Progress Column -->
-    <div id="inprogress-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'in-progress')">
+    <div
+      id="inprogress-column"
+      class="kanban-column"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event, 'in-progress')"
+    >
       <div class="column-header inprogress-header">
         <div class="column-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"
+            />
           </svg>
           <span>In Progress</span>
         </div>
-        <span class="column-count"
-              [class.capacity-warning]="inProgressBookings.length >= 6 && inProgressBookings.length < 10"
-              [class.capacity-critical]="inProgressBookings.length >= 10">{{ inProgressBookings.length }}</span>
+        <span
+          class="column-count"
+          [class.capacity-warning]="
+            inProgressBookings.length >= 6 && inProgressBookings.length < 10
+          "
+          [class.capacity-critical]="inProgressBookings.length >= 10"
+          >{{ inProgressBookings.length }}</span
+        >
       </div>
       <div class="column-content" [class.has-overflow]="inProgressBookings.length > 6">
         <!-- Loading state -->
@@ -375,36 +609,59 @@
         </div>
 
         <!-- Real In Progress Bookings -->
-        <div class="job-card"
-             *ngFor="let booking of inProgressBookings; trackBy: trackByBookingId"
-             (click)="viewBookingDetails(booking)">
+        <div
+          class="job-card"
+          *ngFor="let booking of inProgressBookings; trackBy: trackByBookingId"
+          (click)="viewBookingDetails(booking)"
+        >
           <div class="job-header">
             <div class="job-customer">
-              <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
-                   [alt]="booking.customerName"
-                   class="customer-avatar">
+              <img
+                [src]="
+                  booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)
+                "
+                [alt]="booking.customerName"
+                class="customer-avatar"
+              />
               <div class="customer-info">
-                <span class="customer-name customer-name-hoverable"
-                      (click)="showOwnerTooltip(booking.id, $event)">
+                <span
+                  class="customer-name customer-name-hoverable"
+                  (click)="showOwnerTooltip(booking.id, $event)"
+                >
                   {{ booking.customerName }}
                 </span>
-                <span class="job-id">#job-{{ booking.id | number:'3.0-0' }}</span>
+                <span class="job-id">#job-{{ booking.id | number : '3.0-0' }}</span>
               </div>
             </div>
-            <svg *ngIf="booking.urgency === 'urgent' || booking.urgency === 'high'"
-                 class="urgency-icon" [ngClass]="getUrgencyClass(booking.urgency)"
-                 width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            <svg
+              *ngIf="booking.urgency === 'urgent' || booking.urgency === 'high'"
+              class="urgency-icon"
+              [ngClass]="getUrgencyClass(booking.urgency)"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
 
           <div class="job-vehicle">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
-              <circle cx="7.5" cy="17.5" r="1.5"/>
-              <circle cx="16.5" cy="17.5" r="1.5"/>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z" />
+              <circle cx="7.5" cy="17.5" r="1.5" />
+              <circle cx="16.5" cy="17.5" r="1.5" />
             </svg>
             <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
@@ -426,9 +683,16 @@
 
           <div class="job-footer">
             <span class="job-time">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
               ETA: {{ formatDate(booking.appointmentDate) }}
             </span>
@@ -437,8 +701,15 @@
           <!-- Mark as Ready button -->
           <div class="booking-actions">
             <button class="btn-ready" (click)="markAsReady(booking, $event)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>
               Mark as Ready
             </button>
@@ -447,13 +718,21 @@
 
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && inProgressBookings.length === 0">
-          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10"/>
-            <circle cx="12" cy="12" r="3"/>
-            <line x1="12" y1="2" x2="12" y2="5"/>
-            <line x1="12" y1="19" x2="12" y2="22"/>
-            <line x1="4.93" y1="4.93" x2="7.05" y2="7.05"/>
-            <line x1="16.95" y1="16.95" x2="19.07" y2="19.07"/>
+          <svg
+            class="empty-icon"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#ef4444"
+            stroke-width="1.5"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <circle cx="12" cy="12" r="3" />
+            <line x1="12" y1="2" x2="12" y2="5" />
+            <line x1="12" y1="19" x2="12" y2="22" />
+            <line x1="4.93" y1="4.93" x2="7.05" y2="7.05" />
+            <line x1="16.95" y1="16.95" x2="19.07" y2="19.07" />
           </svg>
           <p>No jobs in progress</p>
         </div>
@@ -461,28 +740,44 @@
     </div>
 
     <!-- Ready Column -->
-    <div id="ready-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'ready')">
+    <div
+      id="ready-column"
+      class="kanban-column"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event, 'ready')"
+    >
       <div class="column-header ready-header">
         <div class="column-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
           <span>Ready for Pickup</span>
         </div>
         <span class="column-count">{{ readyForPickupBookings.length }}</span>
       </div>
       <div class="column-content">
-        <div class="job-card"
-             *ngFor="let booking of readyForPickupBookings; trackBy: trackByBookingId">
+        <div
+          class="job-card"
+          *ngFor="let booking of readyForPickupBookings; trackBy: trackByBookingId"
+        >
           <div class="job-header">
             <div class="job-customer">
               <div class="customer-avatar-placeholder">
                 {{ booking.customerName.charAt(0) || 'C' }}
               </div>
               <div class="customer-info">
-                <span class="customer-name customer-name-hoverable"
-                      (click)="showOwnerTooltip(booking.id, $event)">
+                <span
+                  class="customer-name customer-name-hoverable"
+                  (click)="showOwnerTooltip(booking.id, $event)"
+                >
                   {{ booking.customerName }}
                 </span>
                 <span class="job-id">#{{ booking.id }}</span>
@@ -492,10 +787,17 @@
           </div>
 
           <div class="job-vehicle">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
-              <circle cx="7.5" cy="17.5" r="1.5"/>
-              <circle cx="16.5" cy="17.5" r="1.5"/>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z" />
+              <circle cx="7.5" cy="17.5" r="1.5" />
+              <circle cx="16.5" cy="17.5" r="1.5" />
             </svg>
             <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
@@ -506,9 +808,16 @@
 
           <div class="job-footer">
             <span class="job-time">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
               Ready since: {{ formatDate(booking.appointmentDate) }}
             </span>
@@ -517,15 +826,29 @@
           <!-- Action buttons -->
           <div class="booking-actions booking-actions-dual">
             <button class="btn-notify" (click)="notifyCustomer(booking, $event)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
               Notify Customer
             </button>
             <button class="btn-complete" (click)="completeBooking(booking, $event)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>
               Complete
             </button>
@@ -533,11 +856,24 @@
         </div>
 
         <!-- Empty state -->
-        <div class="empty-state" *ngIf="!isLoadingRealBookings && readyForPickupBookings.length === 0">
-          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M16 4h2a2 2 0 012 2v2M16 20h2a2 2 0 002-2v-2M8 4H6a2 2 0 00-2 2v2M8 20H6a2 2 0 01-2-2v-2"/>
+        <div
+          class="empty-state"
+          *ngIf="!isLoadingRealBookings && readyForPickupBookings.length === 0"
+        >
+          <svg
+            class="empty-icon"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#10b981"
+            stroke-width="1.5"
+          >
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M16 4h2a2 2 0 012 2v2M16 20h2a2 2 0 002-2v-2M8 4H6a2 2 0 00-2 2v2M8 20H6a2 2 0 01-2-2v-2"
+            />
           </svg>
           <p>No vehicles ready for pickup</p>
         </div>
@@ -545,30 +881,46 @@
     </div>
 
     <!-- Completed Column -->
-    <div id="completed-column" class="kanban-column" (dragover)="onDragOver($event)" (drop)="onDrop($event, 'completed')">
+    <div
+      id="completed-column"
+      class="kanban-column"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event, 'completed')"
+    >
       <div class="column-header completed-header">
         <div class="column-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 11 12 14 22 4"/>
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9 11 12 14 22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
           </svg>
           <span>Completed</span>
         </div>
-        <span class="column-count"
-              [class.capacity-warning]="completedBookings.length >= 6 && completedBookings.length < 10"
-              [class.capacity-critical]="completedBookings.length >= 10">{{ completedBookings.length }}</span>
+        <span
+          class="column-count"
+          [class.capacity-warning]="completedBookings.length >= 6 && completedBookings.length < 10"
+          [class.capacity-critical]="completedBookings.length >= 10"
+          >{{ completedBookings.length }}</span
+        >
       </div>
       <div class="column-content" [class.has-overflow]="completedBookings.length > 6">
-        <div class="job-card"
-             *ngFor="let booking of completedBookings; trackBy: trackByBookingId">
+        <div class="job-card" *ngFor="let booking of completedBookings; trackBy: trackByBookingId">
           <div class="job-header">
             <div class="job-customer">
               <div class="customer-avatar-placeholder">
                 {{ booking.customerName.charAt(0) || 'C' }}
               </div>
               <div class="customer-info">
-                <span class="customer-name customer-name-hoverable"
-                      (click)="showOwnerTooltip(booking.id, $event)">
+                <span
+                  class="customer-name customer-name-hoverable"
+                  (click)="showOwnerTooltip(booking.id, $event)"
+                >
                   {{ booking.customerName }}
                 </span>
                 <span class="job-id">#{{ booking.id }}</span>
@@ -578,10 +930,17 @@
           </div>
 
           <div class="job-vehicle">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z"/>
-              <circle cx="7.5" cy="17.5" r="1.5"/>
-              <circle cx="16.5" cy="17.5" r="1.5"/>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 17h14v-5l-1.5-4.5h-11L5 12v5z" />
+              <circle cx="7.5" cy="17.5" r="1.5" />
+              <circle cx="16.5" cy="17.5" r="1.5" />
             </svg>
             <span>{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
           </div>
@@ -592,8 +951,15 @@
 
           <div class="job-footer">
             <span class="job-time">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>
               Completed: {{ formatDate(booking.appointmentDate) }}
             </span>
@@ -602,9 +968,17 @@
 
         <!-- Empty state -->
         <div class="empty-state" *ngIf="!isLoadingRealBookings && completedBookings.length === 0">
-          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
+          <svg
+            class="empty-icon"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#8b5cf6"
+            stroke-width="1.5"
+          >
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
           <p>No completed bookings</p>
         </div>
@@ -613,45 +987,74 @@
   </div>
 
   <!-- Car Owner Profile Tooltip -->
-  <div class="owner-tooltip" *ngIf="hoveredBookingId !== null" 
-       [style.left.px]="tooltipPosition.x"
-       [style.top.px]="tooltipPosition.y">
+  <div
+    class="owner-tooltip"
+    *ngIf="hoveredBookingId !== null"
+    [style.left.px]="tooltipPosition.x"
+    [style.top.px]="tooltipPosition.y"
+  >
     <div class="tooltip-content" *ngIf="tooltipLoading">
       <div class="tooltip-loading">
         <div class="loading-spinner-small"></div>
         <p>Loading profile...</p>
       </div>
     </div>
-    
+
     <div class="tooltip-content" *ngIf="!tooltipLoading && tooltipProfile">
       <div class="tooltip-header">
-        <img [src]="tooltipProfile.profileImageUrl ? 'https://localhost:44316' + tooltipProfile.profileImageUrl : 'https://i.pravatar.cc/150?img=' + (hoveredBookingId % 70)" 
-             [alt]="tooltipProfile.fullName || tooltipProfile.firstName"
-             class="tooltip-avatar">
+        <img
+          [src]="
+            tooltipProfile.profileImageUrl
+              ? 'https://korik-demo.runasp.net' + tooltipProfile.profileImageUrl
+              : 'https://i.pravatar.cc/150?img=' + (hoveredBookingId % 70)
+          "
+          [alt]="tooltipProfile.fullName || tooltipProfile.firstName"
+          class="tooltip-avatar"
+        />
         <div class="tooltip-header-info">
-          <h4 class="tooltip-name">{{ tooltipProfile.fullName || (tooltipProfile.firstName + ' ' + tooltipProfile.lastName) }}</h4>
+          <h4 class="tooltip-name">
+            {{
+              tooltipProfile.fullName || tooltipProfile.firstName + ' ' + tooltipProfile.lastName
+            }}
+          </h4>
           <span class="tooltip-label">Car Owner</span>
         </div>
       </div>
-      
+
       <div class="tooltip-details">
         <div class="tooltip-detail-item" *ngIf="tooltipProfile.phoneNumber">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+            />
           </svg>
           <span>{{ tooltipProfile.phoneNumber }}</span>
         </div>
-        
+
         <div class="tooltip-detail-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
           </svg>
           <span>{{ getFullAddress(tooltipProfile) }}</span>
         </div>
       </div>
     </div>
-    
+
     <div class="tooltip-content" *ngIf="!tooltipLoading && !tooltipProfile">
       <p class="tooltip-error">Profile not available</p>
     </div>
@@ -667,28 +1070,44 @@
           class="density-btn"
           [class.active]="listDensity === 'comfortable'"
           (click)="listDensity = 'comfortable'"
-          title="Comfortable View">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6"/>
-            <line x1="8" y1="12" x2="21" y2="12"/>
-            <line x1="8" y1="18" x2="21" y2="18"/>
-            <line x1="3" y1="6" x2="3.01" y2="6"/>
-            <line x1="3" y1="12" x2="3.01" y2="12"/>
-            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          title="Comfortable View"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" />
+            <line x1="3" y1="12" x2="3.01" y2="12" />
+            <line x1="3" y1="18" x2="3.01" y2="18" />
           </svg>
         </button>
         <button
           class="density-btn"
           [class.active]="listDensity === 'compact'"
           (click)="listDensity = 'compact'"
-          title="Compact View">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="5" x2="21" y2="5"/>
-            <line x1="8" y1="12" x2="21" y2="12"/>
-            <line x1="8" y1="19" x2="21" y2="19"/>
-            <line x1="3" y1="5" x2="3.01" y2="5"/>
-            <line x1="3" y1="12" x2="3.01" y2="12"/>
-            <line x1="3" y1="19" x2="3.01" y2="19"/>
+          title="Compact View"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="8" y1="5" x2="21" y2="5" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="19" x2="21" y2="19" />
+            <line x1="3" y1="5" x2="3.01" y2="5" />
+            <line x1="3" y1="12" x2="3.01" y2="12" />
+            <line x1="3" y1="19" x2="3.01" y2="19" />
           </svg>
         </button>
       </div>
@@ -697,18 +1116,28 @@
     <div class="list-container">
       <!-- New Requests -->
       <div class="list-section" *ngIf="pendingBookings.length > 0">
-        <h3 class="list-section-title">New Requests <span class="section-count">{{ pendingBookings.length }}</span></h3>
-        <div class="list-item" *ngFor="let booking of pendingBookings; trackBy: trackByBookingId" (click)="viewBookingDetails(booking)">
+        <h3 class="list-section-title">
+          New Requests <span class="section-count">{{ pendingBookings.length }}</span>
+        </h3>
+        <div
+          class="list-item"
+          *ngFor="let booking of pendingBookings; trackBy: trackByBookingId"
+          (click)="viewBookingDetails(booking)"
+        >
           <div class="list-item-customer">
-            <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
-                 [alt]="booking.customerName"
-                 class="list-avatar">
+            <img
+              [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
+              [alt]="booking.customerName"
+              class="list-avatar"
+            />
             <div class="list-customer-info">
               <span class="list-customer-name">
                 <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
                 {{ booking.customerName }}
               </span>
-              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+              <span class="list-vehicle"
+                >{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span
+              >
             </div>
           </div>
           <div class="list-item-service">
@@ -717,15 +1146,29 @@
           </div>
           <div class="list-item-actions">
             <button class="list-btn list-btn-confirm" (click)="confirmBooking(booking, $event)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>
               Confirm
             </button>
             <button class="list-btn list-btn-decline" (click)="declineBooking(booking, $event)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           </div>
@@ -734,18 +1177,28 @@
 
       <!-- Upcoming -->
       <div class="list-section" *ngIf="acceptedBookings.length > 0">
-        <h3 class="list-section-title">Upcoming <span class="section-count">{{ acceptedBookings.length }}</span></h3>
-        <div class="list-item" *ngFor="let booking of acceptedBookings; trackBy: trackByBookingId" (click)="viewBookingDetails(booking)">
+        <h3 class="list-section-title">
+          Upcoming <span class="section-count">{{ acceptedBookings.length }}</span>
+        </h3>
+        <div
+          class="list-item"
+          *ngFor="let booking of acceptedBookings; trackBy: trackByBookingId"
+          (click)="viewBookingDetails(booking)"
+        >
           <div class="list-item-customer">
-            <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
-                 [alt]="booking.customerName"
-                 class="list-avatar">
+            <img
+              [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
+              [alt]="booking.customerName"
+              class="list-avatar"
+            />
             <div class="list-customer-info">
               <span class="list-customer-name">
                 <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
                 {{ booking.customerName }}
               </span>
-              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+              <span class="list-vehicle"
+                >{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span
+              >
             </div>
           </div>
           <div class="list-item-service">
@@ -760,18 +1213,28 @@
 
       <!-- In Progress -->
       <div class="list-section" *ngIf="inProgressBookings.length > 0">
-        <h3 class="list-section-title">In Progress <span class="section-count">{{ inProgressBookings.length }}</span></h3>
-        <div class="list-item" *ngFor="let booking of inProgressBookings; trackBy: trackByBookingId" (click)="viewBookingDetails(booking)">
+        <h3 class="list-section-title">
+          In Progress <span class="section-count">{{ inProgressBookings.length }}</span>
+        </h3>
+        <div
+          class="list-item"
+          *ngFor="let booking of inProgressBookings; trackBy: trackByBookingId"
+          (click)="viewBookingDetails(booking)"
+        >
           <div class="list-item-customer">
-            <img [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
-                 [alt]="booking.customerName"
-                 class="list-avatar">
+            <img
+              [src]="booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)"
+              [alt]="booking.customerName"
+              class="list-avatar"
+            />
             <div class="list-customer-info">
               <span class="list-customer-name">
                 <span class="urgency-dot" [ngClass]="getUrgencyClass(booking.urgency)"></span>
                 {{ booking.customerName }}
               </span>
-              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+              <span class="list-vehicle"
+                >{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span
+              >
             </div>
           </div>
           <div class="list-item-service">
@@ -784,20 +1247,29 @@
             </div>
           </div>
           <div class="list-item-actions">
-            <button class="list-btn list-btn-ready" (click)="markAsReady(booking, $event)">Mark Ready</button>
+            <button class="list-btn list-btn-ready" (click)="markAsReady(booking, $event)">
+              Mark Ready
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Ready for Pickup -->
       <div class="list-section" *ngIf="readyForPickupBookings.length > 0">
-        <h3 class="list-section-title">Ready for Pickup <span class="section-count">{{ readyForPickupBookings.length }}</span></h3>
-        <div class="list-item" *ngFor="let booking of readyForPickupBookings; trackBy: trackByBookingId">
+        <h3 class="list-section-title">
+          Ready for Pickup <span class="section-count">{{ readyForPickupBookings.length }}</span>
+        </h3>
+        <div
+          class="list-item"
+          *ngFor="let booking of readyForPickupBookings; trackBy: trackByBookingId"
+        >
           <div class="list-item-customer">
             <div class="list-avatar-placeholder">{{ booking.customerName.charAt(0) || 'C' }}</div>
             <div class="list-customer-info">
               <span class="list-customer-name">{{ booking.customerName }}</span>
-              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+              <span class="list-vehicle"
+                >{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span
+              >
             </div>
           </div>
           <div class="list-item-service">
@@ -805,21 +1277,29 @@
             <span class="list-date">Ready since {{ formatDate(booking.appointmentDate) }}</span>
           </div>
           <div class="list-item-actions">
-            <button class="list-btn list-btn-notify" (click)="notifyCustomer(booking, $event)">Notify</button>
-            <button class="list-btn list-btn-complete" (click)="completeBooking(booking, $event)">Complete</button>
+            <button class="list-btn list-btn-notify" (click)="notifyCustomer(booking, $event)">
+              Notify
+            </button>
+            <button class="list-btn list-btn-complete" (click)="completeBooking(booking, $event)">
+              Complete
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Completed -->
       <div class="list-section" *ngIf="completedBookings.length > 0">
-        <h3 class="list-section-title">Completed <span class="section-count">{{ completedBookings.length }}</span></h3>
+        <h3 class="list-section-title">
+          Completed <span class="section-count">{{ completedBookings.length }}</span>
+        </h3>
         <div class="list-item" *ngFor="let booking of completedBookings; trackBy: trackByBookingId">
           <div class="list-item-customer">
             <div class="list-avatar-placeholder">{{ booking.customerName.charAt(0) || 'C' }}</div>
             <div class="list-customer-info">
               <span class="list-customer-name">{{ booking.customerName }}</span>
-              <span class="list-vehicle">{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span>
+              <span class="list-vehicle"
+                >{{ booking.carYear }} {{ booking.carMake }} {{ booking.carModel }}</span
+              >
             </div>
           </div>
           <div class="list-item-service">
@@ -833,12 +1313,29 @@
       </div>
 
       <!-- Empty State for List View -->
-      <div class="list-empty" *ngIf="!isLoadingRealBookings && pendingBookings.length === 0 && acceptedBookings.length === 0 && inProgressBookings.length === 0 && readyForPickupBookings.length === 0 && completedBookings.length === 0">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-          <line x1="9" y1="9" x2="15" y2="9"/>
-          <line x1="9" y1="13" x2="15" y2="13"/>
-          <line x1="9" y1="17" x2="13" y2="17"/>
+      <div
+        class="list-empty"
+        *ngIf="
+          !isLoadingRealBookings &&
+          pendingBookings.length === 0 &&
+          acceptedBookings.length === 0 &&
+          inProgressBookings.length === 0 &&
+          readyForPickupBookings.length === 0 &&
+          completedBookings.length === 0
+        "
+      >
+        <svg
+          width="64"
+          height="64"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#9ca3af"
+          stroke-width="1.5"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <line x1="9" y1="9" x2="15" y2="9" />
+          <line x1="9" y1="13" x2="15" y2="13" />
+          <line x1="9" y1="17" x2="13" y2="17" />
         </svg>
         <h3>No bookings yet</h3>
         <p>Your job board will show up here once you start receiving booking requests</p>
@@ -851,10 +1348,13 @@
 <app-confirmation-popup
   [isOpen]="showDeclineConfirmation"
   [title]="'Decline Booking'"
-  [message]="'Are you sure you want to decline this booking request? This action cannot be undone and the customer will be notified.'"
+  [message]="
+    'Are you sure you want to decline this booking request? This action cannot be undone and the customer will be notified.'
+  "
   [confirmText]="'Yes, Decline'"
   [cancelText]="'Cancel'"
   [confirmButtonClass]="'danger'"
   (confirmed)="onDeclineConfirmed()"
-  (cancelled)="onDeclineCancelled()">
+  (cancelled)="onDeclineCancelled()"
+>
 </app-confirmation-popup>

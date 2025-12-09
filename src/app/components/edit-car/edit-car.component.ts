@@ -2,8 +2,16 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CarsService, CarIndicatorDto, CreateCarIndicatorRequest, MakeModels } from '../../services/cars.service';
-import { CustomDropdownComponent, DropdownOption } from '../custom-dropdown/custom-dropdown.component';
+import {
+  CarsService,
+  CarIndicatorDto,
+  CreateCarIndicatorRequest,
+  MakeModels,
+} from '../../services/cars.service';
+import {
+  CustomDropdownComponent,
+  DropdownOption,
+} from '../custom-dropdown/custom-dropdown.component';
 
 interface Indicator {
   id: string;
@@ -33,7 +41,7 @@ type NewIndicatorForm = {
   standalone: true,
   imports: [CommonModule, FormsModule, CustomDropdownComponent],
   templateUrl: './edit-car.component.html',
-  styleUrls: ['./edit-car.component.css']
+  styleUrls: ['./edit-car.component.css'],
 })
 export class EditCarComponent implements OnInit {
   private carId!: number;
@@ -93,7 +101,7 @@ export class EditCarComponent implements OnInit {
     '3500 Turbo',
     '4000',
     '4000 Turbo',
-    'Electric'
+    'Electric',
   ];
 
   transmissionTypes: string[] = ['Manual', 'Automatic', 'Semi Automatic'];
@@ -129,7 +137,8 @@ export class EditCarComponent implements OnInit {
   modalMessageType: 'success' | 'error' | null = null;
 
   // Dashboard selection state
-  dashboardIndicators: Array<{ value: string; label: string; icon: string; selected: boolean }> = [];
+  dashboardIndicators: Array<{ value: string; label: string; icon: string; selected: boolean }> =
+    [];
   dashboardSelectionCount = 0;
   // Persisted selection (what's saved) and initial snapshot for cancel
   savedDashboardSelection: string[] = [];
@@ -143,22 +152,32 @@ export class EditCarComponent implements OnInit {
     GeneralMaintenance: { label: 'General Maintenance', icon: '🛠️' },
     OilChange: { label: 'Oil Change', icon: '🛢️' },
     BatteryHealth: { label: 'Battery Health', icon: '🔋' },
-    TireChange: { label: 'Tire Change', icon: '🔄' }
+    TireChange: { label: 'Tire Change', icon: '🔄' },
   };
 
-  indicatorTypeOptions: Array<{ value: string; label: string }> = Object.entries(this.indicatorTypeConfig).map(([value, meta]) => ({
+  indicatorTypeOptions: Array<{ value: string; label: string }> = Object.entries(
+    this.indicatorTypeConfig
+  ).map(([value, meta]) => ({
     value,
-    label: meta.label
+    label: meta.label,
   }));
 
   // Dropdown option arrays for custom dropdown component
-  engineCapacityOptions: DropdownOption[] = this.engineCapacities.map(c => ({ value: c, label: `${c} CC` }));
-  transmissionOptions: DropdownOption[] = this.transmissionTypes.map(t => ({ value: t, label: t }));
-  fuelOptions: DropdownOption[] = this.fuelTypes.map(f => ({ value: f, label: f }));
-  indicatorOptions: DropdownOption[] = Object.entries(this.indicatorTypeConfig).map(([value, meta]) => ({
-    value,
-    label: meta.label
+  engineCapacityOptions: DropdownOption[] = this.engineCapacities.map((c) => ({
+    value: c,
+    label: `${c} CC`,
   }));
+  transmissionOptions: DropdownOption[] = this.transmissionTypes.map((t) => ({
+    value: t,
+    label: t,
+  }));
+  fuelOptions: DropdownOption[] = this.fuelTypes.map((f) => ({ value: f, label: f }));
+  indicatorOptions: DropdownOption[] = Object.entries(this.indicatorTypeConfig).map(
+    ([value, meta]) => ({
+      value,
+      label: meta.label,
+    })
+  );
 
   private normalizeIndicatorTypeInput(value: string | null | undefined): string {
     if (!value) {
@@ -174,7 +193,9 @@ export class EditCarComponent implements OnInit {
       return trimmed;
     }
 
-    const match = Object.entries(this.indicatorTypeConfig).find(([, meta]) => meta.label.toLowerCase() === trimmed.toLowerCase());
+    const match = Object.entries(this.indicatorTypeConfig).find(
+      ([, meta]) => meta.label.toLowerCase() === trimmed.toLowerCase()
+    );
     return match ? match[0] : trimmed;
   }
 
@@ -203,7 +224,7 @@ export class EditCarComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading makes and models:', err);
-      }
+      },
     });
 
     // Initialize dashboard indicators
@@ -211,7 +232,7 @@ export class EditCarComponent implements OnInit {
       value,
       label: meta.label,
       icon: meta.icon,
-      selected: false
+      selected: false,
     }));
 
     // Load saved dashboard selection from localStorage
@@ -223,7 +244,7 @@ export class EditCarComponent implements OnInit {
           // Extract the values from saved indicators
           const savedLabels = savedIndicators.map((ind: any) => ind.label);
           // Find matching values and mark as selected
-          this.dashboardIndicators.forEach(i => {
+          this.dashboardIndicators.forEach((i) => {
             if (savedLabels.includes(i.label)) {
               i.selected = true;
               this.savedDashboardSelection.push(i.value);
@@ -237,14 +258,14 @@ export class EditCarComponent implements OnInit {
 
     // Capture initial/saved selection so Cancel can revert
     this.initialDashboardSelection = [...this.savedDashboardSelection];
-    this.dashboardSelectionCount = this.dashboardIndicators.filter(i => i.selected).length;
+    this.dashboardSelectionCount = this.dashboardIndicators.filter((i) => i.selected).length;
 
     // Keep form model defined to avoid ExpressionChanged errors
     this.updateModel = {
       engineCapacity: undefined,
       currentMileage: undefined,
       transmissionType: undefined,
-      fuelType: undefined
+      fuelType: undefined,
     };
   }
 
@@ -260,12 +281,14 @@ export class EditCarComponent implements OnInit {
           make: String(car?.make ?? ''),
           model: String(car?.model ?? ''),
           year: Number(car?.year ?? 0),
-          licensePlate: String(car?.licensePlate ?? '')
+          licensePlate: String(car?.licensePlate ?? ''),
         };
 
         // If the backend value isn't in the list, include it so it displays
-        if (normalized.engineCapacity &&
-            !this.engineCapacities.includes(String(normalized.engineCapacity))) {
+        if (
+          normalized.engineCapacity &&
+          !this.engineCapacities.includes(String(normalized.engineCapacity))
+        ) {
           this.engineCapacities = [String(normalized.engineCapacity), ...this.engineCapacities];
         }
 
@@ -274,32 +297,34 @@ export class EditCarComponent implements OnInit {
           engineCapacity: normalized.engineCapacity,
           currentMileage: normalized.currentMileage,
           transmissionType: normalized.transmissionType,
-          fuelType: normalized.fuelType
+          fuelType: normalized.fuelType,
         };
 
         // Force change detection so values appear immediately without user interaction
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Failed to fetch car', err)
+      error: (err) => console.error('Failed to fetch car', err),
     });
   }
 
   private loadIndicators(carId: number): void {
     this.carsService.getCarIndicators(carId).subscribe({
       next: (items: CarIndicatorDto[]) => {
-        this.indicators = items.map(dto => this.mapIndicatorDto(dto));
+        this.indicators = items.map((dto) => this.mapIndicatorDto(dto));
         this.cdr.detectChanges();
       },
       error: (err) => {
         // If GET endpoint doesn't exist (404), just keep existing indicators
         if (err.status === 404) {
-          console.warn('[LOAD INDICATORS] GET endpoint not available (404), keeping current indicators');
+          console.warn(
+            '[LOAD INDICATORS] GET endpoint not available (404), keeping current indicators'
+          );
         } else {
           console.error('Failed to load indicators', err);
         }
         // Don't clear indicators on error, maintain current state
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -309,7 +334,7 @@ export class EditCarComponent implements OnInit {
    * Returns an empty string if not found.
    */
   private detectCarOrigin(make: string): string {
-    const entry = this.makes.find(m => m.make === make);
+    const entry = this.makes.find((m) => m.make === make);
     return entry?.CarOrigin || '';
   }
 
@@ -347,14 +372,16 @@ export class EditCarComponent implements OnInit {
 
       // Detect CarOrigin automatically based on the make
       const carOrigin = this.detectCarOrigin(this.fetchedCarCore.make);
-      
+
       // Log the detected origin and payload for debugging
       console.log('Detected CarOrigin:', carOrigin, 'for make:', this.fetchedCarCore.make);
       console.log('Makes array loaded:', this.makes.length, 'entries');
 
       // If origin is empty, validation will fail - warn in console
       if (!carOrigin) {
-        console.warn('CarOrigin could not be detected. Makes data may not be loaded yet or make not found in cars-data.json');
+        console.warn(
+          'CarOrigin could not be detected. Makes data may not be loaded yet or make not found in cars-data.json'
+        );
       }
 
       const payload = {
@@ -367,9 +394,9 @@ export class EditCarComponent implements OnInit {
         licensePlate: this.fetchedCarCore.licensePlate,
         transmissionType: String(this.updateModel.transmissionType ?? 'Manual'),
         fuelType: String(this.updateModel.fuelType ?? 'Gasoline'),
-        origin: carOrigin
+        origin: carOrigin,
       };
-      
+
       console.log('Sending payload to backend:', payload);
 
       this.carsService.updateCarFull(payload).subscribe({
@@ -377,7 +404,9 @@ export class EditCarComponent implements OnInit {
           this.isSaving = false;
           const backendMsg = this.extractMessage(resp);
           const backendSuccess = this.isBackendSuccess(resp);
-          const msg = backendMsg || (backendSuccess ? 'Car updated successfully' : 'Failed to update Car information');
+          const msg =
+            backendMsg ||
+            (backendSuccess ? 'Car updated successfully' : 'Failed to update Car information');
 
           // Show message with auto-hide after 2 seconds
           this.showMessage(msg, backendSuccess ? 'success' : 'error');
@@ -387,21 +416,24 @@ export class EditCarComponent implements OnInit {
         },
         error: (err) => {
           this.isSaving = false;
-          
+
           // Log full error details for debugging
           console.error('Failed to update vehicle via PUT /api/Car', err);
           console.error('Error details:', err.error);
-          
+
           // Extract validation errors if present
           if (err.error?.errors) {
             console.error('Validation errors:', err.error.errors);
           }
-          
-          const errorMsg = this.extractMessage(err.error) || this.extractMessage(err) || 'Failed to update Car information';
+
+          const errorMsg =
+            this.extractMessage(err.error) ||
+            this.extractMessage(err) ||
+            'Failed to update Car information';
 
           // Show error message with auto-hide after 2 seconds
           this.showMessage(errorMsg, 'error');
-        }
+        },
       });
     } else {
       console.warn('Car core details not loaded; cannot send full update payload');
@@ -418,7 +450,10 @@ export class EditCarComponent implements OnInit {
     const raw = obj.Message ?? obj.message ?? obj?.error?.Message ?? obj?.error?.message;
     if (raw == null) return '';
     if (typeof raw === 'string') {
-      const parts = raw.split(',').map(p => p.trim()).filter(Boolean);
+      const parts = raw
+        .split(',')
+        .map((p) => p.trim())
+        .filter(Boolean);
       return parts.length > 1 ? parts.join(' • ') : raw;
     }
     try {
@@ -430,7 +465,14 @@ export class EditCarComponent implements OnInit {
 
   private isBackendSuccess(resp: any): boolean {
     if (!resp) return false;
-    const candidates = [resp?.Success, resp?.success, resp?.data?.Success, resp?.data?.success, resp?.Data?.Success, resp?.Data?.success];
+    const candidates = [
+      resp?.Success,
+      resp?.success,
+      resp?.data?.Success,
+      resp?.data?.success,
+      resp?.Data?.Success,
+      resp?.Data?.success,
+    ];
     for (const v of candidates) {
       if (v === true) return true;
       if (typeof v === 'string') {
@@ -445,7 +487,10 @@ export class EditCarComponent implements OnInit {
   private mapIndicatorDto(dto: CarIndicatorDto): Indicator {
     const indicatorType = String(dto?.indicatorType ?? '').trim();
     const backendId = typeof dto?.id === 'number' ? dto.id : null;
-    const id = backendId != null ? String(backendId) : `indicator-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const id =
+      backendId != null
+        ? String(backendId)
+        : `indicator-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const typeValue = indicatorType;
     const label = this.toIndicatorLabel(typeValue);
     // Use carStatus if available, otherwise fall back to status
@@ -463,7 +508,7 @@ export class EditCarComponent implements OnInit {
       currentMileage: Number(dto?.currentMileage ?? 0),
       nextMileage: Number(dto?.nextMileage ?? 0),
       selected: false,
-      isSet: true // Indicators from backend are already set
+      isSet: true, // Indicators from backend are already set
     };
   }
 
@@ -532,7 +577,7 @@ export class EditCarComponent implements OnInit {
     }
 
     if (indicator.backendId == null) {
-      this.indicators = this.indicators.filter(i => i.id !== indicator.id);
+      this.indicators = this.indicators.filter((i) => i.id !== indicator.id);
       this.showToastMessage('Indicator removed successfully', 'success');
       return;
     }
@@ -546,77 +591,84 @@ export class EditCarComponent implements OnInit {
     this.deletingIndicatorId = idToDelete;
 
     console.log('[DELETE INDICATOR] Deleting indicator with ID:', idToDelete);
-    console.log('[DELETE INDICATOR] URL:', `https://localhost:44316/api/CarIndicator/${idToDelete}`);
+    console.log(
+      '[DELETE INDICATOR] URL:',
+      `https://korik-demo.runasp.net/api/CarIndicator/${idToDelete}`
+    );
 
-      this.carsService.deleteCarIndicator(idToDelete).subscribe({
-        next: (resp: any) => {
-          console.log('[DELETE INDICATOR] DELETE response:', resp);
-          this.deletingIndicatorId = null;
-          const success = this.isBackendSuccess(resp);
-          const backendMsg = this.extractMessage(resp) || 'Indicator deleted successfully';
-          if (success) {
-            // Remove the card immediately
-            this.indicators = this.indicators.filter(i => i.backendId !== idToDelete);
-            this.showToastMessage(backendMsg, 'success');
-          } else {
-            this.showToastMessage(backendMsg, 'error');
-          }
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.warn('[DELETE INDICATOR] DELETE failed, status:', err?.status, 'trying fallbacks');
-          // If backend rejects DELETE (405), attempt common POST-based delete endpoints
-          if (err && err.status === 405) {
-            const urlBase = `${this.carsService['apiBase'] ?? 'https://localhost:44316/api'}/CarIndicator`;
-            const http = (this.carsService as any).http;
-
-            const attempts: any[] = [
-              http.post(`${urlBase}/${idToDelete}`, {}),
-              http.post(`${urlBase}/delete/${idToDelete}`, {}),
-              http.post(`${urlBase}/Delete/${idToDelete}`, {}),
-              http.post(`${urlBase}`, { id: idToDelete })
-            ];
-
-            // Execute fallbacks sequentially until one succeeds
-            let tried = 0;
-            const tryNext = () => {
-              if (tried >= attempts.length) {
-                this.deletingIndicatorId = null;
-                const msg = this.extractMessage(err?.error) || 'Failed to delete indicator. Please try again.';
-                this.showToastMessage(msg, 'error');
-                return;
-              }
-              const obs = attempts[tried++];
-              obs.subscribe({
-                next: (r: any) => {
-                  console.log('[DELETE INDICATOR] Fallback success response:', r);
-                  this.deletingIndicatorId = null;
-                  const success2 = this.isBackendSuccess(r);
-                  const msg = this.extractMessage(r) || 'Indicator deleted successfully';
-                  if (success2) {
-                    // Remove the card immediately
-                    this.indicators = this.indicators.filter(i => i.backendId !== idToDelete);
-                    this.showToastMessage(msg, 'success');
-                  } else {
-                    this.showToastMessage(msg, 'error');
-                  }
-                  this.cdr.detectChanges();
-                },
-                error: (e2: any) => {
-                  console.warn('[DELETE INDICATOR] Fallback attempt failed', e2);
-                  tryNext();
-                }
-              });
-            };
-            tryNext();
-          } else {
-            this.deletingIndicatorId = null;
-            console.error('Failed to delete indicator', err);
-            const msg = this.extractMessage(err?.error) || 'Failed to delete indicator. Please try again.';
-            this.showToastMessage(msg, 'error');
-          }
+    this.carsService.deleteCarIndicator(idToDelete).subscribe({
+      next: (resp: any) => {
+        console.log('[DELETE INDICATOR] DELETE response:', resp);
+        this.deletingIndicatorId = null;
+        const success = this.isBackendSuccess(resp);
+        const backendMsg = this.extractMessage(resp) || 'Indicator deleted successfully';
+        if (success) {
+          // Remove the card immediately
+          this.indicators = this.indicators.filter((i) => i.backendId !== idToDelete);
+          this.showToastMessage(backendMsg, 'success');
+        } else {
+          this.showToastMessage(backendMsg, 'error');
         }
-      });
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.warn('[DELETE INDICATOR] DELETE failed, status:', err?.status, 'trying fallbacks');
+        // If backend rejects DELETE (405), attempt common POST-based delete endpoints
+        if (err && err.status === 405) {
+          const urlBase = `${
+            this.carsService['apiBase'] ?? 'https://korik-demo.runasp.net/api'
+          }/CarIndicator`;
+          const http = (this.carsService as any).http;
+
+          const attempts: any[] = [
+            http.post(`${urlBase}/${idToDelete}`, {}),
+            http.post(`${urlBase}/delete/${idToDelete}`, {}),
+            http.post(`${urlBase}/Delete/${idToDelete}`, {}),
+            http.post(`${urlBase}`, { id: idToDelete }),
+          ];
+
+          // Execute fallbacks sequentially until one succeeds
+          let tried = 0;
+          const tryNext = () => {
+            if (tried >= attempts.length) {
+              this.deletingIndicatorId = null;
+              const msg =
+                this.extractMessage(err?.error) || 'Failed to delete indicator. Please try again.';
+              this.showToastMessage(msg, 'error');
+              return;
+            }
+            const obs = attempts[tried++];
+            obs.subscribe({
+              next: (r: any) => {
+                console.log('[DELETE INDICATOR] Fallback success response:', r);
+                this.deletingIndicatorId = null;
+                const success2 = this.isBackendSuccess(r);
+                const msg = this.extractMessage(r) || 'Indicator deleted successfully';
+                if (success2) {
+                  // Remove the card immediately
+                  this.indicators = this.indicators.filter((i) => i.backendId !== idToDelete);
+                  this.showToastMessage(msg, 'success');
+                } else {
+                  this.showToastMessage(msg, 'error');
+                }
+                this.cdr.detectChanges();
+              },
+              error: (e2: any) => {
+                console.warn('[DELETE INDICATOR] Fallback attempt failed', e2);
+                tryNext();
+              },
+            });
+          };
+          tryNext();
+        } else {
+          this.deletingIndicatorId = null;
+          console.error('Failed to delete indicator', err);
+          const msg =
+            this.extractMessage(err?.error) || 'Failed to delete indicator. Please try again.';
+          this.showToastMessage(msg, 'error');
+        }
+      },
+    });
   }
 
   openDeleteModal(indicator: Indicator): void {
@@ -644,7 +696,7 @@ export class EditCarComponent implements OnInit {
       indicatorType: '',
       lastInspectedDate: '',
       nextInspectedDate: '',
-      nextMileage: undefined
+      nextMileage: undefined,
     };
   }
 
@@ -652,7 +704,9 @@ export class EditCarComponent implements OnInit {
     this.formErrors = {};
 
     // Validate indicator type
-    const normalizedIndicatorType = this.normalizeIndicatorTypeInput(this.newIndicator.indicatorType ?? '');
+    const normalizedIndicatorType = this.normalizeIndicatorTypeInput(
+      this.newIndicator.indicatorType ?? ''
+    );
     if (!normalizedIndicatorType) {
       this.formErrors.indicatorType = 'Please select an indicator type';
     } else {
@@ -720,7 +774,7 @@ export class EditCarComponent implements OnInit {
       lastCheckedDate: this.toBackendDateValue(lastCheckedDate),
       nextCheckedDate: this.toBackendDateValue(nextCheckedDate),
       nextMileage,
-      currentMileage: Number(this.updateModel.currentMileage ?? this.currentMileage ?? 0)
+      currentMileage: Number(this.updateModel.currentMileage ?? this.currentMileage ?? 0),
     };
 
     console.log('[ADD INDICATOR] Car ID:', this.carId);
@@ -759,11 +813,12 @@ export class EditCarComponent implements OnInit {
       error: (err) => {
         this.isSavingIndicator = false;
         console.error('Failed to create indicator', err);
-        const message = this.extractMessage(err?.error) || 'Failed to save indicator. Please try again.';
+        const message =
+          this.extractMessage(err?.error) || 'Failed to save indicator. Please try again.';
         this.modalMessage = message;
         this.modalMessageType = 'error';
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -830,14 +885,16 @@ export class EditCarComponent implements OnInit {
       return;
     }
 
-    this.savedDashboardSelection = this.dashboardIndicators.filter(i => i.selected).map(i => i.value);
+    this.savedDashboardSelection = this.dashboardIndicators
+      .filter((i) => i.selected)
+      .map((i) => i.value);
     // update the initial snapshot to the saved selection
     this.initialDashboardSelection = [...this.savedDashboardSelection];
 
     // Save dashboard indicators to localStorage for this car
     const selectedIndicators = this.dashboardIndicators
-      .filter(i => i.selected)
-      .map(i => ({ label: i.label, icon: i.icon }));
+      .filter((i) => i.selected)
+      .map((i) => ({ label: i.label, icon: i.icon }));
 
     if (this.carId) {
       localStorage.setItem(`car_${this.carId}_dashboard`, JSON.stringify(selectedIndicators));
@@ -856,10 +913,10 @@ export class EditCarComponent implements OnInit {
 
   cancelDashboardChanges(): void {
     // Revert to saved selection
-    this.dashboardIndicators.forEach(i => {
+    this.dashboardIndicators.forEach((i) => {
       i.selected = this.initialDashboardSelection.includes(i.value);
     });
-    this.dashboardSelectionCount = this.dashboardIndicators.filter(i => i.selected).length;
+    this.dashboardSelectionCount = this.dashboardIndicators.filter((i) => i.selected).length;
     this.isEditingDashboard = false;
     this.showToastMessage('Changes cancelled', 'success');
     this.cdr.detectChanges();
@@ -868,7 +925,9 @@ export class EditCarComponent implements OnInit {
   startEditingDashboard(): void {
     // Enter edit mode and save temp selection
     this.isEditingDashboard = true;
-    this.tempDashboardSelection = this.dashboardIndicators.filter(i => i.selected).map(i => i.value);
+    this.tempDashboardSelection = this.dashboardIndicators
+      .filter((i) => i.selected)
+      .map((i) => i.value);
     this.cdr.detectChanges();
   }
 
@@ -886,37 +945,52 @@ export class EditCarComponent implements OnInit {
     console.log('Maintenance Indicator Icon Path for:', indicatorName); // Debug log
     const iconMap: { [key: string]: string } = {
       // Match dashboard indicator labels exactly
-      'AC Service': 'M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
-      'License & Insurance Expiry': 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 13H9v-2h4v2zm0-4H9V9h4v2z',
-      'General Maintenance': 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
+      'AC Service':
+        'M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
+      'License & Insurance Expiry':
+        'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 13H9v-2h4v2zm0-4H9V9h4v2z',
+      'General Maintenance':
+        'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
       'Oil Change': 'M7 13v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6M8 5l4-3 4 3M12 2v10',
       'Battery Health': 'M6 7h11v10H6V7zm11 5h4m-4-2h4',
       'Tire Change': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z',
       // Additional maintenance indicators with same design language
       'Brake Fluid': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 14v-2m2 0v2m-2-6v-2m2 0v2',
       'Engine Air Filter': 'M3 3h18v18H3V3zm0 6h18M9 9v12',
-      'Coolant': 'M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z',
-      'Tire Rotation': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z',
-      'Spark Plugs': 'M12 2v6m0 4v10M4.93 4.93l4.24 4.24m5.66 5.66l4.24 4.24M2 12h6m8 0h6M4.93 19.07l4.24-4.24m5.66-5.66l4.24-4.24',
-      'Transmission Fluid': 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0-7v4m0 6v8M8.22 8.22l2.83 2.83m5.9 5.9l2.83 2.83m-14.83 0l2.83-2.83m5.9-5.9l2.83-2.83',
+      Coolant: 'M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z',
+      'Tire Rotation':
+        'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z',
+      'Spark Plugs':
+        'M12 2v6m0 4v10M4.93 4.93l4.24 4.24m5.66 5.66l4.24 4.24M2 12h6m8 0h6M4.93 19.07l4.24-4.24m5.66-5.66l4.24-4.24',
+      'Transmission Fluid':
+        'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0-7v4m0 6v8M8.22 8.22l2.83 2.83m5.9 5.9l2.83 2.83m-14.83 0l2.83-2.83m5.9-5.9l2.83-2.83',
       'Cabin Air Filter': 'M2 7h20v10H2V7zm0 5h20',
       'Windshield Wipers': 'M2 12l10-5 10 5m-20 5l10-5 10 5',
-      'Brake Pads': 'M5 11h14v10H5V11zm7-6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'
+      'Brake Pads': 'M5 11h14v10H5V11zm7-6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
     };
-    return iconMap[indicatorName] || 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z';
+    return (
+      iconMap[indicatorName] ||
+      'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'
+    );
   }
 
   getDashboardIconPath(indicatorValue: string): string {
     console.log('Dashboard Icon Path for:', indicatorValue); // Debug log
     const iconMap: { [key: string]: string } = {
       // Dashboard indicator keys (PascalCase from indicatorTypeConfig)
-      'ACService': 'M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
-      'CarLicenseAndEnsuranceExpiry': 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 13H9v-2h4v2zm0-4H9V9h4v2z',
-      'GeneralMaintenance': 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
-      'OilChange': 'M7 13v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6M8 5l4-3 4 3M12 2v10',
-      'BatteryHealth': 'M6 7h11v10H6V7zm11 5h4m-4-2h4',
-      'TireChange': 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z'
+      ACService:
+        'M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
+      CarLicenseAndEnsuranceExpiry:
+        'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 13H9v-2h4v2zm0-4H9V9h4v2z',
+      GeneralMaintenance:
+        'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
+      OilChange: 'M7 13v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6M8 5l4-3 4 3M12 2v10',
+      BatteryHealth: 'M6 7h11v10H6V7zm11 5h4m-4-2h4',
+      TireChange: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z',
     };
-    return iconMap[indicatorValue] || 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z';
+    return (
+      iconMap[indicatorValue] ||
+      'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'
+    );
   }
 }

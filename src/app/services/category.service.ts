@@ -7,10 +7,10 @@ import { Subcategory, SubcategoryResponse } from '../models/subcategory.model';
 import { Service, ServiceResponse } from '../models/service.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CategoryService {
-  private readonly apiBase = 'https://localhost:44316/api';
+  private readonly apiBase = 'https://korik-demo.runasp.net/api';
   private categoriesCache$?: Observable<Category[]>;
   private subcategoriesCache: Map<number, Observable<Subcategory[]>> = new Map();
   private servicesCache: Map<number, Observable<Service[]>> = new Map();
@@ -24,7 +24,7 @@ export class CategoryService {
   getCategories(): Observable<Category[]> {
     if (!this.categoriesCache$) {
       this.categoriesCache$ = this.http.get<CategoryResponse>(`${this.apiBase}/Category`).pipe(
-        map(response => {
+        map((response) => {
           if (response.success && response.data) {
             return response.data;
           }
@@ -48,16 +48,18 @@ export class CategoryService {
       return this.subcategoriesCache.get(categoryId)!;
     }
 
-    const subcategories$ = this.http.get<SubcategoryResponse>(`${this.apiBase}/Subcategory/ByCategory/${categoryId}`).pipe(
-      map(response => {
-        if (response.success && response.data) {
-          return response.data;
-        }
-        return [];
-      }),
-      shareReplay(1),
-      catchError(this.handleError)
-    );
+    const subcategories$ = this.http
+      .get<SubcategoryResponse>(`${this.apiBase}/Subcategory/ByCategory/${categoryId}`)
+      .pipe(
+        map((response) => {
+          if (response.success && response.data) {
+            return response.data;
+          }
+          return [];
+        }),
+        shareReplay(1),
+        catchError(this.handleError)
+      );
 
     this.subcategoriesCache.set(categoryId, subcategories$);
     return subcategories$;
@@ -90,16 +92,18 @@ export class CategoryService {
       return this.servicesCache.get(subcategoryId)!;
     }
 
-    const services$ = this.http.get<ServiceResponse>(`${this.apiBase}/Service/subcategory/${subcategoryId}`).pipe(
-      map(response => {
-        if (response.success && response.data) {
-          return response.data;
-        }
-        return [];
-      }),
-      shareReplay(1),
-      catchError(this.handleError)
-    );
+    const services$ = this.http
+      .get<ServiceResponse>(`${this.apiBase}/Service/subcategory/${subcategoryId}`)
+      .pipe(
+        map((response) => {
+          if (response.success && response.data) {
+            return response.data;
+          }
+          return [];
+        }),
+        shareReplay(1),
+        catchError(this.handleError)
+      );
 
     this.servicesCache.set(subcategoryId, services$);
     return services$;
@@ -117,7 +121,7 @@ export class CategoryService {
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An error occurred while fetching categories';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = `Error: ${error.error.message}`;
@@ -125,7 +129,7 @@ export class CategoryService {
       // Server-side error
       errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
     }
-    
+
     console.error('CategoryService Error:', errorMessage);
     return throwError(() => new Error(errorMessage));
   }
