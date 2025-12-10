@@ -5,6 +5,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { ToastContainerComponent } from './components/shared/toast-container/toast-container.component';
 import { ReviewModalComponent } from './components/review-modal/review-modal.component';
 import { AppointmentConfirmationDialogComponent } from './components/appointment-confirmation-dialog/appointment-confirmation-dialog.component';
+import { PaymentTriggerComponent } from './components/payment-trigger/payment-trigger.component';
 import { AuthService } from './services/auth.service';
 import { SignalRNotificationService } from './services/signalr-notification.service';
 import { ReviewModalService } from './services/review-modal.service';
@@ -19,6 +20,7 @@ import { Subject, takeUntil } from 'rxjs';
     ToastContainerComponent,
     ReviewModalComponent,
     AppointmentConfirmationDialogComponent,
+    PaymentTriggerComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
