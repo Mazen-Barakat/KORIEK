@@ -246,19 +246,19 @@
   cursor: pointer;
   position: relative;
   border: 1px solid rgba(0, 0, 0, 0.04);
-  
+
   /* Entrance Animation */
   animation: cardEntranceSlide 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
-  
+
   /* Smooth Transitions */
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  
+
   /* Neomorphism soft shadows */
-  box-shadow: 
+  box-shadow:
     0 10px 28px rgba(0, 0, 0, 0.08),
     0 1px 3px rgba(0, 0, 0, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  
+
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -312,7 +312,7 @@
 /* Hover State - Elevated Neomorphism */
 .vehicle-card:hover {
   transform: translateY(-8px);
-  box-shadow: 
+  box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.12),
     0 1px 3px rgba(0, 0, 0, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -333,7 +333,7 @@
 /* Selected State */
 .vehicle-card.selected {
   border: 2px solid #FF3B30;
-  box-shadow: 
+  box-shadow:
     0 10px 28px rgba(255, 59, 48, 0.15),
     0 1px 3px rgba(255, 59, 48, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -342,7 +342,7 @@
 }
 
 .vehicle-card.selected:hover {
-  box-shadow: 
+  box-shadow:
     0 20px 40px rgba(255, 59, 48, 0.2),
     0 1px 3px rgba(255, 59, 48, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -373,7 +373,7 @@
 
 .vehicle-card.default-vehicle:hover {
   border-color: rgba(255, 59, 48, 0.16);
-  box-shadow: 
+  box-shadow:
     0 20px 40px rgba(255, 59, 48, 0.12),
     0 1px 3px rgba(255, 59, 48, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -406,11 +406,11 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 59, 48, 0.08) 20%, 
-    rgba(255, 59, 48, 0.12) 50%, 
-    rgba(255, 59, 48, 0.08) 80%, 
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 59, 48, 0.08) 20%,
+    rgba(255, 59, 48, 0.12) 50%,
+    rgba(255, 59, 48, 0.08) 80%,
     transparent 100%);
   pointer-events: none;
   z-index: 0;
@@ -465,7 +465,7 @@
 }
 
 .vehicle-card:hover .image-gradient-overlay {
-  background: 
+  background:
     linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%),
     radial-gradient(circle at center, transparent 40%, rgba(27, 54, 93, 0.02) 100%);
   animation: softShine 0.8s ease-out;
@@ -572,7 +572,7 @@
   color: #78350F;
   border: 1px solid rgba(251, 191, 36, 0.3);
   animation-delay: 0.15s;
-  box-shadow: 
+  box-shadow:
     0 2px 6px rgba(251, 191, 36, 0.15),
     inset 0 1px 2px rgba(255, 255, 255, 0.35);
 }
@@ -591,7 +591,7 @@
   color: #FFFFFF;
   border: 1px solid rgba(34, 197, 94, 0.3);
   animation-delay: 0.2s;
-  box-shadow: 
+  box-shadow:
     0 2px 6px rgba(34, 197, 94, 0.15),
     inset 0 1px 2px rgba(255, 255, 255, 0.2);
 }
@@ -985,25 +985,29 @@
   z-index: 2;
 }
 
-/* Good status */
-.premium-indicator.indicator-good {
+/* Normal status */
+.premium-indicator.indicator-good,
+.premium-indicator.indicator-normal {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(22, 163, 74, 0.12) 100%);
   border-color: rgba(34, 197, 94, 0.25);
   box-shadow: 0 1px 3px rgba(34, 197, 94, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
-.premium-indicator.indicator-good:hover {
+.premium-indicator.indicator-good:hover,
+.premium-indicator.indicator-normal:hover {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(22, 163, 74, 0.18) 100%);
   border-color: rgba(34, 197, 94, 0.4);
   box-shadow: 0 3px 8px rgba(34, 197, 94, 0.12), 0 6px 16px rgba(34, 197, 94, 0.08);
 }
 
-.premium-indicator.indicator-good .indicator-dot {
+.premium-indicator.indicator-good .indicator-dot,
+.premium-indicator.indicator-normal .indicator-dot {
   color: #22C55E;
   box-shadow: 0 0 6px rgba(34, 197, 94, 0.6), inset 0 0.5px 1px rgba(255, 255, 255, 0.4);
 }
 
-.premium-indicator.indicator-good .indicator-value {
+.premium-indicator.indicator-good .indicator-value,
+.premium-indicator.indicator-normal .indicator-value {
   color: #22C55E;
 }
 
@@ -1270,17 +1274,20 @@
   color: #1B365D;
 }
 
-/* Good status */
-.premium-indicator.indicator-good {
+/* Normal status */
+.premium-indicator.indicator-good,
+.premium-indicator.indicator-normal {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(22, 163, 74, 0.12) 100%);
   border-color: rgba(34, 197, 94, 0.2);
 }
 
-.premium-indicator.indicator-good .indicator-dot {
+.premium-indicator.indicator-good .indicator-dot,
+.premium-indicator.indicator-normal .indicator-dot {
   color: #22C55E;
 }
 
-.premium-indicator.indicator-good .indicator-value {
+.premium-indicator.indicator-good .indicator-value,
+.premium-indicator.indicator-normal .indicator-value {
   color: #22C55E;
 }
 
@@ -1377,7 +1384,7 @@
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 
+  box-shadow:
     0 4px 12px rgba(255, 59, 48, 0.3),
     0 8px 24px rgba(255, 59, 48, 0.15);
   position: relative;
@@ -1388,7 +1395,7 @@
 
 .quick-action-btn:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 
+  box-shadow:
     0 6px 20px rgba(255, 59, 48, 0.4),
     0 12px 32px rgba(255, 59, 48, 0.25);
   background: #D73329;
@@ -1409,7 +1416,7 @@
 .quick-action-secondary {
   background: linear-gradient(135deg, rgba(255, 59, 48, 0.15) 0%, rgba(255, 59, 48, 0.08) 100%);
   color: #FF3B30;
-  box-shadow: 
+  box-shadow:
     0 2px 8px rgba(255, 59, 48, 0.15),
     inset 0 1px 0 rgba(255, 59, 48, 0.2);
   border: 2px solid rgba(255, 59, 48, 0.2);
@@ -1419,7 +1426,7 @@
   background: linear-gradient(135deg, rgba(255, 59, 48, 0.25) 0%, rgba(255, 59, 48, 0.15) 100%);
   border-color: rgba(255, 59, 48, 0.4);
   color: #D73329;
-  box-shadow: 
+  box-shadow:
     0 4px 12px rgba(255, 59, 48, 0.25),
     inset 0 1px 0 rgba(255, 59, 48, 0.3);
 }
