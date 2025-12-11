@@ -12,7 +12,7 @@ declare const google: any;
   standalone: true,
   imports: [CommonModule, NgIf, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
@@ -37,13 +37,13 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
-      rememberMe: [false]
+      rememberMe: [false],
     });
   }
 
   ngOnInit() {
     // Read role from query params
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       this.selectedRole = params['role'] || '';
 
       // Redirect to role selection if no role provided
@@ -85,7 +85,7 @@ export class LoginComponent implements OnInit {
     if (google && google.accounts && google.accounts.id) {
       google.accounts.id.initialize({
         client_id: this.googleClientId,
-        callback: (response: any) => this.handleGoogleSignIn(response)
+        callback: (response: any) => this.handleGoogleSignIn(response),
       });
     }
   }
@@ -102,75 +102,75 @@ export class LoginComponent implements OnInit {
 
     const loginData = {
       email: this.loginForm.value.email,
-      password: this.loginForm.value.password
+      password: this.loginForm.value.password,
     };
 
-    this.http.post('https://localhost:44316/api/Account/Login', loginData)
-      .subscribe({
-        next: (response: any) => {
-          console.log('Login response:', response);
-          this.isLoading = false;
+    this.http.post('https://korik-demo.runasp.net/api/Account/Login', loginData).subscribe({
+      next: (response: any) => {
+        console.log('Login response:', response);
+        this.isLoading = false;
 
-          // Check if the response indicates success
-          if (response.success === true || response.success === 'true') {
-            // Handle Remember Me token storage first
-            this.handleRememberMe(response);
+        // Check if the response indicates success
+        if (response.success === true || response.success === 'true') {
+          // Handle Remember Me token storage first
+          this.handleRememberMe(response);
 
-            // Store the token with expiry using AuthService
-            const data = response.data || response;
-            if (data.token) {
-              this.authService.saveToken(data.token, data.tokenExpiryTime);
-            }
-
-            // Store user information using AuthService
-            if (data.id || data.userName || data.email) {
-              this.authService.saveUser(data);
-            }
-
-            this.successMessage = response.message || 'Login successful! Redirecting...';
-
-            // Start token expiry monitor
-            this.authService.startTokenExpiryMonitor();
-
-            // Show success popup
-            this.showSuccessPopup = true;
-            this.cdr.detectChanges();
-
-            // Redirect after short delay (role-aware)
-            const respData = data || {};
-            setTimeout(() => {
-              this.redirectAfterLogin(respData);
-            }, 1500);
-          } else {
-            // Handle unsuccessful response (success: false)
-            this.isLoading = false;
-            this.errorMessage = response.message || 'Login failed. Please try again.';
-            this.cdr.detectChanges(); // Force UI update
-          }
-        },
-        error: (error: any) => {
-          console.log('Login error:', error);
-          this.isLoading = false;
-
-          // Check for CORS or network errors
-          if (error.status === 0) {
-            this.errorMessage = 'Unable to connect to server. Please check if the backend is running and CORS is configured properly.';
-          } else if (error.error) {
-            // Handle error response with the backend format
-            if (error.error.message) {
-              this.errorMessage = error.error.message;
-            } else if (typeof error.error === 'string') {
-              this.errorMessage = error.error;
-            } else {
-              this.errorMessage = 'Login failed. Please check your credentials.';
-            }
-          } else {
-            this.errorMessage = `An error occurred during login. Please try again.`;
+          // Store the token with expiry using AuthService
+          const data = response.data || response;
+          if (data.token) {
+            this.authService.saveToken(data.token, data.tokenExpiryTime);
           }
 
+          // Store user information using AuthService
+          if (data.id || data.userName || data.email) {
+            this.authService.saveUser(data);
+          }
+
+          this.successMessage = response.message || 'Login successful! Redirecting...';
+
+          // Start token expiry monitor
+          this.authService.startTokenExpiryMonitor();
+
+          // Show success popup
+          this.showSuccessPopup = true;
+          this.cdr.detectChanges();
+
+          // Redirect after short delay (role-aware)
+          const respData = data || {};
+          setTimeout(() => {
+            this.redirectAfterLogin(respData);
+          }, 1500);
+        } else {
+          // Handle unsuccessful response (success: false)
+          this.isLoading = false;
+          this.errorMessage = response.message || 'Login failed. Please try again.';
           this.cdr.detectChanges(); // Force UI update
         }
-      });
+      },
+      error: (error: any) => {
+        console.log('Login error:', error);
+        this.isLoading = false;
+
+        // Check for CORS or network errors
+        if (error.status === 0) {
+          this.errorMessage =
+            'Unable to connect to server. Please check if the backend is running and CORS is configured properly.';
+        } else if (error.error) {
+          // Handle error response with the backend format
+          if (error.error.message) {
+            this.errorMessage = error.error.message;
+          } else if (typeof error.error === 'string') {
+            this.errorMessage = error.error;
+          } else {
+            this.errorMessage = 'Login failed. Please check your credentials.';
+          }
+        } else {
+          this.errorMessage = `An error occurred during login. Please try again.`;
+        }
+
+        this.cdr.detectChanges(); // Force UI update
+      },
+    });
   }
 
   goBack() {
@@ -193,7 +193,8 @@ export class LoginComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.http.post('https://localhost:44316/api/Account/ForgotPassword', { email })
+    this.http
+      .post('https://korik-demo.runasp.net/api/Account/ForgotPassword', { email })
       .subscribe({
         next: () => {
           this.isLoading = false;
@@ -208,7 +209,7 @@ export class LoginComponent implements OnInit {
             this.errorMessage = 'Unable to process your request. Please try again later.';
           }
           this.cdr.detectChanges(); // Force UI update
-        }
+        },
       });
   }
 
@@ -277,10 +278,7 @@ export class LoginComponent implements OnInit {
     }
 
     try {
-      google.accounts.id.renderButton(
-        document.createElement('div'),
-        {}
-      );
+      google.accounts.id.renderButton(document.createElement('div'), {});
 
       // Trigger popup signin directly
       google.accounts.id.prompt((notification: any) => {
@@ -310,7 +308,7 @@ export class LoginComponent implements OnInit {
       type: 'standard',
       size: 'large',
       theme: 'outline',
-      locale: 'en'
+      locale: 'en',
     });
 
     // Get the button and click it
@@ -346,72 +344,73 @@ export class LoginComponent implements OnInit {
 
     const payload = {
       idToken: idToken,
-      role: this.selectedRole
+      role: this.selectedRole,
     };
 
     console.log('Sending Google login request with payload:', payload);
 
-    this.http.post('https://localhost:44316/api/Account/Google-login', payload)
-      .subscribe({
-        next: (res: any) => {
-          this.isLoading = false;
-          console.log('Google sign-in response:', res);
+    this.http.post('https://korik-demo.runasp.net/api/Account/Google-login', payload).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        console.log('Google sign-in response:', res);
 
-          if (res.success === true || res.success === 'true') {
-            // Handle Remember Me for Google login (assume Remember Me is true for Google)
-            this.rememberMe = true;
-            this.handleRememberMe(res);
+        if (res.success === true || res.success === 'true') {
+          // Handle Remember Me for Google login (assume Remember Me is true for Google)
+          this.rememberMe = true;
+          this.handleRememberMe(res);
 
-            // Store the JWT token with expiry using AuthService
-            const data = res.data || res;
-            if (data.token) {
-              this.authService.saveToken(data.token, data.tokenExpiryTime);
-            }
-
-            // Store user information using AuthService
-            if (data.id || data.userName || data.email) {
-              this.authService.saveUser(data);
-            }
-
-            this.successMessage = res.message || 'Login successful! Redirecting...';
-
-            // Start token expiry monitor
-            this.authService.startTokenExpiryMonitor();
-
-            this.cdr.detectChanges();
-
-            // Redirect after short delay (role-aware)
-            const respData = data || res || {};
-            setTimeout(() => {
-              this.redirectAfterLogin(respData);
-            }, 1600);
-          } else {
-            this.errorMessage = res.message || 'Google sign-in failed. Please try again.';
-            this.cdr.detectChanges();
+          // Store the JWT token with expiry using AuthService
+          const data = res.data || res;
+          if (data.token) {
+            this.authService.saveToken(data.token, data.tokenExpiryTime);
           }
-        },
-        error: (err: any) => {
-          this.isLoading = false;
-          console.error('Google sign-in error:', err);
-          console.error('Error details:', err.error);
 
-          if (err.status === 0) {
-            this.errorMessage = 'Unable to connect to server. Please try again later.';
-          } else if (err?.error?.message) {
-            this.errorMessage = err.error.message;
-          } else if (err?.error?.errors) {
-            const errors = err.error.errors;
-            const errorMessages = Object.keys(errors).map((key: string) => errors[key].join(', ')).join('; ');
-            this.errorMessage = errorMessages || 'An error occurred during sign-in.';
-          } else if (err?.error) {
-            this.errorMessage = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
-          } else {
-            this.errorMessage = 'Google sign-in failed. Please try again.';
+          // Store user information using AuthService
+          if (data.id || data.userName || data.email) {
+            this.authService.saveUser(data);
           }
+
+          this.successMessage = res.message || 'Login successful! Redirecting...';
+
+          // Start token expiry monitor
+          this.authService.startTokenExpiryMonitor();
 
           this.cdr.detectChanges();
+
+          // Redirect after short delay (role-aware)
+          const respData = data || res || {};
+          setTimeout(() => {
+            this.redirectAfterLogin(respData);
+          }, 1600);
+        } else {
+          this.errorMessage = res.message || 'Google sign-in failed. Please try again.';
+          this.cdr.detectChanges();
         }
-      });
+      },
+      error: (err: any) => {
+        this.isLoading = false;
+        console.error('Google sign-in error:', err);
+        console.error('Error details:', err.error);
+
+        if (err.status === 0) {
+          this.errorMessage = 'Unable to connect to server. Please try again later.';
+        } else if (err?.error?.message) {
+          this.errorMessage = err.error.message;
+        } else if (err?.error?.errors) {
+          const errors = err.error.errors;
+          const errorMessages = Object.keys(errors)
+            .map((key: string) => errors[key].join(', '))
+            .join('; ');
+          this.errorMessage = errorMessages || 'An error occurred during sign-in.';
+        } else if (err?.error) {
+          this.errorMessage = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
+        } else {
+          this.errorMessage = 'Google sign-in failed. Please try again.';
+        }
+
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   // Redirect helper: route users based on selected role and available data
@@ -421,7 +420,9 @@ export class LoginComponent implements OnInit {
       const userObj = data || {};
 
       // Normalize selected role and fallback to stored user role if missing
-      const selectedRoleNorm = (this.selectedRole || this.authService.getUserRole() || '').toString().toLowerCase();
+      const selectedRoleNorm = (this.selectedRole || this.authService.getUserRole() || '')
+        .toString()
+        .toLowerCase();
 
       // Possible fields where backend may put workshop id (cover multiple response shapes)
       const workshopIdCandidates = [
@@ -432,12 +433,17 @@ export class LoginComponent implements OnInit {
         userObj.id,
         userObj.userId,
         userObj.data?.workshopId,
-        userObj.data?.id
+        userObj.data?.id,
       ];
 
-      const workshopId = workshopIdCandidates.find(v => v) || this.authService.getUserId();
+      const workshopId = workshopIdCandidates.find((v) => v) || this.authService.getUserId();
 
-      console.debug('redirectAfterLogin:', { selectedRole: this.selectedRole, selectedRoleNorm, workshopId, data: userObj });
+      console.debug('redirectAfterLogin:', {
+        selectedRole: this.selectedRole,
+        selectedRoleNorm,
+        workshopId,
+        data: userObj,
+      });
 
       // Check if user is a workshop owner - redirect to workshop dashboard
       if (selectedRoleNorm === 'workshop' || selectedRoleNorm === 'workshopowner') {

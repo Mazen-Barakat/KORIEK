@@ -21,13 +21,14 @@ src/app/
 ## 🎯 How It Works
 
 ```
-Booking → "Ready for Pickup" → SignalR Notification → 
+Booking → "Ready for Pickup" → SignalR Notification →
 Payment Trigger → Toast → Modal → Payment → Success!
 ```
 
 ## 🔑 Key Components
 
 ### 1. Payment Modal
+
 ```html
 <app-payment-modal
   [bookingId]="123"
@@ -41,12 +42,14 @@ Payment Trigger → Toast → Modal → Payment → Success!
 ```
 
 ### 2. Payment Trigger
+
 ```html
 <!-- Add to app.html (already done!) -->
 <app-payment-trigger></app-payment-trigger>
 ```
 
 ### 3. Pay Now Button
+
 ```html
 <app-pay-now-button
   [bookingId]="123"
@@ -93,6 +96,7 @@ Expiry: 12/25  |  CVC: 123  |  ZIP: 12345
 ## 📡 Events
 
 ### Listen
+
 ```typescript
 window.addEventListener('payment:completed', (e) => {
   console.log('Payment done:', e.detail.bookingId);
@@ -100,27 +104,30 @@ window.addEventListener('payment:completed', (e) => {
 ```
 
 ### Trigger
+
 ```typescript
-window.dispatchEvent(new CustomEvent('booking:ready-for-pickup', {
-  detail: { bookingId, paymentMethod, totalAmount }
-}));
+window.dispatchEvent(
+  new CustomEvent('booking:ready-for-pickup', {
+    detail: { bookingId, paymentMethod, totalAmount },
+  })
+);
 ```
 
 ## 🎯 Conditions for Auto-Trigger
 
 ✅ Booking status = "ReadyForPickup"  
 ✅ Payment method = "CreditCard"  
-✅ Payment status = "Unpaid"  
+✅ Payment status = "Unpaid"
 
 ## 🎨 UI States
 
-| State | Icon | Color | Action |
-|-------|------|-------|--------|
-| Summary | 🚗 | Yellow | Proceed |
-| Payment | 💳 | Blue | Pay |
-| Processing | ⏳ | Gray | Wait |
-| Success | ✓ | Green | Done |
-| Error | ✕ | Red | Retry |
+| State      | Icon | Color  | Action  |
+| ---------- | ---- | ------ | ------- |
+| Summary    | 🚗   | Yellow | Proceed |
+| Payment    | 💳   | Blue   | Pay     |
+| Processing | ⏳   | Gray   | Wait    |
+| Success    | ✓    | Green  | Done    |
+| Error      | ✕    | Red    | Retry   |
 
 ## 📊 Commission Breakdown
 
@@ -133,31 +140,34 @@ Workshop Gets:      $88.00
 ## 🔧 Configuration
 
 ### Stripe Key
+
 ```typescript
 // payment-modal.component.ts (line 41)
 private readonly STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_KEY';
 ```
 
 ### API URL
+
 ```typescript
 // payment.service.ts (line 14)
-private readonly API_URL = 'https://localhost:44316/api/Payment';
+private readonly API_URL = 'https://korik-demo.runasp.net/api/Payment';
 ```
 
 ## 🐛 Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Modal doesn't appear | Check SignalR connection |
-| Card element not loading | Verify Stripe key |
-| Payment fails | Check backend API |
-| Already paid error | Verify payment status |
+| Issue                    | Solution                 |
+| ------------------------ | ------------------------ |
+| Modal doesn't appear     | Check SignalR connection |
+| Card element not loading | Verify Stripe key        |
+| Payment fails            | Check backend API        |
+| Already paid error       | Verify payment status    |
 
 ## 📱 Mobile Support
 
 Fully responsive! Works perfectly on:
+
 - 📱 iOS
-- 🤖 Android  
+- 🤖 Android
 - 💻 Desktop
 - 📲 Tablet
 
@@ -193,4 +203,4 @@ The system is **fully automatic**. Just:
 
 **Ready to use! 🎊**
 
-*Built: December 10, 2025 | Version: 1.0.0*
+_Built: December 10, 2025 | Version: 1.0.0_

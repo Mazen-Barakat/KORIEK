@@ -320,7 +320,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
             response.data.picture ||
             response.data.avatar;
           // Backend host used for serving uploaded files
-          const backendHost = 'https://localhost:44316';
+          const backendHost = 'https://korik-demo.runasp.net';
           if (candidate && typeof candidate === 'string') {
             // If the returned path is relative (starts with '/'), prefix backend host
             if (candidate.startsWith('/')) {
@@ -1054,7 +1054,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
           // Get both regular tips and weather-based tips
           forkJoin({
             regularTips: this.carTipsService.getCarTips(3),
-            weatherTips: this.carTipsService.getWeatherBasedTips(latitude, longitude)
+            weatherTips: this.carTipsService.getWeatherBasedTips(latitude, longitude),
           }).subscribe({
             next: ({ regularTips, weatherTips }) => {
               // Combine and limit to 5 total tips (prioritize weather tips)
@@ -1067,7 +1067,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
             error: (error) => {
               console.error('Error loading tips:', error);
               this.loadFallbackTips();
-            }
+            },
           });
         },
         (error) => {
@@ -1077,7 +1077,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         },
         {
           timeout: 3000, // 3 second timeout for geolocation
-          maximumAge: 300000 // Accept cached location up to 5 minutes old
+          maximumAge: 300000, // Accept cached location up to 5 minutes old
         }
       );
     } else {
@@ -1102,7 +1102,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error loading tips:', error);
         this.loadFallbackTips();
-      }
+      },
     });
   }
 
@@ -1172,7 +1172,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
           const { latitude, longitude } = position.coords;
           forkJoin({
             regularTips: this.carTipsService.getCarTips(newLimit - 2),
-            weatherTips: this.carTipsService.getWeatherBasedTips(latitude, longitude)
+            weatherTips: this.carTipsService.getWeatherBasedTips(latitude, longitude),
           }).subscribe({
             next: ({ regularTips, weatherTips }) => {
               this.tips = [...weatherTips, ...regularTips].slice(0, newLimit) as Tip[];
@@ -1183,7 +1183,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
             },
             error: () => {
               this.loadMoreRegularTips(newLimit);
-            }
+            },
           });
         },
         () => {
@@ -1208,7 +1208,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       error: () => {
         this.loadingTips = false;
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -1645,7 +1645,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     this.cancellingBookingIds.add(booking.id);
     this.cdr.detectChanges();
 
-    const apiUrl = 'https://localhost:44316/api';
+    const apiUrl = 'https://korik-demo.runasp.net/api';
     this.bookingService.http
       .put(`${apiUrl}/Booking/Update-Booking-Status`, {
         id: booking.id,
@@ -1696,7 +1696,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const apiUrl = 'https://localhost:44316/api';
+    const apiUrl = 'https://korik-demo.runasp.net/api';
     const notificationPayload = {
       workshopProfileId: booking.workshopId,
       bookingId: booking.id,
@@ -1809,7 +1809,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   private fetchServiceName(booking: UpcomingBooking): void {
     if (!booking.workshopServiceId) return;
 
-    const apiUrl = 'https://localhost:44316/api';
+    const apiUrl = 'https://korik-demo.runasp.net/api';
 
     // First, get the workshopService to extract serviceId
     this.bookingService.http

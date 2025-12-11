@@ -120,7 +120,7 @@ export class WorkshopsDiscoveryComponent implements OnInit, OnDestroy {
 
   governorates = GOVERNORATES;
 
-  private apiUrl = 'https://localhost:44316/api';
+  private apiUrl = 'https://korik-demo.runasp.net/api';
 
   constructor(
     private http: HttpClient,
@@ -366,7 +366,7 @@ export class WorkshopsDiscoveryComponent implements OnInit, OnDestroy {
       if (workshop.logoImageUrl.startsWith('http')) {
         return workshop.logoImageUrl;
       }
-      return `https://localhost:44316${workshop.logoImageUrl}`;
+      return `https://korik-demo.runasp.net${workshop.logoImageUrl}`;
     }
     return '';
   }

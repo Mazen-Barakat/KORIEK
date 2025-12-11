@@ -9,7 +9,7 @@ import { HttpClient } from '@angular/common/http';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './reset-password.component.html',
-  styleUrls: ['./reset-password.component.css']
+  styleUrls: ['./reset-password.component.css'],
 })
 export class ResetPasswordComponent implements OnInit {
   form: FormGroup;
@@ -29,12 +29,12 @@ export class ResetPasswordComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({
-      newPassword: ['', [Validators.required, Validators.minLength(8)]]
+      newPassword: ['', [Validators.required, Validators.minLength(8)]],
     });
   }
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       console.log('=== URL QUERY PARAMS ===');
       console.log('All params:', params);
 
@@ -79,7 +79,7 @@ export class ResetPasswordComponent implements OnInit {
     const payload = {
       email: this.email,
       passwordResetToken: this.token,
-      newPassword: this.form.value.newPassword
+      newPassword: this.form.value.newPassword,
     };
 
     console.log('=== RESET PASSWORD DEBUG ===');
@@ -87,17 +87,20 @@ export class ResetPasswordComponent implements OnInit {
     console.log('Token from URL:', this.token);
     console.log('New Password:', this.form.value.newPassword);
     console.log('Complete Payload:', JSON.stringify(payload, null, 2));
-    console.log('Endpoint:', 'https://localhost:44316/api/Account/ResetPassword');
+    console.log('Endpoint:', 'https://korik-demo.runasp.net/api/Account/ResetPassword');
 
-    this.http.post('https://localhost:44316/api/Account/ResetPassword', payload, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }).subscribe({
+    this.http
+      .post('https://korik-demo.runasp.net/api/Account/ResetPassword', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      .subscribe({
         next: (res: any) => {
           this.isLoading = false;
           console.log('✅ SUCCESS Response:', res);
-          this.successMessage = res?.message || 'Password changed successfully. You can now log in.';
+          this.successMessage =
+            res?.message || 'Password changed successfully. You can now log in.';
           this.cdr.detectChanges();
 
           // After short delay, navigate to login and remove token/email from URL
@@ -119,18 +122,24 @@ export class ResetPasswordComponent implements OnInit {
           } else if (err?.error?.errors) {
             // Handle validation errors
             const errors = err.error.errors;
-            const errorMessages = Object.keys(errors).map(key => errors[key].join(', ')).join('; ');
+            const errorMessages = Object.keys(errors)
+              .map((key) => errors[key].join(', '))
+              .join('; ');
             this.errorMessage = errorMessages || 'Validation error occurred.';
           } else if (err?.error) {
             // Try to display any error text from the response
-            this.errorMessage = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
+            this.errorMessage =
+              typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
           } else if (err.status === 0) {
-            this.errorMessage = 'Unable to connect to server. Please check if the backend is running.';
+            this.errorMessage =
+              'Unable to connect to server. Please check if the backend is running.';
           } else {
-            this.errorMessage = `Unable to reset password. Status: ${err.status} - ${err.statusText || 'Unknown error'}`;
+            this.errorMessage = `Unable to reset password. Status: ${err.status} - ${
+              err.statusText || 'Unknown error'
+            }`;
           }
           this.cdr.detectChanges();
-        }
+        },
       });
   }
 }

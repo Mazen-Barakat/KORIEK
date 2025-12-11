@@ -159,14 +159,7 @@ export class AuthService {
   getUserName(): string | null {
     const user = this.getUser();
     if (!user) return null;
-    return (
-      user.userName ||
-      user.name ||
-      user.fullName ||
-      user.displayName ||
-      user.email ||
-      null
-    );
+    return user.userName || user.name || user.fullName || user.displayName || user.email || null;
   }
 
   // Save Remember Me flag
@@ -198,9 +191,9 @@ export class AuthService {
       throw new Error('No refresh token available');
     }
 
-    return this.http.post('https://localhost:44316/api/Account/RefreshToken', {
+    return this.http.post('https://korik-demo.runasp.net/api/Account/RefreshToken', {
       userId: userId,
-      refreshToken: refreshToken
+      refreshToken: refreshToken,
     });
   }
 
@@ -254,7 +247,7 @@ export class AuthService {
           error: (error) => {
             console.error('❌ Proactive token refresh failed:', error);
             // Don't logout here, let the interceptor handle it on next API call
-          }
+          },
         });
       }
     }, 60000); // Check every minute

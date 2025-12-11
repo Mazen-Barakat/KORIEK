@@ -12,13 +12,13 @@ import {
   providedIn: 'root',
 })
 export class ReviewService {
-  private readonly apiUrl = 'https://localhost:44316/api';
+  private readonly apiUrl = 'https://korik-demo.runasp.net/api';
 
   constructor(private http: HttpClient) {}
 
   /**
    * Get booking details by ID
-   * GET https://localhost:44316/api/Booking/{id}
+   * GET https://korik-demo.runasp.net/api/Booking/{id}
    */
   getBookingById(bookingId: number): Observable<BookingApiResponse> {
     return this.http.get<BookingApiResponse>(`${this.apiUrl}/Booking/${bookingId}`);
@@ -26,7 +26,7 @@ export class ReviewService {
 
   /**
    * Get workshop profile details by ID
-   * GET https://localhost:44316/api/WorkShopProfile/Get-WorkShop-ById-Profile?id={id}
+   * GET https://korik-demo.runasp.net/api/WorkShopProfile/Get-WorkShop-ById-Profile?id={id}
    */
   getWorkshopById(workshopId: number): Observable<WorkshopApiResponse> {
     return this.http.get<WorkshopApiResponse>(
@@ -36,7 +36,7 @@ export class ReviewService {
 
   /**
    * Get car owner profile by booking ID
-   * GET https://localhost:44316/api/CarOwnerProfile/by-booking/{bookingId}
+   * GET https://korik-demo.runasp.net/api/CarOwnerProfile/by-booking/{bookingId}
    */
   getCarOwnerProfileByBooking(bookingId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/CarOwnerProfile/by-booking/${bookingId}`);
@@ -44,7 +44,7 @@ export class ReviewService {
 
   /**
    * Get all reviews for a workshop
-   * GET https://localhost:44316/api/Review/all-Review/{workshopId}
+   * GET https://korik-demo.runasp.net/api/Review/all-Review/{workshopId}
    */
   getAllWorkshopReviews(workshopId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/Review/all-Review/${workshopId}`);
@@ -52,7 +52,7 @@ export class ReviewService {
 
   /**
    * Get workshop average rating
-   * GET https://localhost:44316/api/Review/average-rating/{workshopId}
+   * GET https://korik-demo.runasp.net/api/Review/average-rating/{workshopId}
    */
   getWorkshopAverageRating(workshopId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/Review/average-rating/${workshopId}`);
@@ -60,7 +60,7 @@ export class ReviewService {
 
   /**
    * Submit a new review
-   * POST https://localhost:44316/api/Review
+   * POST https://korik-demo.runasp.net/api/Review
    */
   createReview(review: ReviewSubmitDto): Observable<ReviewApiResponse> {
     const headers = new HttpHeaders({
@@ -73,7 +73,7 @@ export class ReviewService {
   /**
    * Update booking paid amount
    * This may need to be called after review submission if paidAmount needs separate update
-   * PUT https://localhost:44316/api/Booking/Update-Paid-Amount (assuming this endpoint exists)
+   * PUT https://korik-demo.runasp.net/api/Booking/Update-Paid-Amount (assuming this endpoint exists)
    */
   updateBookingPaidAmount(bookingId: number, paidAmount: number): Observable<any> {
     return this.http.put(`${this.apiUrl}/Booking/Update-Paid-Amount`, {

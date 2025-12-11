@@ -1,6 +1,20 @@
-import { Component, ChangeDetectorRef, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  ChangeDetectorRef,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -13,7 +27,7 @@ declare const google: any;
   standalone: true,
   imports: [CommonModule, NgIf, ReactiveFormsModule, RouterLink],
   templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.css']
+  styleUrls: ['./signup.component.css'],
 })
 export class SignupComponent implements OnInit, AfterViewInit {
   @ViewChild('lottieCanvas') lottieCanvas!: ElementRef<HTMLCanvasElement>;
@@ -40,22 +54,27 @@ export class SignupComponent implements OnInit, AfterViewInit {
     private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {
-    this.signupForm = this.fb.group({
-      userName: ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9]+$/)]],
-      role: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [
-        Validators.required,
-        Validators.minLength(8),
-        this.passwordStrengthValidator
-      ]],
-      confirmPassword: ['', Validators.required]
-    }, { validators: this.passwordMatchValidator });
+    this.signupForm = this.fb.group(
+      {
+        userName: [
+          '',
+          [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9]+$/)],
+        ],
+        role: ['', Validators.required],
+        email: ['', [Validators.required, Validators.email]],
+        password: [
+          '',
+          [Validators.required, Validators.minLength(8), this.passwordStrengthValidator],
+        ],
+        confirmPassword: ['', Validators.required],
+      },
+      { validators: this.passwordMatchValidator }
+    );
   }
 
   ngOnInit() {
     // Read role from query params
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       this.selectedRole = params['role'] || '';
 
       // Redirect to role selection if no role provided
@@ -93,7 +112,7 @@ export class SignupComponent implements OnInit, AfterViewInit {
     if (google && google.accounts && google.accounts.id) {
       google.accounts.id.initialize({
         client_id: this.googleClientId,
-        callback: (response: any) => this.handleGoogleSignIn(response)
+        callback: (response: any) => this.handleGoogleSignIn(response),
       });
     }
   }
@@ -136,67 +155,69 @@ export class SignupComponent implements OnInit, AfterViewInit {
       role: this.signupForm.value.role,
       email: this.signupForm.value.email,
       password: this.signupForm.value.password,
-      confirmPassword: this.signupForm.value.confirmPassword
+      confirmPassword: this.signupForm.value.confirmPassword,
     };
 
-    this.http.post('https://localhost:44316/api/Account/Register', registerData)
-      .subscribe({
-        next: (response: any) => {
-          console.log('Registration response:', response);
+    this.http.post('https://korik-demo.runasp.net/api/Account/Register', registerData).subscribe({
+      next: (response: any) => {
+        console.log('Registration response:', response);
+        this.isLoading = false;
+
+        // Check if the response indicates success
+        if (response.success === true || response.success === 'true') {
+          this.successMessage =
+            response.message ||
+            'Registration successful! Please check your email to confirm your account.';
+          this.signupForm.reset();
+
+          // Show celebration modal with Lottie animation
+          this.showCelebrationModal = true;
+          this.cdr.detectChanges();
+
+          // Initialize Lottie after modal is rendered - give more time for DOM
+          setTimeout(() => {
+            this.initializeLottie();
+          }, 300);
+
+          // Redirect to login after 4.5 seconds with role query param
+          setTimeout(() => {
+            this.router.navigate(['/login'], { queryParams: { role: this.selectedRole } });
+          }, 4500);
+        } else {
+          // Handle unsuccessful response (success: false)
           this.isLoading = false;
-
-          // Check if the response indicates success
-          if (response.success === true || response.success === 'true') {
-            this.successMessage = response.message || 'Registration successful! Please check your email to confirm your account.';
-            this.signupForm.reset();
-
-            // Show celebration modal with Lottie animation
-            this.showCelebrationModal = true;
-            this.cdr.detectChanges();
-
-            // Initialize Lottie after modal is rendered - give more time for DOM
-            setTimeout(() => {
-              this.initializeLottie();
-            }, 300);
-
-            // Redirect to login after 4.5 seconds with role query param
-            setTimeout(() => {
-              this.router.navigate(['/login'], { queryParams: { role: this.selectedRole } });
-            }, 4500);
-          } else {
-            // Handle unsuccessful response (success: false)
-            this.isLoading = false;
-            this.errorMessage = response.message || 'Registration failed. Please try again.';
-            this.cdr.detectChanges(); // Force UI update
-          }
-        },
-        error: (error: any) => {
-          console.error('Registration error:', error);
-          this.isLoading = false;
-
-          // Check for CORS or network errors
-          if (error.status === 0) {
-            this.errorMessage = 'Unable to connect to server. Please check if the backend is running and CORS is configured properly.';
-          } else if (error.error) {
-            // Handle error response with the backend format
-            if (error.error.message) {
-              this.errorMessage = error.error.message;
-            } else if (typeof error.error === 'string') {
-              this.errorMessage = error.error;
-            } else if (error.error.errors) {
-              // Handle ASP.NET validation errors
-              const errors = Object.values(error.error.errors).flat();
-              this.errorMessage = (errors as string[]).join(' ');
-            } else {
-              this.errorMessage = 'Registration failed. Please check your input.';
-            }
-          } else {
-            this.errorMessage = 'An error occurred during registration. Please try again.';
-          }
-
+          this.errorMessage = response.message || 'Registration failed. Please try again.';
           this.cdr.detectChanges(); // Force UI update
         }
-      });
+      },
+      error: (error: any) => {
+        console.error('Registration error:', error);
+        this.isLoading = false;
+
+        // Check for CORS or network errors
+        if (error.status === 0) {
+          this.errorMessage =
+            'Unable to connect to server. Please check if the backend is running and CORS is configured properly.';
+        } else if (error.error) {
+          // Handle error response with the backend format
+          if (error.error.message) {
+            this.errorMessage = error.error.message;
+          } else if (typeof error.error === 'string') {
+            this.errorMessage = error.error;
+          } else if (error.error.errors) {
+            // Handle ASP.NET validation errors
+            const errors = Object.values(error.error.errors).flat();
+            this.errorMessage = (errors as string[]).join(' ');
+          } else {
+            this.errorMessage = 'Registration failed. Please check your input.';
+          }
+        } else {
+          this.errorMessage = 'An error occurred during registration. Please try again.';
+        }
+
+        this.cdr.detectChanges(); // Force UI update
+      },
+    });
   }
 
   // Helper methods for template
@@ -206,9 +227,11 @@ export class SignupComponent implements OnInit, AfterViewInit {
   }
 
   hasFormError(errorType: string): boolean {
-    return !!(this.signupForm.hasError(errorType) &&
+    return !!(
+      this.signupForm.hasError(errorType) &&
       (this.signupForm.get('confirmPassword')?.dirty ||
-       this.signupForm.get('confirmPassword')?.touched));
+        this.signupForm.get('confirmPassword')?.touched)
+    );
   }
 
   // Check if field is valid and touched
@@ -246,7 +269,7 @@ export class SignupComponent implements OnInit, AfterViewInit {
       uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
       number: /[0-9]/.test(password),
-      special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
     };
 
     // Length bonus
@@ -316,10 +339,7 @@ export class SignupComponent implements OnInit, AfterViewInit {
 
     // Open Google Sign-In popup directly
     try {
-      google.accounts.id.renderButton(
-        document.createElement('div'),
-        {}
-      );
+      google.accounts.id.renderButton(document.createElement('div'), {});
 
       // Trigger popup signin directly
       google.accounts.id.prompt((notification: any) => {
@@ -349,7 +369,7 @@ export class SignupComponent implements OnInit, AfterViewInit {
       type: 'standard',
       size: 'large',
       theme: 'outline',
-      locale: 'en'
+      locale: 'en',
     });
 
     // Get the button and click it
@@ -385,74 +405,75 @@ export class SignupComponent implements OnInit, AfterViewInit {
 
     const payload = {
       idToken: idToken,
-      role: this.selectedRole
+      role: this.selectedRole,
     };
 
     console.log('Sending Google login request with payload:', payload);
 
-    this.http.post('https://localhost:44316/api/Account/Google-login', payload)
-      .subscribe({
-        next: (res: any) => {
-          this.isLoading = false;
-          console.log('Google sign-in response:', res);
+    this.http.post('https://korik-demo.runasp.net/api/Account/Google-login', payload).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        console.log('Google sign-in response:', res);
 
-          if (res.success === true || res.success === 'true') {
-            // Store the JWT token using AuthService
-            if (res.data && res.data.token) {
-              this.authService.saveToken(res.data.token);
-            } else if (res.token) {
-              this.authService.saveToken(res.token);
-            }
-
-            // Store user information using AuthService
-            if (res.data) {
-              this.authService.saveUser(res.data);
-            } else if (res.user) {
-              this.authService.saveUser(res.user);
-            }
-
-            this.successMessage = res.message || 'Registration successful! Redirecting...';
-
-            // Show celebration modal with Lottie animation
-            this.showCelebrationModal = true;
-            this.cdr.detectChanges();
-
-            // Initialize Lottie after modal is rendered - give more time for DOM
-            setTimeout(() => {
-              this.initializeLottie();
-            }, 300);
-
-            // Redirect to my-vehicles after 4.5 seconds
-            setTimeout(() => {
-              this.router.navigate(['/my-vehicles']);
-            }, 4500);
-          } else {
-            this.errorMessage = res.message || 'Google sign-in failed. Please try again.';
-            this.cdr.detectChanges();
-          }
-        },
-        error: (err: any) => {
-          this.isLoading = false;
-          console.error('Google sign-in error:', err);
-          console.error('Error details:', err.error);
-
-          if (err.status === 0) {
-            this.errorMessage = 'Unable to connect to server. Please try again later.';
-          } else if (err?.error?.message) {
-            this.errorMessage = err.error.message;
-          } else if (err?.error?.errors) {
-            const errors = err.error.errors;
-            const errorMessages = Object.keys(errors).map((key: string) => errors[key].join(', ')).join('; ');
-            this.errorMessage = errorMessages || 'An error occurred during sign-in.';
-          } else if (err?.error) {
-            this.errorMessage = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
-          } else {
-            this.errorMessage = 'Google sign-in failed. Please try again.';
+        if (res.success === true || res.success === 'true') {
+          // Store the JWT token using AuthService
+          if (res.data && res.data.token) {
+            this.authService.saveToken(res.data.token);
+          } else if (res.token) {
+            this.authService.saveToken(res.token);
           }
 
+          // Store user information using AuthService
+          if (res.data) {
+            this.authService.saveUser(res.data);
+          } else if (res.user) {
+            this.authService.saveUser(res.user);
+          }
+
+          this.successMessage = res.message || 'Registration successful! Redirecting...';
+
+          // Show celebration modal with Lottie animation
+          this.showCelebrationModal = true;
+          this.cdr.detectChanges();
+
+          // Initialize Lottie after modal is rendered - give more time for DOM
+          setTimeout(() => {
+            this.initializeLottie();
+          }, 300);
+
+          // Redirect to my-vehicles after 4.5 seconds
+          setTimeout(() => {
+            this.router.navigate(['/my-vehicles']);
+          }, 4500);
+        } else {
+          this.errorMessage = res.message || 'Google sign-in failed. Please try again.';
           this.cdr.detectChanges();
         }
-      });
+      },
+      error: (err: any) => {
+        this.isLoading = false;
+        console.error('Google sign-in error:', err);
+        console.error('Error details:', err.error);
+
+        if (err.status === 0) {
+          this.errorMessage = 'Unable to connect to server. Please try again later.';
+        } else if (err?.error?.message) {
+          this.errorMessage = err.error.message;
+        } else if (err?.error?.errors) {
+          const errors = err.error.errors;
+          const errorMessages = Object.keys(errors)
+            .map((key: string) => errors[key].join(', '))
+            .join('; ');
+          this.errorMessage = errorMessages || 'An error occurred during sign-in.';
+        } else if (err?.error) {
+          this.errorMessage = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
+        } else {
+          this.errorMessage = 'Google sign-in failed. Please try again.';
+        }
+
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   // Initialize Lottie animation
@@ -474,7 +495,7 @@ export class SignupComponent implements OnInit, AfterViewInit {
           autoplay: true,
           loop: true,
           canvas: canvas,
-          src: 'https://lottie.host/f76a7c1f-7519-44a3-abd6-2bb30997a0a6/eZMmDji8BX.lottie'
+          src: 'https://lottie.host/f76a7c1f-7519-44a3-abd6-2bb30997a0a6/eZMmDji8BX.lottie',
         });
 
         console.log('Lottie instance created successfully:', this.dotLottieInstance);

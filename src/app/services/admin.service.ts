@@ -44,79 +44,102 @@ export interface UpdateWorkshopStatusRequest {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AdminService {
-  private baseUrl = 'https://localhost:44316/api';
+  private baseUrl = 'https://korik-demo.runasp.net/api';
 
   constructor(private http: HttpClient) {}
 
   /**
    * Get all unverified workshop profiles
    */
-  getUnverifiedWorkshops(pageNumber: number = 1, pageSize: number = 10): Observable<PaginatedResponse<WorkshopProfile>> {
+  getUnverifiedWorkshops(
+    pageNumber: number = 1,
+    pageSize: number = 10
+  ): Observable<PaginatedResponse<WorkshopProfile>> {
     const params = new HttpParams()
       .set('PageNumber', pageNumber.toString())
       .set('PageSize', pageSize.toString());
 
     console.log('🔍 Fetching unverified workshops:', { pageNumber, pageSize });
 
-    return this.http.get<ApiResponse<PaginatedResponse<WorkshopProfile>>>(
-      `${this.baseUrl}/WorkShopProfile/Get-All-Unverified-WorkShop-Profile`,
-      { params }
-    ).pipe(
-      tap(response => console.log('📥 Unverified workshops response:', response)),
-      map(response => {
-        if (response && response.data) {
-          return response.data;
-        }
-        console.warn('⚠️ Unexpected response structure for unverified workshops:', response);
-        return { items: [], pageNumber: 1, pageSize: 10, totalRecords: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false };
-      }),
-      catchError(error => {
-        console.error('❌ Error fetching unverified workshops:', error);
-        return throwError(() => error);
-      })
-    );
+    return this.http
+      .get<ApiResponse<PaginatedResponse<WorkshopProfile>>>(
+        `${this.baseUrl}/WorkShopProfile/Get-All-Unverified-WorkShop-Profile`,
+        { params }
+      )
+      .pipe(
+        tap((response) => console.log('📥 Unverified workshops response:', response)),
+        map((response) => {
+          if (response && response.data) {
+            return response.data;
+          }
+          console.warn('⚠️ Unexpected response structure for unverified workshops:', response);
+          return {
+            items: [],
+            pageNumber: 1,
+            pageSize: 10,
+            totalRecords: 0,
+            totalPages: 0,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          };
+        }),
+        catchError((error) => {
+          console.error('❌ Error fetching unverified workshops:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
   /**
    * Get all verified workshop profiles
    */
-  getAllWorkshops(pageNumber: number = 1, pageSize: number = 10): Observable<PaginatedResponse<WorkshopProfile>> {
+  getAllWorkshops(
+    pageNumber: number = 1,
+    pageSize: number = 10
+  ): Observable<PaginatedResponse<WorkshopProfile>> {
     const params = new HttpParams()
       .set('PageNumber', pageNumber.toString())
       .set('PageSize', pageSize.toString());
 
     console.log('🔍 Fetching verified workshops:', { pageNumber, pageSize });
 
-    return this.http.get<ApiResponse<PaginatedResponse<WorkshopProfile>>>(
-      `${this.baseUrl}/WorkShopProfile/Get-All-WorkShop-Profiles`,
-      { params }
-    ).pipe(
-      tap(response => console.log('📥 Verified workshops response:', response)),
-      map(response => {
-        if (response && response.data) {
-          return response.data;
-        }
-        console.warn('⚠️ Unexpected response structure for verified workshops:', response);
-        return { items: [], pageNumber: 1, pageSize: 10, totalRecords: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false };
-      }),
-      catchError(error => {
-        console.error('❌ Error fetching verified workshops:', error);
-        return throwError(() => error);
-      })
-    );
+    return this.http
+      .get<ApiResponse<PaginatedResponse<WorkshopProfile>>>(
+        `${this.baseUrl}/WorkShopProfile/Get-All-WorkShop-Profiles`,
+        { params }
+      )
+      .pipe(
+        tap((response) => console.log('📥 Verified workshops response:', response)),
+        map((response) => {
+          if (response && response.data) {
+            return response.data;
+          }
+          console.warn('⚠️ Unexpected response structure for verified workshops:', response);
+          return {
+            items: [],
+            pageNumber: 1,
+            pageSize: 10,
+            totalRecords: 0,
+            totalPages: 0,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          };
+        }),
+        catchError((error) => {
+          console.error('❌ Error fetching verified workshops:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
   /**
    * Update workshop verification status
    */
   updateWorkshopStatus(request: UpdateWorkshopStatusRequest): Observable<any> {
-    return this.http.put(
-      `${this.baseUrl}/WorkShopProfile/Update-WorkShop-Profile-Status`,
-      request
-    );
+    return this.http.put(`${this.baseUrl}/WorkShopProfile/Update-WorkShop-Profile-Status`, request);
   }
 
   /**
@@ -125,7 +148,7 @@ export class AdminService {
   verifyWorkshop(workshopId: number): Observable<any> {
     return this.updateWorkshopStatus({
       id: workshopId,
-      verificationStatus: 'Verified'
+      verificationStatus: 'Verified',
     });
   }
 
@@ -135,7 +158,7 @@ export class AdminService {
   rejectWorkshop(workshopId: number): Observable<any> {
     return this.updateWorkshopStatus({
       id: workshopId,
-      verificationStatus: 'Rejected'
+      verificationStatus: 'Rejected',
     });
   }
 
@@ -144,16 +167,16 @@ export class AdminService {
    */
   getAllCarOwners(): Observable<CarOwnerProfile[]> {
     console.log('🔍 Fetching car owners...');
-    return this.http.get<ApiResponse<CarOwnerProfile[]>>(
-      `${this.baseUrl}/CarOwnerProfile/all`
-    ).pipe(
-      tap(response => console.log('📥 Car owners response:', response)),
-      map(response => response?.data || []),
-      catchError(error => {
-        console.error('❌ Error fetching car owners:', error);
-        return throwError(() => error);
-      })
-    );
+    return this.http
+      .get<ApiResponse<CarOwnerProfile[]>>(`${this.baseUrl}/CarOwnerProfile/all`)
+      .pipe(
+        tap((response) => console.log('📥 Car owners response:', response)),
+        map((response) => response?.data || []),
+        catchError((error) => {
+          console.error('❌ Error fetching car owners:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
   /**
@@ -161,12 +184,10 @@ export class AdminService {
    */
   getAllCars(): Observable<Car[]> {
     console.log('🔍 Fetching cars...');
-    return this.http.get<ApiResponse<Car[]>>(
-      `${this.baseUrl}/Car`
-    ).pipe(
-      tap(response => console.log('📥 Cars response:', response)),
-      map(response => response?.data || []),
-      catchError(error => {
+    return this.http.get<ApiResponse<Car[]>>(`${this.baseUrl}/Car`).pipe(
+      tap((response) => console.log('📥 Cars response:', response)),
+      map((response) => response?.data || []),
+      catchError((error) => {
         console.error('❌ Error fetching cars:', error);
         return throwError(() => error);
       })
@@ -177,11 +198,9 @@ export class AdminService {
    * Get bookings by workshop ID
    */
   getBookingsByWorkshop(workshopId: number): Observable<Booking[]> {
-    return this.http.get<ApiResponse<Booking[]>>(
-      `${this.baseUrl}/Booking/ByWorkshop/${workshopId}`
-    ).pipe(
-      map(response => response.data)
-    );
+    return this.http
+      .get<ApiResponse<Booking[]>>(`${this.baseUrl}/Booking/ByWorkshop/${workshopId}`)
+      .pipe(map((response) => response.data));
   }
 
   /**
@@ -189,12 +208,10 @@ export class AdminService {
    */
   getAllBookings(): Observable<Booking[]> {
     console.log('🔍 Fetching all bookings...');
-    return this.http.get<ApiResponse<Booking[]>>(
-      `${this.baseUrl}/Booking/All`
-    ).pipe(
-      tap(response => console.log('📥 All bookings response:', response)),
-      map(response => response?.data || []),
-      catchError(error => {
+    return this.http.get<ApiResponse<Booking[]>>(`${this.baseUrl}/Booking/All`).pipe(
+      tap((response) => console.log('📥 All bookings response:', response)),
+      map((response) => response?.data || []),
+      catchError((error) => {
         console.error('❌ Error fetching all bookings:', error);
         return throwError(() => error);
       })
@@ -206,23 +223,23 @@ export class AdminService {
    */
   getAllWorkshopsUnpaginated(): Observable<WorkshopProfile[]> {
     // Request with very large page size to get all workshops
-    const params = new HttpParams()
-      .set('PageNumber', '1')
-      .set('PageSize', '1000');
+    const params = new HttpParams().set('PageNumber', '1').set('PageSize', '1000');
 
     console.log('🔍 Fetching all workshops (unpaginated)...');
 
-    return this.http.get<ApiResponse<PaginatedResponse<WorkshopProfile>>>(
-      `${this.baseUrl}/WorkShopProfile/Get-All-WorkShop-Profiles`,
-      { params }
-    ).pipe(
-      tap(response => console.log('📥 All workshops response:', response)),
-      map(response => response?.data?.items || []),
-      catchError(error => {
-        console.error('❌ Error fetching all workshops:', error);
-        return throwError(() => error);
-      })
-    );
+    return this.http
+      .get<ApiResponse<PaginatedResponse<WorkshopProfile>>>(
+        `${this.baseUrl}/WorkShopProfile/Get-All-WorkShop-Profiles`,
+        { params }
+      )
+      .pipe(
+        tap((response) => console.log('📥 All workshops response:', response)),
+        map((response) => response?.data?.items || []),
+        catchError((error) => {
+          console.error('❌ Error fetching all workshops:', error);
+          return throwError(() => error);
+        })
+      );
   }
 }
 

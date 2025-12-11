@@ -203,7 +203,7 @@ export class BookingComponent implements OnInit {
   readonly CAIRO_TIMEZONE = 'Africa/Cairo';
 
   // API base URL for images
-  private readonly API_BASE_URL = 'https://localhost:44316';
+  private readonly API_BASE_URL = 'https://korik-demo.runasp.net';
 
   // Month names
   readonly MONTH_NAMES = [
@@ -551,26 +551,26 @@ export class BookingComponent implements OnInit {
     if (subcategory.imageUrl) return subcategory.imageUrl;
     // Local fallback mapping based on subcategory name
     const localMap: { [key: string]: string } = {
-      'Fluids': '/Assets/images/Fluids.jpg',
+      Fluids: '/Assets/images/Fluids.jpg',
       'Oil & Filters': '/Assets/images/OilFilters.jpg',
       'Oil Filters': '/Assets/images/OilFilters.jpg',
       'Scheduled Services': '/Assets/images/ScheduledService.jpg',
       'Scheduled Service': '/Assets/images/ScheduledService.jpg',
-      'Summer': '/Assets/images/Summer.jpg',
-      'Travel': '/Assets/images/Travel.jpg',
-      'Winter': '/Assets/images/winter.jpg',
+      Summer: '/Assets/images/Summer.jpg',
+      Travel: '/Assets/images/Travel.jpg',
+      Winter: '/Assets/images/winter.jpg',
       'Sensors & Electronics': '/Assets/images/Sensors.jpg',
       'Electrical & Lighting System': '/Assets/images/LighteningSystem.jpg',
       'Engine & Transmission': '/Assets/images/EngineTransmission.jpg',
       'Fuel System': '/Assets/images/FuelSystem.jpg',
-      'Inspection': '/Assets/images/Inspection.jpg',
+      Inspection: '/Assets/images/Inspection.jpg',
       'Suspension System & Dampening': '/Assets/images/SuspensionSystem.jpg',
       'Parking Brake': '/Assets/images/ParkingBrake.jpg',
       'AC Service': '/Assets/images/ACService.jpg',
       'Cooling System': '/Assets/images/CoolingSystem.jpg',
       'Body Repair': '/Assets/images/BodyRepair.jpg',
-      'Painting': '/Assets/images/Painting.jpg',
-      'Glass': '/Assets/images/Glass.jpg',
+      Painting: '/Assets/images/Painting.jpg',
+      Glass: '/Assets/images/Glass.jpg',
       'Detailing & Care': '/Assets/images/DetailingCar.jpg',
       'Tire Services': '/Assets/images/TimeService.jpg',
       'Wheels & Alignment': '/Assets/images/WheelsAndAlignments.jpg',

@@ -6,7 +6,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
-import { AdminService, WorkshopProfile as AdminWorkshopProfile, CarOwnerProfile, Car, Booking } from '../../services/admin.service';
+import {
+  AdminService,
+  WorkshopProfile as AdminWorkshopProfile,
+  CarOwnerProfile,
+  Car,
+  Booking,
+} from '../../services/admin.service';
 import { AdminAnalyticsService } from '../../services/admin-analytics.service';
 import { AdminDashboardStats } from '../../models/admin-dashboard-stats.model';
 
@@ -44,7 +50,7 @@ interface WorkshopProfile {
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './admin-dashboard.component.html',
-  styleUrls: ['./admin-dashboard.component.css']
+  styleUrls: ['./admin-dashboard.component.css'],
 })
 export class AdminDashboardComponent implements OnInit {
   adminName: string = '';
@@ -56,7 +62,7 @@ export class AdminDashboardComponent implements OnInit {
     pendingApprovals: 0,
     activeUsers: 0,
     monthlyRevenue: 0,
-    revenueChange: 0
+    revenueChange: 0,
   };
 
   recentActivities: any[] = [];
@@ -94,18 +100,18 @@ export class AdminDashboardComponent implements OnInit {
       repeatCustomerRate: 0,
       averageBookingsPerCustomer: 0,
       activeCustomers: 0,
-      inactiveCustomers: 0
+      inactiveCustomers: 0,
     },
     operationalMetrics: {
       averageLeadTime: 0,
       confirmationRate: 0,
       completionRate: 0,
-      averageServiceValue: 0
+      averageServiceValue: 0,
     },
     ratingDistribution: [],
     revenueByWorkshopType: [],
     workshopSizeCategories: [],
-    topWorkshopsByRevenue: []
+    topWorkshopsByRevenue: [],
   };
   isLoadingAnalytics: boolean = true;
   maxRevenueValue: number = 0;
@@ -124,7 +130,7 @@ export class AdminDashboardComponent implements OnInit {
   selectedWorkshop: WorkshopProfile | null = null;
   isDetailModalOpen: boolean = false;
 
-  private baseUrl = 'https://localhost:44316/api';
+  private baseUrl = 'https://korik-demo.runasp.net/api';
 
   constructor(
     private authService: AuthService,
@@ -159,42 +165,62 @@ export class AdminDashboardComponent implements OnInit {
 
     // Load everything in parallel with individual error handling
     forkJoin({
-      unverifiedWorkshops: this.adminService.getUnverifiedWorkshops(this.unverifiedPage, this.unverifiedPageSize).pipe(
-        catchError(err => {
-          console.error('Failed to load unverified workshops:', err);
-          return of({ items: [], pageNumber: 1, pageSize: 10, totalRecords: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false });
-        })
-      ),
-      verifiedWorkshops: this.adminService.getAllWorkshops(this.verifiedPage, this.verifiedPageSize).pipe(
-        catchError(err => {
-          console.error('Failed to load verified workshops:', err);
-          return of({ items: [], pageNumber: 1, pageSize: 5, totalRecords: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false });
-        })
-      ),
+      unverifiedWorkshops: this.adminService
+        .getUnverifiedWorkshops(this.unverifiedPage, this.unverifiedPageSize)
+        .pipe(
+          catchError((err) => {
+            console.error('Failed to load unverified workshops:', err);
+            return of({
+              items: [],
+              pageNumber: 1,
+              pageSize: 10,
+              totalRecords: 0,
+              totalPages: 0,
+              hasPreviousPage: false,
+              hasNextPage: false,
+            });
+          })
+        ),
+      verifiedWorkshops: this.adminService
+        .getAllWorkshops(this.verifiedPage, this.verifiedPageSize)
+        .pipe(
+          catchError((err) => {
+            console.error('Failed to load verified workshops:', err);
+            return of({
+              items: [],
+              pageNumber: 1,
+              pageSize: 5,
+              totalRecords: 0,
+              totalPages: 0,
+              hasPreviousPage: false,
+              hasNextPage: false,
+            });
+          })
+        ),
       allWorkshops: this.adminService.getAllWorkshopsUnpaginated().pipe(
-        catchError(err => {
+        catchError((err) => {
           console.error('Failed to load all workshops:', err);
           return of([]);
         })
       ),
       carOwners: this.adminService.getAllCarOwners().pipe(
-        catchError(err => {
+        catchError((err) => {
           console.error('Failed to load car owners:', err);
           return of([]);
         })
       ),
       cars: this.adminService.getAllCars().pipe(
-        catchError(err => {
+        catchError((err) => {
           console.error('Failed to load cars:', err);
           return of([]);
         })
       ),
       allBookings: this.adminService.getAllBookings().pipe(
-        catchError(err => {
+        catchError((err) => {
           console.error('Failed to load all bookings:', err);
           return of([]);
         })
-      )
+      ),
     }).subscribe({
       next: (data) => {
         console.log('📦 Raw API Response:', data);
@@ -208,7 +234,7 @@ export class AdminDashboardComponent implements OnInit {
         console.log('📊 Pending Workshops:', {
           count: this.pendingWorkshops.length,
           total: this.metrics.pendingApprovals,
-          items: this.pendingWorkshops
+          items: this.pendingWorkshops,
         });
 
         // Update verified workshops
@@ -220,19 +246,21 @@ export class AdminDashboardComponent implements OnInit {
         console.log('✅ Verified Workshops:', {
           count: this.verifiedWorkshops.length,
           total: this.metrics.totalWorkshops,
-          items: this.verifiedWorkshops
+          items: this.verifiedWorkshops,
         });
 
         // Log booking details
         console.log('📊 All Bookings:', {
           totalBookings: data.allBookings.length,
-          completed: data.allBookings.filter(b => b.status === 'Completed').length,
-          paid: data.allBookings.filter(b => b.paymentStatus === 'Paid').length,
-          completedAndPaid: data.allBookings.filter(b => b.status === 'Completed' && b.paymentStatus === 'Paid').length,
+          completed: data.allBookings.filter((b) => b.status === 'Completed').length,
+          paid: data.allBookings.filter((b) => b.paymentStatus === 'Paid').length,
+          completedAndPaid: data.allBookings.filter(
+            (b) => b.status === 'Completed' && b.paymentStatus === 'Paid'
+          ).length,
           totalRevenue: data.allBookings
-            .filter(b => b.status === 'Completed' && b.paymentStatus === 'Paid')
+            .filter((b) => b.status === 'Completed' && b.paymentStatus === 'Paid')
             .reduce((sum, b) => sum + (b.paidAmount || 0), 0),
-          sampleBookings: data.allBookings.slice(0, 3)
+          sampleBookings: data.allBookings.slice(0, 3),
         });
 
         // Calculate analytics with bookings data
@@ -260,7 +288,7 @@ export class AdminDashboardComponent implements OnInit {
           verifiedWorkshops: this.metrics.totalWorkshops,
           pendingWorkshops: this.metrics.pendingApprovals,
           totalCarOwners: data.carOwners.length,
-          totalCars: data.cars.length
+          totalCars: data.cars.length,
         };
 
         this.isLoadingAnalytics = false;
@@ -277,7 +305,7 @@ export class AdminDashboardComponent implements OnInit {
           verifiedWorkshops: this.verifiedWorkshops.length,
           totalBookings: this.metrics.totalBookings,
           totalRevenue: this.dashboardStats.totalRevenue,
-          stats: this.dashboardStats
+          stats: this.dashboardStats,
         });
       },
       error: (error) => {
@@ -287,16 +315,20 @@ export class AdminDashboardComponent implements OnInit {
           status: error.status,
           statusText: error.statusText,
           url: error.url,
-          error: error.error
+          error: error.error,
         });
 
-        alert(`Failed to load dashboard data. Error: ${error.message || 'Unknown error'}. Please check console for details.`);
+        alert(
+          `Failed to load dashboard data. Error: ${
+            error.message || 'Unknown error'
+          }. Please check console for details.`
+        );
 
         this.isLoading = false;
         this.isLoadingVerified = false;
         this.isLoadingAnalytics = false;
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -348,7 +380,7 @@ export class AdminDashboardComponent implements OnInit {
     if (this.dashboardStats.monthlyRevenue.length === 0) {
       return false;
     }
-    const maxRevenue = Math.max(...this.dashboardStats.monthlyRevenue.map(m => m.revenue));
+    const maxRevenue = Math.max(...this.dashboardStats.monthlyRevenue.map((m) => m.revenue));
     return month.revenue === maxRevenue && month.revenue > 0;
   }
 
@@ -369,7 +401,9 @@ export class AdminDashboardComponent implements OnInit {
     if (this.dashboardStats.bookingStatusDistribution.length === 0) {
       return 'N/A';
     }
-    const sorted = [...this.dashboardStats.bookingStatusDistribution].sort((a, b) => b.count - a.count);
+    const sorted = [...this.dashboardStats.bookingStatusDistribution].sort(
+      (a, b) => b.count - a.count
+    );
     return sorted[0].status;
   }
 
@@ -380,7 +414,9 @@ export class AdminDashboardComponent implements OnInit {
     if (this.dashboardStats.bookingStatusDistribution.length === 0) {
       return 0;
     }
-    const sorted = [...this.dashboardStats.bookingStatusDistribution].sort((a, b) => b.count - a.count);
+    const sorted = [...this.dashboardStats.bookingStatusDistribution].sort(
+      (a, b) => b.count - a.count
+    );
     return sorted[0].percentage;
   }
 
@@ -390,25 +426,27 @@ export class AdminDashboardComponent implements OnInit {
   private loadPendingWorkshops(): void {
     this.isLoading = true;
 
-    this.adminService.getUnverifiedWorkshops(this.unverifiedPage, this.unverifiedPageSize).subscribe({
-      next: (response) => {
-        this.pendingWorkshops = response.items || [];
-        this.metrics.pendingApprovals = response.totalRecords || 0;
-        this.unverifiedTotalPages = response.totalPages || 0;
-        this.isLoading = false;
+    this.adminService
+      .getUnverifiedWorkshops(this.unverifiedPage, this.unverifiedPageSize)
+      .subscribe({
+        next: (response) => {
+          this.pendingWorkshops = response.items || [];
+          this.metrics.pendingApprovals = response.totalRecords || 0;
+          this.unverifiedTotalPages = response.totalPages || 0;
+          this.isLoading = false;
 
-        // Update analytics with pending count
-        this.dashboardStats.pendingWorkshops = this.metrics.pendingApprovals;
+          // Update analytics with pending count
+          this.dashboardStats.pendingWorkshops = this.metrics.pendingApprovals;
 
-        // Force change detection
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error loading pending workshops:', error);
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }
-    });
+          // Force change detection
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error loading pending workshops:', error);
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   /**
@@ -431,19 +469,20 @@ export class AdminDashboardComponent implements OnInit {
         console.error('Error loading verified workshops:', error);
         this.isLoadingVerified = false;
         this.cdr.detectChanges();
-      }
+      },
     });
   }
-
-
 
   /**
    * Load bookings for analytics (background process)
    */
-  private loadBookingsForAnalytics(topWorkshops: any[], allWorkshops: any[], carOwners: any[], cars: any[]): void {
-    const bookingRequests = topWorkshops.map(w =>
-      this.adminService.getBookingsByWorkshop(w.id)
-    );
+  private loadBookingsForAnalytics(
+    topWorkshops: any[],
+    allWorkshops: any[],
+    carOwners: any[],
+    cars: any[]
+  ): void {
+    const bookingRequests = topWorkshops.map((w) => this.adminService.getBookingsByWorkshop(w.id));
 
     if (bookingRequests.length === 0) return;
 
@@ -469,7 +508,7 @@ export class AdminDashboardComponent implements OnInit {
           verifiedWorkshops: this.metrics.totalWorkshops,
           pendingWorkshops: this.metrics.pendingApprovals,
           totalCarOwners: carOwners.length,
-          totalCars: cars.length
+          totalCars: cars.length,
         };
 
         this.maxRevenueValue = this.analyticsService.getMaxRevenueValue(
@@ -483,7 +522,7 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading bookings:', error);
-      }
+      },
     });
   }
 
@@ -497,7 +536,7 @@ export class AdminDashboardComponent implements OnInit {
         title: 'Workshop Approved',
         description: 'AutoFix Workshop - Cairo',
         time: '15 minutes ago',
-        color: 'green'
+        color: 'green',
       },
       {
         id: 2,
@@ -506,8 +545,8 @@ export class AdminDashboardComponent implements OnInit {
         title: 'New User Registration',
         description: 'John Doe registered as Car Owner',
         time: '1 hour ago',
-        color: 'blue'
-      }
+        color: 'blue',
+      },
     ];
   }
 
@@ -552,7 +591,7 @@ export class AdminDashboardComponent implements OnInit {
         console.error('Error verifying workshop:', error);
         alert('Failed to verify workshop. Please try again.');
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -560,7 +599,8 @@ export class AdminDashboardComponent implements OnInit {
    * Reject a workshop
    */
   rejectWorkshop(workshopId: number): void {
-    if (!confirm('Are you sure you want to reject this workshop? Status will remain Unverified.')) return;
+    if (!confirm('Are you sure you want to reject this workshop? Status will remain Unverified.'))
+      return;
 
     this.isLoading = true;
 
@@ -577,7 +617,7 @@ export class AdminDashboardComponent implements OnInit {
         console.error('Error rejecting workshop:', error);
         alert('Failed to reject workshop. Please try again.');
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -586,7 +626,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   getLocation(workshop: WorkshopProfile): string {
-    const parts = [workshop.city, workshop.governorate, workshop.country].filter(p => p);
+    const parts = [workshop.city, workshop.governorate, workshop.country].filter((p) => p);
     return parts.join(', ') || 'Location not specified';
   }
 
@@ -607,14 +647,14 @@ export class AdminDashboardComponent implements OnInit {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    return `https://localhost:44316${path.startsWith('/') ? path : '/' + path}`;
+    return `https://korik-demo.runasp.net${path.startsWith('/') ? path : '/' + path}`;
   }
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-EG', {
       style: 'currency',
       currency: 'EGP',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(amount);
   }
 
@@ -632,10 +672,10 @@ export class AdminDashboardComponent implements OnInit {
 
   getPaymentColor(method: string): string {
     const colors: { [key: string]: string } = {
-      'Cash': '#10b981',
+      Cash: '#10b981',
       'Credit Card': '#3b82f6',
       'Debit Card': '#8b5cf6',
-      'Unknown': '#6b7280'
+      Unknown: '#6b7280',
     };
     return colors[method] || '#6b7280';
   }
@@ -643,10 +683,10 @@ export class AdminDashboardComponent implements OnInit {
   getWorkshopTypeColor(type: string): string {
     const colors: { [key: string]: string } = {
       'General Repair': '#3b82f6',
-      'Specialized': '#8b5cf6',
+      Specialized: '#8b5cf6',
       'Quick Service': '#10b981',
       'Body Shop': '#f59e0b',
-      'Tire Service': '#ef4444'
+      'Tire Service': '#ef4444',
     };
     return colors[type] || '#6b7280';
   }

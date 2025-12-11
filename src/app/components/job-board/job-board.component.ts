@@ -53,11 +53,11 @@ interface CarOwnerProfile {
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, ConfirmationPopupComponent],
   templateUrl: './job-board.component.html',
-  styleUrls: ['./job-board.component.css']
+  styleUrls: ['./job-board.component.css'],
 })
 export class JobBoardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private apiUrl = 'https://localhost:44316/api';
+  private apiUrl = 'https://korik-demo.runasp.net/api';
   // Retry control for defensive re-loading when initial load returns empty
   private tryLoadRetries = 0;
   private readonly maxLoadRetries = 3;
@@ -124,11 +124,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   private autoRefreshTimer: any = null;
 
   // Categorized real bookings by status
-  pendingBookings: RealBooking[] = [];      // new requests (Pending)
-  acceptedBookings: RealBooking[] = [];     // upcoming (Accepted)
-  inProgressBookings: RealBooking[] = [];   // in progress
+  pendingBookings: RealBooking[] = []; // new requests (Pending)
+  acceptedBookings: RealBooking[] = []; // upcoming (Accepted)
+  inProgressBookings: RealBooking[] = []; // in progress
   readyForPickupBookings: RealBooking[] = []; // ready for pickup
-  completedBookings: RealBooking[] = [];    // completed
+  completedBookings: RealBooking[] = []; // completed
 
   // Keep mock jobs for backward compatibility (will be phased out)
   jobs: Job[] = [];
@@ -191,7 +191,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     // Load card density preference
     try {
       const savedCardDensity = localStorage.getItem('job-board-card-density');
-      if (savedCardDensity === 'comfortable' || savedCardDensity === 'compact' || savedCardDensity === 'dense') {
+      if (
+        savedCardDensity === 'comfortable' ||
+        savedCardDensity === 'compact' ||
+        savedCardDensity === 'dense'
+      ) {
         this._cardDensity = savedCardDensity;
       }
     } catch (e) {
@@ -210,7 +214,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     }
 
     // Check for tab query param
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       if (params['tab']) {
         this.selectedTab = params['tab'] as JobStatus;
       }
@@ -223,14 +227,20 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     this.loadJobs();
 
     // Listen for booking status changes triggered elsewhere (e.g., from notifications)
-    window.addEventListener('booking:status-changed', this.onExternalBookingStatusChanged as EventListener);
+    window.addEventListener(
+      'booking:status-changed',
+      this.onExternalBookingStatusChanged as EventListener
+    );
   }
 
   ngOnDestroy(): void {
     this.stopAutoRefresh(); // Clean up auto-refresh timer
     this.destroy$.next();
     this.destroy$.complete();
-    window.removeEventListener('booking:status-changed', this.onExternalBookingStatusChanged as EventListener);
+    window.removeEventListener(
+      'booking:status-changed',
+      this.onExternalBookingStatusChanged as EventListener
+    );
   }
 
   // Handler for external booking status change events
@@ -247,7 +257,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     } catch (e) {
       console.error('Error handling external booking status change event', e);
     }
-  }
+  };
 
   // Handle clicks anywhere on the document to close tooltip
   @HostListener('document:click', ['$event'])
@@ -263,7 +273,8 @@ export class JobBoardComponent implements OnInit, OnDestroy {
 
   private loadWorkshopProfileAndBookings(): void {
     this.isLoadingRealBookings = true;
-    this.workshopProfileService.getMyWorkshopProfile()
+    this.workshopProfileService
+      .getMyWorkshopProfile()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (resp: any) => {
@@ -282,7 +293,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           console.error('Error loading workshop profile:', err);
           this.isLoadingRealBookings = false;
           this.cdr.detectChanges();
-        }
+        },
       });
   }
 
@@ -294,7 +305,8 @@ export class JobBoardComponent implements OnInit, OnDestroy {
 
     this.isLoadingRealBookings = true;
 
-    this.bookingService.getBookingsByWorkshop(this.workshopProfileId)
+    this.bookingService
+      .getBookingsByWorkshop(this.workshopProfileId)
       .pipe(
         takeUntil(this.destroy$),
         switchMap((bookings: BookingResponse[]) => {
@@ -303,7 +315,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           }
 
           // For each booking, fetch car owner profile and car details
-          const enrichedRequests = bookings.map(booking => {
+          const enrichedRequests = bookings.map((booking) => {
             const carOwnerRequest = this.getCarOwnerByBookingId(booking.id);
             const carRequest = this.carsService.getCarById(booking.carId);
             const serviceRequest = this.getServiceName(booking.workshopServiceId);
@@ -311,7 +323,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
             return forkJoin({
               carOwner: carOwnerRequest,
               car: carRequest,
-              serviceName: serviceRequest
+              serviceName: serviceRequest,
             }).pipe(
               map(({ carOwner, car, serviceName }) => {
                 const carData = car?.data ?? car;
@@ -323,8 +335,13 @@ export class JobBoardComponent implements OnInit, OnDestroy {
                   paymentMethod: booking.paymentMethod,
                   carId: booking.carId,
                   workshopServiceId: booking.workshopServiceId,
-                  customerName: carOwner ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() || 'Unknown Customer' : 'Unknown Customer',
-                  customerAvatar: carOwner?.profileImageUrl ? `https://localhost:44316${carOwner.profileImageUrl}` : undefined,
+                  customerName: carOwner
+                    ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() ||
+                      'Unknown Customer'
+                    : 'Unknown Customer',
+                  customerAvatar: carOwner?.profileImageUrl
+                    ? `https://korik-demo.runasp.net${carOwner.profileImageUrl}`
+                    : undefined,
                   carMake: carData?.make || 'Unknown',
                   carModel: carData?.model || 'Unknown',
                   carYear: carData?.year || 0,
@@ -332,25 +349,27 @@ export class JobBoardComponent implements OnInit, OnDestroy {
                   serviceName: serviceName || 'Service',
                   urgency: this.determineUrgency(new Date(booking.appointmentDate)),
                   createdAt: booking.createdAt ? new Date(booking.createdAt) : undefined,
-                  fullProfile: carOwner || undefined // Store the full profile
+                  fullProfile: carOwner || undefined, // Store the full profile
                 } as RealBooking;
               }),
-              catchError(() => of({
-                id: booking.id,
-                status: booking.status,
-                appointmentDate: new Date(booking.appointmentDate),
-                issueDescription: booking.issueDescription || '',
-                paymentMethod: booking.paymentMethod,
-                carId: booking.carId,
-                workshopServiceId: booking.workshopServiceId,
-                customerName: 'Unknown Customer',
-                carMake: 'Unknown',
-                carModel: 'Unknown',
-                carYear: 0,
-                carLicensePlate: '',
-                serviceName: 'Service',
-                urgency: 'normal'
-              } as RealBooking))
+              catchError(() =>
+                of({
+                  id: booking.id,
+                  status: booking.status,
+                  appointmentDate: new Date(booking.appointmentDate),
+                  issueDescription: booking.issueDescription || '',
+                  paymentMethod: booking.paymentMethod,
+                  carId: booking.carId,
+                  workshopServiceId: booking.workshopServiceId,
+                  customerName: 'Unknown Customer',
+                  carMake: 'Unknown',
+                  carModel: 'Unknown',
+                  carYear: 0,
+                  carLicensePlate: '',
+                  serviceName: 'Service',
+                  urgency: 'normal',
+                } as RealBooking)
+              )
             );
           });
 
@@ -364,23 +383,29 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           this.isLoadingRealBookings = false;
           this.lastUpdated = new Date(); // Update timestamp on successful load
           console.log('Bookings loaded successfully:', enrichedBookings.length);
-          console.log('Categorized - Pending:', this.pendingBookings.length,
-                      'Accepted:', this.acceptedBookings.length,
-                      'InProgress:', this.inProgressBookings.length,
-                      'Completed:', this.completedBookings.length);
+          console.log(
+            'Categorized - Pending:',
+            this.pendingBookings.length,
+            'Accepted:',
+            this.acceptedBookings.length,
+            'InProgress:',
+            this.inProgressBookings.length,
+            'Completed:',
+            this.completedBookings.length
+          );
           this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error loading real bookings:', err);
           this.isLoadingRealBookings = false;
           this.cdr.detectChanges();
-        }
+        },
       });
   }
 
   private getCarOwnerByBookingId(bookingId: number): Observable<CarOwnerProfile | null> {
     return this.http.get<any>(`${this.apiUrl}/CarOwnerProfile/by-booking/${bookingId}`).pipe(
-      map(response => (response?.data || response) as CarOwnerProfile),
+      map((response) => (response?.data || response) as CarOwnerProfile),
       catchError(() => of(null))
     );
   }
@@ -392,7 +417,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
         const serviceId = wsData?.serviceId;
         if (serviceId) {
           return this.http.get<any>(`${this.apiUrl}/Service/${serviceId}`).pipe(
-            map(svcResponse => {
+            map((svcResponse) => {
               const svcData = svcResponse?.data || svcResponse;
               return svcData?.name || 'Service';
             }),
@@ -424,7 +449,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     this.completedBookings = [];
 
     // Categorize bookings by status
-    this.realBookings.forEach(booking => {
+    this.realBookings.forEach((booking) => {
       const status = booking.status.toLowerCase().trim();
 
       if (status === 'pending') {
@@ -433,7 +458,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
         this.acceptedBookings.push(booking);
       } else if (status === 'inprogress' || status === 'in-progress' || status === 'in progress') {
         this.inProgressBookings.push(booking);
-      } else if (status === 'readyforpickup' || status === 'ready-for-pickup' || status === 'ready for pickup') {
+      } else if (
+        status === 'readyforpickup' ||
+        status === 'ready-for-pickup' ||
+        status === 'ready for pickup'
+      ) {
         this.readyForPickupBookings.push(booking);
       } else if (status === 'completed') {
         this.completedBookings.push(booking);
@@ -447,7 +476,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
       accepted: this.acceptedBookings.length,
       inProgress: this.inProgressBookings.length,
       readyForPickup: this.readyForPickupBookings.length,
-      completed: this.completedBookings.length
+      completed: this.completedBookings.length,
     });
   }
 
@@ -456,14 +485,15 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     event.stopPropagation();
 
     // Immediately update UI: remove from pending, add to accepted
-    this.pendingBookings = this.pendingBookings.filter(b => b.id !== booking.id);
+    this.pendingBookings = this.pendingBookings.filter((b) => b.id !== booking.id);
     const confirmedBooking = { ...booking, status: 'Confirmed' };
     this.acceptedBookings = [confirmedBooking, ...this.acceptedBookings];
 
     // Switch to upcoming tab so user sees the confirmed booking immediately
     this.selectedTab = 'upcoming';
 
-    this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'Confirmed' })
+    this.http
+      .put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'Confirmed' })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -482,11 +512,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           console.error('Error confirming booking:', err);
           this.toastService.error('Error', 'Failed to confirm booking');
           // Revert UI changes on error
-          this.acceptedBookings = this.acceptedBookings.filter(b => b.id !== booking.id);
+          this.acceptedBookings = this.acceptedBookings.filter((b) => b.id !== booking.id);
           this.pendingBookings = [booking, ...this.pendingBookings];
           this.selectedTab = 'new';
           this.cdr.detectChanges();
-        }
+        },
       });
   }
 
@@ -504,9 +534,10 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     const booking = this.bookingToDecline;
 
     // Immediately update UI: remove from pending
-    this.pendingBookings = this.pendingBookings.filter(b => b.id !== booking.id);
+    this.pendingBookings = this.pendingBookings.filter((b) => b.id !== booking.id);
 
-    this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'Rejected' })
+    this.http
+      .put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'Rejected' })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -527,7 +558,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           // Revert UI changes on error
           this.pendingBookings = [booking, ...this.pendingBookings];
           this.cdr.detectChanges();
-        }
+        },
       });
 
     // Close popup and reset state
@@ -546,14 +577,18 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     event.stopPropagation();
 
     // Immediately update UI: remove from in-progress, add to ready for pickup
-    this.inProgressBookings = this.inProgressBookings.filter(b => b.id !== booking.id);
+    this.inProgressBookings = this.inProgressBookings.filter((b) => b.id !== booking.id);
     const readyBooking = { ...booking, status: 'ReadyForPickup' };
     this.readyForPickupBookings = [readyBooking, ...this.readyForPickupBookings];
 
     // Switch to ready tab so user sees the booking immediately
     this.selectedTab = 'ready';
 
-    this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'ReadyForPickup' })
+    this.http
+      .put(`${this.apiUrl}/Booking/Update-Booking-Status`, {
+        id: booking.id,
+        status: 'ReadyForPickup',
+      })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -572,11 +607,13 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           console.error('Error marking booking as ready:', err);
           this.toastService.error('Error', 'Failed to mark booking as ready');
           // Revert UI changes on error
-          this.readyForPickupBookings = this.readyForPickupBookings.filter(b => b.id !== booking.id);
+          this.readyForPickupBookings = this.readyForPickupBookings.filter(
+            (b) => b.id !== booking.id
+          );
           this.inProgressBookings = [booking, ...this.inProgressBookings];
           this.selectedTab = 'in-progress';
           this.cdr.detectChanges();
-        }
+        },
       });
   }
 
@@ -585,14 +622,15 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     event.stopPropagation();
 
     // Immediately update UI: remove from ready for pickup, add to completed
-    this.readyForPickupBookings = this.readyForPickupBookings.filter(b => b.id !== booking.id);
+    this.readyForPickupBookings = this.readyForPickupBookings.filter((b) => b.id !== booking.id);
     const completedBooking = { ...booking, status: 'Completed' };
     this.completedBookings = [completedBooking, ...this.completedBookings];
 
     // Switch to completed tab so user sees the booking immediately
     this.selectedTab = 'completed';
 
-    this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'Completed' })
+    this.http
+      .put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: booking.id, status: 'Completed' })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -611,11 +649,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           console.error('Error completing booking:', err);
           this.toastService.error('Error', 'Failed to complete booking');
           // Revert UI changes on error
-          this.completedBookings = this.completedBookings.filter(b => b.id !== booking.id);
+          this.completedBookings = this.completedBookings.filter((b) => b.id !== booking.id);
           this.readyForPickupBookings = [booking, ...this.readyForPickupBookings];
           this.selectedTab = 'ready';
           this.cdr.detectChanges();
-        }
+        },
       });
   }
 
@@ -624,10 +662,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     event.stopPropagation();
 
     // Update booking with same ReadyForPickup status to trigger notification to car owner
-    this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, {
-      id: booking.id,
-      status: 'ReadyForPickup'
-    })
+    this.http
+      .put(`${this.apiUrl}/Booking/Update-Booking-Status`, {
+        id: booking.id,
+        status: 'ReadyForPickup',
+      })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -639,8 +678,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error notifying customer:', err);
-          this.toastService.error('Notification Failed', 'Failed to send notification to customer. Please try again.');
-        }
+          this.toastService.error(
+            'Notification Failed',
+            'Failed to send notification to customer. Please try again.'
+          );
+        },
       });
   }
 
@@ -657,16 +699,16 @@ export class JobBoardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading jobs:', error);
-      }
+      },
     });
   }
 
   private categorizeJobs(): void {
-    this.newJobs = this.jobs.filter(j => j.status === 'new');
-    this.upcomingJobs = this.jobs.filter(j => j.status === 'upcoming');
-    this.inProgressJobs = this.jobs.filter(j => j.status === 'in-progress');
-    this.readyJobs = this.jobs.filter(j => j.status === 'ready');
-    this.completedJobs = this.jobs.filter(j => j.status === 'completed');
+    this.newJobs = this.jobs.filter((j) => j.status === 'new');
+    this.upcomingJobs = this.jobs.filter((j) => j.status === 'upcoming');
+    this.inProgressJobs = this.jobs.filter((j) => j.status === 'in-progress');
+    this.readyJobs = this.jobs.filter((j) => j.status === 'ready');
+    this.completedJobs = this.jobs.filter((j) => j.status === 'completed');
   }
 
   switchTab(tab: JobStatus): void {
@@ -679,23 +721,29 @@ export class JobBoardComponent implements OnInit, OnDestroy {
 
   getJobsByStatus(status: JobStatus): Job[] {
     switch (status) {
-      case 'new': return this.newJobs;
-      case 'upcoming': return this.upcomingJobs;
-      case 'in-progress': return this.inProgressJobs;
-      case 'ready': return this.readyJobs;
-      case 'completed': return this.completedJobs;
-      default: return [];
+      case 'new':
+        return this.newJobs;
+      case 'upcoming':
+        return this.upcomingJobs;
+      case 'in-progress':
+        return this.inProgressJobs;
+      case 'ready':
+        return this.readyJobs;
+      case 'completed':
+        return this.completedJobs;
+      default:
+        return [];
     }
   }
 
   getStatusLabel(status: JobStatus): string {
     const labels: Record<JobStatus, string> = {
-      'new': 'New Requests',
-      'upcoming': 'Upcoming',
+      new: 'New Requests',
+      upcoming: 'Upcoming',
       'in-progress': 'In Progress',
-      'ready': 'Ready for Pickup',
-      'completed': 'Completed',
-      'cancelled': 'Cancelled'
+      ready: 'Ready for Pickup',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
     };
     return labels[status];
   }
@@ -706,10 +754,10 @@ export class JobBoardComponent implements OnInit, OnDestroy {
 
   getUrgencyClass(urgency: string): string {
     const classes: Record<string, string> = {
-      'urgent': 'urgency-urgent',
-      'high': 'urgency-high',
-      'normal': 'urgency-normal',
-      'low': 'urgency-low'
+      urgent: 'urgency-urgent',
+      high: 'urgency-high',
+      normal: 'urgency-normal',
+      low: 'urgency-low',
     };
     return classes[urgency] || 'urgency-normal';
   }
@@ -762,7 +810,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error updating job status:', error);
         // TODO: Show error notification
-      }
+      },
     });
   }
 
@@ -772,7 +820,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
@@ -783,7 +831,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
       element.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
-        inline: 'center'
+        inline: 'center',
       });
 
       // Add temporary highlight effect
@@ -859,11 +907,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
 
   getStageLabel(stage: string): string {
     const labels: Record<string, string> = {
-      'received': 'Received',
-      'diagnosing': 'Diagnosing',
-      'repairing': 'Repairing',
-      'testing': 'Testing',
-      'done': 'Done'
+      received: 'Received',
+      diagnosing: 'Diagnosing',
+      repairing: 'Repairing',
+      testing: 'Testing',
+      done: 'Done',
     };
     return labels[stage] || stage;
   }
@@ -897,42 +945,42 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   // Tooltip methods for car owner profile - now click-based
   showOwnerTooltip(bookingId: number, event: Event): void {
     event.stopPropagation();
-    
+
     // Toggle tooltip - if already showing this booking, hide it
     if (this.hoveredBookingId === bookingId) {
       this.hideOwnerTooltip();
       return;
     }
-    
+
     // Get the position of the clicked element
     const target = event.target as HTMLElement;
     const rect = target.getBoundingClientRect();
-    
+
     // Position tooltip to the right of the name, or left if not enough space
     const tooltipWidth = 350; // Approximate tooltip width
     const viewportWidth = window.innerWidth;
     const spaceOnRight = viewportWidth - rect.right;
-    
+
     if (spaceOnRight > tooltipWidth + 20) {
       // Position to the right
       this.tooltipPosition = {
         x: rect.right + 10,
-        y: rect.top
+        y: rect.top,
       };
     } else {
       // Position to the left
       this.tooltipPosition = {
         x: rect.left - tooltipWidth - 10,
-        y: rect.top
+        y: rect.top,
       };
     }
-    
+
     this.hoveredBookingId = bookingId;
     this.tooltipLoading = true;
     this.tooltipProfile = null;
 
     // Check if we already have the profile cached in the booking object
-    const booking = this.realBookings.find(b => b.id === bookingId);
+    const booking = this.realBookings.find((b) => b.id === bookingId);
     if (booking && booking.fullProfile) {
       this.tooltipProfile = booking.fullProfile;
       this.tooltipLoading = false;
@@ -948,7 +996,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
             this.tooltipProfile = profile;
             this.tooltipLoading = false;
             this.cdr.detectChanges();
-            
+
             // Updates cache for next time
             if (booking && profile) {
               booking.fullProfile = profile;
@@ -959,7 +1007,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
           console.error('Error loading car owner profile:', err);
           this.tooltipLoading = false;
           this.cdr.detectChanges();
-        }
+        },
       });
   }
 
@@ -971,7 +1019,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
 
   getFullAddress(profile: CarOwnerProfile | null): string {
     if (!profile) return '';
-    const parts = [profile.city, profile.governorate, profile.country].filter(p => p && p.trim());
+    const parts = [profile.city, profile.governorate, profile.country].filter((p) => p && p.trim());
     return parts.join(', ') || 'Address not available';
   }
 

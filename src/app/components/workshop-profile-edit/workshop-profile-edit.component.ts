@@ -101,7 +101,7 @@ export class WorkshopProfileEditComponent
   uploadError: string = '';
 
   // Backend base URL used to build absolute image URLs when backend returns relative paths
-  private readonly backendBaseUrl = 'https://localhost:44316';
+  private readonly backendBaseUrl = 'https://korik-demo.runasp.net';
 
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   private readonly STORAGE_KEY = 'workshop_profile_data';
@@ -496,7 +496,7 @@ export class WorkshopProfileEditComponent
     console.log('=== SUBMITTING PROFILE UPDATE (FormData) ===');
     console.log('Original profileData:', this.profileData);
     console.log(
-      'API Endpoint: PUT https://localhost:44316/api/WorkShopProfile/Update-WorkShop-Profile'
+      'API Endpoint: PUT https://korik-demo.runasp.net/api/WorkShopProfile/Update-WorkShop-Profile'
     );
 
     // Send PUT request with FormData

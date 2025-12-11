@@ -1,4 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
@@ -50,7 +56,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   ) {}
 
   // API base used for direct booking status updates from notification actions
-  private readonly apiUrl = 'https://localhost:44316/api';
+  private readonly apiUrl = 'https://korik-demo.runasp.net/api';
 
   /**
    * Handle a notification action button click (e.g., Confirm/Decline for booking)
@@ -79,7 +85,11 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
       }
 
       if (targetStatus) {
-        this.http.put(`${this.apiUrl}/Booking/Update-Booking-Status`, { id: bookingId, status: targetStatus })
+        this.http
+          .put(`${this.apiUrl}/Booking/Update-Booking-Status`, {
+            id: bookingId,
+            status: targetStatus,
+          })
           .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: () => {
@@ -88,9 +98,11 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
               // Broadcast a global event so other components (job board, dashboard) can refresh
               try {
-                window.dispatchEvent(new CustomEvent('booking:status-changed', {
-                  detail: { bookingId, status: targetStatus }
-                }));
+                window.dispatchEvent(
+                  new CustomEvent('booking:status-changed', {
+                    detail: { bookingId, status: targetStatus },
+                  })
+                );
               } catch (e) {
                 // ignore if event cannot be dispatched
               }
@@ -106,7 +118,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
             },
             error: (err) => {
               console.error('Error performing notification action on backend:', err);
-            }
+            },
           });
         return;
       }
@@ -189,7 +201,9 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     this.displayLimit += this.displayIncrement;
     this.updateDisplayedNotifications();
     this.cdr.detectChanges();
-    console.log(`📄 Loaded more notifications. Now showing ${this.notifications.length} of ${this.allNotifications.length}`);
+    console.log(
+      `📄 Loaded more notifications. Now showing ${this.notifications.length} of ${this.allNotifications.length}`
+    );
   }
 
   /**
@@ -211,7 +225,8 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     // Then sync with backend
     const token = this.authService.getToken();
     if (token && backendNotificationId) {
-      this.notificationService.markAsReadOnBackend(backendNotificationId, token)
+      this.notificationService
+        .markAsReadOnBackend(backendNotificationId, token)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
@@ -219,7 +234,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('❌ Failed to mark notification as read on backend:', err);
-          }
+          },
         });
     }
   }
@@ -228,22 +243,25 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     const token = this.authService.getToken();
 
     // Get all unread notifications before marking them as read
-    const unreadNotifications = this.notifications.filter(n => !n.read);
+    const unreadNotifications = this.notifications.filter((n) => !n.read);
 
     // Update locally first for immediate UI feedback
     this.notificationService.markAllAsRead();
 
     // Then sync with backend using bulk endpoint
     if (token && unreadNotifications.length > 0) {
-      this.notificationService.markAllAsReadOnBackend(token)
+      this.notificationService
+        .markAllAsReadOnBackend(token)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            console.log(`✅ Marked all ${unreadNotifications.length} notifications as read on backend`);
+            console.log(
+              `✅ Marked all ${unreadNotifications.length} notifications as read on backend`
+            );
           },
           error: (err) => {
             console.error('❌ Failed to mark all as read on backend:', err);
-          }
+          },
         });
     }
   }
@@ -263,7 +281,8 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     // Sync with backend
     const token = this.authService.getToken();
     if (token && backendNotificationId) {
-      this.notificationService.markAsReadOnBackend(backendNotificationId, token)
+      this.notificationService
+        .markAsReadOnBackend(backendNotificationId, token)
         .pipe(takeUntil(this.destroy$))
         .subscribe();
     }
@@ -280,9 +299,10 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     // Backend sends wrong notification type (PaymentReceived instead of BookingCompleted)
     // So we detect by message content: "has been completed" or "booking has been completed"
     const messageLC = (notification.message || '').toLowerCase();
-    const isCompletedNotification = messageLC.includes('has been completed') ||
-                                     messageLC.includes('booking has been completed') ||
-                                     messageLC.includes('service completed');
+    const isCompletedNotification =
+      messageLC.includes('has been completed') ||
+      messageLC.includes('booking has been completed') ||
+      messageLC.includes('service completed');
     const bookingId = notification.data?.bookingId;
     const userRole = this.authService.getUserRole();
     const isCarOwner = RoleHelper.isCarOwner(userRole);
@@ -318,7 +338,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
     let notificationDate = typeof date === 'string' ? new Date(date) : new Date(date);
 
     // Backend stores times 2 hours behind, so add 2 hours to correct it
-    notificationDate = new Date(notificationDate.getTime() + (2 * 60 * 60 * 1000));
+    notificationDate = new Date(notificationDate.getTime() + 2 * 60 * 60 * 1000);
 
     // Calculate the time difference with corrected timestamp
     const diff = now.getTime() - notificationDate.getTime();
@@ -400,7 +420,9 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log(`📬 Reopening appointment confirmation modal for booking ${bookingId}, notification ${backendNotificationId}`);
+    console.log(
+      `📬 Reopening appointment confirmation modal for booking ${bookingId}, notification ${backendNotificationId}`
+    );
 
     // Call reopenAppointmentDialog with notification ID - it will fetch fresh data from API
     if ((window as any).reopenAppointmentDialog) {

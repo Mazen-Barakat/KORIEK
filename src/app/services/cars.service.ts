@@ -31,20 +31,18 @@ export interface CarIndicatorDto {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CarsService {
   private jsonUrl = 'cars-data.json';
   private cache$!: Observable<MakeModels[]>;
-  private readonly apiBase = 'https://localhost:44316/api';
+  private readonly apiBase = 'https://korik-demo.runasp.net/api';
 
   constructor(private http: HttpClient) {}
 
   getAllMakesAndModels(): Observable<MakeModels[]> {
     if (!this.cache$) {
-      this.cache$ = this.http.get<MakeModels[]>(this.jsonUrl).pipe(
-        shareReplay(1)
-      );
+      this.cache$ = this.http.get<MakeModels[]>(this.jsonUrl).pipe(shareReplay(1));
     }
     return this.cache$;
   }
@@ -66,7 +64,9 @@ export class CarsService {
   // Check if a license plate is already in use. Returns Observable<boolean>
   // Note: Adjust the endpoint path if your backend exposes a different route.
   checkLicensePlate(licensePlate: string): Observable<boolean> {
-    const url = `${this.apiBase}/Car/GetByLicensePlate?licensePlate=${encodeURIComponent(licensePlate)}`;
+    const url = `${this.apiBase}/Car/GetByLicensePlate?licensePlate=${encodeURIComponent(
+      licensePlate
+    )}`;
     return this.http.get<any>(url).pipe(
       // The backend is expected to return an object like { success: true, message: '', data: boolean }
       // Map to boolean for convenience in the frontend.
@@ -146,7 +146,9 @@ export class CarsService {
     const urlBase = `${this.apiBase}/CarIndicator`;
     const deleteUrl = `${urlBase}/${indicatorId}`;
 
-    return this.http.delete<any>(deleteUrl).pipe(
+    return this.http
+      .delete<any>(deleteUrl)
+      .pipe
       // If DELETE succeeds, return its response. If it fails with 405 (Method Not Allowed),
       // try POST fallbacks.
       // We use catchError here to convert to an alternate observable.
@@ -155,6 +157,6 @@ export class CarsService {
       // Using dynamic imports to keep rxjs operators inline
       // (catchError below will perform the fallback attempt)
       // The following catchError is implemented in the component by subscription error handler.
-    );
+      ();
   }
 }

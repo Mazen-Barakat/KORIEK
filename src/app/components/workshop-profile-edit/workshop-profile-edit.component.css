@@ -969,6 +969,7 @@
   margin-top: 1.5rem;
 }
 
+
 .form-row {
   display: flex;
   flex-wrap: wrap;
@@ -1286,6 +1287,7 @@
   box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
   transform: translateY(-2px);
 }
+
 
 .modal-footer button:disabled {
   opacity: 0.6;
