@@ -70,7 +70,7 @@
                 class="premium-car-image"
                 (error)="handleImageError($event)"
               />
-              
+
               <!-- Floating Feature Badge -->
               <div *ngIf="vehicle.isDefault" class="floating-badge premium-badge">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -213,8 +213,8 @@
                 <div
                   *ngFor="let indicator of vehicle.dashboardIndicators"
                   class="premium-indicator"
-                  [class.indicator-good]="
-                    getIndicatorStatusByLabel(vehicle, indicator.label) === 'good'
+                  [class.indicator-normal]="
+                    getIndicatorStatusByLabel(vehicle, indicator.label) === 'normal'
                   "
                   [class.indicator-warning]="
                     getIndicatorStatusByLabel(vehicle, indicator.label) === 'warning'
@@ -233,7 +233,7 @@
                   }}</span>
                 </div>
               </div>
-              
+
               <!-- Placeholder when no indicators -->
               <div
                 class="car-indicators-placeholder"

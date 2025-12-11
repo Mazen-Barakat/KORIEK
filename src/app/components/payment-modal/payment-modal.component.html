@@ -1,0 +1,211 @@
+<div class="payment-modal-overlay" (click)="cancel()">
+  <div class="payment-modal" (click)="$event.stopPropagation()">
+
+    <!-- Close Button -->
+    <button class="close-btn" (click)="cancel()" *ngIf="currentStep !== 'processing'">
+      <span>✕</span>
+    </button>
+
+    <!-- Progress Indicator -->
+    <div class="progress-steps">
+      <div class="step" [class.active]="currentStep === 'summary'" [class.completed]="currentStep !== 'summary'">
+        <div class="step-circle">1</div>
+        <span>Summary</span>
+      </div>
+      <div class="step-line" [class.completed]="currentStep !== 'summary'"></div>
+      <div class="step" [class.active]="currentStep === 'payment' || currentStep === 'processing'" [class.completed]="currentStep === 'success'">
+        <div class="step-circle">2</div>
+        <span>Payment</span>
+      </div>
+      <div class="step-line" [class.completed]="currentStep === 'success'"></div>
+      <div class="step" [class.active]="currentStep === 'success'" [class.completed]="currentStep === 'success'">
+        <div class="step-circle">3</div>
+        <span>Complete</span>
+      </div>
+    </div>
+
+    <!-- Summary Step -->
+    <div class="step-content" *ngIf="currentStep === 'summary'">
+      <div class="header">
+        <div class="icon-container success">
+          <span class="icon">🚗</span>
+        </div>
+        <h2>Your Vehicle is Ready!</h2>
+        <p class="subtitle">Complete payment to pick up your vehicle</p>
+      </div>
+
+      <div class="booking-details">
+        <div class="detail-card">
+          <div class="detail-icon">🏢</div>
+          <div class="detail-info">
+            <span class="detail-label">Workshop</span>
+            <span class="detail-value">{{ workshopName }}</span>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-icon">🔧</div>
+          <div class="detail-info">
+            <span class="detail-label">Service</span>
+            <span class="detail-value">{{ serviceName }}</span>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-icon">📅</div>
+          <div class="detail-info">
+            <span class="detail-label">Appointment</span>
+            <span class="detail-value">{{ formatDate(appointmentDate) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="payment-summary">
+        <h3>Payment Summary</h3>
+        <div class="summary-row">
+          <span>Service Amount</span>
+          <span class="amount">${{ formatCurrency(workshopAmount) }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Platform Fee (12%)</span>
+          <span class="amount">${{ formatCurrency(commissionAmount) }}</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-row total">
+          <span>Total Amount</span>
+          <span class="amount">${{ formatCurrency(totalAmount) }}</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" (click)="cancel()">
+          Cancel
+        </button>
+        <button class="btn btn-primary" (click)="proceedToPayment()">
+          Proceed to Payment →
+        </button>
+      </div>
+    </div>
+
+    <!-- Payment Step -->
+    <div class="step-content" *ngIf="currentStep === 'payment'">
+      <div class="header">
+        <div class="icon-container payment">
+          <span class="icon">💳</span>
+        </div>
+        <h2>Enter Payment Details</h2>
+        <p class="subtitle">Your payment is secure and encrypted</p>
+      </div>
+
+      <div class="payment-amount-display">
+        <span class="amount-label">Total Amount</span>
+        <span class="amount-value">${{ formatCurrency(totalAmount) }}</span>
+      </div>
+
+      <form (submit)="$event.preventDefault(); handlePayment()">
+        <div class="form-group">
+          <label>Card Information</label>
+          <div id="card-element" class="card-element"></div>
+          <div class="secure-badge">
+            <span>🔒</span>
+            <span>Secured by Stripe</span>
+          </div>
+        </div>
+
+        <div class="error-message" *ngIf="errorMessage">
+          <span class="error-icon">⚠️</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" (click)="backToSummary()" [disabled]="processing">
+            ← Back
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="processing">
+            <span *ngIf="!processing">Pay ${{ formatCurrency(totalAmount) }}</span>
+            <span *ngIf="processing">Processing...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Processing Step -->
+    <div class="step-content processing-step" *ngIf="currentStep === 'processing'">
+      <div class="processing-animation">
+        <div class="spinner"></div>
+        <div class="processing-card">
+          <span class="card-icon">💳</span>
+        </div>
+      </div>
+      <h2>Processing Payment</h2>
+      <p class="subtitle">Please wait while we process your payment...</p>
+      <div class="processing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <!-- Success Step -->
+    <div class="step-content success-step" *ngIf="currentStep === 'success'">
+      <div class="success-animation">
+        <div class="checkmark-circle">
+          <span class="checkmark">✓</span>
+        </div>
+      </div>
+      <h2>Payment Successful!</h2>
+      <p class="subtitle">Your payment has been processed successfully</p>
+
+      <div class="success-details">
+        <div class="success-row">
+          <span>Amount Paid</span>
+          <span class="success-amount">${{ formatCurrency(totalAmount) }}</span>
+        </div>
+        <div class="success-row">
+          <span>Booking ID</span>
+          <span>#{{ bookingId }}</span>
+        </div>
+        <div class="success-row">
+          <span>Status</span>
+          <span class="status-badge">Paid</span>
+        </div>
+      </div>
+
+      <div class="success-message">
+        <span class="message-icon">🎉</span>
+        <p>You can now pick up your vehicle from the workshop!</p>
+      </div>
+    </div>
+
+    <!-- Error Step -->
+    <div class="step-content error-step" *ngIf="currentStep === 'error'">
+      <div class="error-animation">
+        <div class="error-circle">
+          <span class="error-x">✕</span>
+        </div>
+      </div>
+      <h2>Payment Failed</h2>
+      <p class="subtitle">{{ errorMessage || 'An error occurred while processing your payment' }}</p>
+
+      <div class="error-suggestions">
+        <h4>Common Issues:</h4>
+        <ul>
+          <li>Insufficient funds</li>
+          <li>Card declined by bank</li>
+          <li>Incorrect card details</li>
+          <li>Expired card</li>
+        </ul>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" (click)="cancel()">
+          Cancel
+        </button>
+        <button class="btn btn-primary" (click)="retryPayment()">
+          Try Again
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

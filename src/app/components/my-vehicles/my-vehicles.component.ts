@@ -478,9 +478,9 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     try {
       const status = this.getIndicatorStatusByLabel(vehicle, indicator.label);
-      // Only redirect when the indicator has a known status (good/warning/critical).
+      // Only redirect when the indicator has a known status (normal/warning/critical).
       // Do NOT redirect when status is 'unknown' or not available.
-      if (status === 'good' || status === 'warning' || status === 'critical') {
+      if (status === 'normal' || status === 'warning' || status === 'critical') {
         // Navigate to car-details and include fragment so the details page scrolls to the health section
         this.router.navigate(['/car-details', vehicle.id], { fragment: 'vehicle-health' });
       } else {
@@ -762,8 +762,8 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   }
 
   // Get indicator status from maintenance items
-  getIndicatorStatus(vehicle: Vehicle, indicatorType: string): 'good' | 'warning' | 'critical' {
-    if (!vehicle.maintenanceItems || vehicle.maintenanceItems.length === 0) return 'good';
+  getIndicatorStatus(vehicle: Vehicle, indicatorType: string): 'normal' | 'warning' | 'critical' {
+    if (!vehicle.maintenanceItems || vehicle.maintenanceItems.length === 0) return 'normal';
 
     const indicatorMap: Record<string, string[]> = {
       oil: ['Oil Change', 'Engine Oil', 'Oil'],
@@ -778,13 +778,13 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       )
     );
 
-    if (matchingItems.length === 0) return 'good';
+    if (matchingItems.length === 0) return 'normal';
 
     const minKm = Math.min(...matchingItems.map((item) => item.remainingKm));
 
     if (minKm <= 1000) return 'critical';
     if (minKm <= 3000) return 'warning';
-    return 'good';
+    return 'normal';
   }
 
   // Get indicator label
@@ -793,7 +793,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
 
     if (status === 'critical') return 'Service Now';
     if (status === 'warning') return 'Service Soon';
-    return 'Good';
+    return 'Normal';
   }
 
   // Load indicator statuses from backend for all vehicles
@@ -887,7 +887,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   getIndicatorStatusByLabel(
     vehicle: Vehicle,
     indicatorLabel: string
-  ): 'good' | 'warning' | 'critical' | 'unknown' {
+  ): 'normal' | 'warning' | 'critical' | 'unknown' {
     // First check if we have status from backend
     if (vehicle.dashboardIndicators) {
       const indicator = vehicle.dashboardIndicators.find((ind) => ind.label === indicatorLabel);
@@ -895,9 +895,9 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         const status = indicator.status.toLowerCase();
         if (status === 'critical') return 'critical';
         if (status === 'warning') return 'warning';
-        if (status === 'normal' || status === 'good') return 'good';
+        if (status === 'normal' || status === 'good') return 'normal';
         if (status === 'unknown') return 'unknown';
-        return 'good'; // Default to good for any other status
+        return 'normal'; // Default to normal for any other status
       }
     }
 
@@ -922,7 +922,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     if (status === 'critical') return 'Critical';
     if (status === 'warning') return 'Warning';
     if (status === 'unknown') return 'Unknown';
-    return 'Good';
+    return 'Normal';
   }
 
   // AI Assistant Methods

@@ -391,6 +391,23 @@
   margin: 0;
 }
 
+/* Load More Indicator */
+.load-more-indicator {
+  text-align: center;
+  padding: 16px 20px;
+  margin: 8px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+}
+
+.load-more-indicator p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
 /* Backdrop */
 .notification-backdrop {
   position: fixed;
