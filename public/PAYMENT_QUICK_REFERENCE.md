@@ -141,7 +141,7 @@ private readonly STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_KEY';
 ### API URL
 ```typescript
 // payment.service.ts (line 14)
-private readonly API_URL = 'https://localhost:44316/api/Payment';
+private readonly API_URL = 'https://korik-demo.runasp.net/api/Payment';
 ```
 
 ## 🐛 Troubleshooting

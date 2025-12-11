@@ -51,7 +51,7 @@
 ```
 **Solution:**
 - Backend endpoint might be down
-- Check backend is running: `https://localhost:44316/api/Payment/create-payment-intent`
+ - Check backend is running: `https://korik-demo.runasp.net/api/Payment/create-payment-intent`
 - Check network tab in DevTools for failed requests
 - Look for CORS errors in console
 
@@ -81,7 +81,7 @@
 
 ### Backend Requirements
 
-Your backend endpoint `https://localhost:44316/api/Payment/create-payment-intent` MUST:
+Your backend endpoint `https://korik-demo.runasp.net/api/Payment/create-payment-intent` MUST:
 
 1. **Accept POST request:**
 ```json
