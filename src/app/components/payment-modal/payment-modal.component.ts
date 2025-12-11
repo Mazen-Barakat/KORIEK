@@ -152,7 +152,7 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
       console.log('✅ Card element mounted successfully');
 
       // Listen for card errors
-      this.cardElement.on('change', (event) => {
+      this.cardElement.on('change', (event: any) => {
         if (event.error) {
           this.errorMessage = event.error.message;
           console.warn('⚠️ Card error:', event.error.message);
