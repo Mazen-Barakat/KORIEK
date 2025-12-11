@@ -30,7 +30,7 @@ export interface AIResponse {
   providedIn: 'root'
 })
 export class AiAssistantService {
-  private readonly API_BASE_URL = 'https://localhost:44316/api';
+  private readonly API_BASE_URL = 'https://korik-demo.runasp.net/api';
   private readonly STORAGE_KEY = 'ai_conversation';
   
   private messagesSubject = new BehaviorSubject<AIMessage[]>([]);
