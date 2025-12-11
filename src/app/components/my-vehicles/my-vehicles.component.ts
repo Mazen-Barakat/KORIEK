@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AddVehicleFormComponent } from '../add-vehicle-form/add-vehicle-form.component';
@@ -12,7 +12,8 @@ import {
 } from '../../services/car-expense.service';
 import { BookingService } from '../../services/booking.service';
 import { CarTipsService, CarTip } from '../../services/car-tips.service';
-import { forkJoin } from 'rxjs';
+import { AiAssistantService, AIMessage } from '../../services/ai-assistant.service';
+import { forkJoin, Subscription } from 'rxjs';
 
 interface Vehicle {
   id: number;
@@ -124,6 +125,17 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   expenseTypes: ExpenseType[] = ['Fuel', 'Maintenance', 'Repair', 'Insurance', 'Other'];
   welcomeMessage: string = '';
   aiInputText: string = '';
+  
+  // AI Assistant properties
+  aiMessages: AIMessage[] = [];
+  isAILoading = false;
+  isAITyping = false;
+  aiError: string | null = null;
+  isAIExpanded = true;
+  private aiSubscription: Subscription | null = null;
+  private typingSubscription: Subscription | null = null;
+  @ViewChild('chatMessagesContainer') chatMessagesContainer!: ElementRef;
+  
   tips: Tip[] = [];
   loadingTips = false;
   showTipModal = false;
@@ -171,7 +183,8 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private carExpenseService: CarExpenseService,
     private bookingService: BookingService,
-    private carTipsService: CarTipsService
+    private carTipsService: CarTipsService,
+    private aiAssistantService: AiAssistantService
   ) {}
 
   // Note: removed Escape key handler to prevent closing the Add Vehicle modal
@@ -195,10 +208,31 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     this.loadLocalBookingCreationTimes();
     this.loadVehiclesFromBackend();
     this.checkAndLoadTips();
+    
+    // Subscribe to AI messages
+    this.aiSubscription = this.aiAssistantService.messages$.subscribe(messages => {
+      this.aiMessages = messages;
+      this.cdr.detectChanges();
+      this.scrollToLatestMessage();
+    });
+    
+    // Subscribe to typing indicator
+    this.typingSubscription = this.aiAssistantService.isTyping$.subscribe(isTyping => {
+      this.isAITyping = isTyping;
+      this.cdr.detectChanges();
+    });
   }
 
   ngOnDestroy(): void {
     this.stopCancelButtonUpdateInterval();
+    
+    // Clean up AI subscriptions
+    if (this.aiSubscription) {
+      this.aiSubscription.unsubscribe();
+    }
+    if (this.typingSubscription) {
+      this.typingSubscription.unsubscribe();
+    }
   }
 
   /**
@@ -895,37 +929,73 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   handleAIPrompt(action: string): void {
     console.log('AI Assistant action:', action);
 
-    switch (action) {
-      case 'maintenance':
-        // Navigate to booking page
-        this.navigateToBooking();
-        break;
-      case 'tips':
-        // Show AI tips (placeholder for future implementation)
-        this.aiInputText = 'Give me maintenance tips for my vehicles';
-        break;
-      case 'diagnostics':
-        // Show diagnostics (placeholder for future implementation)
-        this.aiInputText = 'Check diagnostics for all vehicles';
-        break;
-      case 'history':
-        // Show history (placeholder for future implementation)
-        this.aiInputText = 'Show me maintenance history';
-        break;
+    const prompts: { [key: string]: string } = {
+      'maintenance': 'Help me schedule a maintenance service for my vehicle',
+      'tips': 'Give me maintenance tips for my vehicles',
+      'diagnostics': 'Check diagnostics for all my vehicles',
+      'history': 'Show me my maintenance history'
+    };
+
+    this.aiInputText = prompts[action] || '';
+    if (this.aiInputText) {
+      this.sendAIMessage();
     }
   }
 
   sendAIMessage(): void {
-    if (!this.aiInputText.trim()) return;
+    if (!this.aiInputText.trim() || this.isAILoading) return;
 
-    console.log('AI message sent:', this.aiInputText);
+    const message = this.aiInputText.trim();
+    this.aiInputText = ''; // Clear input immediately for better UX
+    this.isAILoading = true;
+    this.aiError = null;
 
-    // Placeholder for AI integration
-    // In production, this would call an AI service endpoint
+    this.aiAssistantService.askAI(message).subscribe({
+      next: (response) => {
+        this.isAILoading = false;
+        console.log('AI Response:', response);
+        this.cdr.detectChanges();
+        this.scrollToLatestMessage();
+      },
+      error: (error) => {
+        this.isAILoading = false;
+        this.aiError = 'Failed to get response. Please try again.';
+        console.error('AI Error:', error);
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
-    // For now, just clear the input
-    this.aiInputText = '';
+  clearAIChat(): void {
+    this.aiAssistantService.clearConversation();
+    this.aiError = null;
     this.cdr.detectChanges();
+  }
+
+  toggleAIExpanded(): void {
+    this.isAIExpanded = !this.isAIExpanded;
+    this.cdr.detectChanges();
+  }
+
+  private scrollToLatestMessage(): void {
+    setTimeout(() => {
+      if (this.chatMessagesContainer?.nativeElement) {
+        const container = this.chatMessagesContainer.nativeElement;
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 100);
+  }
+
+  formatMessageTime(date: Date): string {
+    return new Date(date).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  trackByMessageId(index: number, message: AIMessage): string {
+    return message.id;
   }
 
   // Tips & News Methods
