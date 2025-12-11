@@ -6,11 +6,11 @@ import {
   CreatePaymentDTO,
   PaymentIntentResponse,
   PaymentDetailsResponse,
-  PaymentDTO
+  PaymentDTO,
 } from '../models/payment.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PaymentService {
   private readonly API_URL = 'https://korik-demo.runasp.net/api/Payment';
@@ -35,43 +35,41 @@ export class PaymentService {
     token: string
   ): Observable<PaymentIntentResponse> {
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     });
 
     const payload: CreatePaymentDTO = {
       bookingId,
-      totalAmount
+      totalAmount,
     };
 
     console.log('📤 Sending payment intent request:', {
       endpoint: `${this.API_URL}/create-payment-intent`,
       bookingId,
-      totalAmount
+      totalAmount,
     });
 
-    return this.http.post<PaymentIntentResponse>(
-      `${this.API_URL}/create-payment-intent`,
-      payload,
-      { headers }
-    ).pipe(
-      map(response => {
-        console.log('✅ Payment intent response received:', response);
-        if (!response.success) {
-          console.error('❌ Backend returned success=false:', response.message);
-        }
-        return response;
-      }),
-      catchError(error => {
-        console.error('❌ HTTP Error creating payment intent:', {
-          status: error.status,
-          statusText: error.statusText,
-          message: error.message,
-          error: error.error
-        });
-        throw error;
-      })
-    );
+    return this.http
+      .post<PaymentIntentResponse>(`${this.API_URL}/create-payment-intent`, payload, { headers })
+      .pipe(
+        map((response) => {
+          console.log('✅ Payment intent response received:', response);
+          if (!response.success) {
+            console.error('❌ Backend returned success=false:', response.message);
+          }
+          return response;
+        }),
+        catchError((error) => {
+          console.error('❌ HTTP Error creating payment intent:', {
+            status: error.status,
+            statusText: error.statusText,
+            message: error.message,
+            error: error.error,
+          });
+          throw error;
+        })
+      );
   }
 
   /**
@@ -79,22 +77,21 @@ export class PaymentService {
    */
   getPaymentDetails(bookingId: number, token: string): Observable<PaymentDetailsResponse> {
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     });
 
-    return this.http.get<PaymentDetailsResponse>(
-      `${this.API_URL}/booking/${bookingId}`,
-      { headers }
-    ).pipe(
-      map(response => {
-        console.log('📊 Payment details fetched:', response);
-        return response;
-      }),
-      catchError(error => {
-        console.error('❌ Error fetching payment details:', error);
-        throw error;
-      })
-    );
+    return this.http
+      .get<PaymentDetailsResponse>(`${this.API_URL}/booking/${bookingId}`, { headers })
+      .pipe(
+        map((response) => {
+          console.log('📊 Payment details fetched:', response);
+          return response;
+        }),
+        catchError((error) => {
+          console.error('❌ Error fetching payment details:', error);
+          throw error;
+        })
+      );
   }
 
   /**
@@ -104,7 +101,7 @@ export class PaymentService {
     this.paymentFlowSubject.next({
       active: true,
       bookingId,
-      amount
+      amount,
     });
   }
 
@@ -134,7 +131,7 @@ export class PaymentService {
       totalAmount,
       commissionAmount,
       workshopAmount,
-      commissionRate
+      commissionRate,
     };
   }
 
@@ -147,36 +144,32 @@ export class PaymentService {
     token: string
   ): Observable<any> {
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     });
 
     const payload = {
       bookingId,
       paymentIntentId,
-      status: 'succeeded'
+      status: 'succeeded',
     };
 
     console.log('✅ Confirming payment success on backend:', {
       endpoint: `${this.API_URL}/confirm-payment`,
-      payload
+      payload,
     });
 
-    return this.http.post<any>(
-      `${this.API_URL}/confirm-payment`,
-      payload,
-      { headers }
-    ).pipe(
-      map(response => {
+    return this.http.post<any>(`${this.API_URL}/confirm-payment`, payload, { headers }).pipe(
+      map((response) => {
         console.log('✅ Payment confirmed on backend:', response);
         return response;
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('❌ HTTP Error confirming payment:', {
           status: error.status,
           statusText: error.statusText,
           message: error.message,
-          error: error.error
+          error: error.error,
         });
         throw error;
       })
