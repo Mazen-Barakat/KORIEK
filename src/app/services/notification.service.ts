@@ -20,7 +20,7 @@ export class NotificationService {
   ]);
 
   private unreadCountSubject = new BehaviorSubject<number>(0);
-  private readonly API_URL = 'https://localhost:44316/Notifications';
+  private readonly API_URL = 'https://korik-demo.runasp.net/api/Notifications';
 
   constructor(private http: HttpClient) {
     this.startAutoNotificationSimulation();

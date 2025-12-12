@@ -200,7 +200,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
         this.workshopId = data.id.toString();
 
         // Load additional data in parallel using forkJoin
-        const photosUrl = `https://localhost:44316/WorkShopPhoto/${data.id}`;
+        const photosUrl = `https://korik-demo.runasp.net/api/WorkShopPhoto/${data.id}`;
 
         const photosRequest = this.http.get(photosUrl).pipe(
           timeout(5000), // 5 second timeout

@@ -51,7 +51,7 @@ export interface EnrichedBooking {
   providedIn: 'root',
 })
 export class BookingService {
-  public apiUrl = 'https://localhost:44316/';
+  public apiUrl = 'https://korik-demo.runasp.net/api';
   private jobsSubject = new BehaviorSubject<Job[]>([]);
   public jobs$ = this.jobsSubject.asObservable();
 

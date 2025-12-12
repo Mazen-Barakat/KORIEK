@@ -120,7 +120,7 @@ export class WorkshopsDiscoveryComponent implements OnInit, OnDestroy {
 
   governorates = GOVERNORATES;
 
-  private apiUrl = 'https://localhost:44316/';
+  private apiUrl = 'https://korik-demo.runasp.net/api';
 
   constructor(
     private http: HttpClient,

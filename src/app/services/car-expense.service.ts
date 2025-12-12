@@ -24,7 +24,7 @@ export interface CarExpenseDto {
 
 @Injectable({ providedIn: 'root' })
 export class CarExpenseService {
-  private readonly baseUrl = 'https://localhost:44316/';
+  private readonly baseUrl = 'https://korik-demo.runasp.net/api';
 
   constructor(private http: HttpClient) {}
 

@@ -45,7 +45,7 @@ export interface WorkshopServiceData {
   providedIn: 'root',
 })
 export class WorkshopServiceService {
-  private apiUrl = 'https://localhost:44316/WorkshopService';
+  private apiUrl = 'https://korik-demo.runasp.net/api/WorkshopService';
 
   constructor(private http: HttpClient) {}
 

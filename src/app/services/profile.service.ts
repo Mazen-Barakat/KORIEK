@@ -25,8 +25,8 @@ export interface ProfileResponse {
   providedIn: 'root',
 })
 export class ProfileService {
-  private readonly API_URL = 'https://localhost:44316/CarOwnerProfile';
-  private readonly BACKEND_BASE_URL = 'https://localhost:44316';
+  private readonly API_URL = 'https://korik-demo.runasp.net/api/CarOwnerProfile';
+  private readonly BACKEND_BASE_URL = 'https://korik-demo.runasp.net/api';
 
   private profileDataSubject = new BehaviorSubject<{ profilePicture: string | null } | null>(null);
   public profileData$ = this.profileDataSubject.asObservable();

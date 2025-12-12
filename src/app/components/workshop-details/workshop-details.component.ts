@@ -155,7 +155,7 @@ interface RatingBar {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkshopDetailsComponent implements OnInit, OnDestroy {
-  private readonly API_BASE_URL = 'https://localhost:44316/';
+  private readonly API_BASE_URL = 'https://korik-demo.runasp.net/api';
 
   workshop: WorkshopDetails | null = null;
   workshopServices: WorkshopService[] = [];
