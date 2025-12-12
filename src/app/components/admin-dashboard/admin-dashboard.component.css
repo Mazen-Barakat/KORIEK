@@ -172,6 +172,9 @@
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .section-header {
@@ -217,6 +220,9 @@
   border-radius: 12px;
   padding: 18px;
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .approval-card:hover {
@@ -228,6 +234,8 @@
   display: flex;
   gap: 14px;
   margin-bottom: 14px;
+  width: 100%;
+  overflow: hidden;
 }
 
 .workshop-icon {
@@ -245,17 +253,27 @@
   color: white;
 }
 
+.approval-details {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .approval-details h3 {
   font-size: 1rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 6px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .owner-name {
   font-size: 0.875rem;
   color: #6b7280;
   margin: 0 0 4px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .location {
@@ -265,6 +283,9 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  flex-wrap: wrap;
 }
 
 .location svg {
@@ -930,17 +951,36 @@ button:disabled {
 
 @media (max-width: 768px) {
   .admin-dashboard {
-    padding: 20px;
+    padding: 15px;
   }
 
   .header-content {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+    padding: 20px;
+  }
+
+  .header-title h1 {
+    font-size: 1.5rem;
   }
 
   .metrics-grid {
     grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .dashboard-section {
+    padding: 16px;
+  }
+
+  .section-header h2 {
+    font-size: 1.1rem;
   }
 
   .actions-grid {
@@ -954,6 +994,54 @@ button:disabled {
   .approval-actions button {
     width: 100%;
     justify-content: center;
+  }
+
+  .approval-info {
+    flex-direction: row;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .approval-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .workshop-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .approval-details h3 {
+    font-size: 0.95rem;
+    word-break: break-word;
+  }
+
+  .owner-name,
+  .location {
+    font-size: 0.8rem;
+    word-break: break-word;
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pagination-btn {
+    width: 100%;
+  }
+
+  .pagination-numbers {
+    justify-content: center;
+    width: 100%;
   }
 
   .modal-overlay {
@@ -978,6 +1066,90 @@ button:disabled {
   .btn-modal-approve {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-dashboard {
+    padding: 10px;
+  }
+
+  .header-content {
+    padding: 15px;
+  }
+
+  .header-title h1 {
+    font-size: 1.3rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .dashboard-section {
+    padding: 12px;
+  }
+
+  .section-header {
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+  }
+
+  .section-header h2 {
+    font-size: 1rem;
+  }
+
+  .approval-card {
+    padding: 14px;
+  }
+
+  .approval-info {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .approval-details {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .workshop-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .approval-details h3 {
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  .approval-details p {
+    font-size: 0.75rem;
+    word-break: break-word;
+  }
+
+  .status-badge {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+  }
+
+  .btn-view {
+    font-size: 0.8rem;
+    padding: 8px 12px;
+  }
+
+  .pagination-numbers {
+    gap: 5px;
+  }
+
+  .page-number {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
   }
 }
 

@@ -574,14 +574,11 @@ export class AdminDashboardComponent implements OnInit {
    * Approve/Verify a workshop
    */
   approveWorkshop(workshopId: number): void {
-    if (!confirm('Are you sure you want to verify this workshop?')) return;
-
     this.isLoading = true;
 
     this.adminService.verifyWorkshop(workshopId).subscribe({
       next: (response) => {
         console.log('Workshop verified:', response);
-        alert('Workshop verified successfully!');
         this.closeDetailModal();
         // Reload both lists and analytics
         this.loadPendingWorkshops();
