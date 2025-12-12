@@ -808,6 +808,119 @@
               </div>
             </div>
 
+            <!-- Pagination Controls -->
+            <div class="pagination-wrapper" *ngIf="servicesTotalRecords > servicesPageSize">
+              <div class="pagination-container">
+                <div class="pagination-info">
+                  <span class="showing-text">
+                    Showing <strong>{{ getServicesShowingStart() }}</strong> -
+                    <strong>{{ getServicesShowingEnd() }}</strong> of
+                    <strong>{{ servicesTotalRecords }}</strong> services
+                  </span>
+                </div>
+                <div class="pagination-nav">
+                  <button
+                    title="First Page"
+                    class="pagination-btn nav-btn"
+                    (click)="firstServicesPage()"
+                    [disabled]="servicesPageNumber === 1"
+                  >
+                    <!-- first icon -->
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="11 17 6 12 11 7"></polyline>
+                      <polyline points="18 17 13 12 18 7"></polyline>
+                    </svg>
+                  </button>
+                  <button
+                    title="Previous Page"
+                    class="pagination-btn nav-btn"
+                    (click)="prevServicesPage()"
+                    [disabled]="servicesPageNumber === 1"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M15 18l-6-6 6-6"></path>
+                    </svg>
+                  </button>
+                  <div class="pagination-pages">
+                    <button
+                      *ngFor="let p of getServicesPages()"
+                      class="page-btn"
+                      [class.active]="p === servicesPageNumber"
+                      (click)="onServicesPageClick(p)"
+                      [disabled]="p === '...'"
+                    >
+                      <span *ngIf="p === '...'" class="page-ellipsis">...</span>
+                      <span *ngIf="p !== '...'">{{ p }}</span>
+                    </button>
+                  </div>
+                  <button
+                    title="Next Page"
+                    class="pagination-btn nav-btn"
+                    (click)="nextServicesPage()"
+                    [disabled]="servicesPageNumber >= servicesTotalPages"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M9 18l6-6-6-6"></path>
+                    </svg>
+                  </button>
+                  <button
+                    title="Last Page"
+                    class="pagination-btn nav-btn"
+                    (click)="lastServicesPage()"
+                    [disabled]="servicesPageNumber >= servicesTotalPages"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="13 17 18 12 13 7"></polyline>
+                      <polyline points="6 17 11 12 6 7"></polyline>
+                    </svg>
+                  </button>
+                </div>
+                <div class="page-size-selector">
+                  <label>Per page:</label>
+                  <select
+                    class=""
+                    [ngModel]="servicesPageSize"
+                    (ngModelChange)="changeServicesPageSize($event)"
+                  >
+                    <option [value]="3">3</option>
+                    <option [value]="6">6</option>
+                    <option [value]="9">9</option>
+                    <option [value]="15">15</option>
+                    <option [value]="30">30</option>
+                    <option [value]="60">60</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <!-- Book CTA -->
             <div class="services-cta">
               <div class="cta-content">

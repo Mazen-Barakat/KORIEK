@@ -12,7 +12,7 @@ import {
   providedIn: 'root',
 })
 export class ReviewService {
-  private readonly apiUrl = 'https://korik-demo.runasp.net/api';
+  private readonly apiUrl = 'https://localhost:44316/';
 
   constructor(private http: HttpClient) {}
 

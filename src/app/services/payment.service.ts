@@ -13,7 +13,7 @@ import {
   providedIn: 'root',
 })
 export class PaymentService {
-  private readonly API_URL = 'https://korik-demo.runasp.net/api/Payment';
+  private readonly API_URL = 'https://localhost:44316/Payment';
 
   // Subject to track payment flow state
   private paymentFlowSubject = new BehaviorSubject<{

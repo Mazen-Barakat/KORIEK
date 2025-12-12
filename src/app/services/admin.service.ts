@@ -47,7 +47,7 @@ export interface UpdateWorkshopStatusRequest {
   providedIn: 'root',
 })
 export class AdminService {
-  private baseUrl = 'https://korik-demo.runasp.net/api';
+  private baseUrl = 'https://localhost:44316/';
 
   constructor(private http: HttpClient) {}
 

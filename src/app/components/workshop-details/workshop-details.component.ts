@@ -7,6 +7,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Subject, forkJoin, of } from 'rxjs';
@@ -148,16 +149,21 @@ interface RatingBar {
 @Component({
   selector: 'app-workshop-details',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './workshop-details.component.html',
   styleUrls: ['./workshop-details.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkshopDetailsComponent implements OnInit, OnDestroy {
-  private readonly API_BASE_URL = 'https://korik-demo.runasp.net/api';
+  private readonly API_BASE_URL = 'https://localhost:44316/';
 
   workshop: WorkshopDetails | null = null;
   workshopServices: WorkshopService[] = [];
+  // Pagination state for services
+  servicesPageNumber = 1;
+  servicesPageSize = 15;
+  servicesTotalRecords = 0;
+  servicesTotalPages = 0;
   isLoading = true;
   errorMessage = '';
   activeTab: 'overview' | 'services' | 'reviews' | 'gallery' = 'overview';
@@ -182,6 +188,118 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
       this.workshopId = +params['id'];
       this.loadWorkshopDetails();
     });
+  }
+
+  /**
+   * Load services with pagination. Call this when services tab is active or page changes.
+   */
+  loadServices(page = this.servicesPageNumber, pageSize = this.servicesPageSize): void {
+    this.servicesPageNumber = page;
+    this.servicesPageSize = pageSize;
+
+    this.http
+      .get<ApiResponse<WorkshopServicesResponse>>(
+        `${this.API_BASE_URL}/WorkshopService/Get-Workshop-Services-By-Profile-ID?Id=${this.workshopId}&PageNumber=${this.servicesPageNumber}&PageSize=${this.servicesPageSize}`
+      )
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err) => of(null))
+      )
+      .subscribe((res) => {
+        if (res && res.success && res.data) {
+          this.workshopServices = res.data.items.map((service) => ({
+            id: service.id,
+            serviceId: service.serviceId,
+            serviceName: service.serviceName,
+            serviceDescription: service.serviceDescription,
+            duration: service.duration,
+            minPrice: service.minPrice,
+            maxPrice: service.maxPrice,
+            origin: service.origin,
+          }));
+          this.servicesTotalRecords = res.data.totalRecords ?? 0;
+          this.servicesTotalPages =
+            res.data.totalPages ??
+            Math.ceil(this.servicesTotalRecords / this.servicesPageSize || 1);
+        } else {
+          this.workshopServices = [];
+          this.servicesTotalRecords = 0;
+          this.servicesTotalPages = 0;
+        }
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+      });
+  }
+
+  // Pagination helpers
+  setServicesPage(page: number): void {
+    if (page < 1 || page > this.servicesTotalPages) return;
+    this.loadServices(page, this.servicesPageSize);
+  }
+
+  firstServicesPage(): void {
+    this.setServicesPage(1);
+  }
+
+  lastServicesPage(): void {
+    this.setServicesPage(this.servicesTotalPages || 1);
+  }
+
+  prevServicesPage(): void {
+    this.setServicesPage(Math.max(1, this.servicesPageNumber - 1));
+  }
+
+  nextServicesPage(): void {
+    this.setServicesPage(Math.min(this.servicesTotalPages || 1, this.servicesPageNumber + 1));
+  }
+
+  changeServicesPageSize(size: any): void {
+    const newSize = typeof size === 'string' ? parseInt(size, 10) : Number(size);
+    if (!newSize || newSize <= 0) return;
+    this.servicesPageSize = newSize;
+    this.servicesPageNumber = 1;
+    this.loadServices(1, newSize);
+  }
+
+  getServicesShowingStart(): number {
+    return (this.servicesPageNumber - 1) * this.servicesPageSize + 1;
+  }
+
+  getServicesShowingEnd(): number {
+    const end = this.servicesPageNumber * this.servicesPageSize;
+    return end > this.servicesTotalRecords ? this.servicesTotalRecords : end;
+  }
+
+  onServicesPageClick(p: number | '...') {
+    if (p === '...') return;
+    this.setServicesPage(p as number);
+  }
+
+  /**
+   * Compute a compact pagination array. Returns numbers and '...' where appropriate.
+   */
+  getServicesPages(): Array<number | '...'> {
+    const total = this.servicesTotalPages || 1;
+    const current = this.servicesPageNumber || 1;
+    const delta = 1; // neighbors
+    const range: Array<number | '...'> = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) range.push(i);
+      return range;
+    }
+
+    const left = Math.max(2, current - delta);
+    const right = Math.min(total - 1, current + delta);
+
+    range.push(1);
+    if (left > 2) range.push('...');
+
+    for (let i = left; i <= right; i++) range.push(i);
+
+    if (right < total - 1) range.push('...');
+    range.push(total);
+    return range;
   }
 
   ngOnDestroy(): void {
@@ -218,7 +336,7 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
         ),
       services: this.http
         .get<ApiResponse<WorkshopServicesResponse>>(
-          `${this.API_BASE_URL}/WorkshopService/Get-Workshop-Services-By-Profile-ID?Id=${this.workshopId}&PageNumber=1&PageSize=50`
+          `${this.API_BASE_URL}/WorkshopService/Get-Workshop-Services-By-Profile-ID?Id=${this.workshopId}&PageNumber=${this.servicesPageNumber}&PageSize=${this.servicesPageSize}`
         )
         .pipe(
           catchError((err) => {
@@ -406,6 +524,10 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
 
   setActiveTab(tab: 'overview' | 'services' | 'reviews' | 'gallery'): void {
     this.activeTab = tab;
+    if (tab === 'services') {
+      // load services for current page when services tab is opened
+      this.loadServices(this.servicesPageNumber, this.servicesPageSize);
+    }
   }
 
   setAsHeroImage(imageUrl: string): void {

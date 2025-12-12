@@ -36,7 +36,7 @@ export interface CarIndicatorDto {
 export class CarsService {
   private jsonUrl = 'cars-data.json';
   private cache$!: Observable<MakeModels[]>;
-  private readonly apiBase = 'https://korik-demo.runasp.net/api';
+  private readonly apiBase = 'https://localhost:44316/';
 
   constructor(private http: HttpClient) {}
 

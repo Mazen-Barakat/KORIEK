@@ -191,7 +191,7 @@ export class AuthService {
       throw new Error('No refresh token available');
     }
 
-    return this.http.post('https://korik-demo.runasp.net/api/Account/RefreshToken', {
+    return this.http.post('https://localhost:44316/Account/RefreshToken', {
       userId: userId,
       refreshToken: refreshToken,
     });

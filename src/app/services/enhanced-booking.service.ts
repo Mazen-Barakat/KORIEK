@@ -15,7 +15,7 @@ import {
   providedIn: 'root',
 })
 export class EnhancedBookingService {
-  private apiUrl = 'https://korik-demo.runasp.net/api';
+  private apiUrl = 'https://localhost:44316/';
 
   // Store bookings with precise timing
   private bookingsSubject = new BehaviorSubject<Map<number, EnhancedBookingNotification>>(
