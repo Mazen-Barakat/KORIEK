@@ -19,19 +19,19 @@ import {
   providedIn: 'root',
 })
 export class WorkshopProfileService {
-  private apiUrl = 'https://korik-demo.runasp.net/api/Workshop';
+  private apiUrl = 'https://localhost:44316/Workshop';
 
   // WorkShopProfile endpoints (separate controller)
-  private profileApiBase = 'https://korik-demo.runasp.net/api/WorkShopProfile';
+  private profileApiBase = 'https://localhost:44316/WorkShopProfile';
 
   // Category API endpoint
-  private categoryApiUrl = 'https://korik-demo.runasp.net/api/Category';
+  private categoryApiUrl = 'https://localhost:44316/Category';
 
   // Subcategory API endpoint
-  private subcategoryApiUrl = 'https://korik-demo.runasp.net/api/Subcategory';
+  private subcategoryApiUrl = 'https://localhost:44316/Subcategory';
 
   // Service API endpoint
-  private serviceApiUrl = 'https://korik-demo.runasp.net/api/Service';
+  private serviceApiUrl = 'https://localhost:44316/Service';
 
   // Cache for categories, subcategories, and services
   private categoriesCache$?: Observable<CategoryAPIResponse>;

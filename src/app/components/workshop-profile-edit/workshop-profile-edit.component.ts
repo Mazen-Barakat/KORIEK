@@ -101,7 +101,7 @@ export class WorkshopProfileEditComponent
   uploadError: string = '';
 
   // Backend base URL used to build absolute image URLs when backend returns relative paths
-  private readonly backendBaseUrl = 'https://korik-demo.runasp.net';
+  private readonly backendBaseUrl = 'https://localhost:44316';
 
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   private readonly STORAGE_KEY = 'workshop_profile_data';
