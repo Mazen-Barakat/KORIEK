@@ -130,7 +130,7 @@ export class AdminDashboardComponent implements OnInit {
   selectedWorkshop: WorkshopProfile | null = null;
   isDetailModalOpen: boolean = false;
 
-  private baseUrl = 'https://korik-demo.runasp.net/api';
+  private baseUrl = 'https://localhost:44316/api';
 
   constructor(
     private authService: AuthService,
@@ -647,7 +647,7 @@ export class AdminDashboardComponent implements OnInit {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    return `https://korik-demo.runasp.net${path.startsWith('/') ? path : '/' + path}`;
+    return `https://localhost:44316${path.startsWith('/') ? path : '/' + path}`;
   }
 
   formatCurrency(amount: number): string {

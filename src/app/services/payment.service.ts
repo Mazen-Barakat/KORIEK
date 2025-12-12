@@ -13,7 +13,7 @@ import {
   providedIn: 'root',
 })
 export class PaymentService {
-  private readonly API_URL = 'https://localhost:44316/Payment';
+  private readonly API_URL = 'https://localhost:44316/api/Payment';
 
   // Subject to track payment flow state
   private paymentFlowSubject = new BehaviorSubject<{

@@ -1,4 +1,11 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  ElementRef,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AddVehicleFormComponent } from '../add-vehicle-form/add-vehicle-form.component';
@@ -125,7 +132,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   expenseTypes: ExpenseType[] = ['Fuel', 'Maintenance', 'Repair', 'Insurance', 'Other'];
   welcomeMessage: string = '';
   aiInputText: string = '';
-  
+
   // AI Assistant properties
   aiMessages: AIMessage[] = [];
   isAILoading = false;
@@ -135,7 +142,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   private aiSubscription: Subscription | null = null;
   private typingSubscription: Subscription | null = null;
   @ViewChild('chatMessagesContainer') chatMessagesContainer!: ElementRef;
-  
+
   tips: Tip[] = [];
   loadingTips = false;
   showTipModal = false;
@@ -208,16 +215,16 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     this.loadLocalBookingCreationTimes();
     this.loadVehiclesFromBackend();
     this.checkAndLoadTips();
-    
+
     // Subscribe to AI messages
-    this.aiSubscription = this.aiAssistantService.messages$.subscribe(messages => {
+    this.aiSubscription = this.aiAssistantService.messages$.subscribe((messages) => {
       this.aiMessages = messages;
       this.cdr.detectChanges();
       this.scrollToLatestMessage();
     });
-    
+
     // Subscribe to typing indicator
-    this.typingSubscription = this.aiAssistantService.isTyping$.subscribe(isTyping => {
+    this.typingSubscription = this.aiAssistantService.isTyping$.subscribe((isTyping) => {
       this.isAITyping = isTyping;
       this.cdr.detectChanges();
     });
@@ -225,7 +232,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopCancelButtonUpdateInterval();
-    
+
     // Clean up AI subscriptions
     if (this.aiSubscription) {
       this.aiSubscription.unsubscribe();
@@ -320,7 +327,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
             response.data.picture ||
             response.data.avatar;
           // Backend host used for serving uploaded files
-          const backendHost = 'https://korik-demo.runasp.net';
+          const backendHost = 'https://localhost:44316';
           if (candidate && typeof candidate === 'string') {
             // If the returned path is relative (starts with '/'), prefix backend host
             if (candidate.startsWith('/')) {
@@ -930,10 +937,10 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     console.log('AI Assistant action:', action);
 
     const prompts: { [key: string]: string } = {
-      'maintenance': 'Help me schedule a maintenance service for my vehicle',
-      'tips': 'Give me maintenance tips for my vehicles',
-      'diagnostics': 'Check diagnostics for all my vehicles',
-      'history': 'Show me my maintenance history'
+      maintenance: 'Help me schedule a maintenance service for my vehicle',
+      tips: 'Give me maintenance tips for my vehicles',
+      diagnostics: 'Check diagnostics for all my vehicles',
+      history: 'Show me my maintenance history',
     };
 
     this.aiInputText = prompts[action] || '';
@@ -962,7 +969,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
         this.aiError = 'Failed to get response. Please try again.';
         console.error('AI Error:', error);
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -990,7 +997,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     return new Date(date).toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
     });
   }
 
@@ -1645,7 +1652,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     this.cancellingBookingIds.add(booking.id);
     this.cdr.detectChanges();
 
-    const apiUrl = 'https://korik-demo.runasp.net/api';
+    const apiUrl = 'https://localhost:44316/api';
     this.bookingService.http
       .put(`${apiUrl}/Booking/Update-Booking-Status`, {
         id: booking.id,
@@ -1696,7 +1703,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const apiUrl = 'https://korik-demo.runasp.net/api';
+    const apiUrl = 'https://localhost:44316/api';
     const notificationPayload = {
       workshopProfileId: booking.workshopId,
       bookingId: booking.id,
@@ -1809,7 +1816,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   private fetchServiceName(booking: UpcomingBooking): void {
     if (!booking.workshopServiceId) return;
 
-    const apiUrl = 'https://korik-demo.runasp.net/api';
+    const apiUrl = 'https://localhost:44316/api';
 
     // First, get the workshopService to extract serviceId
     this.bookingService.http

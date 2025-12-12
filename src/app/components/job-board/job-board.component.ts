@@ -57,7 +57,7 @@ interface CarOwnerProfile {
 })
 export class JobBoardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private apiUrl = 'https://korik-demo.runasp.net/api';
+  private apiUrl = 'https://localhost:44316/api';
   // Retry control for defensive re-loading when initial load returns empty
   private tryLoadRetries = 0;
   private readonly maxLoadRetries = 3;
@@ -340,7 +340,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
                       'Unknown Customer'
                     : 'Unknown Customer',
                   customerAvatar: carOwner?.profileImageUrl
-                    ? `https://korik-demo.runasp.net${carOwner.profileImageUrl}`
+                    ? `https://localhost:44316${carOwner.profileImageUrl}`
                     : undefined,
                   carMake: carData?.make || 'Unknown',
                   carModel: carData?.model || 'Unknown',

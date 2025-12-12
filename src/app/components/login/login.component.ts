@@ -105,7 +105,7 @@ export class LoginComponent implements OnInit {
       password: this.loginForm.value.password,
     };
 
-    this.http.post('https://korik-demo.runasp.net/api/Account/Login', loginData).subscribe({
+    this.http.post('https://localhost:44316/api/Account/Login', loginData).subscribe({
       next: (response: any) => {
         console.log('Login response:', response);
         this.isLoading = false;
@@ -193,24 +193,22 @@ export class LoginComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.http
-      .post('https://korik-demo.runasp.net/api/Account/ForgotPassword', { email })
-      .subscribe({
-        next: () => {
-          this.isLoading = false;
-          this.successMessage = 'A password reset link has been sent to your email.';
-          this.cdr.detectChanges(); // Force UI update
-        },
-        error: (error: any) => {
-          this.isLoading = false;
-          if (error.error && error.error.message) {
-            this.errorMessage = error.error.message;
-          } else {
-            this.errorMessage = 'Unable to process your request. Please try again later.';
-          }
-          this.cdr.detectChanges(); // Force UI update
-        },
-      });
+    this.http.post('https://localhost:44316/api/Account/ForgotPassword', { email }).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.successMessage = 'A password reset link has been sent to your email.';
+        this.cdr.detectChanges(); // Force UI update
+      },
+      error: (error: any) => {
+        this.isLoading = false;
+        if (error.error && error.error.message) {
+          this.errorMessage = error.error.message;
+        } else {
+          this.errorMessage = 'Unable to process your request. Please try again later.';
+        }
+        this.cdr.detectChanges(); // Force UI update
+      },
+    });
   }
 
   // Helper method for template
@@ -349,7 +347,7 @@ export class LoginComponent implements OnInit {
 
     console.log('Sending Google login request with payload:', payload);
 
-    this.http.post('https://korik-demo.runasp.net/api/Account/Google-login', payload).subscribe({
+    this.http.post('https://localhost:44316/api/Account/Google-login', payload).subscribe({
       next: (res: any) => {
         this.isLoading = false;
         console.log('Google sign-in response:', res);

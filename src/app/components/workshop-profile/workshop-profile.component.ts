@@ -200,7 +200,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
         this.workshopId = data.id.toString();
 
         // Load additional data in parallel using forkJoin
-        const photosUrl = `https://localhost:44316/WorkShopPhoto/${data.id}`;
+        const photosUrl = `https://localhost:44316/api/WorkShopPhoto/${data.id}`;
 
         const photosRequest = this.http.get(photosUrl).pipe(
           timeout(5000), // 5 second timeout
@@ -295,7 +295,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   loadReviews(workshopId: number): void {
     this.isLoadingReviews = true;
-    const reviewsUrl = `https://korik-demo.runasp.net/api/Review/all-Review/${workshopId}`;
+    const reviewsUrl = `https://localhost:44316/api/Review/all-Review/${workshopId}`;
 
     this.http
       .get<any>(reviewsUrl)
@@ -360,7 +360,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   getFullImageUrl(url: string): string {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `https://korik-demo.runasp.net${url.startsWith('/') ? '' : '/'}${url}`;
+    return `https://localhost:44316${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
   getStarArray(rating: number): number[] {
@@ -479,7 +479,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    const baseUrl = 'https://korik-demo.runasp.net';
+    const baseUrl = 'https://localhost:44316';
     return `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
   }
 

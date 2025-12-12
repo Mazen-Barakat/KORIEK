@@ -155,7 +155,7 @@ interface RatingBar {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkshopDetailsComponent implements OnInit, OnDestroy {
-  private readonly API_BASE_URL = 'https://localhost:44316/';
+  private readonly API_BASE_URL = 'https://localhost:44316/api';
 
   workshop: WorkshopDetails | null = null;
   workshopServices: WorkshopService[] = [];
@@ -484,7 +484,7 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
   private getFullImageUrl(url: string | null): string {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `https://korik-demo.runasp.net${url}`;
+    return `https://localhost:44316${url}`;
   }
 
   private checkIfOpen(workingHours: WorkingHours[]): boolean {

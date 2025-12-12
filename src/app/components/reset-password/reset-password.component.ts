@@ -87,10 +87,10 @@ export class ResetPasswordComponent implements OnInit {
     console.log('Token from URL:', this.token);
     console.log('New Password:', this.form.value.newPassword);
     console.log('Complete Payload:', JSON.stringify(payload, null, 2));
-    console.log('Endpoint:', 'https://localhost:44316/Account/ResetPassword');
+    console.log('Endpoint:', 'https://localhost:44316/api/Account/ResetPassword');
 
     this.http
-      .post('https://localhost:44316/Account/ResetPassword', payload, {
+      .post('https://localhost:44316/api/Account/ResetPassword', payload, {
         headers: {
           'Content-Type': 'application/json',
         },

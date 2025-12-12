@@ -10,7 +10,7 @@ import { Service, ServiceResponse } from '../models/service.model';
   providedIn: 'root',
 })
 export class CategoryService {
-  private readonly apiBase = 'https://localhost:44316/';
+  private readonly apiBase = 'https://localhost:44316/api';
   private categoriesCache$?: Observable<Category[]>;
   private subcategoriesCache: Map<number, Observable<Subcategory[]>> = new Map();
   private servicesCache: Map<number, Observable<Service[]>> = new Map();

@@ -15,7 +15,7 @@ import {
   providedIn: 'root',
 })
 export class EnhancedBookingService {
-  private apiUrl = 'https://localhost:44316/';
+  private apiUrl = 'https://localhost:44316/api';
 
   // Store bookings with precise timing
   private bookingsSubject = new BehaviorSubject<Map<number, EnhancedBookingNotification>>(

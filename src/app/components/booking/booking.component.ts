@@ -203,7 +203,7 @@ export class BookingComponent implements OnInit {
   readonly CAIRO_TIMEZONE = 'Africa/Cairo';
 
   // API base URL for images
-  private readonly API_BASE_URL = 'https://korik-demo.runasp.net';
+  private readonly API_BASE_URL = 'https://localhost:44316';
 
   // Month names
   readonly MONTH_NAMES = [

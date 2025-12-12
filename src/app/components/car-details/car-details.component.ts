@@ -176,8 +176,8 @@ export class CarDetailsComponent implements OnInit {
   isLoadingServiceHistory = false;
   serviceHistoryError = '';
 
-  private apiUrl = 'https://korik-demo.runasp.net/api/CarIndicator/car';
-  private bookingApiUrl = 'https://korik-demo.runasp.net/api/Booking';
+  private apiUrl = 'https://localhost:44316/api/CarIndicator/car';
+  private bookingApiUrl = 'https://localhost:44316/api/Booking';
   private pendingFragment: string | null = null;
 
   constructor(

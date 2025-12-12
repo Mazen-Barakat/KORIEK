@@ -56,7 +56,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   ) {}
 
   // API base used for direct booking status updates from notification actions
-  private readonly apiUrl = 'https://korik-demo.runasp.net/api';
+  private readonly apiUrl = 'https://localhost:44316/api';
 
   /**
    * Handle a notification action button click (e.g., Confirm/Decline for booking)
