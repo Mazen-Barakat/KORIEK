@@ -1,5 +1,5 @@
 .car-details-page {
-  padding: 3rem 2.5rem;
+  padding: 2rem 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
@@ -160,6 +160,11 @@
   font-weight: 600;
   color: #1f2937;
   letter-spacing: -0.025em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  flex: 1;
 }
 
 /* Mini Egyptian License Plate */
@@ -2610,22 +2615,131 @@
   color: #16a34a;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Responsive Design - Mobile First */
+/* Small Mobile (320px - 374px) */
+@media (max-width: 374px) {
+  .car-details-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .title-section h1 {
+    font-size: 1.25rem;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+  }
+
   .analytics-row {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
   .quick-stats {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
   .insights-row {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
   .total-breakdown {
     flex-direction: column;
+    gap: 1rem;
+  }
+
+  .breakdown-divider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .breakdown-bar-header {
+    min-width: 100px;
+    font-size: 0.875rem;
+  }
+}
+
+/* Standard Mobile (375px - 575px) */
+@media (min-width: 375px) and (max-width: 575px) {
+  .car-details-page {
+    padding: 1.25rem 1rem;
+  }
+
+  .title-section h1 {
+    font-size: 1.375rem;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .brand-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .analytics-row {
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+
+  .quick-stats {
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+
+  .insights-row {
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+
+  .total-breakdown {
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .breakdown-divider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .breakdown-bar-header {
+    min-width: 110px;
+  }
+}
+
+/* Tablet Portrait (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .car-details-page {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .title-section h1 {
+    font-size: 1.5rem;
+    white-space: normal;
+  }
+
+  .analytics-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .insights-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .total-breakdown {
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   .breakdown-divider {
@@ -2635,6 +2749,57 @@
 
   .breakdown-bar-header {
     min-width: 120px;
+  }
+}
+
+/* Tablet Landscape (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .car-details-page {
+    padding: 2rem 1.5rem;
+  }
+
+  .title-section h1 {
+    font-size: 1.75rem;
+  }
+
+  .analytics-row {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  .insights-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  .total-breakdown {
+    flex-direction: row;
+    gap: 2rem;
+  }
+
+  .breakdown-divider {
+    width: 1px;
+    height: 100%;
+  }
+
+  .breakdown-bar-header {
+    min-width: 130px;
+  }
+}
+
+/* Desktop (992px+) */
+@media (min-width: 992px) {
+  .car-details-page {
+    padding: 2.5rem 2rem;
+  }
+
+  .title-section h1 {
+    font-size: 1.875rem;
   }
 }
 
@@ -3577,22 +3742,34 @@
   }
 }
 
-@media (max-width: 640px) {
-  .car-details-page {
-    padding: 1rem;
-  }
-
+/* Mobile Optimizations (max-width: 767px) */
+@media (max-width: 767px) {
   .header-section {
     flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .title-section {
+    width: 100%;
+    order: 1;
   }
 
   .title-section h1 {
-    font-size: 1.5rem;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
   }
 
   .edit-btn {
     width: 100%;
     justify-content: center;
+    order: 2;
+  }
+
+  .back-btn {
+    width: 100%;
+    justify-content: center;
+    order: 0;
   }
 
   .info-grid,
@@ -3606,11 +3783,13 @@
 
   .quick-actions-bar {
     flex-direction: column;
+    gap: 0.75rem;
   }
 
   .action-btn {
     width: 100%;
     justify-content: center;
+    min-height: 48px;
   }
 
   .summary-overview {
@@ -4570,6 +4749,17 @@
 
 /* Responsive Design for New Features */
 @media (max-width: 768px) {
+  /* Add Indicator Button - Tablet/Mobile */
+  .add-indicator-btn {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  .add-indicator-btn .plus-icon {
+    font-size: 0.95rem;
+    margin-right: 0.4rem;
+  }
+
   .indicators-compact-grid {
     grid-template-columns: 1fr;
   }
@@ -4689,6 +4879,48 @@
 .add-expense-btn:hover {
   background: #dc2626;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+/* Add Expense Button - Responsive */
+@media (max-width: 768px) {
+  .add-expense-btn {
+    padding: 0.625rem 1.125rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-expense-btn {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .add-indicator-btn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .add-indicator-btn .plus-icon {
+    font-size: 0.9rem;
+    margin-right: 0.35rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .add-expense-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .add-indicator-btn {
+    padding: 0.4rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .add-indicator-btn .plus-icon {
+    font-size: 0.85rem;
+    margin-right: 0.3rem;
+  }
 }
 
 .expense-list {

@@ -978,22 +978,86 @@ h2 {
   animation-fill-mode: backwards;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
+/* ============================================
+   RESPONSIVE DESIGN - Standardized Breakpoints
+   ============================================ */
+
+/* XL - Extra Large Desktop (1200px+) */
+@media (min-width: 1200px) {
+  .login-container {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .login-card {
+    max-width: 520px;
+  }
+}
+
+/* LG - Large Desktop/Laptop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .login-card {
+    max-width: 500px;
+  }
+}
+
+/* Tablet/Laptop - (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
   .login-container {
     padding: 20px;
   }
 
   .login-card {
-    padding: 30px 24px;
+    padding: 70px 24px 32px;
+    max-width: 100%;
+  }
+
+  .back-btn {
+    top: 16px;
+    left: 16px;
   }
 
   h2 {
-    font-size: 1.8rem;
+    font-size: 1.9rem;
+    margin-top: 10px;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .success-popup {
+    padding: 35px 40px;
+    margin: 0 24px;
+  }
+}
+
+/* MD - Mobile Landscape/Small Tablet (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .login-container {
+    padding: 18px;
+  }
+
+  .login-card {
+    padding: 68px 22px 30px;
+    max-width: 100%;
+  }
+
+  .back-btn {
+    top: 16px;
+    left: 16px;
+    padding: 8px 14px;
+    font-size: 0.875rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+    margin-top: 10px;
   }
 
   .subtitle {
     font-size: 0.95rem;
+    margin-bottom: 25px;
   }
 
   .success-popup {
@@ -1011,24 +1075,152 @@ h2 {
     height: 60px;
   }
 
-  .role-icon {
-    width: 28px;
-    height: 28px;
-  }
-
-  .car-icon {
-    width: 32px;
-    height: 32px;
-  }
-
   .form-row {
     flex-direction: column;
-    align-items: flex-start;
     gap: 12px;
   }
 
   .remember-me {
     width: 100%;
+  }
+
+  .role-badge {
+    margin-bottom: 25px;
+  }
+
+  .role-badge-content {
+    gap: 15px;
+    flex-direction: column;
+  }
+}
+
+/* SM - Small Mobile (375px - 575px) */
+@media (min-width: 375px) and (max-width: 575px) {
+  .login-container {
+    padding: 14px;
+  }
+
+  .login-card {
+    padding: 66px 20px 28px;
+    border-radius: 16px;
+  }
+
+  .back-btn {
+    top: 14px;
+    left: 14px;
+    padding: 7px 13px;
+    font-size: 0.8125rem;
+    gap: 6px;
+  }
+
+  .back-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+    margin-top: 8px;
+    margin-bottom: 10px;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 22px;
+  }
+
+  .login-btn,
+  .google-btn {
+    padding: 14px 20px;
+    font-size: 0.9375rem;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .success-popup {
+    padding: 28px 28px;
+    margin: 0 16px;
+  }
+
+  .role-badge-content {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .role-text {
+    text-align: center;
+  }
+}
+
+/* XS - Extra Small Mobile (0 - 374px) - Default Base */
+@media (max-width: 374px) {
+  .login-container {
+    padding: 12px;
+  }
+
+  .login-card {
+    padding: 64px 16px 26px;
+    border-radius: 14px;
+  }
+
+  .back-btn {
+    top: 12px;
+    left: 12px;
+    padding: 6px 11px;
+    font-size: 0.75rem;
+    gap: 5px;
+  }
+
+  .back-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    margin-top: 6px;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 0.8125rem;
+    margin-bottom: 18px;
+  }
+
+  .login-btn,
+  .google-btn {
+    padding: 13px 18px;
+    font-size: 0.875rem;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .input-wrapper input {
+    font-size: 14px;
+  }
+
+  .success-popup {
+    padding: 24px 20px;
+    margin: 0 12px;
+  }
+
+  .role-badge-content {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .spinner-container {
+    width: 70px;
+    height: 70px;
+  }
+
+  .role-icon-wrapper {
+    width: 55px;
+    height: 55px;
   }
 }
 

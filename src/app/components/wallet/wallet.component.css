@@ -401,3 +401,56 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+  .section-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .filter-tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 575px) {
+  .section-header-row {
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .filter-tabs {
+    width: 100%;
+    gap: 6px;
+    padding: 3px;
+  }
+
+  .filter-tab {
+    flex: 1;
+    padding: 9px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+}
+
+@media (max-width: 374px) {
+  .filter-tabs {
+    gap: 4px;
+    padding: 3px;
+  }
+
+  .filter-tab {
+    padding: 8px 8px;
+    font-size: 11px;
+  }
+}

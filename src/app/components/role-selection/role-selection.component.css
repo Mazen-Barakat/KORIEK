@@ -357,31 +357,215 @@ h1 {
   min-height: 50px;
 }
 
-@media (max-width: 768px) {
+/* ============================================
+   RESPONSIVE DESIGN - Standardized Breakpoints
+   ============================================ */
+
+/* XL - Extra Large (min-width: 1200px) */
+@media (min-width: 1200px) {
+  .role-selection-container {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
   .role-selection-card {
+    max-width: 900px;
+  }
+}
+
+/* LG - Large (min-width: 992px and max-width: 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .role-selection-card {
+    max-width: 850px;
+  }
+
+  .roles-grid {
+    gap: 28px;
+  }
+}
+
+/* Tablet (min-width: 768px and max-width: 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .role-selection-container {
     padding: 30px 20px;
+  }
+
+  .role-selection-card {
+    padding: 40px 30px;
+    max-width: 100%;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+  }
+
+  .roles-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .role-card {
+    padding: 28px;
+    min-height: 48px;
+  }
+}
+
+/* MD - Medium (min-width: 576px and max-width: 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .role-selection-container {
+    padding: 20px 16px;
+  }
+
+  .role-selection-card {
+    padding: 35px 25px;
   }
 
   h1 {
     font-size: 2rem;
   }
 
+  .subtitle {
+    font-size: 1rem;
+    margin-bottom: 30px;
+  }
+
   .roles-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
   }
 
   .role-card {
-    padding: 25px;
+    padding: 24px 20px;
+    min-height: 48px;
+  }
+
+  .role-icon {
+    width: 65px;
+    height: 65px;
+    margin-bottom: 18px;
+  }
+
+  .role-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .role-title {
+    font-size: 1.35rem;
+  }
+
+  .role-description {
+    font-size: 0.95rem;
+    min-height: 45px;
+  }
+}
+
+/* SM - Small (min-width: 375px and max-width: 575px) */
+@media (min-width: 375px) and (max-width: 575px) {
+  .role-selection-container {
+    padding: 16px 12px;
+  }
+
+  .role-selection-card {
+    padding: 30px 18px;
+    border-radius: 16px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    margin-bottom: 10px;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 25px;
+  }
+
+  .roles-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .role-card {
+    padding: 24px 18px;
+    min-height: 48px;
   }
 
   .role-icon {
     width: 60px;
     height: 60px;
+    margin-bottom: 16px;
   }
 
   .role-icon svg {
     width: 30px;
     height: 30px;
   }
+
+  .role-title {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+  }
+
+  .role-description {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    min-height: auto;
+  }
 }
+
+/* XS - Extra Small (max-width: 374px) */
+@media (max-width: 374px) {
+  .role-selection-container {
+    padding: 14px 10px;
+  }
+
+  .role-selection-card {
+    padding: 26px 14px;
+    border-radius: 14px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+  }
+
+  .roles-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .role-card {
+    padding: 20px 14px;
+    min-height: 48px;
+  }
+
+  .role-icon {
+    width: 55px;
+    height: 55px;
+    margin-bottom: 14px;
+  }
+
+  .role-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .role-title {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+
+  .role-description {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    min-height: auto;

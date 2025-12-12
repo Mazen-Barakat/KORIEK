@@ -221,12 +221,12 @@
 }
 
 .new-header .column-title {
-  color: #ed8936;
+  color: #f59e0b;
 }
 
 .new-header .column-count {
-  background: linear-gradient(145deg, rgba(237, 137, 54, 0.08), rgba(237, 137, 54, 0.04));
-  color: #c05621;
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+  color: #d97706;
 }
 
 .upcoming-header {
@@ -234,12 +234,12 @@
 }
 
 .upcoming-header .column-title {
-  color: #f687b3;
+  color: #ec4899;
 }
 
 .upcoming-header .column-count {
-  background: linear-gradient(145deg, rgba(246, 135, 179, 0.08), rgba(246, 135, 179, 0.04));
-  color: #eb2a5a;
+  background: linear-gradient(145deg, rgba(236, 72, 153, 0.1), rgba(236, 72, 153, 0.05));
+  color: #db2777;
 }
 
 .inprogress-header {
@@ -247,13 +247,13 @@
 }
 
 .inprogress-header .column-title {
-  color: #e53e3e;
+  color: #ef4444;
 }
 
 .inprogress-header .column-count {
-  background: linear-gradient(145deg, rgba(229, 62, 62, 0.08), rgba(229, 62, 62, 0.04));
-  color: #c53030;
-  box-shadow: 2px 2px 6px rgba(229, 62, 62, 0.1), -1px -1px 4px rgba(255, 255, 255, 0.7);
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+  color: #dc2626;
+  box-shadow: 2px 2px 6px rgba(239, 68, 68, 0.08), -1px -1px 4px rgba(255, 255, 255, 0.7);
 }
 
 .ready-header {
@@ -261,12 +261,12 @@
 }
 
 .ready-header .column-title {
-  color: #38a169;
+  color: #10b981;
 }
 
 .ready-header .column-count {
-  background: linear-gradient(145deg, rgba(56, 161, 105, 0.08), rgba(56, 161, 105, 0.04));
-  color: #22543d;
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+  color: #059669;
 }
 
 .completed-header {
@@ -274,12 +274,12 @@
 }
 
 .completed-header .column-title {
-  color: #718096;
+  color: #6366f1;
 }
 
 .completed-header .column-count {
-  background: linear-gradient(145deg, rgba(113, 128, 150, 0.08), rgba(113, 128, 150, 0.04));
-  color: #4a5568;
+  background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
+  color: #4f46e5;
 }
 
 /* Column Content */
@@ -1358,7 +1358,7 @@
 }
 
 .urgency-icon {
-  flex-shrink: 0;
+  display: none !important;
 }
 
 .urgency-icon.urgency-urgent {

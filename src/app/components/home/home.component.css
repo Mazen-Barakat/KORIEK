@@ -149,7 +149,59 @@
   line-height: 1.6;
 }
 
-@media (max-width: 768px) {
+/* ============================================
+   RESPONSIVE DESIGN - Standardized Breakpoints
+   ============================================ */
+
+/* XL - Extra Large (min-width: 1200px) */
+@media (min-width: 1200px) {
+  .features-preview {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .features-grid {
+    gap: 2.5rem;
+  }
+}
+
+/* LG - Large (min-width: 992px and max-width: 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .features-preview {
+    padding: 4rem 2rem;
+  }
+
+  .features-grid {
+    gap: 2rem;
+  }
+}
+
+/* Tablet (min-width: 768px and max-width: 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .hero-title {
+    font-size: 3rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.3rem;
+  }
+
+  .features-preview h2 {
+    font-size: 2.2rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.8rem;
+  }
+
+  .btn {
+    min-height: 48px;
+  }
+}
+
+/* MD - Medium (min-width: 576px and max-width: 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
   .hero-title {
     font-size: 2.5rem;
   }
@@ -160,5 +212,106 @@
 
   .features-preview h2 {
     font-size: 2rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .feature-card {
+    padding: 1.8rem;
+  }
+
+  .btn {
+    min-height: 48px;
+  }
+}
+
+/* SM - Small (min-width: 375px and max-width: 575px) */
+@media (min-width: 375px) and (max-width: 575px) {
+  .hero-title {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .features-preview {
+    padding: 2.5rem 1rem;
+  }
+
+  .features-preview h2 {
+    font-size: 1.75rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.25rem;
+  }
+
+  .feature-card p {
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    min-height: 48px;
+  }
+}
+
+/* XS - Extra Small (max-width: 374px) */
+@media (max-width: 374px) {
+  .hero-title {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .features-preview {
+    padding: 2rem 0.75rem;
+  }
+
+  .features-preview h2 {
+    font-size: 1.5rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feature-card {
+    padding: 1.25rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .feature-card p {
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    padding: 0.875rem 2rem;
+    font-size: 0.9rem;
+    min-height: 48px;
+  }
+
+  .hero-actions {
+    gap: 12px;
   }
 }
