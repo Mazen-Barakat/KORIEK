@@ -34,6 +34,14 @@ export class ProfileService {
   constructor(private http: HttpClient) {}
 
   /**
+   * Allow other parts of the app to set the profile picture programmatically
+   * (useful for workshop owners whose image comes from a different API).
+   */
+  setProfilePicture(fullUrl: string | null) {
+    this.profileDataSubject.next({ profilePicture: fullUrl });
+  }
+
+  /**
    * Fetch user profile data
    */
   getProfile(): Observable<ProfileResponse> {

@@ -205,6 +205,59 @@ export class BookingService {
   }
 
   /**
+   * Calculate total revenue for a workshop from all bookings
+   * Logic: Sum all PaidAmount values for bookings and multiply by 0.88 (workshop's share)
+   */
+  calculateWorkshopRevenue(workshopId: number): Observable<number> {
+    return this.getBookingsByWorkshop(workshopId).pipe(
+      map((bookings: BookingResponse[]) => {
+        // Sum all PaidAmount values
+        const totalPaidAmount = bookings.reduce((sum, booking) => {
+          return sum + (booking.paidAmount || 0);
+        }, 0);
+
+        // Apply workshop's 88% share (12% platform commission)
+        const workshopRevenue = totalPaidAmount * 0.88;
+
+        return workshopRevenue;
+      }),
+      catchError((err) => {
+        console.error('Error calculating workshop revenue:', err);
+        return of(0);
+      })
+    );
+  }
+
+  /**
+   * Calculate pending payouts for a workshop
+   * Logic: Filter bookings with PaymentMethod = "CreditCard", sum PaidAmount values, multiply by 0.88
+   */
+  calculateWorkshopPendingPayouts(workshopId: number): Observable<number> {
+    return this.getBookingsByWorkshop(workshopId).pipe(
+      map((bookings: BookingResponse[]) => {
+        // Filter bookings with PaymentMethod = "CreditCard"
+        const creditCardBookings = bookings.filter(
+          booking => booking.paymentMethod === 'CreditCard'
+        );
+
+        // Sum all PaidAmount values for credit card bookings
+        const totalPaidAmount = creditCardBookings.reduce((sum, booking) => {
+          return sum + (booking.paidAmount || 0);
+        }, 0);
+
+        // Apply workshop's 88% share (12% platform commission)
+        const workshopPayout = totalPaidAmount * 0.88;
+
+        return workshopPayout;
+      }),
+      catchError((err) => {
+        console.error('Error calculating workshop pending payouts:', err);
+        return of(0);
+      })
+    );
+  }
+
+  /**
    * Get car owner profile by booking ID
    */
   getCarOwnerProfileByBooking(bookingId: number): Observable<any> {

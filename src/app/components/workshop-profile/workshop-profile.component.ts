@@ -295,7 +295,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   loadReviews(workshopId: number): void {
     this.isLoadingReviews = true;
-    const reviewsUrl = `https://korik-demo.runasp.net/api/Review/all-Review/${workshopId}`;
+    const reviewsUrl = `https://localhost:44316/api/Review/all-Review/${workshopId}`;
 
     this.http
       .get<any>(reviewsUrl)
@@ -479,7 +479,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    const baseUrl = 'https://korik-demo.runasp.net';
+    const baseUrl = 'https://localhost:44316';
     return `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
   }
 

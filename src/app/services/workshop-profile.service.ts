@@ -149,7 +149,7 @@ export class WorkshopProfileService {
    */
   getWorkshopWorkingHours(workshopId: number): Observable<WorkShopWorkingHoursAPI[]> {
     return this.http
-      .get<any>(`https://korik-demo.runasp.net/api/WorkShopWorkingHours/workshop/${workshopId}`)
+      .get<any>(`https://localhost:44316/api/WorkShopWorkingHours/workshop/${workshopId}`)
       .pipe(
         map((response: any) => {
           // Handle response that might be wrapped in data property
@@ -163,7 +163,7 @@ export class WorkshopProfileService {
    * Create working hours for a workshop
    */
   createWorkingHours(workingHour: WorkShopWorkingHoursAPI): Observable<any> {
-    return this.http.post('https://korik-demo.runasp.net/api/WorkShopWorkingHours', workingHour);
+    return this.http.post('https://localhost:44316/api/WorkShopWorkingHours', workingHour);
   }
 
   /**
@@ -171,7 +171,7 @@ export class WorkshopProfileService {
    */
   deleteAllWorkingHours(workshopId: number): Observable<any> {
     return this.http.delete(
-      `https://korik-demo.runasp.net/api/WorkShopWorkingHours/workshop/${workshopId}`
+      `https://localhost:44316/api/WorkShopWorkingHours/workshop/${workshopId}`
     );
   }
 
@@ -179,14 +179,14 @@ export class WorkshopProfileService {
    * Delete individual working hour by ID
    */
   deleteWorkingHour(id: number): Observable<any> {
-    return this.http.delete(`https://korik-demo.runasp.net/api/WorkShopWorkingHours/${id}`);
+    return this.http.delete(`https://localhost:44316/api/WorkShopWorkingHours/${id}`);
   }
 
   /**
    * Update working hours for a workshop
    */
   updateWorkshopWorkingHours(workingHours: WorkShopWorkingHoursAPI[]): Observable<any> {
-    return this.http.put('https://korik-demo.runasp.net/api/WorkShopWorkingHours', workingHours);
+    return this.http.put('https://localhost:44316/api/WorkShopWorkingHours', workingHours);
   }
 
   /**
@@ -250,7 +250,7 @@ export class WorkshopProfileService {
       form.append('Photos', image, image.name);
     });
 
-    return this.http.post(`https://korik-demo.runasp.net/api/WorkShopPhoto`, form);
+    return this.http.post(`https://localhost:44316/api/WorkShopPhoto`, form);
   }
 
   /**
@@ -264,7 +264,7 @@ export class WorkshopProfileService {
     form.append('WorkShopProfileId', String(workShopProfileId));
     images.forEach((image) => form.append('Photos', image, image.name));
 
-    return this.http.post(`https://korik-demo.runasp.net/api/WorkShopPhoto`, form, {
+    return this.http.post(`https://localhost:44316/api/WorkShopPhoto`, form, {
       reportProgress: true,
       observe: 'events',
     });
@@ -274,14 +274,14 @@ export class WorkshopProfileService {
    * Get all photos for a workshop profile
    */
   getWorkShopPhotos(workShopProfileId: number | string): Observable<any> {
-    return this.http.get(`https://korik-demo.runasp.net/api/WorkShopPhoto/${workShopProfileId}`);
+    return this.http.get(`https://localhost:44316/api/WorkShopPhoto/${workShopProfileId}`);
   }
 
   /**
    * Delete a workshop photo by its ID
    */
   deleteWorkShopPhotoById(photoId: number): Observable<any> {
-    return this.http.delete(`https://korik-demo.runasp.net/api/WorkShopPhoto/${photoId}`);
+    return this.http.delete(`https://localhost:44316/api/WorkShopPhoto/${photoId}`);
   }
 
   /**
@@ -534,7 +534,7 @@ export class WorkshopProfileService {
     params.set('PageNumber', String(options?.pageNumber ?? 1));
     params.set('PageSize', String(options?.pageSize ?? 10));
 
-    const url = `https://korik-demo.runasp.net/api/WorkshopService/Search-Workshops-By-Service-And-Origin?${params.toString()}`;
+    const url = `https://localhost:44316/api/WorkshopService/Search-Workshops-By-Service-And-Origin?${params.toString()}`;
 
     console.log('Workshop search URL:', url);
 

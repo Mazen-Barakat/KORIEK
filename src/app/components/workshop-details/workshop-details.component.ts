@@ -484,7 +484,7 @@ export class WorkshopDetailsComponent implements OnInit, OnDestroy {
   private getFullImageUrl(url: string | null): string {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `https://korik-demo.runasp.net${url}`;
+    return `https://localhost:44316${url}`;
   }
 
   private checkIfOpen(workingHours: WorkingHours[]): boolean {

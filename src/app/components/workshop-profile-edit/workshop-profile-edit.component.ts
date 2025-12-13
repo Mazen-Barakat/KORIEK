@@ -496,7 +496,7 @@ export class WorkshopProfileEditComponent
     console.log('=== SUBMITTING PROFILE UPDATE (FormData) ===');
     console.log('Original profileData:', this.profileData);
     console.log(
-      'API Endpoint: PUT https://korik-demo.runasp.net/api/WorkShopProfile/Update-WorkShop-Profile'
+      'API Endpoint: PUT https://localhost:44316/api/WorkShopProfile/Update-WorkShop-Profile'
     );
 
     // Send PUT request with FormData

@@ -366,7 +366,7 @@ export class WorkshopsDiscoveryComponent implements OnInit, OnDestroy {
       if (workshop.logoImageUrl.startsWith('http')) {
         return workshop.logoImageUrl;
       }
-      return `https://korik-demo.runasp.net${workshop.logoImageUrl}`;
+      return `https://localhost:44316${workshop.logoImageUrl}`;
     }
     return '';
   }

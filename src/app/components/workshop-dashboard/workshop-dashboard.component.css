@@ -4147,50 +4147,94 @@ button:focus-visible {
 }
 
 /* ============================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN - Standardized Breakpoints
    ============================================ */
 
-@media (max-width: 1400px) {
-  .smart-metrics-grid.four-columns {
-    grid-template-columns: 1fr 1fr;
+/* XL - Extra Large Desktop (1200px+) */
+@media (min-width: 1200px) {
+  .dashboard-page {
+    max-width: 1440px;
+    margin: 0 auto;
   }
 
+  .smart-metrics-grid.four-columns {
+    grid-template-columns: 1.8fr 1fr 1fr 1fr;
+  }
+
+  .smart-metrics-grid.five-columns {
+    grid-template-columns: 1.5fr repeat(4, 1fr);
+  }
+}
+
+/* LG - Large Desktop/Laptop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .dashboard-content {
+    width: 100%;
+  }
+
+  .smart-metrics-grid.four-columns {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+
+  .smart-metrics-grid.five-columns {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Tablet/Laptop - (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .dashboard-page {
+    padding: 20px;
+  }
+
+  .dashboard-header {
+    padding: 24px;
+  }
+
+  .smart-metrics-grid,
+  .smart-metrics-grid.four-columns {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .smart-metrics-grid .metric-card:nth-child(1),
   .smart-metrics-grid.four-columns .metric-card:nth-child(1) {
     grid-column: span 2;
   }
 
   .smart-metrics-grid.five-columns {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .smart-metrics-grid.five-columns .metric-card:nth-child(1) {
-    grid-column: span 3;
-  }
-
-  .smart-metrics-grid.five-columns .metric-card:nth-child(5) {
     grid-column: span 2;
   }
-}
 
-@media (max-width: 1200px) {
-  .dashboard-content {
-    width: 100%;
+  .greeting .title {
+    font-size: 32px;
+  }
+
+  .section-card {
+    padding: 20px;
   }
 }
 
-@media (max-width: 768px) {
+/* MD - Mobile Landscape/Small Tablet (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
   .dashboard-page {
-    padding: 16px;
+    padding: 14px;
   }
 
   .dashboard-header {
-    padding: 16px;
+    padding: 18px 14px;
+    border-radius: 16px;
   }
 
   .smart-metrics-grid,
   .smart-metrics-grid.four-columns,
   .smart-metrics-grid.five-columns {
     grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
 
   .smart-metrics-grid .metric-card:nth-child(1),
@@ -4199,40 +4243,338 @@ button:focus-visible {
     grid-column: span 2;
   }
 
-  .smart-metrics-grid.five-columns .metric-card:nth-child(5) {
-    grid-column: span 2;
+  .metric-card {
+    padding: 18px 14px;
+    border-radius: 14px;
   }
 
   .header-top {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 14px;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+  }
+
+  .greeting .title {
+    font-size: 26px;
+  }
+
+  .greeting .subtitle {
+    font-size: 13px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .export-pdf-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 12px 16px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+
+  .shop-status {
+    flex: 1;
+    min-width: 140px;
+    justify-content: center;
+  }
+
+  .status-text {
+    font-size: 13px;
   }
 
   .actions-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .section-card {
+    padding: 18px 14px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .quick-actions-grid {
+    gap: 10px;
+  }
+
+  .neo-action-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .neo-action-icon {
+    width: 46px;
+    height: 46px;
   }
 }
 
-@media (max-width: 480px) {
+/* SM - Small Mobile (375px - 575px) */
+@media (min-width: 375px) and (max-width: 575px) {
+  .dashboard-page {
+    padding: 12px;
+  }
+
+  .dashboard-header {
+    padding: 16px 12px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+  }
+
   .smart-metrics-grid,
   .smart-metrics-grid.four-columns,
   .smart-metrics-grid.five-columns {
     grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
   }
 
   .smart-metrics-grid .metric-card,
   .smart-metrics-grid.four-columns .metric-card,
   .smart-metrics-grid.five-columns .metric-card {
     grid-column: span 1;
+    padding: 16px 12px;
+    border-radius: 14px;
   }
 
   .greeting .title {
-    font-size: 22px;
+    font-size: 24px;
+    letter-spacing: -0.5px;
+  }
+
+  .greeting .welcome-text {
+    font-size: 11px;
+  }
+
+  .greeting .subtitle {
+    font-size: 12px;
+  }
+
+  .header-top {
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .export-pdf-btn,
+  .shop-status {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .export-pdf-btn {
+    padding: 12px 16px;
+    font-size: 13px;
+    min-height: 48px;
+    border-radius: 12px;
+  }
+
+  .shop-status {
+    min-height: 48px;
+  }
+
+  .status-text {
+    font-size: 13px;
   }
 
   .section-card {
-    padding: 16px;
+    padding: 16px 12px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+  }
+
+  .metric-value {
+    font-size: 26px;
+  }
+
+  .metric-label {
+    font-size: 12px;
+  }
+
+  .metric-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .quick-actions-grid {
+    gap: 10px;
+  }
+
+  .neo-action-card {
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+
+  .neo-action-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .neo-action-content h4 {
+    font-size: 14px;
+  }
+
+  .neo-action-content p {
+    font-size: 12px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .section-header {
+    margin-bottom: 16px;
+  }
+}
+
+/* XS - Extra Small Mobile (0 - 374px) - Default Base */
+@media (max-width: 374px) {
+  .dashboard-page {
+    padding: 10px;
+  }
+
+  .dashboard-header {
+    padding: 14px 10px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+  }
+
+  .smart-metrics-grid,
+  .smart-metrics-grid.four-columns,
+  .smart-metrics-grid.five-columns {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .smart-metrics-grid .metric-card,
+  .smart-metrics-grid.four-columns .metric-card,
+  .smart-metrics-grid.five-columns .metric-card {
+    grid-column: span 1;
+    padding: 14px 10px;
+    border-radius: 12px;
+  }
+
+  .greeting .title {
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .greeting .welcome-text {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  .greeting .subtitle {
+    font-size: 11px;
+  }
+
+  .header-top {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .export-pdf-btn,
+  .shop-status {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .export-pdf-btn {
+    padding: 12px 14px;
+    font-size: 12px;
+    min-height: 48px;
+    border-radius: 10px;
+  }
+
+  .shop-status {
+    min-height: 48px;
+  }
+
+  .status-text {
+    font-size: 12px;
+  }
+
+  .section-card {
+    padding: 14px 10px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  .metric-value {
+    font-size: 22px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+  }
+
+  .metric-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .quick-actions-grid {
+    gap: 8px;
+  }
+
+  .neo-action-card {
+    padding: 12px 10px;
+    border-radius: 10px;
+  }
+
+  .neo-action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  .neo-action-content h4 {
+    font-size: 13px;
+  }
+
+  .neo-action-content p {
+    font-size: 11px;
+  }
+
+  .section-title {
+    font-size: 15px;
+  }
+
+  .section-header {
+    margin-bottom: 14px;
   }
 }
 
@@ -4573,4 +4915,176 @@ button:focus-visible {
 
 .geo-debug-panel div {
   margin-bottom: 6px;
+}
+
+/* ============================================
+   ADDITIONAL MOBILE OPTIMIZATIONS
+   ============================================ */
+
+/* Appointment items mobile optimization */
+@media (max-width: 575px) {
+  .appointment-item {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+
+  .apt-time-badge {
+    font-size: 10px;
+  }
+
+  .apt-customer {
+    font-size: 12px;
+  }
+
+  .apt-service {
+    font-size: 11px;
+  }
+
+  .list-appointment-item {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .list-apt-time {
+    font-size: 11px;
+  }
+
+  .list-apt-customer {
+    font-size: 13px;
+  }
+
+  .list-apt-service {
+    font-size: 12px;
+  }
+}
+
+/* Schedule controls mobile */
+@media (max-width: 575px) {
+  .schedule-controls {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .view-mode-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .calendar-nav-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .today-btn {
+    flex: 1;
+  }
+}
+
+/* Week overview mobile */
+@media (max-width: 575px) {
+  .week-overview-enhanced {
+    padding: 16px 12px;
+  }
+
+  .overview-main {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .overview-stat {
+    width: 100%;
+    padding: 12px 14px;
+    min-width: auto;
+  }
+
+  .week-stat-mini {
+    padding: 12px;
+  }
+}
+
+/* Activity stream mobile */
+@media (max-width: 575px) {
+  .activity-item {
+    padding: 14px 12px;
+    gap: 10px;
+  }
+
+  .activity-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .activity-time {
+    font-size: 11px;
+  }
+
+  .activity-description {
+    font-size: 13px;
+  }
+}
+
+/* Calendar day cards mobile */
+@media (max-width: 575px) {
+  .calendar-day-card {
+    min-height: 120px;
+  }
+
+  .day-card-header {
+    padding: 10px 12px;
+  }
+
+  .day-card-header .day-date {
+    font-size: 16px;
+  }
+
+  .day-card-header .day-name {
+    font-size: 9px;
+  }
+}
+
+/* Performance snapshot mobile */
+@media (max-width: 575px) {
+  .performance-snapshot {
+    padding: 16px 12px;
+  }
+
+  .performance-title {
+    font-size: 15px;
+  }
+}
+
+/* Ensure all content fits with proper spacing */
+@media (max-width: 575px) {
+  /* Override any min-width that causes overflow */
+  * {
+    min-width: 0;
+  }
+
+  /* Ensure buttons don't overflow */
+  button, .btn, .neo-action-card {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Ensure text doesn't overflow */
+  .section-title,
+  .greeting .title,
+  .activity-description,
+  .apt-customer,
+  .list-apt-customer {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Allow multi-line for longer descriptions */
+  .apt-service,
+  .list-apt-service,
+  .activity-description-text {
+    white-space: normal;
+    word-wrap: break-word;
+  }
 }

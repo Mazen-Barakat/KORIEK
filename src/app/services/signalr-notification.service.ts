@@ -91,7 +91,7 @@ export class SignalRNotificationService {
     try {
       // Build the hub connection
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl('https://korik-demo.runasp.net/notificationHub', {
+        .withUrl('https://localhost:44316/notificationHub', {
           accessTokenFactory: () => this.getAccessToken(),
         })
         .withAutomaticReconnect({

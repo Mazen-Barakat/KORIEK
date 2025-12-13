@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { ContactService } from '../../services/contact.service';
 import { ProfileService } from '../../services/profile.service';
+import { WorkshopProfileService } from '../../services/workshop-profile.service';
 import { ProfileButtonComponent } from '../profile/profile-button.component';
 import { NotificationPanelComponent } from '../notification-panel/notification-panel.component';
 import { RoleHelper } from '../../models/user-roles';
@@ -66,6 +67,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private profileService: ProfileService,
+    private workshopProfileService: WorkshopProfileService,
     private router: Router,
     private contactService: ContactService
   ) {}
@@ -100,14 +102,25 @@ export class HeaderComponent implements OnInit, OnDestroy {
       // When authenticated, proactively fetch the profile so the profile button
       // receives the profile image without requiring a user click.
       if (isAuth) {
-        // Trigger a profile fetch. The ProfileService tap operator will push
-        // the image URL into the BehaviorSubject used by ProfileButtonComponent.
-        this.profileService.getProfile().subscribe({
-          next: () => {},
-          error: () => {
-            // Ignore profile fetch errors here; ProfileButton will show placeholder.
-          },
-        });
+        // Trigger a profile fetch. For workshop owners we also fetch the workshop profile
+        // and use its LogoImageUrl if present. Otherwise fall back to the standard profile.
+        if (RoleHelper.isWorkshop(this.authService.getUserRole())) {
+          this.workshopProfileService.getMyWorkshopProfile().subscribe({
+            next: (resp: any) => {
+              const data = resp?.data ?? resp;
+              const candidate = data?.LogoImageUrl || data?.logoImageUrl || data?.logoUrl || null;
+              const full = this.profileService.getFullImageUrl(candidate) || null;
+              this.profileService.setProfilePicture(full);
+            },
+            error: () => {
+              // fallback to car owner profile
+              this.profileService.getProfile().subscribe({ next: () => {}, error: () => {} });
+            },
+          });
+        } else {
+          // Non-workshop users: use the normal profile endpoint
+          this.profileService.getProfile().subscribe({ next: () => {}, error: () => {} });
+        }
       }
     });
 
@@ -119,7 +132,22 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (this.authService.isAuthenticated()) {
       // ensure username is available on init
       this.userName = this.authService.getUserName();
-      this.profileService.getProfile().subscribe({ next: () => {}, error: () => {} });
+      // Same logic as above when auth state is present on init
+      if (RoleHelper.isWorkshop(this.authService.getUserRole())) {
+        this.workshopProfileService.getMyWorkshopProfile().subscribe({
+          next: (resp: any) => {
+            const data = resp?.data ?? resp;
+            const candidate = data?.LogoImageUrl || data?.logoImageUrl || data?.logoUrl || null;
+            const full = this.profileService.getFullImageUrl(candidate) || null;
+            this.profileService.setProfilePicture(full);
+          },
+          error: () => {
+            this.profileService.getProfile().subscribe({ next: () => {}, error: () => {} });
+          },
+        });
+      } else {
+        this.profileService.getProfile().subscribe({ next: () => {}, error: () => {} });
+      }
     }
 
     // Also subscribe to user data changes to update displayed name dynamically
@@ -259,7 +287,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     // For workshop dashboard route, always show wallet link (user viewing their own dashboard)
     const url = this.router.url;
-    if (url.startsWith('/workshop/dashboard') || url.startsWith('/workshop/job-board') || url.startsWith('/workshop/wallet')) {
+    if (
+      url.startsWith('/workshop/dashboard') ||
+      url.startsWith('/workshop/job-board') ||
+      url.startsWith('/workshop/wallet')
+    ) {
       this.isCurrentWorkshopOwner = true;
       return;
     }

@@ -101,12 +101,7 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: 'workshop/settings',
-    loadComponent: () => import('./components/workshop-settings/workshop-settings.component').then(m => m.WorkshopSettingsComponent),
-    canActivate: [authGuard],
-    canDeactivate: [UnsavedChangesGuard]
-  },
-  {
+
     path: 'admin/dashboard',
     loadComponent: () => import('./components/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
     canActivate: [authGuard, adminGuard]

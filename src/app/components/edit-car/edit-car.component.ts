@@ -593,7 +593,7 @@ export class EditCarComponent implements OnInit {
     console.log('[DELETE INDICATOR] Deleting indicator with ID:', idToDelete);
     console.log(
       '[DELETE INDICATOR] URL:',
-      `https://korik-demo.runasp.net/api/CarIndicator/${idToDelete}`
+      `https://localhost:44316/api/CarIndicator/${idToDelete}`
     );
 
     this.carsService.deleteCarIndicator(idToDelete).subscribe({
@@ -616,7 +616,7 @@ export class EditCarComponent implements OnInit {
         // If backend rejects DELETE (405), attempt common POST-based delete endpoints
         if (err && err.status === 405) {
           const urlBase = `${
-            this.carsService['apiBase'] ?? 'https://korik-demo.runasp.net/api'
+            this.carsService['apiBase'] ?? 'https://localhost:44316/api'
           }/CarIndicator`;
           const http = (this.carsService as any).http;
 

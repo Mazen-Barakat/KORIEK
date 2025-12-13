@@ -11,6 +11,7 @@ import { Job, JobStatus } from '../../models/booking.model';
 import { HttpClient } from '@angular/common/http';
 import { ConfirmationPopupComponent } from '../shared/confirmation-popup/confirmation-popup.component';
 import { ToastService } from '../../services/toast.service';
+import { ProfileService } from '../../services/profile.service';
 import { NotificationType } from '../../models/notification.model';
 
 // Interface for real booking with enriched data
@@ -57,7 +58,7 @@ interface CarOwnerProfile {
 })
 export class JobBoardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private apiUrl = 'https://korik-demo.runasp.net/api';
+  private apiUrl = 'https://localhost:44316/api';
   // Retry control for defensive re-loading when initial load returns empty
   private tryLoadRetries = 0;
   private readonly maxLoadRetries = 3;
@@ -156,6 +157,49 @@ export class JobBoardComponent implements OnInit, OnDestroy {
   tooltipLoading: boolean = false;
   tooltipPosition: { x: number; y: number } = { x: 0, y: 0 };
 
+  // Default avatar path used when backend image is missing or fails to load
+  defaultAvatar = 'Assets/images/default-profile.svg';
+
+  // Image error handler to set default avatar when image fails to load
+  setDefaultAvatar(event: Event): void {
+    try {
+      const img = event?.target as HTMLImageElement;
+      if (!img) return;
+      if (img.src && img.src.indexOf(this.defaultAvatar) === -1) {
+        img.src = this.defaultAvatar;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Return a CSS class for avatar based on booking status
+  getAvatarStatusClass(booking: RealBooking): string {
+    if (!booking || !booking.status) return '';
+    const status = booking.status.toLowerCase().trim();
+    if (status === 'pending') return 'avatar-pending';
+    if (status === 'accepted' || status === 'confirmed') return 'avatar-accepted';
+    if (status === 'inprogress' || status === 'in-progress' || status === 'in progress')
+      return 'avatar-inprogress';
+    if (
+      status === 'readyforpickup' ||
+      status === 'ready-for-pickup' ||
+      status === 'ready for pickup'
+    )
+      return 'avatar-ready';
+    if (status === 'completed') return 'avatar-completed';
+    return '';
+  }
+
+  // Resolve profile image URL for tooltip and other places
+  getProfileImageUrl(profile?: CarOwnerProfile | null): string {
+    if (!profile) return '';
+    if (profile.profileImageUrl) {
+      return this.profileService.getFullImageUrl(profile.profileImageUrl) || '';
+    }
+    return '';
+  }
+
   constructor(
     private bookingService: BookingService,
     private workshopProfileService: WorkshopProfileService,
@@ -164,7 +208,8 @@ export class JobBoardComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private profileService: ProfileService
   ) {}
 
   ngOnInit(): void {
@@ -327,6 +372,11 @@ export class JobBoardComponent implements OnInit, OnDestroy {
             }).pipe(
               map(({ carOwner, car, serviceName }) => {
                 const carData = car?.data ?? car;
+                // Resolve avatar URL using ProfileService to handle relative or absolute paths
+                const resolvedAvatar = carOwner?.profileImageUrl
+                  ? this.profileService.getFullImageUrl(carOwner.profileImageUrl)
+                  : undefined;
+
                 return {
                   id: booking.id,
                   status: booking.status,
@@ -339,9 +389,7 @@ export class JobBoardComponent implements OnInit, OnDestroy {
                     ? `${carOwner.firstName || ''} ${carOwner.lastName || ''}`.trim() ||
                       'Unknown Customer'
                     : 'Unknown Customer',
-                  customerAvatar: carOwner?.profileImageUrl
-                    ? `https://korik-demo.runasp.net${carOwner.profileImageUrl}`
-                    : undefined,
+                  customerAvatar: resolvedAvatar,
                   carMake: carData?.make || 'Unknown',
                   carModel: carData?.model || 'Unknown',
                   carYear: carData?.year || 0,

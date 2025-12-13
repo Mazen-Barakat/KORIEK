@@ -229,8 +229,122 @@
   color: #111827;
 }
 
-/* Responsive Design */
-@media (max-width: 640px) {
+/* ============================================
+   RESPONSIVE DESIGN - Standardized Breakpoints
+   ============================================ */
+
+/* XL - Extra Large Desktop (1200px+) */
+@media (min-width: 1200px) {
+  .vehicle-info-section.realistic {
+    padding: 2.5rem;
+  }
+
+  .car-details-card {
+    max-width: 550px;
+  }
+}
+
+/* LG - Large Desktop/Laptop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .vehicle-info-section.realistic {
+    padding: 2.25rem;
+  }
+}
+
+/* Tablet/Laptop - (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .vehicle-info-section.realistic {
+    padding: 2rem 1.5rem;
+  }
+
+  .license-plate-egypt {
+    width: 300px;
+    height: 150px;
+  }
+
+  .car-details-card {
+    padding: 1.75rem;
+  }
+
+  .car-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.875rem;
+  }
+}
+
+/* MD - Mobile Landscape/Small Tablet (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .vehicle-info-section.realistic {
+    padding: 1.75rem 1.25rem;
+    border-radius: 14px;
+  }
+
+  .vehicle-info-section.realistic h2 {
+    font-size: 1.375rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .info-container {
+    gap: 1.75rem;
+  }
+
+  .license-plate-egypt {
+    width: 290px;
+    height: 145px;
+  }
+
+  .plate-letters,
+  .plate-numbers {
+    font-size: 1.75rem;
+  }
+
+  .egypt-label-en {
+    font-size: 1.125rem;
+  }
+
+  .egypt-label-ar {
+    font-size: 1.625rem;
+  }
+
+  .car-details-card {
+    padding: 1.5rem;
+  }
+
+  .manufacturer-logo img {
+    max-width: 110px;
+    max-height: 75px;
+  }
+
+  .manufacturer-name h3 {
+    font-size: 1.875rem;
+  }
+
+  .car-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.875rem;
+  }
+
+  .info-item {
+    padding: 0.875rem;
+  }
+}
+
+/* SM - Small Mobile (375px - 575px) */
+@media (min-width: 375px) and (max-width: 575px) {
+  .vehicle-info-section.realistic {
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+  }
+
+  .vehicle-info-section.realistic h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .info-container {
+    gap: 1.5rem;
+  }
+
   .license-plate-egypt {
     width: 280px;
     height: 140px;
@@ -238,19 +352,157 @@
 
   .plate-letters,
   .plate-numbers {
-    font-size: 1.5rem;
+    font-size: 1.625rem;
+    letter-spacing: 2px;
   }
 
   .egypt-label-en {
-    font-size: 1rem;
+    font-size: 1.0625rem;
   }
 
   .egypt-label-ar {
     font-size: 1.5rem;
   }
 
+  .plate-divider {
+    height: 45px;
+  }
+
+  .car-details-card {
+    padding: 1.375rem;
+  }
+
+  .manufacturer-logo {
+    padding: 0.875rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .manufacturer-logo img {
+    max-width: 100px;
+    max-height: 70px;
+  }
+
+  .manufacturer-name h3 {
+    font-size: 1.75rem;
+    letter-spacing: 1.5px;
+  }
+
   .car-info-grid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .info-item {
+    padding: 0.875rem;
+  }
+
+  .info-label {
+    font-size: 0.6875rem;
+  }
+
+  .info-value {
+    font-size: 1rem;
+  }
+}
+
+/* XS - Extra Small Mobile (0 - 374px) - Default Base */
+@media (max-width: 374px) {
+  .vehicle-info-section.realistic {
+    padding: 1.25rem 0.875rem;
+    border-radius: 12px;
+  }
+
+  .vehicle-info-section.realistic h2 {
+    font-size: 1.125rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .info-container {
+    gap: 1.25rem;
+  }
+
+  .license-plate-egypt {
+    width: 260px;
+    height: 130px;
+  }
+
+  .plate-top {
+    padding: 0 0.75rem;
+  }
+
+  .plate-country-section {
+    gap: 1rem;
+  }
+
+  .plate-letters,
+  .plate-numbers {
+    font-size: 1.5rem;
+    letter-spacing: 1.5px;
+  }
+
+  .egypt-label-en {
+    font-size: 1rem;
+    letter-spacing: 1.5px;
+  }
+
+  .egypt-label-ar {
+    font-size: 1.375rem;
+  }
+
+  .plate-bottom {
+    padding: 0 1.25rem;
+  }
+
+  .plate-divider {
+    height: 40px;
+  }
+
+  .screw {
+    width: 10px;
+    height: 10px;
+  }
+
+  .car-details-card {
+    padding: 1.25rem;
+    border-radius: 14px;
+  }
+
+  .manufacturer-logo {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+  }
+
+  .manufacturer-logo img {
+    max-width: 90px;
+    max-height: 60px;
+  }
+
+  .manufacturer-name {
+    margin-bottom: 1.25rem;
+  }
+
+  .manufacturer-name h3 {
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+  }
+
+  .car-info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+
+  .info-item {
+    padding: 0.75rem;
+    border-radius: 8px;
+  }
+
+  .info-label {
+    font-size: 0.625rem;
+  }
+
+  .info-value {
+    font-size: 0.9375rem;
   }
 }
 

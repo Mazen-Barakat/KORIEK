@@ -158,7 +158,7 @@ export class SignupComponent implements OnInit, AfterViewInit {
       confirmPassword: this.signupForm.value.confirmPassword,
     };
 
-    this.http.post('https://korik-demo.runasp.net/api/Account/Register', registerData).subscribe({
+    this.http.post('https://localhost:44316/api/Account/Register', registerData).subscribe({
       next: (response: any) => {
         console.log('Registration response:', response);
         this.isLoading = false;
@@ -410,7 +410,7 @@ export class SignupComponent implements OnInit, AfterViewInit {
 
     console.log('Sending Google login request with payload:', payload);
 
-    this.http.post('https://korik-demo.runasp.net/api/Account/Google-login', payload).subscribe({
+    this.http.post('https://localhost:44316/api/Account/Google-login', payload).subscribe({
       next: (res: any) => {
         this.isLoading = false;
         console.log('Google sign-in response:', res);

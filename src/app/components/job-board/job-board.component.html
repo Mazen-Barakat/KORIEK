@@ -291,15 +291,16 @@
           class="job-card"
           *ngFor="let booking of pendingBookings; trackBy: trackByBookingId"
           (click)="viewBookingDetails(booking)"
+          [class.expanded]="isBookingExpanded(booking.id)"
         >
           <div class="job-header">
             <div class="job-customer">
               <img
-                [src]="
-                  booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)
-                "
+                [src]="booking.customerAvatar || defaultAvatar"
                 [alt]="booking.customerName"
                 class="customer-avatar"
+                [ngClass]="getAvatarStatusClass(booking)"
+                (error)="setDefaultAvatar($event)"
               />
               <div class="customer-info">
                 <span
@@ -463,15 +464,16 @@
           class="job-card"
           *ngFor="let booking of acceptedBookings; trackBy: trackByBookingId"
           (click)="viewBookingDetails(booking)"
+          [class.expanded]="isBookingExpanded(booking.id)"
         >
           <div class="job-header">
             <div class="job-customer">
               <img
-                [src]="
-                  booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)
-                "
+                [src]="booking.customerAvatar || defaultAvatar"
                 [alt]="booking.customerName"
                 class="customer-avatar"
+                [ngClass]="getAvatarStatusClass(booking)"
+                (error)="setDefaultAvatar($event)"
               />
               <div class="customer-info">
                 <span
@@ -613,15 +615,16 @@
           class="job-card"
           *ngFor="let booking of inProgressBookings; trackBy: trackByBookingId"
           (click)="viewBookingDetails(booking)"
+          [class.expanded]="isBookingExpanded(booking.id)"
         >
           <div class="job-header">
             <div class="job-customer">
               <img
-                [src]="
-                  booking.customerAvatar || 'https://i.pravatar.cc/150?img=' + (booking.id % 70)
-                "
+                [src]="booking.customerAvatar || defaultAvatar"
                 [alt]="booking.customerName"
                 class="customer-avatar"
+                [ngClass]="getAvatarStatusClass(booking)"
+                (error)="setDefaultAvatar($event)"
               />
               <div class="customer-info">
                 <span
@@ -767,12 +770,17 @@
         <div
           class="job-card"
           *ngFor="let booking of readyForPickupBookings; trackBy: trackByBookingId"
+          [class.expanded]="isBookingExpanded(booking.id)"
         >
           <div class="job-header">
             <div class="job-customer">
-              <div class="customer-avatar-placeholder">
-                {{ booking.customerName.charAt(0) || 'C' }}
-              </div>
+              <img
+                class="customer-avatar"
+                [src]="booking.customerAvatar || defaultAvatar"
+                [alt]="booking.customerName || 'Customer'"
+                [ngClass]="getAvatarStatusClass(booking)"
+                (error)="setDefaultAvatar($event)"
+              />
               <div class="customer-info">
                 <span
                   class="customer-name customer-name-hoverable"
@@ -910,12 +918,20 @@
         >
       </div>
       <div class="column-content" [class.has-overflow]="completedBookings.length > 6">
-        <div class="job-card" *ngFor="let booking of completedBookings; trackBy: trackByBookingId">
+        <div
+          class="job-card"
+          *ngFor="let booking of completedBookings; trackBy: trackByBookingId"
+          [class.expanded]="isBookingExpanded(booking.id)"
+        >
           <div class="job-header">
             <div class="job-customer">
-              <div class="customer-avatar-placeholder">
-                {{ booking.customerName.charAt(0) || 'C' }}
-              </div>
+              <img
+                class="customer-avatar"
+                [src]="booking.customerAvatar || defaultAvatar"
+                [alt]="booking.customerName || 'Customer'"
+                [ngClass]="getAvatarStatusClass(booking)"
+                (error)="setDefaultAvatar($event)"
+              />
               <div class="customer-info">
                 <span
                   class="customer-name customer-name-hoverable"
@@ -1004,12 +1020,12 @@
       <div class="tooltip-header">
         <img
           [src]="
-            tooltipProfile.profileImageUrl
-              ? 'https://korik-demo.runasp.net' + tooltipProfile.profileImageUrl
-              : 'https://i.pravatar.cc/150?img=' + (hoveredBookingId % 70)
+            getProfileImageUrl(tooltipProfile) ||
+            'https://i.pravatar.cc/150?img=' + (hoveredBookingId % 70)
           "
           [alt]="tooltipProfile.fullName || tooltipProfile.firstName"
           class="tooltip-avatar"
+          (error)="setDefaultAvatar($event)"
         />
         <div class="tooltip-header-info">
           <h4 class="tooltip-name">
