@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
@@ -29,7 +29,8 @@ export class WalletComponent implements OnInit, OnDestroy {
   constructor(
     private walletService: WalletService,
     private workshopProfileService: WorkshopProfileService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -45,6 +46,8 @@ export class WalletComponent implements OnInit, OnDestroy {
           if (this.workshopProfileId > 0) {
             this.loadWalletData();
           }
+          // Force change detection
+          this.cdr.detectChanges();
         },
         error: (err: any) => {
           console.error('❌ Error fetching workshop profile:', err);
@@ -60,7 +63,10 @@ export class WalletComponent implements OnInit, OnDestroy {
   private loadWalletData(): void {
     this.walletService.getWalletSummary()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(summary => this.walletSummary = summary);
+      .subscribe(summary => {
+        this.walletSummary = summary;
+        this.cdr.detectChanges();
+      });
 
     // Load real transactions from bookings - always on page load
     if (this.workshopProfileId > 0) {
@@ -72,6 +78,8 @@ export class WalletComponent implements OnInit, OnDestroy {
             this.transactions = transactions;
             // Calculate dynamic growth rate from transactions
             this.calculateDynamicGrowthRate();
+            // Force change detection
+            this.cdr.detectChanges();
           },
           error: (err: any) => {
             console.error('❌ Error loading transactions:', err);
@@ -81,7 +89,10 @@ export class WalletComponent implements OnInit, OnDestroy {
 
     this.walletService.getPayoutSchedule()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(schedule => this.payoutSchedule = schedule);
+      .subscribe(schedule => {
+        this.payoutSchedule = schedule;
+        this.cdr.detectChanges();
+      });
   }
 
   /**
