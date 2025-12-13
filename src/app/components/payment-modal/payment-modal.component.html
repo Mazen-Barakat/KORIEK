@@ -62,8 +62,37 @@
 
       <div class="payment-summary">
         <h3>Payment Summary</h3>
+
+        <!-- Amount Input Field -->
+        <div class="amount-input-group">
+          <label for="paymentAmount">Enter Payment Amount</label>
+          <div class="price-range-hint" *ngIf="priceFrom && priceTo">
+            Price Range: ${{ priceFrom }} - ${{ priceTo }}
+          </div>
+          <div class="input-with-currency">
+            <span class="currency-symbol">$</span>
+            <input
+              type="number"
+              id="paymentAmount"
+              class="amount-input"
+              [(ngModel)]="userEnteredAmount"
+              (ngModelChange)="onAmountChange()"
+              [min]="priceFrom || 0"
+              [max]="priceTo || 999999"
+              placeholder="Enter amount"
+              required
+            />
+          </div>
+          <div class="amount-error" *ngIf="amountError">
+            <span class="error-icon">⚠️</span>
+            <span>{{ amountError }}</span>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
         <div class="summary-row">
-          <span>Service Amount</span>
+          <span>Service Amount (88%)</span>
           <span class="amount">${{ formatCurrency(workshopAmount) }}</span>
         </div>
         <div class="summary-row">
@@ -81,7 +110,7 @@
         <button class="btn btn-secondary" (click)="cancel()">
           Cancel
         </button>
-        <button class="btn btn-primary" (click)="proceedToPayment()">
+        <button class="btn btn-primary" (click)="proceedToPayment()" [disabled]="!!amountError || !userEnteredAmount">
           Proceed to Payment →
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
@@ -21,6 +21,8 @@ import { SignalRNotificationService } from '../../services/signalr-notification.
       [workshopName]="selectedBooking.workshopName"
       [serviceName]="selectedBooking.serviceName"
       [appointmentDate]="selectedBooking.appointmentDate"
+      [priceFrom]="selectedBooking.priceFrom"
+      [priceTo]="selectedBooking.priceTo"
       (paymentSuccess)="handlePaymentSuccess()"
       (paymentCancelled)="handlePaymentCancelled()"
     ></app-payment-modal>
@@ -36,7 +38,9 @@ export class PaymentTriggerComponent implements OnInit, OnDestroy {
     totalAmount: 0,
     workshopName: '',
     serviceName: '',
-    appointmentDate: ''
+    appointmentDate: '',
+    priceFrom: 0,
+    priceTo: 0
   };
 
   constructor(
@@ -45,15 +49,19 @@ export class PaymentTriggerComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private toastService: ToastService,
     private signalRService: SignalRNotificationService,
-    private router: Router
+    private router: Router,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
+    console.log('💳 PaymentTriggerComponent initialized and listening for events');
+
     // Listen for "Ready for Pickup" notifications from SignalR
     this.signalRService.appointmentConfirmationReceived
       .pipe(takeUntil(this.destroy$))
       .subscribe((notification: any) => {
-        console.log('📬 Notification received:', notification);
+        console.log('📬 Notification received in payment-trigger:', notification);
         this.checkAndTriggerPayment(notification);
       });
 
@@ -73,15 +81,31 @@ export class PaymentTriggerComponent implements OnInit, OnDestroy {
     if (typeof window !== 'undefined') {
       window.addEventListener('booking:status-changed', (event: any) => {
         const { bookingId, status } = event.detail || {};
-        console.log('🎯 Booking status changed event:', { bookingId, status });
+        console.log('🎯 Booking status changed event received in payment-trigger:', { bookingId, status });
+
+        if (!bookingId || !status) {
+          console.warn('⚠️ Missing bookingId or status in event');
+          return;
+        }
+
+        const statusLower = status.toLowerCase();
+        console.log('🔍 Checking status:', statusLower);
 
         // Check if status is ready for pickup
-        if (bookingId && status &&
-            (status.toLowerCase().includes('ready') ||
-             status.toLowerCase().includes('readyforpickup') ||
-             status === 'ReadyForPickup')) {
-          console.log('✅ Ready for pickup detected! Checking payment...');
-          this.fetchBookingAndTriggerPayment(bookingId);
+        if (statusLower === 'ready' ||
+            statusLower === 'readyforpickup' ||
+            statusLower === 'ready-for-pickup' ||
+            statusLower.includes('ready')) {
+          console.log('✅ Ready for pickup detected! Triggering payment check immediately...');
+
+          // Run in NgZone to ensure Angular change detection
+          this.ngZone.run(() => {
+            this.fetchBookingAndTriggerPayment(bookingId);
+            // Force change detection immediately
+            this.cdr.detectChanges();
+          });
+        } else {
+          console.log('❌ Status not ready for pickup:', statusLower);
         }
       });
 
@@ -137,7 +161,7 @@ export class PaymentTriggerComponent implements OnInit, OnDestroy {
     console.log('🔍 Fetching booking details for ID:', bookingId);
 
     this.bookingService.getBookingById(bookingId).subscribe({
-      next: (response: any) => {
+      next: async (response: any) => {
         const booking = response.data || response;
 
         console.log('📊 Full booking response:', booking);
@@ -182,20 +206,32 @@ export class PaymentTriggerComponent implements OnInit, OnDestroy {
         });
 
         if (isCreditCard && isReadyForPickup && isUnpaid) {
-          console.log('✅ All conditions met! Showing payment modal...');
+          console.log('✅ All conditions met! Showing payment modal instantly...');
 
-          // Show notification toast first
-          this.toastService.info(
-            'Payment Required 💳',
-            'Your vehicle is ready! Complete payment to proceed.',
-            5000
-          );
+          // Show modal IMMEDIATELY with basic booking data
+          this.ngZone.run(() => {
+            this.selectedBooking = {
+              id: bookingId,
+              totalAmount: booking.quotedPrice || booking.totalAmount || 100,
+              workshopName: 'Loading...',
+              serviceName: 'Loading...',
+              appointmentDate: booking.appointmentDate || new Date().toISOString(),
+              priceFrom: 0,
+              priceTo: 0
+            };
+            this.showPaymentModal = true;
+            console.log('💳 Payment modal opened instantly!');
+            // Force immediate change detection
+            this.cdr.detectChanges();
+          });
 
-          // Trigger payment modal instantly (no delay)
-          this.showPaymentModalForBooking(
+          // Then fetch complete details in background and update
+          this.fetchCompleteBookingDetails(
             bookingId,
-            booking.quotedPrice || booking.totalAmount || 100,
-            booking
+            booking.workShopProfileId || booking.workshopProfileId,
+            booking.workshopServiceId,
+            booking.appointmentDate,
+            booking.quotedPrice || booking.totalAmount || 100
           );
         } else {
           console.warn('⚠️ Payment modal not shown. Conditions not met:', {
@@ -212,6 +248,88 @@ export class PaymentTriggerComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Fetch complete booking details including workshop name and service name
+   */
+  private async fetchCompleteBookingDetails(
+    bookingId: number,
+    workshopProfileId: number,
+    workshopServiceId: number,
+    appointmentDate: string,
+    totalAmount: number
+  ): Promise<void> {
+    try {
+      // Fetch workshop profile
+      const workshopResponse: any = await this.bookingService.http
+        .get(`https://localhost:44316/api/WorkShopProfile/Get-WorkShop-ById-Profile?id=${workshopProfileId}`)
+        .toPromise();
+
+      const workshopData = workshopResponse?.data || workshopResponse;
+      const workshopName = workshopData?.name || workshopData?.shopName || workshopData?.workshopName || 'Auto Workshop';
+
+      console.log('🏪 Workshop fetched:', workshopName);
+
+      // Fetch workshop service to get serviceId and price range (MinPrice and MaxPrice)
+      const workshopServiceResponse: any = await this.bookingService.http
+        .get(`https://localhost:44316/api/WorkshopService/${workshopServiceId}`)
+        .toPromise();
+
+      const workshopServiceData = workshopServiceResponse?.data || workshopServiceResponse;
+      const serviceId = workshopServiceData?.serviceId;
+      const minPrice = workshopServiceData?.minPrice || workshopServiceData?.MinPrice || 0;
+      const maxPrice = workshopServiceData?.maxPrice || workshopServiceData?.MaxPrice || 0;
+
+      console.log('🔧 Workshop service fetched - serviceId:', serviceId, 'Price range: $', minPrice, '- $', maxPrice);
+
+      // Fetch service name from Services table
+      let serviceName = 'Vehicle Service';
+      if (serviceId) {
+        const serviceResponse: any = await this.bookingService.http
+          .get(`https://localhost:44316/api/Service/${serviceId}`)
+          .toPromise();
+
+        const serviceData = serviceResponse?.data || serviceResponse;
+        serviceName = serviceData?.name || serviceData?.serviceName || 'Vehicle Service';
+        console.log('🛠️ Service name fetched:', serviceName);
+      }
+
+      // Show notification toast
+      this.toastService.info(
+        'Payment Required 💳',
+        'Your vehicle is ready! Complete payment to proceed.',
+        5000
+      );
+
+      // Update modal with complete fetched data including price range
+      this.ngZone.run(() => {
+        this.selectedBooking = {
+          id: bookingId,
+          totalAmount: totalAmount,
+          workshopName: workshopName,
+          serviceName: serviceName,
+          appointmentDate: appointmentDate,
+          priceFrom: minPrice,
+          priceTo: maxPrice
+        };
+        console.log('📋 Modal updated with complete details:', this.selectedBooking);
+        // Force change detection to update view
+        this.cdr.detectChanges();
+      });
+
+    } catch (error) {
+      console.error('❌ Error fetching complete booking details:', error);
+
+      // Update modal with default values if fetch fails
+      this.ngZone.run(() => {
+        this.selectedBooking = {
+          ...this.selectedBooking,
+          workshopName: 'Auto Workshop',
+          serviceName: 'Vehicle Service'
+        };
+      });
+    }
+  }
+
+  /**
    * Show payment modal with booking details
    */
   private showPaymentModalForBooking(
@@ -219,15 +337,23 @@ export class PaymentTriggerComponent implements OnInit, OnDestroy {
     totalAmount: number,
     bookingData?: any
   ) {
-    this.selectedBooking = {
-      id: bookingId,
-      totalAmount: totalAmount,
-      workshopName: bookingData?.workshopName || 'Auto Workshop',
-      serviceName: bookingData?.serviceName || 'Vehicle Service',
-      appointmentDate: bookingData?.appointmentDate || new Date().toISOString()
-    };
+    // Run inside Angular zone to ensure change detection triggers
+    this.ngZone.run(() => {
+      this.selectedBooking = {
+        id: bookingId,
+        totalAmount: totalAmount,
+        workshopName: bookingData?.workshopName || 'Auto Workshop',
+        serviceName: bookingData?.serviceName || 'Vehicle Service',
+        appointmentDate: bookingData?.appointmentDate || new Date().toISOString(),
+        priceFrom: bookingData?.priceFrom || 0,
+        priceTo: bookingData?.priceTo || 0
+      };
 
-    this.showPaymentModal = true;
+      this.showPaymentModal = true;
+      console.log('💳 Payment modal triggered - showPaymentModal:', this.showPaymentModal);
+      // Force change detection immediately
+      this.cdr.detectChanges();
+    });
   }
 
   /**
