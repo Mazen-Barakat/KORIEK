@@ -117,33 +117,51 @@ export class AddVehicleFormComponent implements OnInit {
   }
 
   /**
+   * Convert Arabic numerals (٠-٩) to English numerals (0-9)
+   */
+  private convertArabicNumeralsToEnglish(text: string): string {
+    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const englishNumerals = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    
+    let result = text;
+    arabicNumerals.forEach((arabic, index) => {
+      result = result.replace(new RegExp(arabic, 'g'), englishNumerals[index]);
+    });
+    return result;
+  }
+
+  /**
    * Synchronous validator that enforces final license plate format:
-   *  - 2 or 3 letters (A-Z)
-   *  - followed immediately by 3 or 4 digits (0-9)
+   *  - 2 or 3 letters (A-Z or Arabic letters)
+   *  - followed immediately by 3 or 4 digits (0-9 or Arabic digits)
    * Returns { plateFormat: true } when invalid.
    */
   plateFormatValidator(control: AbstractControl): ValidationErrors | null {
     const value = control && control.value ? String(control.value).trim() : '';
     if (!value) return null; // required validator handles emptiness
 
-    // Only uppercase letters and digits considered for validation
-    const normalized = value.replace(/\s+/g, '').toUpperCase();
-    const ok = /^[A-Z]{2,3}\d{3,4}$/.test(normalized);
+    // Convert Arabic numerals to English for validation
+    const normalized = this.convertArabicNumeralsToEnglish(value).replace(/\s+/g, '').toUpperCase();
+    
+    // Allow both English letters (A-Z) and Arabic letters, followed by digits
+    const ok = /^[A-Zا-ي]{2,3}\d{3,4}$/.test(normalized);
     return ok ? null : { plateFormat: true };
   }
 
   /**
-   * Keep license plate input strictly alphanumeric while typing.
-   * This strips any non-alphanumeric chars and uppercases letters.
+   * Keep license plate input alphanumeric (English & Arabic) while typing.
+   * Allows Arabic letters, English letters, Arabic numerals, and English numerals.
    */
   onPlateInput(ev: Event): void {
     const input = ev.target as HTMLInputElement;
     if (!input) return;
     const raw = input.value || '';
-    // Remove any non-alphanumeric characters (no spaces, no symbols)
-    const filtered = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    
+    // Allow English letters, Arabic letters, English digits, and Arabic numerals
+    // Remove any other characters (no spaces, no symbols)
+    const filtered = raw.replace(/[^a-zA-Zا-ي0-9٠-٩]/g, '').toUpperCase();
 
-    // If value changed, update control and input value to keep them in sync
+    // If value changed, update input value to keep it in sync
     if (filtered !== raw) {
       input.value = filtered;
     }
@@ -340,6 +358,29 @@ export class AddVehicleFormComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  /**
+   * Handle mileage input to accept and convert Arabic numerals
+   */
+  onMileageInput(ev: Event): void {
+    const input = ev.target as HTMLInputElement;
+    if (!input) return;
+    const raw = input.value || '';
+    
+    // Convert Arabic numerals to English and keep only digits
+    const converted = this.convertArabicNumeralsToEnglish(raw);
+    const filtered = converted.replace(/[^0-9]/g, '');
+
+    // Update input and form control if value changed
+    if (filtered !== raw) {
+      input.value = filtered;
+    }
+
+    const ctrl = this.addVehicleForm.get('mileage');
+    if (ctrl && ctrl.value !== filtered) {
+      ctrl.setValue(filtered || null);
+    }
+  }
+
   // Custom validator to ensure engineCapacity > 0
   greaterThanZeroValidator(control: AbstractControl): ValidationErrors | null {
     if (control == null || control.value == null || control.value === '') return { required: true };
@@ -400,13 +441,17 @@ export class AddVehicleFormComponent implements OnInit {
       // Detect CarOrigin automatically based on selected make
       const carOrigin = this.detectCarOrigin(this.addVehicleForm.value.make);
       
+      // Convert Arabic numerals to English in license plate and mileage
+      const licensePlateConverted = this.convertArabicNumeralsToEnglish(this.addVehicleForm.value.licensePlate || '');
+      const mileageConverted = this.convertArabicNumeralsToEnglish(String(this.addVehicleForm.value.mileage || '0'));
+      
       const requestBody = {
         make: this.addVehicleForm.value.make,
         model: this.addVehicleForm.value.model,
         year: this.addVehicleForm.value.year,
         engineCapacity: parseFloat(this.addVehicleForm.value.engineCapacity),
-        currentMileage: Number(this.addVehicleForm.value.mileage),
-        licensePlate: this.addVehicleForm.value.licensePlate,
+        currentMileage: Number(mileageConverted),
+        licensePlate: licensePlateConverted,
         transmissionType: this.addVehicleForm.value.transmissionType,
         fuelType: this.addVehicleForm.value.fuelType,
         origin: carOrigin

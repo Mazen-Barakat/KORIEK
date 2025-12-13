@@ -281,7 +281,7 @@
               <rect x="2" y="7" width="20" height="10" rx="2"/>
               <line x1="7" y1="12" x2="17" y2="12"/>
             </svg>
-            <input type="text" id="licensePlate" formControlName="licensePlate" placeholder="e.g., ABC1234"
+            <input type="text" id="licensePlate" formControlName="licensePlate" placeholder="e.g., ABC1234 or ابج١٢٣٤"
               maxlength="7" (input)="onPlateInput($event)" autocomplete="off">
           </div>
           
@@ -293,7 +293,7 @@
             </svg>
             <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['required']">License plate is required</span>
             <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['maxlength']">Cannot exceed 7 characters</span>
-            <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['plateFormat']">Format must be 2–3 letters followed by 3–4 digits (alphanumeric only)</span>
+            <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['plateFormat']">Format must be 2–3 letters (English or Arabic) followed by 3–4 digits</span>
             <span *ngIf="addVehicleForm.get('licensePlate')?.errors?.['licenseNotUnique']">This plate is already registered</span>
           </div>
         </div>
@@ -305,7 +305,7 @@
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
             </svg>
-            <input type="number" min="0" id="mileage" formControlName="mileage" placeholder="e.g., 45000">
+            <input type="text" inputmode="numeric" id="mileage" formControlName="mileage" placeholder="e.g., 45000 or ٤٥٠٠٠" (input)="onMileageInput($event)">
             <span class="input-suffix">km</span>
           </div>
           
