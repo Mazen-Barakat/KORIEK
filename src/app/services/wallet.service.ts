@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, forkJoin } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
 import { Transaction, PayoutSchedule, WalletSummary } from '../models/wallet.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WalletService {
+  private apiUrl = 'https://localhost:44316/api';
+
   private walletSummarySubject = new BehaviorSubject<WalletSummary>({
     availableBalance: 12450.75,
     pendingBalance: 3200.00,
@@ -95,7 +99,7 @@ export class WalletService {
     }
   ]);
 
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
   getWalletSummary(): Observable<WalletSummary> {
     return this.walletSummarySubject.asObservable();
@@ -103,6 +107,151 @@ export class WalletService {
 
   getTransactions(): Observable<Transaction[]> {
     return this.transactionsSubject.asObservable();
+  }
+
+  /**
+   * Fetch completed bookings by workshop profile ID and transform to transactions
+   */
+  getTransactionsByWorkshop(workshopProfileId: number): Observable<Transaction[]> {
+    console.log('🔍 Fetching bookings for workshop:', workshopProfileId);
+    
+    return this.http.get<any>(`${this.apiUrl}/Booking/ByWorkshop/${workshopProfileId}`).pipe(
+      switchMap((response: any) => {
+        const allBookings = response?.data || response || [];
+        console.log('📦 Total bookings:', allBookings.length);
+        
+        // Calculate wallet summary from all bookings
+        this.calculateWalletSummary(allBookings);
+        
+        // Filter only completed bookings
+        const completedBookings = allBookings.filter((booking: any) => {
+          const status = (booking.status || booking.Status || '').toLowerCase();
+          return status === 'completed';
+        });
+        
+        console.log('✅ Completed bookings:', completedBookings.length);
+        
+        if (!completedBookings || completedBookings.length === 0) {
+          return of([]);
+        }
+
+        // Fetch additional data for each booking
+        const transactionObservables = completedBookings.map((booking: any) => {
+          // First get WorkshopService to extract ServiceId, then fetch from Service table
+          const workshopServiceCall = this.http.get<any>(`${this.apiUrl}/WorkshopService/${booking.workshopServiceId}`).pipe(
+            switchMap((wsResponse: any) => {
+              const wsData = wsResponse?.data || wsResponse;
+              const serviceId = wsData?.serviceId || wsData?.ServiceId;
+              if (serviceId) {
+                return this.http.get<any>(`${this.apiUrl}/Service/${serviceId}`).pipe(
+                  catchError(() => of({ serviceName: 'Service' }))
+                );
+              }
+              return of({ serviceName: 'Service' });
+            }),
+            catchError(() => of({ serviceName: 'Service' }))
+          );
+          
+          return forkJoin({
+            service: workshopServiceCall,
+            carOwner: this.http.get<any>(`${this.apiUrl}/CarOwnerProfile/by-booking/${booking.id}`).pipe(
+              catchError(() => of({ fullName: 'Customer' }))
+            ),
+            car: this.http.get<any>(`${this.apiUrl}/Car/${booking.carId}`).pipe(
+              catchError(() => of({ make: '', model: 'Vehicle' }))
+            )
+          }).pipe(
+            map(({ service, carOwner, car }) => {
+              const serviceData = service?.data || service;
+              const carOwnerData = carOwner?.data || carOwner;
+              const carData = car?.data || car;
+              
+              // Extract service name from Service table response
+              const serviceName = serviceData?.serviceName || 
+                                 serviceData?.ServiceName || 
+                                 serviceData?.name || 
+                                 serviceData?.Name || 
+                                 'Unknown Service';
+              const customerName = carOwnerData?.fullName || carOwnerData?.FullName || 'Customer';
+              const carName = carData ? `${carData.make || ''} ${carData.model || ''}`.trim() : 'Vehicle';
+              
+              // Calculate workshop's 88% share
+              const workshopAmount = booking.paidAmount * 0.88;
+              
+              const transaction: Transaction = {
+                id: `booking-${booking.id}`,
+                type: 'credit',
+                amount: workshopAmount,
+                description: `${serviceName} - ${carName}`,
+                date: new Date(booking.appointmentDate),
+                status: 'completed',
+                category: 'booking',
+                reference: `BK${String(booking.id).padStart(6, '0')}`,
+                customerName: customerName
+              };
+              
+              return transaction;
+            })
+          );
+        });
+
+        if (transactionObservables.length === 0) {
+          return of([]);
+        }
+
+        return (forkJoin(transactionObservables) as Observable<Transaction[]>).pipe(
+          map((transactions: Transaction[]) => {
+            return transactions.sort((a, b) => b.date.getTime() - a.date.getTime());
+          })
+        );
+      }),
+      catchError((err) => {
+        console.error('❌ Error fetching transactions:', err);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Calculate wallet summary from bookings
+   */
+  private calculateWalletSummary(allBookings: any[]): void {
+    let totalEarnings = 0;
+    let pendingBalance = 0;
+    let completedBalance = 0;
+    
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    let monthlyRevenue = 0;
+    
+    allBookings.forEach((booking: any) => {
+      const workshopAmount = (booking.paidAmount || 0) * 0.88;
+      const status = (booking.status || booking.Status || '').toLowerCase();
+      const bookingDate = new Date(booking.appointmentDate);
+      
+      if (status === 'completed') {
+        totalEarnings += workshopAmount;
+        completedBalance += workshopAmount;
+        
+        if (bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear) {
+          monthlyRevenue += workshopAmount;
+        }
+      } else if (status === 'pending' || status === 'in-progress') {
+        pendingBalance += workshopAmount;
+      }
+    });
+    
+    const summary: WalletSummary = {
+      availableBalance: completedBalance,
+      pendingBalance: pendingBalance,
+      totalEarnings: totalEarnings,
+      monthlyRevenue: monthlyRevenue,
+      revenueChange: 12.5, // TODO: Calculate from previous period
+      nextPayoutAmount: 0, // TODO: Calculate from schedule
+      nextPayoutDate: new Date() // TODO: Get from schedule
+    };
+    
+    this.walletSummarySubject.next(summary);
   }
 
   getPayoutSchedule(): Observable<PayoutSchedule[]> {

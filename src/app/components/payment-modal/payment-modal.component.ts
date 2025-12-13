@@ -21,9 +21,15 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
   @Input() workshopName!: string;
   @Input() serviceName!: string;
   @Input() appointmentDate!: string;
+  @Input() priceFrom: number = 0;
+  @Input() priceTo: number = 0;
 
   @Output() paymentSuccess = new EventEmitter<void>();
   @Output() paymentCancelled = new EventEmitter<void>();
+
+  // User-entered amount
+  userEnteredAmount: number = 0;
+  amountError: string = '';
 
   @ViewChild('cardElement', { static: false }) cardElementRef!: ElementRef;
 
@@ -54,10 +60,15 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
-    // Calculate commission breakdown
-    const breakdown = this.paymentService.calculateCommissionBreakdown(this.totalAmount);
-    this.commissionAmount = breakdown.commissionAmount;
-    this.workshopAmount = breakdown.workshopAmount;
+    // Initialize user entered amount with the suggested total or midpoint of range
+    if (this.priceFrom && this.priceTo) {
+      this.userEnteredAmount = Math.round((this.priceFrom + this.priceTo) / 2);
+    } else {
+      this.userEnteredAmount = this.totalAmount || 0;
+    }
+
+    // Calculate commission breakdown based on user amount
+    this.updateCalculations();
 
     // Initialize Stripe
     this.stripe = await loadStripe(this.STRIPE_PUBLISHABLE_KEY);
@@ -69,6 +80,40 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
 
     // Trigger change detection after async operations
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Validate and update amount when user types
+   */
+  onAmountChange(): void {
+    this.amountError = '';
+
+    if (!this.userEnteredAmount || this.userEnteredAmount <= 0) {
+      this.amountError = 'Amount must be greater than 0';
+      return;
+    }
+
+    if (this.priceFrom && this.priceTo) {
+      if (this.userEnteredAmount < this.priceFrom) {
+        this.amountError = `Amount must be at least $${this.priceFrom}`;
+      } else if (this.userEnteredAmount > this.priceTo) {
+        this.amountError = `Amount cannot exceed $${this.priceTo}`;
+      }
+    }
+
+    // Update calculations
+    this.updateCalculations();
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Update commission and workshop amount based on user-entered amount
+   */
+  private updateCalculations(): void {
+    const breakdown = this.paymentService.calculateCommissionBreakdown(this.userEnteredAmount);
+    this.commissionAmount = breakdown.commissionAmount;
+    this.workshopAmount = breakdown.workshopAmount;
+    this.totalAmount = this.userEnteredAmount;
   }
 
   ngOnDestroy() {

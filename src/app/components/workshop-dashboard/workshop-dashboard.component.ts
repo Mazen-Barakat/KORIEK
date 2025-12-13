@@ -195,29 +195,14 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
     const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
     const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-    // Calculate Monthly Revenue (current month completed bookings)
+    // Calculate Monthly Revenue using the exact logic:
+    // Sum all PaidAmount values and multiply by 0.88 (workshop's share)
     const currentMonthRevenue = bookings
-      .filter(b => {
-        const bookingDate = new Date(b.appointmentDate);
-        return (
-          bookingDate.getMonth() === currentMonth &&
-          bookingDate.getFullYear() === currentYear &&
-          (b.status.toLowerCase() === 'completed' || b.status.toLowerCase() === 'paid')
-        );
-      })
-      .reduce((sum, b) => sum + (this.estimateBookingRevenue(b)), 0);
+      .reduce((sum, b) => sum + (b.paidAmount || 0), 0) * 0.88;
 
-    // Calculate last month revenue for comparison
-    const lastMonthRevenue = bookings
-      .filter(b => {
-        const bookingDate = new Date(b.appointmentDate);
-        return (
-          bookingDate.getMonth() === lastMonth &&
-          bookingDate.getFullYear() === lastMonthYear &&
-          (b.status.toLowerCase() === 'completed' || b.status.toLowerCase() === 'paid')
-        );
-      })
-      .reduce((sum, b) => sum + (this.estimateBookingRevenue(b)), 0);
+    // Calculate last month revenue for comparison (if needed)
+    // For now, we'll keep the basic calculation, but you could filter by month if needed
+    const lastMonthRevenue = 0; // Set to 0 or implement last month filtering if needed
 
     const revenueChange = lastMonthRevenue > 0
       ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
@@ -252,13 +237,11 @@ export class WorkshopDashboardComponent implements OnInit, OnDestroy {
       return status === 'quote sent' || status === 'awaiting approval' || status === 'pending approval';
     }).length;
 
-    // Calculate Pending Payouts (85% of completed but unpaid bookings)
+    // Calculate Pending Payouts using the exact logic:
+    // Filter bookings with PaymentMethod = "CreditCard", sum PaidAmount, multiply by 0.88
     const pendingPayouts = bookings
-      .filter(b => {
-        const status = b.status.toLowerCase();
-        return status === 'completed' && b.paymentMethod;
-      })
-      .reduce((sum, b) => sum + (this.estimateBookingRevenue(b) * 0.85), 0);
+      .filter(b => b.paymentMethod === 'CreditCard')
+      .reduce((sum, b) => sum + (b.paidAmount || 0), 0) * 0.88;
 
     // Update metrics (keep existing shopRating from profile)
     this.metrics = {
