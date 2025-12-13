@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import {
   CreatePaymentDTO,
   PaymentIntentResponse,
@@ -13,7 +14,7 @@ import {
   providedIn: 'root',
 })
 export class PaymentService {
-  private readonly API_URL = 'https://korik-demo.runasp.net/api/Payment';
+  private readonly API_URL = `${environment.apiBase}/Payment`;
 
   // Subject to track payment flow state
   private paymentFlowSubject = new BehaviorSubject<{

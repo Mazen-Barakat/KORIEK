@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-reset-password',
@@ -87,10 +88,10 @@ export class ResetPasswordComponent implements OnInit {
     console.log('Token from URL:', this.token);
     console.log('New Password:', this.form.value.newPassword);
     console.log('Complete Payload:', JSON.stringify(payload, null, 2));
-    console.log('Endpoint:', 'https://korik-demo.runasp.net/api/Account/ResetPassword');
+    console.log('Endpoint:', `${environment.apiBase}/Account/ResetPassword`);
 
     this.http
-      .post('https://korik-demo.runasp.net/api/Account/ResetPassword', payload, {
+      .post(`${environment.apiBase}/Account/ResetPassword`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },

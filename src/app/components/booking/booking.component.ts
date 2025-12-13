@@ -7,6 +7,7 @@ import { CategoryService } from '../../services/category.service';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
 import { BookingService } from '../../services/booking.service';
 import { Category } from '../../models/category.model';
+import { environment } from '../../../environments/environment';
 import { Subcategory } from '../../models/subcategory.model';
 import { Service } from '../../models/service.model';
 import { PaymentMethodPopupComponent } from '../payment-method-popup/payment-method-popup.component';
@@ -203,7 +204,7 @@ export class BookingComponent implements OnInit {
   readonly CAIRO_TIMEZONE = 'Africa/Cairo';
 
   // API base URL for images
-  private readonly API_BASE_URL = 'https://localhost:44316';
+  private readonly API_BASE_URL = environment.fileHost;
 
   // Month names
   readonly MONTH_NAMES = [

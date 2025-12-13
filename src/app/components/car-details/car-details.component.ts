@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { VehicleInfoComponent } from './vehicle-info/vehicle-info.component';
+import { environment } from '../../../environments/environment';
 import {
   CarExpenseService,
   CreateCarExpenseRequest,
@@ -176,8 +177,8 @@ export class CarDetailsComponent implements OnInit {
   isLoadingServiceHistory = false;
   serviceHistoryError = '';
 
-  private apiUrl = 'https://localhost:44316/api/CarIndicator/car';
-  private bookingApiUrl = 'https://localhost:44316/api/Booking';
+  private apiUrl = `${environment.apiBase}/CarIndicator/car`;
+  private bookingApiUrl = `${environment.apiBase}/Booking`;
   private pendingFragment: string | null = null;
 
   constructor(

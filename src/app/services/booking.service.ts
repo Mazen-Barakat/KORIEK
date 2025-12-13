@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { BehaviorSubject, Observable, of, forkJoin } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import {
@@ -51,7 +52,7 @@ export interface EnrichedBooking {
   providedIn: 'root',
 })
 export class BookingService {
-  public apiUrl = 'https://korik-demo.runasp.net/api';
+  public apiUrl = environment.apiBase;
   private jobsSubject = new BehaviorSubject<Job[]>([]);
   public jobs$ = this.jobsSubject.asObservable();
 
@@ -237,7 +238,7 @@ export class BookingService {
       map((bookings: BookingResponse[]) => {
         // Filter bookings with PaymentMethod = "CreditCard"
         const creditCardBookings = bookings.filter(
-          booking => booking.paymentMethod === 'CreditCard'
+          (booking) => booking.paymentMethod === 'CreditCard'
         );
 
         // Sum all PaidAmount values for credit card bookings

@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, interval } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import {
   EnhancedBookingNotification,
   BookingResponseStatus,
@@ -15,7 +16,7 @@ import {
   providedIn: 'root',
 })
 export class EnhancedBookingService {
-  private apiUrl = 'https://korik-demo.runasp.net/api';
+  private apiUrl = environment.apiBase;
 
   // Store bookings with precise timing
   private bookingsSubject = new BehaviorSubject<Map<number, EnhancedBookingNotification>>(

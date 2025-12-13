@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 // API Request/Response Interfaces
 export interface WorkshopServiceCreateRequest {
@@ -45,7 +46,7 @@ export interface WorkshopServiceData {
   providedIn: 'root',
 })
 export class WorkshopServiceService {
-  private apiUrl = 'https://korik-demo.runasp.net/api/WorkshopService';
+  private apiUrl = `${environment.apiBase}/WorkshopService`;
 
   constructor(private http: HttpClient) {}
 

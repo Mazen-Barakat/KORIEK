@@ -16,6 +16,7 @@ import { ReviewModalService } from '../../services/review-modal.service';
 import { ToastService } from '../../services/toast.service';
 import { AppNotification } from '../../models/wallet.model';
 import { RoleHelper } from '../../models/user-roles';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-notification-panel',
@@ -56,7 +57,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
   ) {}
 
   // API base used for direct booking status updates from notification actions
-  private readonly apiUrl = 'https://localhost:44316/api';
+  private readonly apiUrl = environment.apiBase;
 
   /**
    * Handle a notification action button click (e.g., Confirm/Decline for booking)

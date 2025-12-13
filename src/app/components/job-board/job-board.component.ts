@@ -12,6 +12,7 @@ import { HttpClient } from '@angular/common/http';
 import { ConfirmationPopupComponent } from '../shared/confirmation-popup/confirmation-popup.component';
 import { ToastService } from '../../services/toast.service';
 import { ProfileService } from '../../services/profile.service';
+import { environment } from '../../../environments/environment';
 import { NotificationType } from '../../models/notification.model';
 
 // Interface for real booking with enriched data
@@ -58,7 +59,7 @@ interface CarOwnerProfile {
 })
 export class JobBoardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private apiUrl = 'https://localhost:44316/api';
+  private apiUrl = environment.apiBase;
   // Retry control for defensive re-loading when initial load returns empty
   private tryLoadRetries = 0;
   private readonly maxLoadRetries = 3;

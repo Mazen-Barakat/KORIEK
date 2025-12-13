@@ -33,6 +33,7 @@ import {
   GOVERNORATES,
   EGYPTIAN_CITIES_BY_GOVERNORATE,
 } from '../../models/workshop-profile.model';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-workshop-profile-edit',
@@ -101,7 +102,7 @@ export class WorkshopProfileEditComponent
   uploadError: string = '';
 
   // Backend base URL used to build absolute image URLs when backend returns relative paths
-  private readonly backendBaseUrl = 'https://korik-demo.runasp.net/api';
+  private readonly backendBaseUrl = environment.fileHost;
 
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   private readonly STORAGE_KEY = 'workshop_profile_data';
@@ -495,9 +496,7 @@ export class WorkshopProfileEditComponent
     // Log the operation
     console.log('=== SUBMITTING PROFILE UPDATE (FormData) ===');
     console.log('Original profileData:', this.profileData);
-    console.log(
-      'API Endpoint: PUT https://localhost:44316/api/WorkShopProfile/Update-WorkShop-Profile'
-    );
+    console.log(`API Endpoint: PUT ${environment.apiBase}/WorkShopProfile/Update-WorkShop-Profile`);
 
     // Send PUT request with FormData
     this.workshopProfileService

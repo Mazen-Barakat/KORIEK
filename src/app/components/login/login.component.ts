@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 declare const google: any;
 
@@ -105,7 +106,7 @@ export class LoginComponent implements OnInit {
       password: this.loginForm.value.password,
     };
 
-    this.http.post('https://localhost:44316/api/Account/Login', loginData).subscribe({
+    this.http.post(`${environment.apiBase}/Account/Login`, loginData).subscribe({
       next: (response: any) => {
         console.log('Login response:', response);
         this.isLoading = false;
@@ -193,7 +194,7 @@ export class LoginComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.http.post('https://localhost:44316/api/Account/ForgotPassword', { email }).subscribe({
+    this.http.post(`${environment.apiBase}/Account/ForgotPassword`, { email }).subscribe({
       next: () => {
         this.isLoading = false;
         this.successMessage = 'A password reset link has been sent to your email.';
@@ -347,7 +348,7 @@ export class LoginComponent implements OnInit {
 
     console.log('Sending Google login request with payload:', payload);
 
-    this.http.post('https://localhost:44316/api/Account/Google-login', payload).subscribe({
+    this.http.post(`${environment.apiBase}/Account/Google-login`, payload).subscribe({
       next: (res: any) => {
         this.isLoading = false;
         console.log('Google sign-in response:', res);

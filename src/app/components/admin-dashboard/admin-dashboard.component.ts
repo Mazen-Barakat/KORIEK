@@ -14,6 +14,7 @@ import {
   Booking,
 } from '../../services/admin.service';
 import { AdminAnalyticsService } from '../../services/admin-analytics.service';
+import { environment } from '../../../environments/environment';
 import { AdminDashboardStats } from '../../models/admin-dashboard-stats.model';
 
 interface AdminMetrics {
@@ -130,7 +131,7 @@ export class AdminDashboardComponent implements OnInit {
   selectedWorkshop: WorkshopProfile | null = null;
   isDetailModalOpen: boolean = false;
 
-  private baseUrl = 'https://localhost:44316/api';
+  private baseUrl = environment.apiBase;
 
   constructor(
     private authService: AuthService,
@@ -644,7 +645,7 @@ export class AdminDashboardComponent implements OnInit {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    return `https://localhost:44316${path.startsWith('/') ? path : '/' + path}`;
+    return `${environment.fileHost}${path.startsWith('/') ? path : '/' + path}`;
   }
 
   formatCurrency(amount: number): string {

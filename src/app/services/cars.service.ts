@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { shareReplay, map } from 'rxjs/operators';
 
 export interface MakeModels {
@@ -36,7 +37,7 @@ export interface CarIndicatorDto {
 export class CarsService {
   private jsonUrl = 'cars-data.json';
   private cache$!: Observable<MakeModels[]>;
-  private readonly apiBase = 'https://korik-demo.runasp.net/api';
+  private readonly apiBase = environment.apiBase;
 
   constructor(private http: HttpClient) {}
 

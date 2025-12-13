@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface AIMessage {
   id: string;
@@ -30,7 +31,7 @@ export interface AIResponse {
   providedIn: 'root',
 })
 export class AiAssistantService {
-  private readonly API_BASE_URL = 'https://korik-demo.runasp.net/api';
+  private readonly API_BASE_URL = environment.apiBase;
   private readonly STORAGE_KEY = 'ai_conversation';
 
   private messagesSubject = new BehaviorSubject<AIMessage[]>([]);

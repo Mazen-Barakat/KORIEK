@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 import { Category, CategoryResponse } from '../models/category.model';
+import { environment } from '../../environments/environment';
 import { Subcategory, SubcategoryResponse } from '../models/subcategory.model';
 import { Service, ServiceResponse } from '../models/service.model';
 
@@ -10,7 +11,7 @@ import { Service, ServiceResponse } from '../models/service.model';
   providedIn: 'root',
 })
 export class CategoryService {
-  private readonly apiBase = 'https://korik-demo.runasp.net/api';
+  private readonly apiBase = environment.apiBase;
   private categoriesCache$?: Observable<Category[]>;
   private subcategoriesCache: Map<number, Observable<Subcategory[]>> = new Map();
   private servicesCache: Map<number, Observable<Service[]>> = new Map();

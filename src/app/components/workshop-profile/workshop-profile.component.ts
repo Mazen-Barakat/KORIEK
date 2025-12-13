@@ -18,6 +18,7 @@ import {
 import { Subscription, forkJoin, of, timeout } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { AddServiceModalComponent } from '../add-service-modal/add-service-modal.component';
 import { WorkshopServicesCatalogComponent } from '../workshop-services-catalog/workshop-services-catalog.component';
 import { WorkshopService as WorkshopServiceModel } from '../../models/workshop-profile.model';
@@ -200,7 +201,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
         this.workshopId = data.id.toString();
 
         // Load additional data in parallel using forkJoin
-        const photosUrl = `https://korik-demo.runasp.net/api/WorkShopPhoto/${data.id}`;
+        const photosUrl = `${environment.apiBase}/WorkShopPhoto/${data.id}`;
 
         const photosRequest = this.http.get(photosUrl).pipe(
           timeout(5000), // 5 second timeout
@@ -295,7 +296,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
 
   loadReviews(workshopId: number): void {
     this.isLoadingReviews = true;
-    const reviewsUrl = `https://localhost:44316/api/Review/all-Review/${workshopId}`;
+    const reviewsUrl = `${environment.apiBase}/Review/all-Review/${workshopId}`;
 
     this.http
       .get<any>(reviewsUrl)
@@ -360,7 +361,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
   getFullImageUrl(url: string): string {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `https://korik-demo.runasp.net${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${environment.fileHost}${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
   getStarArray(rating: number): number[] {
@@ -479,7 +480,7 @@ export class WorkshopProfileComponent implements OnInit, OnDestroy {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    const baseUrl = 'https://localhost:44316';
+    const baseUrl = environment.fileHost;
     return `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
   }
 

@@ -21,6 +21,7 @@ import { BookingService } from '../../services/booking.service';
 import { CarTipsService, CarTip } from '../../services/car-tips.service';
 import { AiAssistantService, AIMessage } from '../../services/ai-assistant.service';
 import { forkJoin, Subscription } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 interface Vehicle {
   id: number;
@@ -327,7 +328,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
             response.data.picture ||
             response.data.avatar;
           // Backend host used for serving uploaded files
-          const backendHost = 'https://localhost:44316';
+          const backendHost = environment.fileHost;
           if (candidate && typeof candidate === 'string') {
             // If the returned path is relative (starts with '/'), prefix backend host
             if (candidate.startsWith('/')) {
@@ -1652,7 +1653,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
     this.cancellingBookingIds.add(booking.id);
     this.cdr.detectChanges();
 
-    const apiUrl = 'https://localhost:44316/api';
+    const apiUrl = environment.apiBase;
     this.bookingService.http
       .put(`${apiUrl}/Booking/Update-Booking-Status`, {
         id: booking.id,
@@ -1703,7 +1704,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const apiUrl = 'https://localhost:44316/api';
+    const apiUrl = environment.apiBase;
     const notificationPayload = {
       workshopProfileId: booking.workshopId,
       bookingId: booking.id,
@@ -1816,7 +1817,7 @@ export class MyVehiclesComponent implements OnInit, OnDestroy {
   private fetchServiceName(booking: UpcomingBooking): void {
     if (!booking.workshopServiceId) return;
 
-    const apiUrl = 'https://localhost:44316/api';
+    const apiUrl = environment.apiBase;
 
     // First, get the workshopService to extract serviceId
     this.bookingService.http

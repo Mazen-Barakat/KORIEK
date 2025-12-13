@@ -8,6 +8,7 @@ import {
   CreateCarIndicatorRequest,
   MakeModels,
 } from '../../services/cars.service';
+import { environment } from '../../../environments/environment';
 import {
   CustomDropdownComponent,
   DropdownOption,
@@ -591,10 +592,7 @@ export class EditCarComponent implements OnInit {
     this.deletingIndicatorId = idToDelete;
 
     console.log('[DELETE INDICATOR] Deleting indicator with ID:', idToDelete);
-    console.log(
-      '[DELETE INDICATOR] URL:',
-      `https://localhost:44316/api/CarIndicator/${idToDelete}`
-    );
+    console.log('[DELETE INDICATOR] URL:', `${environment.apiBase}/CarIndicator/${idToDelete}`);
 
     this.carsService.deleteCarIndicator(idToDelete).subscribe({
       next: (resp: any) => {
@@ -615,9 +613,7 @@ export class EditCarComponent implements OnInit {
         console.warn('[DELETE INDICATOR] DELETE failed, status:', err?.status, 'trying fallbacks');
         // If backend rejects DELETE (405), attempt common POST-based delete endpoints
         if (err && err.status === 405) {
-          const urlBase = `${
-            this.carsService['apiBase'] ?? 'https://localhost:44316/api'
-          }/CarIndicator`;
+          const urlBase = `${this.carsService['apiBase'] ?? environment.apiBase}/CarIndicator`;
           const http = (this.carsService as any).http;
 
           const attempts: any[] = [

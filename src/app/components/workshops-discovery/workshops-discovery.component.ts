@@ -15,6 +15,7 @@ import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { GeolocationService } from '../../services/geolocation.service';
 import { WorkshopProfileService } from '../../services/workshop-profile.service';
 import { GOVERNORATES, EGYPTIAN_CITIES_BY_GOVERNORATE } from '../../models/workshop-profile.model';
+import { environment } from '../../../environments/environment';
 
 interface Workshop {
   id: number;
@@ -120,7 +121,7 @@ export class WorkshopsDiscoveryComponent implements OnInit, OnDestroy {
 
   governorates = GOVERNORATES;
 
-  private apiUrl = 'https://korik-demo.runasp.net/api';
+  private apiUrl = environment.apiBase;
 
   constructor(
     private http: HttpClient,
@@ -366,7 +367,7 @@ export class WorkshopsDiscoveryComponent implements OnInit, OnDestroy {
       if (workshop.logoImageUrl.startsWith('http')) {
         return workshop.logoImageUrl;
       }
-      return `https://localhost:44316${workshop.logoImageUrl}`;
+      return `${environment.fileHost}${workshop.logoImageUrl}`;
     }
     return '';
   }

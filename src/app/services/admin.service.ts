@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { map, tap, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
@@ -47,7 +48,7 @@ export interface UpdateWorkshopStatusRequest {
   providedIn: 'root',
 })
 export class AdminService {
-  private baseUrl = 'https://korik-demo.runasp.net/api';
+  private baseUrl = environment.apiBase;
 
   constructor(private http: HttpClient) {}
 

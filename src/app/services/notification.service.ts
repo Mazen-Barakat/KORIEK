@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, interval, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { AppNotification, NotificationPreference } from '../models/wallet.model';
 import { NotificationDto, NotificationType } from '../models/notification.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +21,7 @@ export class NotificationService {
   ]);
 
   private unreadCountSubject = new BehaviorSubject<number>(0);
-  private readonly API_URL = 'https://korik-demo.runasp.net/api/Notifications';
+  private readonly API_URL = `${environment.apiBase}/Notifications`;
 
   constructor(private http: HttpClient) {
     this.startAutoNotificationSimulation();
@@ -77,20 +78,23 @@ export class NotificationService {
    */
   fetchUnreadCountFromBackend(token: string): void {
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     });
 
-    this.http.get<any>(`${this.API_URL}/unread-count`, { headers }).pipe(
-      catchError((error) => {
-        console.error('❌ Error fetching unread count from backend:', error);
-        return of({ count: 0 });
-      })
-    ).subscribe((response) => {
-      const count = response?.count ?? response?.data?.count ?? 0;
-      this.unreadCountSubject.next(count);
-      console.log(`📊 Unread count from backend: ${count}`);
-    });
+    this.http
+      .get<any>(`${this.API_URL}/unread-count`, { headers })
+      .pipe(
+        catchError((error) => {
+          console.error('❌ Error fetching unread count from backend:', error);
+          return of({ count: 0 });
+        })
+      )
+      .subscribe((response) => {
+        const count = response?.count ?? response?.data?.count ?? 0;
+        this.unreadCountSubject.next(count);
+        console.log(`📊 Unread count from backend: ${count}`);
+      });
   }
 
   getPreferences(): Observable<NotificationPreference[]> {
@@ -138,7 +142,12 @@ export class NotificationService {
     this.showBrowserNotification(newNotification);
 
     // Log for debugging
-    console.log('🔔 New notification added:', newNotification.title, '| Total unread:', this.unreadCountSubject.value);
+    console.log(
+      '🔔 New notification added:',
+      newNotification.title,
+      '| Total unread:',
+      this.unreadCountSubject.value
+    );
   }
 
   updatePreference(preferenceId: string, updates: Partial<NotificationPreference>): void {
@@ -201,8 +210,8 @@ export class NotificationService {
    */
   fetchNotificationsFromApi(token: string): Observable<AppNotification[]> {
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     });
 
     return this.http.get<any>(this.API_URL, { headers }).pipe(
@@ -365,10 +374,10 @@ export class NotificationService {
    */
   private mergeNotifications(newNotifications: AppNotification[]): void {
     const existingNotifications = this.notificationsSubject.value;
-    const existingIds = new Set(existingNotifications.map(n => n.id));
+    const existingIds = new Set(existingNotifications.map((n) => n.id));
 
     // Filter out duplicates and add new notifications
-    const uniqueNew = newNotifications.filter(n => !existingIds.has(n.id));
+    const uniqueNew = newNotifications.filter((n) => !existingIds.has(n.id));
 
     if (uniqueNew.length > 0) {
       // Combine and sort by timestamp (newest first)
@@ -389,8 +398,8 @@ export class NotificationService {
    */
   markAsReadOnBackend(notificationId: string, token: string): Observable<any> {
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     });
 
     return this.http.put(`${this.API_URL}/${notificationId}/mark-read`, {}, { headers }).pipe(
@@ -410,8 +419,8 @@ export class NotificationService {
    */
   markAllAsReadOnBackend(token: string): Observable<any> {
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     });
 
     return this.http.put(`${this.API_URL}/mark-all-read`, {}, { headers }).pipe(
@@ -459,7 +468,7 @@ export class NotificationService {
   removeExpiredConfirmationNotifications(): void {
     const now = new Date();
     const notifications = this.notificationsSubject.value;
-    const filtered = notifications.filter(n => {
+    const filtered = notifications.filter((n) => {
       if (n.type === 'appointment-confirmation' && n.confirmationDeadline) {
         return new Date(n.confirmationDeadline) > now;
       }
@@ -469,7 +478,9 @@ export class NotificationService {
     if (filtered.length < notifications.length) {
       this.notificationsSubject.next(filtered);
       this.updateUnreadCount();
-      console.log(`🗑️ Removed ${notifications.length - filtered.length} expired confirmation notifications`);
+      console.log(
+        `🗑️ Removed ${notifications.length - filtered.length} expired confirmation notifications`
+      );
     }
   }
 

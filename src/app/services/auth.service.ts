@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -191,7 +192,7 @@ export class AuthService {
       throw new Error('No refresh token available');
     }
 
-    return this.http.post('https://korik-demo.runasp.net/api/Account/RefreshToken', {
+    return this.http.post(`${environment.apiBase}/Account/RefreshToken`, {
       userId: userId,
       refreshToken: refreshToken,
     });

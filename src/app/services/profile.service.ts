@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface UserProfile {
   id: number;
@@ -25,8 +26,8 @@ export interface ProfileResponse {
   providedIn: 'root',
 })
 export class ProfileService {
-  private readonly API_URL = 'https://korik-demo.runasp.net/api/CarOwnerProfile';
-  private readonly BACKEND_BASE_URL = 'https://korik-demo.runasp.net/api';
+  private readonly API_URL = `${environment.apiBase}/CarOwnerProfile`;
+  private readonly BACKEND_BASE_URL = environment.fileHost;
 
   private profileDataSubject = new BehaviorSubject<{ profilePicture: string | null } | null>(null);
   public profileData$ = this.profileDataSubject.asObservable();
@@ -97,7 +98,7 @@ export class ProfileService {
     if (relativePath.startsWith('http')) {
       return relativePath;
     }
-    // Otherwise, prepend the backend base URL
+    // Otherwise, prepend the backend file host
     return `${this.BACKEND_BASE_URL}${relativePath}`;
   }
 }

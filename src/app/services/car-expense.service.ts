@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { map } from 'rxjs/operators';
 
 export type ExpenseType = 'Fuel' | 'Maintenance' | 'Repair' | 'Insurance' | 'Other';
@@ -24,7 +25,7 @@ export interface CarExpenseDto {
 
 @Injectable({ providedIn: 'root' })
 export class CarExpenseService {
-  private readonly baseUrl = 'https://korik-demo.runasp.net/api';
+  private readonly baseUrl = environment.apiBase;
 
   constructor(private http: HttpClient) {}
 

@@ -9,6 +9,7 @@ import { ReviewModalService } from './review-modal.service';
 import { NotificationDto, NotificationType } from '../models/notification.model';
 import { AppNotification } from '../models/wallet.model';
 import { Subject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 // Interface for appointment confirmation requests
 export interface AppointmentConfirmationNotification {
@@ -91,7 +92,7 @@ export class SignalRNotificationService {
     try {
       // Build the hub connection
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl('https://localhost:44316/notificationHub', {
+        .withUrl(`${environment.fileHost}/notificationHub`, {
           accessTokenFactory: () => this.getAccessToken(),
         })
         .withAutomaticReconnect({
