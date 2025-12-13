@@ -48,7 +48,7 @@ import { AuthService } from '../../services/auth.service';
         height: 44px;
         border-radius: 50%;
         background: linear-gradient(135deg, var(--brand-primary) 0%, #dc2626 100%);
-        border: 3px solid rgba(255,255,255,0.95);
+        border: 3px solid rgba(255, 255, 255, 0.95);
         cursor: pointer;
         color: white;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -59,7 +59,7 @@ import { AuthService } from '../../services/auth.service';
       .profile-btn:hover {
         transform: translateY(-3px) scale(1.05);
         box-shadow: 0 8px 20px rgba(239, 68, 68, 0.32);
-        border-color: rgba(255,255,255,1);
+        border-color: rgba(255, 255, 255, 1);
       }
 
       .profile-btn:active {
@@ -89,8 +89,9 @@ export class ProfileButtonComponent implements OnInit {
   ngOnInit() {
     // Determine profile route based on user role
     const role = this.authService.getUserRole();
-    const isWorkshopOwner = role?.toLowerCase() === 'workshop' || role?.toLowerCase() === 'workshopowner';
-    
+    const isWorkshopOwner =
+      role?.toLowerCase() === 'workshop' || role?.toLowerCase() === 'workshopowner';
+
     if (isWorkshopOwner) {
       const userId = this.authService.getUserId() || this.authService.getUser()?.id;
       this.profileRoute = `/workshop-profile/${userId}`;
@@ -104,6 +105,24 @@ export class ProfileButtonComponent implements OnInit {
         this.profileImageUrl = profile.profilePicture;
       }
     });
+
+    // Fallback: try to use stored user data (in case profileService hasn't emitted yet)
+    try {
+      const storedUser = this.authService.getUser();
+      const candidate =
+        storedUser?.profileImageUrl || storedUser?.profilePicture || storedUser?.imageUrl || null;
+      if (candidate) {
+        const full = this.profileService.getFullImageUrl(candidate as string) || null;
+        if (full) this.profileImageUrl = full;
+      }
+    } catch (e) {
+      // ignore and rely on profileData$ subscription
+    }
+
+    // Ensure profile fetch is attempted so ProfileService updates its BehaviorSubject
+    if (!this.profileImageUrl) {
+      this.profileService.getProfile().subscribe({ next: () => {}, error: () => {} });
+    }
   }
 
   onImageError() {

@@ -26,12 +26,21 @@ export interface ProfileResponse {
 })
 export class ProfileService {
   private readonly API_URL = 'https://localhost:44316/api/CarOwnerProfile';
-  private readonly BACKEND_BASE_URL = 'https://localhost:44316/api';
+  // Use root host for static files — backend serves uploads under the host root, not under /api
+  private readonly BACKEND_BASE_URL = 'https://localhost:44316';
 
   private profileDataSubject = new BehaviorSubject<{ profilePicture: string | null } | null>(null);
   public profileData$ = this.profileDataSubject.asObservable();
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Allow other parts of the app to set the profile picture programmatically
+   * (useful for workshop owners whose image comes from a different API).
+   */
+  setProfilePicture(fullUrl: string | null) {
+    this.profileDataSubject.next({ profilePicture: fullUrl });
+  }
 
   /**
    * Fetch user profile data
