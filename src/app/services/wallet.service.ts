@@ -114,23 +114,23 @@ export class WalletService {
    */
   getTransactionsByWorkshop(workshopProfileId: number): Observable<Transaction[]> {
     console.log('🔍 Fetching bookings for workshop:', workshopProfileId);
-    
+
     return this.http.get<any>(`${this.apiUrl}/Booking/ByWorkshop/${workshopProfileId}`).pipe(
       switchMap((response: any) => {
         const allBookings = response?.data || response || [];
         console.log('📦 Total bookings:', allBookings.length);
-        
+
         // Calculate wallet summary from all bookings
         this.calculateWalletSummary(allBookings);
-        
+
         // Filter only completed bookings
         const completedBookings = allBookings.filter((booking: any) => {
           const status = (booking.status || booking.Status || '').toLowerCase();
           return status === 'completed';
         });
-        
+
         console.log('✅ Completed bookings:', completedBookings.length);
-        
+
         if (!completedBookings || completedBookings.length === 0) {
           return of([]);
         }
@@ -151,7 +151,7 @@ export class WalletService {
             }),
             catchError(() => of({ serviceName: 'Service' }))
           );
-          
+
           return forkJoin({
             service: workshopServiceCall,
             carOwner: this.http.get<any>(`${this.apiUrl}/CarOwnerProfile/by-booking/${booking.id}`).pipe(
@@ -165,19 +165,19 @@ export class WalletService {
               const serviceData = service?.data || service;
               const carOwnerData = carOwner?.data || carOwner;
               const carData = car?.data || car;
-              
+
               // Extract service name from Service table response
-              const serviceName = serviceData?.serviceName || 
-                                 serviceData?.ServiceName || 
-                                 serviceData?.name || 
-                                 serviceData?.Name || 
+              const serviceName = serviceData?.serviceName ||
+                                 serviceData?.ServiceName ||
+                                 serviceData?.name ||
+                                 serviceData?.Name ||
                                  'Unknown Service';
               const customerName = carOwnerData?.fullName || carOwnerData?.FullName || 'Customer';
               const carName = carData ? `${carData.make || ''} ${carData.model || ''}`.trim() : 'Vehicle';
-              
+
               // Calculate workshop's 88% share
               const workshopAmount = booking.paidAmount * 0.88;
-              
+
               const transaction: Transaction = {
                 id: `booking-${booking.id}`,
                 type: 'credit',
@@ -189,7 +189,7 @@ export class WalletService {
                 reference: `BK${String(booking.id).padStart(6, '0')}`,
                 customerName: customerName
               };
-              
+
               return transaction;
             })
           );
@@ -219,20 +219,20 @@ export class WalletService {
     let totalEarnings = 0;
     let pendingBalance = 0;
     let completedBalance = 0;
-    
+
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     let monthlyRevenue = 0;
-    
+
     allBookings.forEach((booking: any) => {
       const workshopAmount = (booking.paidAmount || 0) * 0.88;
       const status = (booking.status || booking.Status || '').toLowerCase();
       const bookingDate = new Date(booking.appointmentDate);
-      
+
       if (status === 'completed') {
         totalEarnings += workshopAmount;
         completedBalance += workshopAmount;
-        
+
         if (bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear) {
           monthlyRevenue += workshopAmount;
         }
@@ -240,7 +240,7 @@ export class WalletService {
         pendingBalance += workshopAmount;
       }
     });
-    
+
     const summary: WalletSummary = {
       availableBalance: completedBalance,
       pendingBalance: pendingBalance,
@@ -250,7 +250,7 @@ export class WalletService {
       nextPayoutAmount: 0, // TODO: Calculate from schedule
       nextPayoutDate: new Date() // TODO: Get from schedule
     };
-    
+
     this.walletSummarySubject.next(summary);
   }
 
@@ -269,7 +269,7 @@ export class WalletService {
   }
 
   getTransactionsByDateRange(startDate: Date, endDate: Date): Transaction[] {
-    return this.transactionsSubject.value.filter(txn => 
+    return this.transactionsSubject.value.filter(txn =>
       txn.date >= startDate && txn.date <= endDate
     );
   }
