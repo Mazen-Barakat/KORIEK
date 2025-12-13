@@ -366,7 +366,7 @@
 
       <ng-container *ngIf="isAuthenticated && !isAuthFormPage">
         <div class="mobile-action-icons">
-          <app-notification-panel (click)="closeMobileMenu()"></app-notification-panel>
+          <app-notification-panel></app-notification-panel>
           <app-profile-button (click)="closeMobileMenu()"></app-profile-button>
         </div>
         <button (click)="logout(); closeMobileMenu()" class="btn btn-logout">Logout</button>
